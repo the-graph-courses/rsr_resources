@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistics Resources – The GRAPH Courses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #006D77;
+    --teal-dark: #005A63;
+    --teal-light: #83C5BE;
+    --teal-bg: #e8f6f5;
+    --gold: #FFD166;
+    --gold-dark: #e6b84d;
+    --text: #1c1917;
+    --text-mid: #57534e;
+    --text-light: #a8a29e;
+    --bg: #fafaf9;
+    --white: #ffffff;
+    --border: #e7e5e4;
+    --sidebar-w: 280px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .top-bar {
+    height: 4px;
+    background: linear-gradient(90deg, var(--gold), var(--teal-light), var(--teal));
+  }
+
+  .shell {
+    display: flex;
+    height: calc(100vh - 4px);
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .sidebar-header {
+    padding: 24px 22px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-brand {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--teal);
+    margin-bottom: 4px;
+  }
+
+  .sidebar-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+  }
+
+  .sidebar-nav {
+    padding: 12px 10px;
+    flex: 1;
+  }
+
+  .nav-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-light);
+    padding: 8px 12px 6px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    text-decoration: none;
+    color: var(--text-mid);
+    margin-bottom: 2px;
+  }
+
+  .nav-item:hover {
+    background: var(--teal-bg);
+    color: var(--teal-dark);
+  }
+
+  .nav-item.active {
+    background: var(--teal);
+    color: var(--white);
+  }
+
+  .nav-item.active .nav-icon {
+    color: var(--gold);
+  }
+
+  .nav-item.active .nav-desc {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .nav-icon {
+    font-size: 18px;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--teal);
+    transition: color 0.15s;
+  }
+
+  .nav-text {
+    min-width: 0;
+  }
+
+  .nav-name {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .nav-desc {
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--text-light);
+    margin-top: 1px;
+    transition: color 0.15s;
+  }
+
+  .sidebar-footer {
+    padding: 14px 22px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-light);
+    line-height: 1.45;
+  }
+
+  .sidebar-footer a {
+    color: var(--teal);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .sidebar-footer a:hover {
+    text-decoration: underline;
+  }
+
+  /* ── Main content area ── */
+  .main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+  }
+
+  .main iframe {
+    flex: 1;
+    border: none;
+    width: 100%;
+    height: 100%;
+    background: var(--white);
+  }
+
+  .welcome {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    text-align: center;
+  }
+
+  .welcome-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+
+  .welcome h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--teal);
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+
+  .welcome p {
+    font-size: 14px;
+    color: var(--text-mid);
+    max-width: 380px;
+    line-height: 1.6;
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 700px) {
+    :root { --sidebar-w: 220px; }
+    .sidebar-header { padding: 16px 14px 14px; }
+    .sidebar-nav { padding: 8px 6px; }
+    .nav-desc { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar"></div>
+
+<div class="shell">
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">The GRAPH Courses</div>
+      <div class="sidebar-title">Interactive Statistics Resources</div>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-label">Resources</div>
+
+      <a class="nav-item" data-src="mean-sd-explorer.html" onclick="load(this)">
+        <span class="nav-icon">&#xf0;</span>
+        <div class="nav-text">
+          <div class="nav-name">Mean & SD Explorer</div>
+          <div class="nav-desc">Click to add points and see the mean and standard deviation update live.</div>
+        </div>
+      </a>
+
+      <a class="nav-item" data-src="least-squares-explorer.html" onclick="load(this)">
+        <span class="nav-icon">&#x2571;</span>
+        <div class="nav-text">
+          <div class="nav-name">Least Squares Explorer</div>
+          <div class="nav-desc">Drag sliders to fit a regression line and minimize the sum of squared residuals.</div>
+        </div>
+      </a>
+
+      <a class="nav-item" data-src="slope-standard-error.html" onclick="load(this)">
+        <span class="nav-icon">&#x21C5;</span>
+        <div class="nav-text">
+          <div class="nav-name">Slope Standard Error</div>
+          <div class="nav-desc">Explore what affects the precision of the slope estimate through simulation.</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
+      A project of <a href="https://thegraphcourses.org" target="_blank">The GRAPH Courses</a>
+    </div>
+  </nav>
+
+  <div class="main" id="main">
+    <div class="welcome" id="welcome">
+      <div class="welcome-icon">&#x1F4CA;</div>
+      <h2>Welcome</h2>
+      <p>Select a resource from the sidebar to get started. Each tool is an interactive exploration of a core statistics concept.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+function load(el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  const src = el.getAttribute('data-src');
+  const main = document.getElementById('main');
+  main.innerHTML = '<iframe src="' + src + '"></iframe>';
+}
+</script>
+
+</body>
+</html>

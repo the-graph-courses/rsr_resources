@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Standard Error of the Slope</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <style>
+    :root {
+      --teal: #2d6f7a;
+      --teal-dark: #235861;
+      --teal-soft: #e4eff1;
+      --red: #c83b3b;
+      --gold: #e8c76a;
+      --ink: #2f3742;
+      --muted: #66707a;
+      --bg: #f5f5f3;
+      --panel-bg: #fbfbfa;
+      --shadow: 0 10px 28px rgba(35,48,56,0.08);
+      --good: #78ac8c;
+      --mid: #d5c260;
+      --bad: #d06a63;
+      --blue: #2a6cb8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #e7eaec;
+      color: var(--ink);
+    }
+    .gold-bar { height: 8px; background: linear-gradient(90deg, #d4a843, #e8c34a); }
+    .teal-bar { height: 6px; background: var(--teal); }
+    .sim-panel {
+      background: var(--panel-bg);
+      border: 2px solid rgba(45,111,122,0.35);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+    .control-group {
+      margin-bottom: 14px;
+      background: #f8f8f7;
+      border: 1.5px solid #dbe0e3;
+      border-radius: 16px;
+      padding: 12px 14px 10px;
+    }
+    .control-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+    }
+    .control-label { font-size: 16px; font-weight: 800; }
+    .control-value { font-size: 14px; font-weight: 800; color: var(--ink); }
+    .control-note { font-size: 13px; line-height: 1.3; color: var(--muted); margin-bottom: 6px; }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--teal);
+      cursor: pointer;
+      height: 6px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+      background: var(--teal); cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+    button {
+      appearance: none; border: none; border-radius: 999px;
+      padding: 11px 16px; font-size: 14px; font-weight: 800;
+      color: white; background: var(--teal); cursor: pointer;
+      box-shadow: 0 6px 14px rgba(45,111,122,0.18);
+      transition: transform 0.1s, box-shadow 0.1s;
+      font-family: inherit;
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(45,111,122,0.24); }
+    button:active { transform: translateY(0); }
+    button.secondary { background: #7a8893; box-shadow: 0 6px 14px rgba(0,0,0,0.1); }
+    .legend-row {
+      display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+      font-size: 12px; color: var(--muted); font-weight: 700; margin-top: 6px; padding-left: 4px;
+    }
+    .legend-chip { display: inline-flex; align-items: center; gap: 6px; }
+    .swatch { width: 18px; height: 4px; border-radius: 999px; }
+    .sw-red { background: var(--red); }
+    .sw-ghost { background: rgba(45,111,122,0.33); }
+    .sw-true { background: rgba(45,111,122,0.7); height: 2px; border-top: 2px dashed rgba(45,111,122,0.7); }
+    .sw-point { width: 10px; height: 10px; border-radius: 999px; background: var(--teal); }
+    .sw-pop { width: 10px; height: 10px; border-radius: 999px; background: rgba(45,111,122,0.22); }
+    svg { width: 100%; height: auto; display: block; }
+    .slide {
+      width: 1600px;
+      margin: 14px auto;
+      background: var(--bg);
+      border-top: 18px solid var(--gold);
+      border-bottom: 18px solid var(--teal);
+      box-shadow: 0 18px 45px rgba(0,0,0,0.12);
+      padding: 24px 30px 20px;
+    }
+    .slide-header { margin-bottom: 14px; }
+    .slide-title {
+      font-size: 48px; line-height: 1.04; color: var(--teal);
+      font-weight: 800; letter-spacing: -0.03em; margin: 0 0 8px;
+    }
+    .slide-subtitle { font-size: 20px; line-height: 1.38; margin: 0; max-width: 960px; }
+    .slide-subtitle .strong-bold { font-weight: 900; }
+    .sim-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr 280px;
+      gap: 16px; align-items: start;
+    }
+    .sim-controls { padding: 16px 16px 14px; }
+    .sim-controls h2 {
+      margin: 0 0 10px; font-size: 26px; color: var(--teal-dark);
+      line-height: 1.05; letter-spacing: -0.02em;
+    }
+    .button-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .sample-counter {
+      margin-top: 10px; text-align: center; font-size: 13px;
+      color: var(--muted); font-weight: 600;
+    }
+    .sample-counter span { color: var(--ink); font-weight: 900; font-size: 18px; }
+    .sim-main { padding: 14px 16px; }
+    .sim-header {
+      display: grid; grid-template-columns: 1fr auto;
+      gap: 14px; align-items: start; margin-bottom: 6px;
+    }
+    .sim-title { font-size: 26px; font-weight: 800; color: var(--ink); line-height: 1.1; margin: 0; }
+    .sim-subtitle { font-size: 15px; color: var(--muted); line-height: 1.3; margin-top: 3px; }
+    .viz-shell {
+      background: #f8f8f7; border: 1.5px solid #d8dde1;
+      border-radius: 16px; padding: 6px; margin-top: 8px;
+    }
+    .sim-right { padding: 16px 16px 14px; }
+    .sim-right h2 {
+      margin: 0 0 10px; font-size: 26px; color: var(--teal-dark); line-height: 1.05;
+    }
+    .summary-box {
+      background: #f7f8f8; border: 1.5px solid #dbe0e3;
+      border-radius: 16px; padding: 12px 14px 10px; margin-bottom: 12px;
+    }
+    .summary-box h3 { margin: 0 0 6px; font-size: 18px; color: var(--teal-dark); }
+    .summary-box p { margin: 0; font-size: 15px; line-height: 1.34; }
+    .big-number { font-size: 38px; font-weight: 900; color: var(--ink); line-height: 1; margin: 2px 0 4px; }
+    .big-number.se-blue { color: var(--blue); }
+    .big-number.sd-subtle { font-size: 20px; font-weight: 700; color: var(--muted); }
+    .tiny { font-size: 12px; color: var(--muted); line-height: 1.3; }
+    .formula-card {
+      background: #f2f3f2; border: 1.5px solid #dbe0e3;
+      border-radius: 16px; padding: 10px 12px;
+    }
+    .formula-title { font-size: 14px; font-weight: 800; margin-bottom: 6px; color: var(--teal-dark); }
+    .formula-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .formula-katex { font-size: 16px; line-height: 1.2; }
+    .pop-controls-bar {
+      margin-top: 14px; background: var(--panel-bg);
+      border: 2px solid rgba(45,111,122,0.2); border-radius: 18px;
+      padding: 12px 20px; display: flex; gap: 28px; align-items: center; flex-wrap: wrap;
+    }
+    .pop-controls-bar .pop-label { font-size: 14px; font-weight: 800; color: var(--teal-dark); white-space: nowrap; }
+    .pop-dial { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
+    .pop-dial input[type="range"] { width: 120px; }
+    .pop-dial .pop-val { min-width: 50px; text-align: right; color: var(--ink); font-weight: 800; }
+    .practice-section {
+      width: 1600px; margin: 0 auto 30px;
+      background: var(--bg);
+      border-top: 8px solid var(--teal);
+      box-shadow: 0 12px 35px rgba(0,0,0,0.10);
+      padding: 24px 30px 28px;
+    }
+    .practice-header { margin-bottom: 18px; }
+    .practice-title {
+      font-size: 34px; font-weight: 800; color: var(--teal);
+      letter-spacing: -0.02em; margin-bottom: 4px;
+    }
+    .practice-subtitle { font-size: 16px; color: var(--muted); line-height: 1.4; }
+    .practice-subtitle strong { color: var(--teal-dark); }
+    .question-row {
+      background: white; border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      padding: 20px 24px; margin-bottom: 18px;
+    }
+    .question-header {
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .question-label {
+      display: inline-block;
+      font-size: 12px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.06em; padding: 4px 10px; border-radius: 6px;
+      color: white; margin-bottom: 8px;
+      opacity: 0; transform: translateY(-4px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .question-label.visible {
+      opacity: 1; transform: translateY(0);
+    }
+    .ql-residual { background: var(--red); }
+    .ql-range { background: var(--blue); }
+    .ql-size { background: #27ae60; }
+    .question-text {
+      display: block;
+      font-size: 22px; font-weight: 700; color: var(--ink);
+    }
+    .compare-grid {
+      display: grid; grid-template-columns: 1fr 60px 1fr; gap: 0; align-items: start;
+    }
+    .compare-side {
+      border: 3px solid #e0e0d8; border-radius: 12px; overflow: hidden;
+      cursor: pointer; transition: all 0.2s; position: relative;
+    }
+    .compare-side:hover { border-color: #aaa; }
+    .compare-side.picked { border-color: var(--teal); background: #f0fafa; }
+    .compare-side.correct { border-color: #27ae60; }
+    .compare-side.wrong { border-color: var(--red); }
+    .compare-side.was-answer { border-color: #27ae60; border-style: dashed; }
+    .side-header {
+      padding: 10px 14px 6px;
+      display: flex; justify-content: space-between; align-items: baseline;
+    }
+    .side-label { font-size: 16px; font-weight: 800; color: var(--teal-dark); }
+    .side-params { font-size: 12px; color: var(--muted); }
+    .side-params strong { color: var(--ink); }
+    .side-canvas-wrap { padding: 0 8px 8px; }
+    canvas.cmp-canvas { display: block; width: 100%; height: 260px; }
+    .side-footer {
+      padding: 6px 14px 10px; font-size: 13px; color: var(--muted); text-align: center;
+      border-top: 1px solid #eee;
+    }
+    .side-footer .slope-val { font-weight: 800; color: var(--red); }
+    .side-footer .se-val { font-weight: 800; color: var(--blue); display: none; }
+    .compare-side.revealed .side-footer .se-val { display: inline; }
+    .vs-divider {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 900; color: #ccc;
+    }
+    .question-actions {
+      display: flex; align-items: center; gap: 14px; margin-top: 14px;
+      min-height: 44px;
+    }
+    .pick-prompt {
+      font-size: 14px; color: var(--muted); font-style: italic;
+    }
+    .result-msg {
+      font-size: 14px; line-height: 1.5; padding: 10px 14px; border-radius: 8px; flex: 1;
+    }
+    .result-msg.correct-msg { background: #e8f8e8; border-left: 4px solid #27ae60; color: #1a5a2e; }
+    .result-msg.wrong-msg { background: #fde8e8; border-left: 4px solid var(--red); color: #6a1a1a; }
+    .result-msg strong { color: var(--teal-dark); }
+    .reveal-badge {
+      position: absolute; top: 8px; right: 8px;
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700; color: white;
+    }
+    .rb-correct { background: #27ae60; }
+    .rb-wrong { background: var(--red); }
+  </style>
+</head>
+<body>
+<div class="gold-bar"></div>
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-title">What Affects the Precision of the Slope Estimate?</div>
+    <p class="slide-subtitle">
+      Click <span class="strong-bold">Draw New Sample</span> repeatedly and watch the slope change.
+      The <span class="strong-bold">standard error</span> measures how much it varies across samples.
+    </p>
+  </div>
+  <div class="sim-layout">
+    <!-- LEFT CONTROLS -->
+    <aside class="sim-panel sim-controls">
+      <h2>Simulation Dials</h2>
+      <div class="control-group">
+        <div class="control-top">
+          <div class="control-label">Sample size</div>
+          <div class="control-value" id="nValue">12 points</div>
+        </div>
+        <div class="control-note">Small samples let a few points tug the line around.</div>
+        <input id="nSlider" type="range" min="4" max="40" value="12" />
+      </div>
+      <div class="control-group">
+        <div class="control-top">
+          <div class="control-label">Range of x values</div>
+          <div class="control-value" id="rangeValue">Wide</div>
+        </div>
+        <div class="control-note">Think of it like a seesaw: the further apart the anchor points, the harder it is to tilt.</div>
+        <input id="rangeSlider" type="range" min="15" max="95" value="78" />
+      </div>
+      <div class="control-group">
+        <div class="control-top">
+          <div class="control-label">Fit around the line</div>
+          <div class="control-value" id="noiseValue">Tighter</div>
+        </div>
+        <div class="control-note">This changes the population itself, not just the sample.</div>
+        <input id="noiseSlider" type="range" min="5" max="55" value="20" />
+      </div>
+      <div class="button-row">
+        <button id="rerollBtn">Draw New Sample</button>
+        <button class="secondary" id="clearBtn">Clear</button>
+      </div>
+      <div class="button-row">
+        <button class="secondary" id="toggleBtn">Hide Population</button>
+      </div>
+      <div class="sample-counter">
+        Samples drawn: <span id="sampleCount">0</span>
+      </div>
+    </aside>
+    <!-- CENTER PLOT -->
+    <main class="sim-panel sim-main">
+      <div class="sim-header">
+        <div>
+          <div class="sim-title">Build Up the Sampling Distribution</div>
+          <div class="sim-subtitle">Each click draws one new sample. Previous slopes fade to ghosts.</div>
+        </div>
+      </div>
+      <div class="viz-shell">
+        <svg id="simSvg" viewBox="0 0 860 520"></svg>
+      </div>
+      <div class="legend-row">
+        <span class="legend-chip"><span class="swatch sw-point"></span> sample</span>
+        <span class="legend-chip"><span class="swatch sw-red"></span> fitted line</span>
+        <span class="legend-chip"><span class="swatch sw-ghost"></span> previous slopes</span>
+        <span class="legend-chip"><span class="swatch sw-true"></span> true slope</span>
+        <span class="legend-chip"><span class="swatch sw-pop"></span> population</span>
+      </div>
+    </main>
+    <!-- RIGHT READOUT -->
+    <aside class="sim-panel sim-right">
+      <h2>Read the Numbers</h2>
+      <div class="summary-box">
+        <h3>Current sample slope</h3>
+        <div class="big-number" style="color:var(--red);" id="slopeDisplay">--</div>
+        <div class="tiny">True slope: <span id="trueSlopeReadout">0.072</span></div>
+      </div>
+      <div class="summary-box">
+        <h3>Estimated SE of slope</h3>
+        <div class="big-number se-blue" id="seDisplay">--</div>
+      </div>
+      <div class="summary-box">
+        <h3>Observed SD of slopes</h3>
+        <div class="big-number sd-subtle" id="sdDisplay">--</div>
+        <div class="tiny">Across <span id="sdCount">0</span> samples &nbsp;|&nbsp; True SE: <strong id="trueSEDisplay">--</strong></div>
+      </div>
+      <div class="formula-card">
+        <div class="formula-title">The Formula</div>
+        <div class="formula-row"><div class="formula-katex" id="formulaMain"></div></div>
+        <div class="formula-row" style="margin-bottom:0;"><div class="formula-katex" id="formulaSe"></div></div>
+      </div>
+    </aside>
+  </div>
+  <!-- POPULATION PARAMETERS -->
+  <div class="pop-controls-bar">
+    <div class="pop-label">Population Parameters</div>
+    <div class="pop-dial">
+      True slope:
+      <input id="trueSlopeSlider" type="range" min="0" max="15" step="1" value="7" />
+      <div class="pop-val" id="trueSlopeVal">0.070</div>
+    </div>
+    <div class="pop-dial">
+      Intercept:
+      <input id="trueIntSlider" type="range" min="5" max="40" step="1" value="12" />
+      <div class="pop-val" id="trueIntVal">1.20</div>
+    </div>
+  </div>
+</div>
+<!-- SECTION 2: PRACTICE -->
+<div class="practice-section">
+  <div class="practice-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+    <div>
+      <div class="practice-title">Test Your Intuition</div>
+      <p class="practice-subtitle">
+        For each pair, click the sample you think has the <strong>greater estimated SE of the slope</strong>.
+      </p>
+    </div>
+    <button class="secondary" onclick="pqRegenerate()" style="flex-shrink:0;margin-top:6px;">New Questions</button>
+  </div>
+  <div id="pqContainer"></div>
+</div>
+<script>
+// ================================================================
+//  SHARED MATH CORE
+// ================================================================
+function randn() {
+  let u=0,v=0;
+  while(!u) u=Math.random();
+  while(!v) v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+function randnWith(rng) {
+  let u=0,v=0;
+  while(u===0) u=rng();
+  while(v===0) v=rng();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+function mulberry32(a) {
+  return function() {
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t^t>>>15,t|1);
+    t ^= t+Math.imul(t^t>>>7,t|61);
+    return ((t^t>>>14)>>>0)/4294967296;
+  };
+}
+function linReg(pts) {
+  const n=pts.length; let sx=0,sy=0,sxx=0,sxy=0;
+  for(const p of pts){sx+=p.x;sy+=p.y;sxx+=p.x*p.x;sxy+=p.x*p.y;}
+  const d=n*sxx-sx*sx;
+  const b1=d?((n*sxy-sx*sy)/d):0;
+  const b0=(sy-b1*sx)/n;
+  let sse=0; for(const p of pts){const r=p.y-(b0+b1*p.x);sse+=r*r;}
+  const se_r=n>2?Math.sqrt(sse/(n-2)):1;
+  const xbar=sx/n;
+  let ssxx=0; for(const p of pts) ssxx+=(p.x-xbar)**2;
+  return {b0,b1,se_resid:se_r,se_slope:se_r/Math.sqrt(ssxx||1),xbar,ssxx};
+}
+function genPts(n,xMin,xMax,spread,slope,intercept) {
+  slope = slope !== undefined ? slope : 0.4;
+  intercept = intercept !== undefined ? intercept : 1.0;
+  const pts=[];
+  for(let i=0;i<n;i++){
+    const x=xMin+Math.random()*(xMax-xMin);
+    pts.push({x, y: intercept + slope*x + randn()*spread});
+  }
+  return pts;
+}
+function theoreticalSE(pts, trueSpread) {
+  const n=pts.length; let sx=0;
+  for(const p of pts) sx+=p.x;
+  const xbar=sx/n;
+  let ssxx=0; for(const p of pts) ssxx+=(p.x-xbar)**2;
+  return trueSpread/Math.sqrt(ssxx||1);
+}
+function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+const DPR = window.devicePixelRatio||1;
+function el(id){return document.getElementById(id);}
+// ================================================================
+//  SECTION 1: MAIN SIMULATION
+// ================================================================
+const sim = {
+  noise: 20, xRange: 78, n: 12,
+  trueSlope: 0.072, trueInt: 1.2,
+  showPop: true, history: [],
+  currentSample: null, currentFit: null,
+};
+let popCache=null, popCacheKey='', globalSeed=Math.floor(Math.random()*100000);
+const P={left:68,right:780,top:32,bottom:460,width:712,height:428};
+const xDom=[0,100];
+function simYDomain() {
+  const yA=sim.trueInt+sim.trueSlope*0, yB=sim.trueInt+sim.trueSlope*100;
+  const sigma=sim.noise/10;
+  const lo=Math.min(yA,yB)-sigma*3.5, hi=Math.max(yA,yB)+sigma*3.5;
+  const pad=(hi-lo)*0.08;
+  const nlo=Math.floor((lo-pad)*2)/2, nhi=Math.ceil((hi+pad)*2)/2;
+  return [Math.min(nlo,-0.5), Math.max(nhi,nlo+2)];
+}
+function simXToPx(x){return P.left+((x-xDom[0])/(xDom[1]-xDom[0]))*P.width;}
+function simYToPx(y){const yd=simYDomain();return P.bottom-((y-yd[0])/(yd[1]-yd[0]))*P.height;}
+function simDrawOneSample() {
+  const rng=mulberry32(globalSeed++);
+  const center=50, half=sim.xRange/2;
+  const xMin=center-half, xMax=center+half;
+  // Filter population to points within the current x-range
+  const pop=simGetPop();
+  const eligible=pop.filter(p=>p.x>=xMin&&p.x<=xMax);
+  // Shuffle eligible and pick n (Fisher-Yates on a copy of indices)
+  const idxs=eligible.map((_,i)=>i);
+  for(let i=idxs.length-1;i>0;i--){
+    const j=Math.floor(rng()*(i+1));
+    [idxs[i],idxs[j]]=[idxs[j],idxs[i]];
+  }
+  const pick=Math.min(sim.n,idxs.length);
+  const xs=[],ys=[];
+  for(let i=0;i<pick;i++){
+    const p=eligible[idxs[i]];
+    xs.push(p.x);ys.push(p.y);
+  }
+  return {xs,ys};
+}
+function simFitOLS(xs,ys) {
+  const n=xs.length;
+  const xbar=xs.reduce((a,b)=>a+b,0)/n;
+  const ybar=ys.reduce((a,b)=>a+b,0)/n;
+  let sxx=0,sxy=0;
+  for(let i=0;i<n;i++){sxx+=(xs[i]-xbar)**2;sxy+=(xs[i]-xbar)*(ys[i]-ybar);}
+  const slope=sxy/(sxx||1), intercept=ybar-slope*xbar;
+  let sse=0;for(let i=0;i<n;i++)sse+=(ys[i]-(intercept+slope*xs[i]))**2;
+  const seResid=Math.sqrt(sse/Math.max(1,n-2));
+  return {slope,intercept,seSlope:seResid/Math.sqrt(sxx||1),seResid,sxx};
+}
+function simGetPop() {
+  const key=`${sim.trueSlope}_${sim.trueInt}_${sim.noise}`;
+  if(popCacheKey===key&&popCache)return popCache;
+  const rng=mulberry32(99917),pts=[],sigma=sim.noise/10;
+  for(let i=0;i<2000;i++){
+    const x=rng()*100;
+    pts.push({x, y:sim.trueInt+sim.trueSlope*x+randnWith(rng)*sigma});
+  }
+  popCache=pts;popCacheKey=key;return pts;
+}
+function simMakeLinePath(slope,intercept) {
+  return `M ${simXToPx(-5)} ${simYToPx(intercept+slope*-5)} L ${simXToPx(105)} ${simYToPx(intercept+slope*105)}`;
+}
+function labelNoise(v){return v<15?'Very tight':v<25?'Tighter':v<38?'Moderate':'Noisy';}
+function labelRange(v){return v<30?'Very narrow':v<50?'Narrow':v<75?'Moderate':'Wide';}
+function simRender() {
+  el('noiseValue').textContent=labelNoise(sim.noise);
+  el('rangeValue').textContent=labelRange(sim.xRange);
+  el('nValue').textContent=`${sim.n} points`;
+  el('trueSlopeReadout').textContent=sim.trueSlope.toFixed(3);
+  const svg=el('simSvg');
+  const yd=simYDomain();
+  const ySpan=yd[1]-yd[0];
+  const yStep=ySpan<=4?0.5:ySpan<=8?1:ySpan<=16?2:5;
+  let html=`<defs><clipPath id="plotClip"><rect x="${P.left}" y="${P.top}" width="${P.width}" height="${P.height}"/></clipPath></defs>`;
+  // Grid
+  for(let y=Math.ceil(yd[0]/yStep)*yStep;y<=yd[1];y+=yStep)
+    html+=`<line stroke="#e1e5e8" stroke-width="1" stroke-dasharray="4 6" x1="${P.left}" y1="${simYToPx(y)}" x2="${P.right}" y2="${simYToPx(y)}"/>`;
+  for(let x=0;x<=100;x+=20)
+    html+=`<line stroke="#e1e5e8" stroke-width="1" stroke-dasharray="4 6" x1="${simXToPx(x)}" y1="${P.top}" x2="${simXToPx(x)}" y2="${P.bottom}"/>`;
+  html+=`<line stroke="#8a939a" stroke-width="1.8" x1="${P.left}" y1="${P.bottom}" x2="${P.right}" y2="${P.bottom}"/>`;
+  html+=`<line stroke="#8a939a" stroke-width="1.8" x1="${P.left}" y1="${P.top}" x2="${P.left}" y2="${P.bottom}"/>`;
+  for(let x=0;x<=100;x+=20)
+    html+=`<text font-size="12" fill="#64707a" font-weight="700" x="${simXToPx(x)}" y="${P.bottom+22}" text-anchor="middle">${x}</text>`;
+  for(let y=Math.ceil(yd[0]/yStep)*yStep;y<=yd[1];y+=yStep){
+    const lb=Number.isInteger(y)?y.toString():y.toFixed(1);
+    html+=`<text font-size="12" fill="#64707a" font-weight="700" x="${P.left-12}" y="${simYToPx(y)+4}" text-anchor="end">${lb}</text>`;
+  }
+  // X range band (no text label)
+  const center=50,xMin=center-sim.xRange/2,xMax=center+sim.xRange/2;
+  html+=`<rect fill="rgba(232,199,106,0.18)" x="${simXToPx(xMin)}" y="${P.top}" width="${simXToPx(xMax)-simXToPx(xMin)}" height="${P.bottom-P.top}" rx="8"/>`;
+  html+=`<g clip-path="url(#plotClip)">`;
+  // Population cloud
+  if(sim.showPop){const pop=simGetPop();for(const p of pop)html+=`<circle cx="${simXToPx(p.x)}" cy="${simYToPx(p.y)}" r="3.2" fill="rgba(45,111,122,0.18)"/>`;}
+  // True line
+  html+=`<path d="${simMakeLinePath(sim.trueSlope,sim.trueInt)}" stroke="rgba(45,111,122,0.6)" stroke-width="2.2" stroke-dasharray="7 6" fill="none"/>`;
+  // Ghost lines
+  const fadeStart=Math.max(0,sim.history.length-60);
+  for(let i=fadeStart;i<sim.history.length;i++){
+    const h=sim.history[i],age=sim.history.length-1-i;
+    const op=Math.max(0.06,0.35*Math.pow(0.96,age));
+    html+=`<path d="${simMakeLinePath(h.slope,h.intercept)}" stroke="rgba(45,111,122,${op.toFixed(3)})" stroke-width="2.2" fill="none"/>`;
+  }
+  if(sim.currentFit)html+=`<path d="${simMakeLinePath(sim.currentFit.slope,sim.currentFit.intercept)}" stroke="var(--red)" stroke-width="3.5" fill="none"/>`;
+  if(sim.currentSample){
+    for(let i=0;i<sim.currentSample.xs.length;i++){
+      const cx=simXToPx(sim.currentSample.xs[i]),cy=simYToPx(sim.currentSample.ys[i]);
+      html+=`<circle cx="${cx}" cy="${cy}" r="5.5" fill="var(--teal)" opacity="0.92"/>`;
+      html+=`<circle cx="${cx}" cy="${cy}" r="5.5" fill="none" stroke="white" stroke-width="1.5"/>`;
+    }
+  }
+  html+=`</g>`;
+  svg.innerHTML=html;
+  // Right panel
+  if(sim.currentFit){
+    el('slopeDisplay').textContent=sim.currentFit.slope.toFixed(4);
+    el('seDisplay').textContent=sim.currentFit.seSlope.toFixed(4);
+  }
+  const allSlopes=sim.history.map(h=>h.slope);
+  if(sim.currentFit)allSlopes.push(sim.currentFit.slope);
+  if(allSlopes.length>=2){
+    const mean=allSlopes.reduce((a,b)=>a+b,0)/allSlopes.length;
+    const variance=allSlopes.reduce((a,s)=>a+(s-mean)**2,0)/(allSlopes.length-1);
+    el('sdDisplay').textContent=Math.sqrt(variance).toFixed(4);
+  } else el('sdDisplay').textContent='--';
+  el('sdCount').textContent=allSlopes.length;
+  el('sampleCount').textContent=allSlopes.length;
+  const sigma=sim.noise/10;
+  const trueSE=sigma*Math.sqrt(12)/(sim.xRange*Math.sqrt(Math.max(1,sim.n-1)));
+  el('trueSEDisplay').textContent=trueSE.toFixed(4);
+}
+function simDrawNew(){
+  if(sim.currentFit)sim.history.push({slope:sim.currentFit.slope,intercept:sim.currentFit.intercept});
+  const s=simDrawOneSample();sim.currentSample=s;sim.currentFit=simFitOLS(s.xs,s.ys);simRender();
+}
+function simClear(){
+  sim.noise=20;sim.xRange=78;sim.n=12;sim.trueSlope=0.070;sim.trueInt=1.2;
+  sim.history=[];sim.currentSample=null;sim.currentFit=null;popCache=null;
+  el('noiseSlider').value=20;el('rangeSlider').value=78;el('nSlider').value=12;
+  el('trueSlopeSlider').value=7;el('trueIntSlider').value=12;
+  el('trueSlopeVal').textContent='0.070';el('trueIntVal').textContent='1.20';
+  el('slopeDisplay').textContent='--';el('seDisplay').textContent='--';el('sdDisplay').textContent='--';
+  simRender();
+}
+function simSliderClear(){sim.history=[];sim.currentSample=null;sim.currentFit=null;
+  el('slopeDisplay').textContent='--';el('seDisplay').textContent='--';el('sdDisplay').textContent='--';simRender();}
+el('noiseSlider').addEventListener('input',e=>{sim.noise=+e.target.value;popCache=null;simSliderClear();});
+el('rangeSlider').addEventListener('input',e=>{sim.xRange=+e.target.value;simSliderClear();});
+el('nSlider').addEventListener('input',e=>{sim.n=+e.target.value;simSliderClear();});
+el('rerollBtn').addEventListener('click',simDrawNew);
+el('clearBtn').addEventListener('click',simClear);
+el('toggleBtn').addEventListener('click',()=>{
+  sim.showPop=!sim.showPop;el('toggleBtn').textContent=sim.showPop?'Hide Population':'Show Population';simRender();
+});
+el('trueSlopeSlider').addEventListener('input',e=>{
+  sim.trueSlope=+e.target.value/100;el('trueSlopeVal').textContent=sim.trueSlope.toFixed(3);popCache=null;simSliderClear();
+});
+el('trueIntSlider').addEventListener('input',e=>{
+  sim.trueInt=+e.target.value/10;el('trueIntVal').textContent=sim.trueInt.toFixed(2);popCache=null;simSliderClear();
+});
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&e.target===document.body){e.preventDefault();simDrawNew();}});
+// ================================================================
+//  SECTION 2: DYNAMIC COMPARISON QUESTIONS
+// ================================================================
+const PQ_SLOPE = 0.4, PQ_INT = 1.0, PQ_RESAMPLE = 35;
+function pqMakeQuestionDefs() {
+  const baseN = 10 + Math.floor(Math.random() * 20);
+  const tightSpread = 0.2 + Math.random() * 0.4;
+  const looseSpread = 1.8 + Math.random() * 1.5;
+  const rangeN = 10 + Math.floor(Math.random() * 15);
+  const rangeSpread = 0.6 + Math.random() * 0.8;
+  const narrowW = 2 + Math.random() * 2;
+  const narrowCenter = 8 + Math.random() * 4;
+  const smallN = 4 + Math.floor(Math.random() * 4);
+  const largeN = 30 + Math.floor(Math.random() * 30);
+  const sizeSpread = 0.6 + Math.random() * 1.0;
+  const flipQ0 = Math.random() < 0.5;
+  const flipQ1 = Math.random() < 0.5;
+  const flipQ2 = Math.random() < 0.5;
+  return [
+    {
+      factor: 'residual', factorLabel: 'Residual Spread', factorClass: 'ql-residual',
+      a: flipQ0 ? { n:baseN, xMin:2, xMax:18, spread:looseSpread } : { n:baseN, xMin:2, xMax:18, spread:tightSpread },
+      b: flipQ0 ? { n:baseN, xMin:2, xMax:18, spread:tightSpread } : { n:baseN, xMin:2, xMax:18, spread:looseSpread },
+      answer: flipQ0 ? 'a' : 'b',
+      explain: 'This reflects the population, not your sampling choices. In a population where y-values hug the trend closely, most samples will produce similar slopes. In a population with wide scatter, the data leave room for many plausible slopes, so each sample\'s estimate lands somewhere different.',
+    },
+    {
+      factor: 'range', factorLabel: 'Range of X', factorClass: 'ql-range',
+      a: flipQ1 ? { n:rangeN, xMin:2, xMax:18, spread:rangeSpread } : { n:rangeN, xMin:narrowCenter-narrowW/2, xMax:narrowCenter+narrowW/2, spread:rangeSpread },
+      b: flipQ1 ? { n:rangeN, xMin:narrowCenter-narrowW/2, xMax:narrowCenter+narrowW/2, spread:rangeSpread } : { n:rangeN, xMin:2, xMax:18, spread:rangeSpread },
+      answer: flipQ1 ? 'b' : 'a',
+      explain: 'A narrow x-range keeps &Sigma;(x<sub>i</sub> &minus; x&#x0304;)&sup2; small, so the line pivots freely. A wide range pins the slope down.',
+    },
+    {
+      factor: 'size', factorLabel: 'Sample Size', factorClass: 'ql-size',
+      a: flipQ2 ? { n:largeN, xMin:2, xMax:18, spread:sizeSpread } : { n:smallN, xMin:2, xMax:18, spread:sizeSpread },
+      b: flipQ2 ? { n:smallN, xMin:2, xMax:18, spread:sizeSpread } : { n:largeN, xMin:2, xMax:18, spread:sizeSpread },
+      answer: flipQ2 ? 'b' : 'a',
+      explain: 'Fewer points means fewer terms in &Sigma;(x<sub>i</sub> &minus; x&#x0304;)&sup2;, so a few unlucky draws can tilt the line dramatically.',
+    },
+  ];
+}
+let currentQDefs = [];
+let pqData = [];
+function pqBuildHTML() {
+  const indices = [0, 1, 2];
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  let html = '';
+  for (let displayIdx = 0; displayIdx < 3; displayIdx++) {
+    const q = indices[displayIdx];
+    const def = currentQDefs[q];
+    const paramDescA = `n=<strong>${def.a.n}</strong>, x: <strong>${def.a.xMin.toFixed(0)}&ndash;${def.a.xMax.toFixed(0)}</strong>`;
+    const paramDescB = `n=<strong>${def.b.n}</strong>, x: <strong>${def.b.xMin.toFixed(0)}&ndash;${def.b.xMax.toFixed(0)}</strong>`;
+    html += `
+    <div class="question-row" id="q${q}">
+      <div class="question-header">
+        <span class="question-label ${def.factorClass}" id="q${q}label">${def.factorLabel}</span>
+        <span class="question-text">Which has the greater estimated standard error?</span>
+      </div>
+      <div class="compare-grid">
+        <div class="compare-side" id="q${q}a" onclick="pqPick(${q},'a')">
+          <div class="side-header">
+            <span class="side-label">Sample A</span>
+            <span class="side-params">${paramDescA}</span>
+          </div>
+          <div class="side-canvas-wrap"><canvas class="cmp-canvas" id="cmpC${q}a"></canvas></div>
+          <div class="side-footer">Slope: <span class="slope-val" id="q${q}a-slope">...</span>&nbsp;&nbsp;<span class="se-val" id="q${q}a-se"></span></div>
+        </div>
+        <div class="vs-divider">vs</div>
+        <div class="compare-side" id="q${q}b" onclick="pqPick(${q},'b')">
+          <div class="side-header">
+            <span class="side-label">Sample B</span>
+            <span class="side-params">${paramDescB}</span>
+          </div>
+          <div class="side-canvas-wrap"><canvas class="cmp-canvas" id="cmpC${q}b"></canvas></div>
+          <div class="side-footer">Slope: <span class="slope-val" id="q${q}b-slope">...</span>&nbsp;&nbsp;<span class="se-val" id="q${q}b-se"></span></div>
+        </div>
+      </div>
+      <div class="question-actions" id="q${q}actions">
+        <div class="pick-prompt">Click the sample you think has the greater estimated SE.</div>
+      </div>
+    </div>`;
+  }
+  el('pqContainer').innerHTML = html;
+}
+function pqGenAll() {
+  currentQDefs = pqMakeQuestionDefs();
+  pqData = [];
+  pqBuildHTML();
+  for (let q = 0; q < currentQDefs.length; q++) {
+    const def = currentQDefs[q];
+    const sampleA = genPts(def.a.n, def.a.xMin, def.a.xMax, def.a.spread, PQ_SLOPE, PQ_INT);
+    const sampleB = genPts(def.b.n, def.b.xMin, def.b.xMax, def.b.spread, PQ_SLOPE, PQ_INT);
+    const regA = linReg(sampleA), regB = linReg(sampleB);
+    const linesA = [], linesB = [];
+    for (let i = 0; i < PQ_RESAMPLE; i++) {
+      linesA.push(linReg(genPts(def.a.n, def.a.xMin, def.a.xMax, def.a.spread, PQ_SLOPE, PQ_INT)));
+      linesB.push(linReg(genPts(def.b.n, def.b.xMin, def.b.xMax, def.b.spread, PQ_SLOPE, PQ_INT)));
+    }
+    const popA = genPts(200, def.a.xMin, def.a.xMax, def.a.spread, PQ_SLOPE, PQ_INT);
+    const popB = genPts(200, def.b.xMin, def.b.xMax, def.b.spread, PQ_SLOPE, PQ_INT);
+    pqData[q] = {
+      sampleA, sampleB, regA, regB, linesA, linesB, popA, popB,
+      picked: null, revealed: false,
+      seA: theoreticalSE(sampleA, def.a.spread),
+      seB: theoreticalSE(sampleB, def.b.spread),
+    };
+  }
+}
+function pqDrawSide(canvasId, opts) {
+  const c = el(canvasId); if (!c) return;
+  const r = c.getBoundingClientRect(); if (!r.width) return;
+  c.width = r.width * DPR; c.height = r.height * DPR;
+  const ctx = c.getContext('2d'); ctx.scale(DPR, DPR);
+  const w = r.width, h = r.height;
+  const M = { top:16, right:16, bottom:32, left:42 };
+  const pw = w-M.left-M.right, ph = h-M.top-M.bottom;
+  const xMin=-1, xMax=21, yMin=-3, yMax=13;
+  const toX = x => M.left+(x-xMin)/(xMax-xMin)*pw;
+  const toY = y => M.top+(1-(y-yMin)/(yMax-yMin))*ph;
+  ctx.fillStyle='#fafaf8'; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='#e8e8e0'; ctx.lineWidth=0.5;
+  for(let x=0;x<=20;x+=4){ctx.beginPath();ctx.moveTo(toX(x),M.top);ctx.lineTo(toX(x),M.top+ph);ctx.stroke();}
+  for(let y=0;y<=12;y+=2){ctx.beginPath();ctx.moveTo(M.left,toY(y));ctx.lineTo(M.left+pw,toY(y));ctx.stroke();}
+  ctx.strokeStyle='#bbb'; ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(M.left,M.top);ctx.lineTo(M.left,M.top+ph);ctx.lineTo(M.left+pw,M.top+ph);ctx.stroke();
+  ctx.fillStyle='#aaa'; ctx.font='10px Inter,sans-serif'; ctx.textAlign='center';
+  for(let x=0;x<=20;x+=4)ctx.fillText(x,toX(x),M.top+ph+14);
+  ctx.textAlign='right';
+  for(let y=0;y<=12;y+=4)ctx.fillText(y,M.left-6,toY(y)+3);
+  ctx.save(); ctx.beginPath(); ctx.rect(M.left,M.top,pw,ph); ctx.clip();
+  if(opts.pop){for(const pt of opts.pop){ctx.fillStyle='rgba(45,111,122,0.15)';ctx.beginPath();ctx.arc(toX(pt.x),toY(pt.y),2.5,0,Math.PI*2);ctx.fill();}}
+  if(opts.showTrue){ctx.strokeStyle='rgba(45,111,122,0.5)';ctx.lineWidth=2;ctx.setLineDash([7,5]);ctx.beginPath();ctx.moveTo(toX(xMin),toY(PQ_INT+PQ_SLOPE*xMin));ctx.lineTo(toX(xMax),toY(PQ_INT+PQ_SLOPE*xMax));ctx.stroke();ctx.setLineDash([]);}
+  if(opts.ghostLines){for(const ln of opts.ghostLines){ctx.strokeStyle='rgba(70,130,180,0.16)';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(toX(xMin),toY(ln.b0+ln.b1*xMin));ctx.lineTo(toX(xMax),toY(ln.b0+ln.b1*xMax));ctx.stroke();}}
+  if(opts.reg){ctx.strokeStyle='#c83b3b';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(toX(xMin),toY(opts.reg.b0+opts.reg.b1*xMin));ctx.lineTo(toX(xMax),toY(opts.reg.b0+opts.reg.b1*xMax));ctx.stroke();}
+  ctx.restore();
+  if(opts.pts){for(const pt of opts.pts){const cx=toX(pt.x),cy=toY(pt.y);ctx.fillStyle='#1a5c5a';ctx.beginPath();ctx.arc(cx,cy,4.5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='white';ctx.lineWidth=1.2;ctx.stroke();}}
+}
+function pqRenderAll() {
+  for (let q = 0; q < currentQDefs.length; q++) {
+    const d = pqData[q]; if (!d) continue;
+    const rev = d.revealed;
+    pqDrawSide(`cmpC${q}a`,{pts:d.sampleA,reg:d.regA,ghostLines:rev?d.linesA:null,pop:rev?d.popA:null,showTrue:rev});
+    pqDrawSide(`cmpC${q}b`,{pts:d.sampleB,reg:d.regB,ghostLines:rev?d.linesB:null,pop:rev?d.popB:null,showTrue:rev});
+    const sA=el(`q${q}a-slope`),sB=el(`q${q}b-slope`);
+    if(sA)sA.textContent=d.regA.b1.toFixed(3);
+    if(sB)sB.textContent=d.regB.b1.toFixed(3);
+    if(rev){const eA=el(`q${q}a-se`),eB=el(`q${q}b-se`);if(eA)eA.textContent=`SE = ${d.seA.toFixed(3)}`;if(eB)eB.textContent=`SE = ${d.seB.toFixed(3)}`;}
+  }
+}
+function pqPick(q, side) {
+  const d = pqData[q]; if(!d||d.revealed) return;
+  d.picked=side; d.revealed=true;
+  const def=currentQDefs[q];
+  const isCorrect=(side===def.answer);
+  const sideA=el(`q${q}a`),sideB=el(`q${q}b`);
+  sideA.style.cursor='default'; sideB.style.cursor='default';
+  const correctEl=def.answer==='a'?sideA:sideB;
+  const pickedEl=side==='a'?sideA:sideB;
+  correctEl.classList.add('correct');
+  if(!isCorrect){pickedEl.classList.add('wrong');correctEl.insertAdjacentHTML('beforeend','<div class="reveal-badge rb-correct">&#10003;</div>');pickedEl.insertAdjacentHTML('beforeend','<div class="reveal-badge rb-wrong">&#10007;</div>');}
+  else{correctEl.insertAdjacentHTML('beforeend','<div class="reveal-badge rb-correct">&#10003;</div>');}
+  sideA.classList.add('revealed'); sideB.classList.add('revealed');
+  const labelEl=el(`q${q}label`); if(labelEl) labelEl.classList.add('visible');
+  const cls=isCorrect?'correct-msg':'wrong-msg';
+  const icon=isCorrect?'&#10003; Correct!':'&#10007; Not quite.';
+  el(`q${q}actions`).innerHTML=`
+    <div class="result-msg ${cls}">
+      <strong>${icon}</strong> Sample ${def.answer.toUpperCase()} has the greater estimated SE (${(def.answer==='a'?d.seA:d.seB).toFixed(3)} vs ${(def.answer==='a'?d.seB:d.seA).toFixed(3)}).
+      The key factor: <strong>${def.factorLabel.toLowerCase()}</strong>. ${def.explain}
+    </div>`;
+  pqRenderAll();
+}
+function pqRegenerate() {
+  pqGenAll();
+  requestAnimationFrame(pqRenderAll);
+}
+// ================================================================
+//  INIT
+// ================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  katex.render(String.raw`SE_{\hat{\beta}_1} = \frac{s_e}{\sqrt{\sum_{i=1}^{n}(x_i - \bar{x})^2}}`, el('formulaMain'), {displayMode:true, throwOnError:false});
+  katex.render(String.raw`\text{where}\quad s_e = \sqrt{\frac{\sum(y_i - \hat{y}_i)^2}{n - 2}}`, el('formulaSe'), {displayMode:true, throwOnError:false});
+  simRender();
+  pqGenAll();
+  pqRenderAll();
+});
+window.addEventListener('resize', () => { simRender(); pqRenderAll(); });
+</script>
+</body>
+</html>

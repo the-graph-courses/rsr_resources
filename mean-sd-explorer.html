@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mean & SD Explorer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+    background: #fafaf9;
+    color: #1c1917;
+    padding: 24px 20px;
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: 960px; margin: 0 auto; }
+
+  h1 {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+  h1 .red { color: #dc2626; }
+  h1 .blue { color: #3b82f6; }
+
+  .hint {
+    text-align: center;
+    font-size: 15px;
+    color: #a8a29e;
+    margin-bottom: 16px;
+  }
+
+  .canvas-wrap {
+    background: #fff;
+    border: 2px solid #e7e5e4;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: crosshair;
+  }
+
+  canvas { display: block; width: 100%; height: auto; }
+
+  .stats {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 18px;
+    color: #78716c;
+    min-height: 24px;
+  }
+
+  .bottom-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .tiny-btn {
+    padding: 5px 12px;
+    border: 1px solid #d6d3d1;
+    border-radius: 5px;
+    background: #fff;
+    color: #78716c;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .tiny-btn:hover { background: #f5f5f4; }
+  .tiny-btn.danger { color: #ef4444; border-color: #fecaca; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><span class="red">Mean</span> & <span class="blue">SD</span> Explorer</h1>
+  <p class="hint">Click anywhere to add points. Drag to move. Right-click to remove.</p>
+
+  <div class="canvas-wrap">
+    <canvas id="c" width="1800" height="1000"></canvas>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="bottom-row">
+    <button class="tiny-btn" id="btn-uniform">20 uniform</button>
+    <button class="tiny-btn" id="btn-normal">20 normal</button>
+    <button class="tiny-btn danger" id="btn-clear">clear</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = canvas.width;
+const H = canvas.height;
+const PAD_L = 100;
+const PAD_R = 100;
+const PAD_TOP = 220;
+const LINE_Y = H - 140;
+const DOT_R = 18;
+const AXIS_MIN = 0;
+const AXIS_MAX = 100;
+const LINE_LEFT = PAD_L - 15;
+const LINE_RIGHT = W - PAD_R + 15;
+
+const FONT = '"DM Sans", "Helvetica Neue", sans-serif';
+
+let points = [
+  { id: 1, x: 28, y: 0.4 },
+  { id: 2, x: 42, y: 0.6 },
+  { id: 3, x: 50, y: 0.3 },
+  { id: 4, x: 58, y: 0.7 },
+  { id: 5, x: 71, y: 0.5 },
+];
+let nextId = 100;
+let dragging = null;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+
+function valToPixel(v) {
+  return PAD_L + ((v - AXIS_MIN) / (AXIS_MAX - AXIS_MIN)) * (W - PAD_L - PAD_R);
+}
+function pixelToVal(px) {
+  return AXIS_MIN + ((px - PAD_L) / (W - PAD_L - PAD_R)) * (AXIS_MAX - AXIS_MIN);
+}
+function yFracToPixel(f) {
+  return PAD_TOP + (1 - f) * (LINE_Y - PAD_TOP - DOT_R * 2 - 20);
+}
+function pixelToYFrac(py) {
+  return 1 - (py - PAD_TOP) / (LINE_Y - PAD_TOP - DOT_R * 2 - 20);
+}
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function mean(arr) { return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0; }
+function sd(arr) {
+  if (arr.length < 2) return 0;
+  const m = mean(arr);
+  return Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / (arr.length - 1));
+}
+
+// Clamp band edges to the number line extent
+function bandClamp(px) {
+  return clamp(px, LINE_LEFT, LINE_RIGHT);
+}
+
+function getCanvasCoords(e) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    cx: (e.clientX - rect.left) / rect.width * W,
+    cy: (e.clientY - rect.top) / rect.height * H,
+  };
+}
+
+function hitTest(cx, cy) {
+  for (let i = points.length - 1; i >= 0; i--) {
+    const p = points[i];
+    const px = valToPixel(p.x);
+    const py = yFracToPixel(p.y);
+    const dx = cx - px, dy = cy - py;
+    if (dx * dx + dy * dy <= (DOT_R + 6) * (DOT_R + 6)) return i;
+  }
+  return -1;
+}
+
+function drawBand(loVal, hiVal, bandTop, bandH, fillColor, strokeColor, dashColor, labelAlpha, labelText1, labelText2, fontSize) {
+  const loX = bandClamp(valToPixel(loVal));
+  const hiX = bandClamp(valToPixel(hiVal));
+
+  ctx.fillStyle = fillColor;
+  ctx.strokeStyle = strokeColor;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(loX, bandTop, hiX - loX, bandH, 8);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.setLineDash([8, 6]);
+  ctx.strokeStyle = dashColor;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(loX, bandTop); ctx.lineTo(loX, bandTop + bandH);
+  ctx.moveTo(hiX, bandTop); ctx.lineTo(hiX, bandTop + bandH);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.font = `700 ${fontSize}px "Outfit", sans-serif`;
+  ctx.fillStyle = labelAlpha;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(labelText1, loX, bandTop - 10);
+  ctx.fillText(labelText2, hiX, bandTop - 10);
+
+  return { loX, hiX };
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  const vals = points.map(p => p.x);
+  const m = mean(vals);
+  const s = sd(vals);
+  const hasStat = vals.length >= 2 && s > 0;
+  const mx = valToPixel(m);
+
+  const lo1 = m - s, hi1 = m + s;
+  const lo2 = m - 2 * s, hi2 = m + 2 * s;
+
+  const bandTop = PAD_TOP - 10;
+  const bandH = LINE_Y - bandTop - 20;
+
+  // ±2 SD band (lighter)
+  if (hasStat) {
+    drawBand(lo2, hi2, bandTop, bandH,
+      'rgba(59,130,246,0.04)', 'rgba(59,130,246,0.12)',
+      'rgba(59,130,246,0.18)', 'rgba(59,130,246,0.4)',
+      '\u22122 SD', '+2 SD', 30);
+  }
+
+  // ±1 SD band (darker)
+  if (hasStat) {
+    drawBand(lo1, hi1, bandTop, bandH,
+      'rgba(59,130,246,0.08)', 'rgba(59,130,246,0.25)',
+      'rgba(59,130,246,0.35)', 'rgba(59,130,246,0.6)',
+      '\u22121 SD', '+1 SD', 32);
+  }
+
+  // Mean line
+  if (vals.length > 0) {
+    ctx.strokeStyle = '#dc2626';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(mx, PAD_TOP - 10);
+    ctx.lineTo(mx, LINE_Y - 6);
+    ctx.stroke();
+
+    ctx.fillStyle = '#dc2626';
+    ctx.beginPath();
+    ctx.moveTo(mx, LINE_Y - 4);
+    ctx.lineTo(mx - 12, LINE_Y + 16);
+    ctx.lineTo(mx + 12, LINE_Y + 16);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Mean label at top
+  if (vals.length > 0) {
+    ctx.font = `700 44px ${FONT}`;
+    ctx.fillStyle = '#dc2626';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(`mean = ${m.toFixed(1)}`, mx, 14);
+  }
+
+  // SD arrow on right side only
+  if (hasStat) {
+    const hiX1 = bandClamp(valToPixel(hi1));
+    const arrowY = 115;
+
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(mx, arrowY);
+    ctx.lineTo(hiX1, arrowY);
+    ctx.stroke();
+
+    // arrowhead
+    ctx.fillStyle = '#3b82f6';
+    ctx.beginPath();
+    ctx.moveTo(hiX1, arrowY);
+    ctx.lineTo(hiX1 - 14, arrowY - 8);
+    ctx.lineTo(hiX1 - 14, arrowY + 8);
+    ctx.closePath();
+    ctx.fill();
+
+    // tick at mean end
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(mx, arrowY - 10);
+    ctx.lineTo(mx, arrowY + 10);
+    ctx.stroke();
+
+    // label
+    ctx.font = `700 42px ${FONT}`;
+    ctx.fillStyle = '#3b82f6';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(`SD = ${s.toFixed(1)}`, (mx + hiX1) / 2, arrowY - 14);
+  }
+
+  // Bold number line
+  ctx.strokeStyle = '#1c1917';
+  ctx.lineWidth = 7;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(LINE_LEFT, LINE_Y);
+  ctx.lineTo(LINE_RIGHT, LINE_Y);
+  ctx.stroke();
+
+  // Ticks
+  for (let v = 0; v <= 100; v += 10) {
+    const tx = valToPixel(v);
+    ctx.strokeStyle = '#1c1917';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(tx, LINE_Y - 16);
+    ctx.lineTo(tx, LINE_Y + 16);
+    ctx.stroke();
+
+    ctx.font = `700 32px ${FONT}`;
+    ctx.fillStyle = '#44403c';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(v, tx, LINE_Y + 24);
+  }
+
+  // Dots
+  for (const p of points) {
+    const px = valToPixel(p.x);
+    const py = yFracToPixel(p.y);
+    ctx.beginPath();
+    ctx.arc(px, py, DOT_R, 0, Math.PI * 2);
+    ctx.fillStyle = '#1c1917';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
+
+  // Stats
+  const statsEl = document.getElementById('stats');
+  if (vals.length < 2) {
+    statsEl.innerHTML = '<span style="color:#a8a29e">Add at least 2 points to see statistics</span>';
+  } else if (s === 0) {
+    statsEl.innerHTML = `<span style="color:#dc2626;font-weight:700">mean = ${m.toFixed(1)}</span> &nbsp; SD = 0 (all points identical)`;
+  } else {
+    const in1 = vals.filter(v => v >= lo1 && v <= hi1).length;
+    const in2 = vals.filter(v => v >= lo2 && v <= hi2).length;
+    const pct1 = Math.round((in1 / vals.length) * 100);
+    const pct2 = Math.round((in2 / vals.length) * 100);
+    statsEl.innerHTML =
+      `\u00b11 SD: <span style="color:#1c1917;font-weight:600">${in1}/${vals.length}</span> (${pct1}%)` +
+      ` &nbsp;&nbsp;\u00b7&nbsp;&nbsp; ` +
+      `\u00b12 SD: <span style="color:#1c1917;font-weight:600">${in2}/${vals.length}</span> (${pct2}%)`;
+  }
+}
+
+// Interaction
+canvas.addEventListener('pointerdown', (e) => {
+  if (e.button === 2) return;
+  const { cx, cy } = getCanvasCoords(e);
+  const idx = hitTest(cx, cy);
+  if (idx >= 0) {
+    dragging = idx;
+    const p = points[idx];
+    dragOffsetX = cx - valToPixel(p.x);
+    dragOffsetY = cy - yFracToPixel(p.y);
+    canvas.setPointerCapture(e.pointerId);
+    canvas.style.cursor = 'grabbing';
+    e.preventDefault();
+  }
+});
+
+canvas.addEventListener('pointermove', (e) => {
+  if (dragging === null) {
+    const { cx, cy } = getCanvasCoords(e);
+    canvas.style.cursor = hitTest(cx, cy) >= 0 ? 'grab' : 'crosshair';
+    return;
+  }
+  const { cx, cy } = getCanvasCoords(e);
+  const p = points[dragging];
+  p.x = clamp(pixelToVal(cx - dragOffsetX), AXIS_MIN, AXIS_MAX);
+  p.y = clamp(pixelToYFrac(cy - dragOffsetY), 0.05, 0.95);
+  draw();
+});
+
+canvas.addEventListener('pointerup', (e) => {
+  if (dragging !== null) {
+    dragging = null;
+    canvas.style.cursor = 'crosshair';
+    return;
+  }
+  const { cx, cy } = getCanvasCoords(e);
+  const val = pixelToVal(cx);
+  if (val < AXIS_MIN - 3 || val > AXIS_MAX + 3) return;
+  if (cy < PAD_TOP - 30 || cy > LINE_Y + 10) return;
+  const yf = clamp(pixelToYFrac(cy), 0.05, 0.95);
+  points.push({ id: nextId++, x: clamp(val, AXIS_MIN, AXIS_MAX), y: yf });
+  draw();
+});
+
+canvas.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  const { cx, cy } = getCanvasCoords(e);
+  const idx = hitTest(cx, cy);
+  if (idx >= 0) {
+    points.splice(idx, 1);
+    draw();
+  }
+});
+
+document.getElementById('btn-uniform').addEventListener('click', () => {
+  points = [];
+  for (let i = 0; i < 20; i++) {
+    points.push({ id: nextId++, x: Math.random() * (AXIS_MAX - AXIS_MIN) + AXIS_MIN, y: 0.15 + Math.random() * 0.7 });
+  }
+  draw();
+});
+
+document.getElementById('btn-normal').addEventListener('click', () => {
+  points = [];
+  for (let i = 0; i < 20; i++) {
+    const u1 = Math.random(), u2 = Math.random();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    points.push({ id: nextId++, x: clamp(50 + z * 15, AXIS_MIN, AXIS_MAX), y: 0.15 + Math.random() * 0.7 });
+  }
+  draw();
+});
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+  points = [];
+  draw();
+});
+
+draw();
+</script>
+</body>
+</html>
