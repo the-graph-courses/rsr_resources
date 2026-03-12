@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Height Explorer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+    background: #fafaf9;
+    color: #1c1917;
+    padding: 24px 20px;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  h1 {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+  h1 .gold { color: #c8962e; }
+  h1 .teal { color: #006D77; }
+  .hint {
+    text-align: center;
+    font-size: 15px;
+    color: #a8a29e;
+    margin-bottom: 16px;
+  }
+  .canvas-wrap {
+    background: #fff;
+    border: 2px solid #e7e5e4;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  canvas { display: block; width: 100%; height: auto; }
+  .stats {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 18px;
+    color: #78716c;
+    min-height: 24px;
+  }
+  .controls-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .tiny-btn {
+    padding: 5px 12px;
+    border: 1px solid #d6d3d1;
+    border-radius: 5px;
+    background: #fff;
+    color: #78716c;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .tiny-btn:hover { background: #f5f5f4; }
+  .tiny-btn.danger { color: #ef4444; border-color: #fecaca; }
+  .unit-toggle {
+    display: inline-flex;
+    border: 1px solid #d6d3d1;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .unit-toggle button {
+    padding: 5px 14px;
+    border: none;
+    background: #fff;
+    color: #78716c;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s, color 0.15s;
+  }
+  .unit-toggle button:not(:last-child) {
+    border-right: 1px solid #d6d3d1;
+  }
+  .unit-toggle button.active {
+    background: #006D77;
+    color: #fff;
+  }
+  .unit-toggle button:hover:not(.active) { background: #f5f5f4; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Height Explorer: <span class="gold">Mean</span> & <span class="teal">SD</span></h1>
+  <p class="hint">Add people and watch the mean and standard deviation update. Drag a head to change height. Double-click to remove.</p>
+  <div class="canvas-wrap">
+    <canvas id="c" width="1800" height="1000"></canvas>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="controls-row">
+    <button class="tiny-btn" id="btn-add1">Add 1 person</button>
+    <button class="tiny-btn" id="btn-add10">Add 10 people</button>
+    <button class="tiny-btn danger" id="btn-clear">Clear all</button>
+    <div class="unit-toggle">
+      <button class="active" id="btn-cm">cm</button>
+      <button id="btn-ftin">ft / in</button>
+    </div>
+  </div>
+</div>
+<script>
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+var W = canvas.width;
+var H = canvas.height;
+
+var PAD_LEFT = 150;
+var PAD_RIGHT = 340;
+var PAD_TOP = 70;
+var FLOOR_Y = 930;
+var FONT = '"DM Sans", "Helvetica Neue", sans-serif';
+var axisMin = 0;
+var axisMax = 220;
+var unit = 'cm';
+var people = [];
+var nextId = 1;
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function meanArr(arr) { return arr.length ? arr.reduce(function(a, b) { return a + b; }, 0) / arr.length : 0; }
+function sdArr(arr) {
+  if (arr.length < 2) return 0;
+  var m = meanArr(arr);
+  return Math.sqrt(arr.reduce(function(s, v) { return s + (v - m) * (v - m); }, 0) / (arr.length - 1));
+}
+function randn() {
+  var u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+function randomHeight() {
+  return clamp(Math.round(170 + randn() * 10), 130, 220);
+}
+
+function cmToFtIn(cm) {
+  var totalIn = cm / 2.54;
+  var ft = Math.floor(totalIn / 12);
+  var inches = Math.round(totalIn % 12);
+  if (inches === 12) { ft++; inches = 0; }
+  return { ft: ft, inches: inches };
+}
+function formatDec(cm) {
+  if (unit === 'cm') return cm.toFixed(1) + ' cm';
+  var totalIn = cm / 2.54;
+  var ft = Math.floor(totalIn / 12);
+  var inDec = (totalIn - ft * 12).toFixed(1);
+  return ft + '\u2032' + inDec + '\u2033';
+}
+
+
+function heightToY(h) {
+  return FLOOR_Y - ((h - axisMin) / (axisMax - axisMin)) * (FLOOR_Y - PAD_TOP);
+}
+
+function personX(i) {
+  var n = people.length;
+  var aL = PAD_LEFT + 20, aR = W - PAD_RIGHT - 20;
+  var slot = (aR - aL) / n;
+  return aL + (i + 0.5) * slot;
+}
+function slotWidth() {
+  if (!people.length) return 100;
+  return (W - PAD_LEFT - PAD_RIGHT - 40) / people.length;
+}
+
+function niceStep(range) {
+  var rough = range / 8;
+  var mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  var norm = rough / mag;
+  if (norm <= 1.5) return mag;
+  if (norm <= 3.5) return 2 * mag;
+  if (norm <= 7.5) return 5 * mag;
+  return 10 * mag;
+}
+
+function drawPerson(x, heightCm, sw) {
+  var headY = heightToY(heightCm);
+  var feetY = FLOOR_Y;
+  var pH = feetY - headY;
+  if (pH < 8) return;
+
+  var maxSpread = Math.min(sw * 0.35, pH * 0.18);
+  var headR = clamp(pH * 0.065, 4, 22);
+  var headCY = headY + headR;
+  var neckY = headCY + headR * 0.8;
+  var shoulderY = headY + pH * 0.22;
+  var hipY = headY + pH * 0.52;
+  var armLen = clamp(pH * 0.16, 6, maxSpread);
+  var legSpread = clamp(pH * 0.1, 4, maxSpread * 0.7);
+  var lw = clamp(pH * 0.022, 2, 7);
+
+  ctx.strokeStyle = '#1c1917';
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = lw;
+
+  ctx.beginPath();
+  ctx.moveTo(x - legSpread, feetY);
+  ctx.lineTo(x, hipY);
+  ctx.lineTo(x + legSpread, feetY);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x, hipY);
+  ctx.lineTo(x, neckY);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x - armLen, shoulderY + armLen * 0.35);
+  ctx.lineTo(x, shoulderY);
+  ctx.lineTo(x + armLen, shoulderY + armLen * 0.35);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(x, headCY, headR, 0, Math.PI * 2);
+  ctx.fillStyle = '#1c1917';
+  ctx.fill();
+}
+
+function getCanvasCoords(e) {
+  var rect = canvas.getBoundingClientRect();
+  return {
+    cx: (e.clientX - rect.left) / rect.width * W,
+    cy: (e.clientY - rect.top) / rect.height * H
+  };
+}
+
+function hitTestBody(cx, cy) {
+  var sw = slotWidth();
+  for (var i = people.length - 1; i >= 0; i--) {
+    var px = personX(i);
+    var headY = heightToY(people[i].height);
+    if (Math.abs(cx - px) < Math.max(sw * 0.45, 20) && cy >= headY - 15 && cy <= FLOOR_Y + 10) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+function hitTestHead(cx, cy) {
+  for (var i = people.length - 1; i >= 0; i--) {
+    var px = personX(i);
+    var topY = heightToY(people[i].height);
+    var pH = FLOOR_Y - topY;
+    var headR = clamp(pH * 0.065, 4, 22);
+    var headCY = topY + headR;
+    var dx = cx - px, dy = cy - headCY;
+    if (dx * dx + dy * dy <= (headR + 10) * (headR + 10)) return i;
+  }
+  return -1;
+}
+
+var dragging = null;
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  var heights = people.map(function(p) { return p.height; });
+  var m = meanArr(heights);
+  var s = sdArr(heights);
+  var hasStat = heights.length >= 2 && s > 0;
+
+  var bL = PAD_LEFT - 6;
+  var bR = W - PAD_RIGHT + 6;
+
+  // ── Ruler spine ──
+  ctx.strokeStyle = '#bbb';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(PAD_LEFT - 6, PAD_TOP);
+  ctx.lineTo(PAD_LEFT - 6, FLOOR_Y);
+  ctx.stroke();
+
+  // ── Grid + ruler ticks ──
+  if (unit === 'cm') {
+    var step = niceStep(axisMax - axisMin);
+    var v0 = Math.ceil(axisMin / step) * step;
+    for (var v = v0; v <= axisMax; v += step) {
+      var y = heightToY(v);
+      if (y < PAD_TOP - 5 || y > FLOOR_Y + 5) continue;
+      ctx.strokeStyle = '#ececec';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(bL, y);
+      ctx.lineTo(bR, y);
+      ctx.stroke();
+      ctx.strokeStyle = '#bbb';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(PAD_LEFT - 18, y);
+      ctx.lineTo(PAD_LEFT - 6, y);
+      ctx.stroke();
+      ctx.font = '600 26px ' + FONT;
+      ctx.fillStyle = '#78716c';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(Math.round(v), PAD_LEFT - 24, y);
+    }
+  } else {
+    var stepIn = 2;
+    var startIn = Math.ceil((axisMin / 2.54) / stepIn) * stepIn;
+    for (var tIn = startIn; tIn * 2.54 <= axisMax; tIn += stepIn) {
+      var vc = tIn * 2.54;
+      var yc = heightToY(vc);
+      if (yc < PAD_TOP - 5 || yc > FLOOR_Y + 5) continue;
+      ctx.strokeStyle = '#ececec';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(bL, yc);
+      ctx.lineTo(bR, yc);
+      ctx.stroke();
+      ctx.strokeStyle = '#bbb';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(PAD_LEFT - 18, yc);
+      ctx.lineTo(PAD_LEFT - 6, yc);
+      ctx.stroke();
+      var ft = Math.floor(tIn / 12);
+      var inches = tIn % 12;
+      ctx.font = '600 26px ' + FONT;
+      ctx.fillStyle = '#78716c';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(ft + '\u2032' + inches + '\u2033', PAD_LEFT - 24, yc);
+    }
+  }
+
+  // ── SD bands (horizontal) ──
+  if (hasStat) {
+    var lo2 = m - 2 * s, hi2 = m + 2 * s;
+    var lo1 = m - s, hi1 = m + s;
+
+    var y2t = heightToY(Math.min(hi2, axisMax));
+    var y2b = heightToY(Math.max(lo2, axisMin));
+    ctx.fillStyle = 'rgba(131,197,190,0.13)';
+    ctx.fillRect(bL, y2t, bR - bL, y2b - y2t);
+    ctx.setLineDash([8, 6]);
+    ctx.strokeStyle = 'rgba(131,197,190,0.45)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(bL, y2t); ctx.lineTo(bR, y2t);
+    ctx.moveTo(bL, y2b); ctx.lineTo(bR, y2b);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = '700 22px "Outfit", sans-serif';
+    ctx.fillStyle = 'rgba(0,109,119,0.5)';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    if (y2t > PAD_TOP + 10) ctx.fillText('+2 SD', bR - 8, y2t - 3);
+    ctx.textBaseline = 'top';
+    if (y2b < FLOOR_Y - 10) ctx.fillText('\u22122 SD', bR - 8, y2b + 3);
+
+    var y1t = heightToY(Math.min(hi1, axisMax));
+    var y1b = heightToY(Math.max(lo1, axisMin));
+    ctx.fillStyle = 'rgba(131,197,190,0.2)';
+    ctx.fillRect(bL, y1t, bR - bL, y1b - y1t);
+    ctx.setLineDash([8, 6]);
+    ctx.strokeStyle = 'rgba(0,109,119,0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(bL, y1t); ctx.lineTo(bR, y1t);
+    ctx.moveTo(bL, y1b); ctx.lineTo(bR, y1b);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = '700 24px "Outfit", sans-serif';
+    ctx.fillStyle = 'rgba(0,109,119,0.7)';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('+1 SD', bR - 8, y1t - 3);
+    ctx.textBaseline = 'top';
+    ctx.fillText('\u22121 SD', bR - 8, y1b + 3);
+  }
+
+  // ── Mean line ──
+  if (heights.length > 0) {
+    var my = heightToY(m);
+    ctx.setLineDash([14, 8]);
+    ctx.strokeStyle = '#c8962e';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(bL, my);
+    ctx.lineTo(bR, my);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    var meanLabelY = my;
+    var sdLabelY = null;
+
+    if (hasStat) {
+      var my2 = heightToY(m);
+      var sdTopY = heightToY(m + s);
+      sdLabelY = (my2 + sdTopY) / 2;
+
+      var minGap = 42;
+      if (meanLabelY - sdLabelY < minGap) {
+        var mid = (meanLabelY + sdLabelY) / 2;
+        sdLabelY = mid - minGap / 2;
+        meanLabelY = mid + minGap / 2;
+      }
+
+      var bracketX = bR + 14;
+      ctx.strokeStyle = '#006D77';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(bracketX, my2);
+      ctx.lineTo(bracketX, sdTopY);
+      ctx.stroke();
+
+      ctx.fillStyle = '#006D77';
+      ctx.beginPath();
+      ctx.moveTo(bracketX, sdTopY);
+      ctx.lineTo(bracketX - 6, sdTopY + 11);
+      ctx.lineTo(bracketX + 6, sdTopY + 11);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(bracketX - 8, my2);
+      ctx.lineTo(bracketX + 8, my2);
+      ctx.stroke();
+
+      ctx.font = '700 32px ' + FONT;
+      ctx.fillStyle = '#006D77';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('SD = ' + formatDec(s), bR + 36, sdLabelY);
+    }
+
+    ctx.font = '700 34px ' + FONT;
+    ctx.fillStyle = '#c8962e';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('mean = ' + formatDec(m), bR + 36, meanLabelY);
+  }
+
+  // ── Floor line ──
+  ctx.strokeStyle = '#999';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(bL, FLOOR_Y);
+  ctx.lineTo(bR, FLOOR_Y);
+  ctx.stroke();
+
+  // ── Stick figures ──
+  var sw = slotWidth();
+  for (var i = 0; i < people.length; i++) {
+    drawPerson(personX(i), people[i].height, sw);
+  }
+
+  // ── Stats text ──
+  var statsEl = document.getElementById('stats');
+  if (heights.length < 2) {
+    statsEl.innerHTML = '<span style="color:#a8a29e">Add at least 2 people to see statistics</span>';
+  } else if (s === 0) {
+    statsEl.innerHTML = '<span style="color:#c8962e;font-weight:700">mean = ' + formatDec(m) + '</span> &nbsp; SD = 0 (all same height)';
+  } else {
+    var lo1s = m - s, hi1s = m + s, lo2s = m - 2 * s, hi2s = m + 2 * s;
+    var in1 = heights.filter(function(h) { return h >= lo1s && h <= hi1s; }).length;
+    var in2 = heights.filter(function(h) { return h >= lo2s && h <= hi2s; }).length;
+    var pct1 = Math.round((in1 / heights.length) * 100);
+    var pct2 = Math.round((in2 / heights.length) * 100);
+    statsEl.innerHTML =
+      '<span style="color:#c8962e;font-weight:700">mean = ' + formatDec(m) + '</span>' +
+      ' &nbsp;&middot;&nbsp; ' +
+      '<span style="color:#006D77;font-weight:700">SD = ' + formatDec(s) + '</span>' +
+      ' &nbsp;&middot;&nbsp; ' +
+      '\u00b11 SD: <span style="color:#1c1917;font-weight:600">' + in1 + '/' + heights.length + '</span> (' + pct1 + '%)' +
+      ' &nbsp;&middot;&nbsp; ' +
+      '\u00b12 SD: <span style="color:#1c1917;font-weight:600">' + in2 + '/' + heights.length + '</span> (' + pct2 + '%)';
+  }
+}
+
+// ── Interactions ──
+canvas.addEventListener('pointerdown', function(e) {
+  if (e.button !== 0) return;
+  var coords = getCanvasCoords(e);
+  var idx = hitTestHead(coords.cx, coords.cy);
+  if (idx >= 0) {
+    dragging = idx;
+    canvas.setPointerCapture(e.pointerId);
+    canvas.style.cursor = 'grabbing';
+    e.preventDefault();
+  }
+});
+
+canvas.addEventListener('pointermove', function(e) {
+  var coords = getCanvasCoords(e);
+  if (dragging !== null) {
+    var newH = axisMin + ((FLOOR_Y - coords.cy) / (FLOOR_Y - PAD_TOP)) * (axisMax - axisMin);
+    people[dragging].height = clamp(Math.round(newH), 100, 250);
+    draw();
+    canvas.style.cursor = 'grabbing';
+    return;
+  }
+  canvas.style.cursor = hitTestHead(coords.cx, coords.cy) >= 0 ? 'grab' : 'default';
+});
+
+canvas.addEventListener('pointerup', function(e) {
+  if (dragging !== null) {
+    dragging = null;
+    canvas.style.cursor = 'default';
+  }
+});
+
+canvas.addEventListener('dblclick', function(e) {
+  var coords = getCanvasCoords(e);
+  var idx = hitTestBody(coords.cx, coords.cy);
+  if (idx >= 0) {
+    people.splice(idx, 1);
+    draw();
+  }
+});
+
+document.getElementById('btn-add1').addEventListener('click', function() {
+  people.push({ id: nextId++, height: randomHeight() });
+  draw();
+});
+
+document.getElementById('btn-add10').addEventListener('click', function() {
+  for (var i = 0; i < 10; i++) {
+    people.push({ id: nextId++, height: randomHeight() });
+  }
+  draw();
+});
+
+document.getElementById('btn-clear').addEventListener('click', function() {
+  people = [];
+  draw();
+});
+
+document.getElementById('btn-cm').addEventListener('click', function() { setUnit('cm'); });
+document.getElementById('btn-ftin').addEventListener('click', function() { setUnit('ftin'); });
+
+function setUnit(u) {
+  unit = u;
+  document.getElementById('btn-cm').classList.toggle('active', u === 'cm');
+  document.getElementById('btn-ftin').classList.toggle('active', u === 'ftin');
+  draw();
+}
+
+draw();
+</script>
+</body>
+</html>

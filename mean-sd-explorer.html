@@ -81,7 +81,7 @@
 <body>
 <div class="wrap">
   <h1><span class="red">Mean</span> & <span class="blue">SD</span> Explorer</h1>
-  <p class="hint">Click anywhere to add points. Drag to move. Right-click to remove.</p>
+  <p class="hint">Click anywhere to add points. Drag to move. Double-click to remove.</p>
 
   <div class="canvas-wrap">
     <canvas id="c" width="1800" height="1000"></canvas>
@@ -90,9 +90,9 @@
   <div class="stats" id="stats"></div>
 
   <div class="bottom-row">
-    <button class="tiny-btn" id="btn-uniform">20 uniform</button>
-    <button class="tiny-btn" id="btn-normal">20 normal</button>
-    <button class="tiny-btn danger" id="btn-clear">clear</button>
+    <button class="tiny-btn" id="btn-uniform">Add 10 uniform</button>
+    <button class="tiny-btn" id="btn-normal">Add 10 normal</button>
+    <button class="tiny-btn danger" id="btn-clear">Clear all</button>
   </div>
 </div>
 
@@ -106,12 +106,15 @@ const PAD_R = 100;
 const PAD_TOP = 220;
 const LINE_Y = H - 140;
 const DOT_R = 18;
-const AXIS_MIN = 0;
-const AXIS_MAX = 100;
 const LINE_LEFT = PAD_L - 15;
 const LINE_RIGHT = W - PAD_R + 15;
 
 const FONT = '"DM Sans", "Helvetica Neue", sans-serif';
+const DEFAULT_MIN = 0;
+const DEFAULT_MAX = 100;
+
+let axisMin = DEFAULT_MIN;
+let axisMax = DEFAULT_MAX;
 
 let points = [
   { id: 1, x: 28, y: 0.4 },
@@ -125,11 +128,27 @@ let dragging = null;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
 
+function computeAxisRange() {
+  const vals = points.map(p => p.x);
+  let lo = DEFAULT_MIN, hi = DEFAULT_MAX;
+  if (vals.length >= 2) {
+    const m = mean(vals);
+    const s = sd(vals);
+    if (s > 0) {
+      lo = Math.min(lo, m - 2.5 * s);
+      hi = Math.max(hi, m + 2.5 * s);
+    }
+  }
+  const pad = (hi - lo) * 0.05;
+  axisMin = lo - pad;
+  axisMax = hi + pad;
+}
+
 function valToPixel(v) {
-  return PAD_L + ((v - AXIS_MIN) / (AXIS_MAX - AXIS_MIN)) * (W - PAD_L - PAD_R);
+  return PAD_L + ((v - axisMin) / (axisMax - axisMin)) * (W - PAD_L - PAD_R);
 }
 function pixelToVal(px) {
-  return AXIS_MIN + ((px - PAD_L) / (W - PAD_L - PAD_R)) * (AXIS_MAX - AXIS_MIN);
+  return axisMin + ((px - PAD_L) / (W - PAD_L - PAD_R)) * (axisMax - axisMin);
 }
 function yFracToPixel(f) {
   return PAD_TOP + (1 - f) * (LINE_Y - PAD_TOP - DOT_R * 2 - 20);
@@ -145,9 +164,18 @@ function sd(arr) {
   return Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / (arr.length - 1));
 }
 
-// Clamp band edges to the number line extent
 function bandClamp(px) {
   return clamp(px, LINE_LEFT, LINE_RIGHT);
+}
+
+function niceTickStep(range) {
+  const rough = range / 8;
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  const norm = rough / mag;
+  if (norm <= 1.5) return mag;
+  if (norm <= 3.5) return 2 * mag;
+  if (norm <= 7.5) return 5 * mag;
+  return 10 * mag;
 }
 
 function getCanvasCoords(e) {
@@ -201,6 +229,7 @@ function drawBand(loVal, hiVal, bandTop, bandH, fillColor, strokeColor, dashColo
 }
 
 function draw() {
+  computeAxisRange();
   ctx.clearRect(0, 0, W, H);
 
   const vals = points.map(p => p.x);
@@ -305,7 +334,9 @@ function draw() {
   ctx.stroke();
 
   // Ticks
-  for (let v = 0; v <= 100; v += 10) {
+  const step = niceTickStep(axisMax - axisMin);
+  const tickStart = Math.ceil(axisMin / step) * step;
+  for (let v = tickStart; v <= axisMax; v += step) {
     const tx = valToPixel(v);
     ctx.strokeStyle = '#1c1917';
     ctx.lineWidth = 4;
@@ -315,11 +346,12 @@ function draw() {
     ctx.lineTo(tx, LINE_Y + 16);
     ctx.stroke();
 
+    const label = step >= 1 ? Math.round(v) : +v.toFixed(1);
     ctx.font = `700 32px ${FONT}`;
     ctx.fillStyle = '#44403c';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText(v, tx, LINE_Y + 24);
+    ctx.fillText(label, tx, LINE_Y + 24);
   }
 
   // Dots
@@ -354,10 +386,13 @@ function draw() {
 }
 
 // Interaction
+let lastDownOnPoint = false;
+
 canvas.addEventListener('pointerdown', (e) => {
   if (e.button === 2) return;
   const { cx, cy } = getCanvasCoords(e);
   const idx = hitTest(cx, cy);
+  lastDownOnPoint = idx >= 0;
   if (idx >= 0) {
     dragging = idx;
     const p = points[idx];
@@ -377,7 +412,7 @@ canvas.addEventListener('pointermove', (e) => {
   }
   const { cx, cy } = getCanvasCoords(e);
   const p = points[dragging];
-  p.x = clamp(pixelToVal(cx - dragOffsetX), AXIS_MIN, AXIS_MAX);
+  p.x = clamp(pixelToVal(cx - dragOffsetX), DEFAULT_MIN, DEFAULT_MAX);
   p.y = clamp(pixelToYFrac(cy - dragOffsetY), 0.05, 0.95);
   draw();
 });
@@ -388,17 +423,19 @@ canvas.addEventListener('pointerup', (e) => {
     canvas.style.cursor = 'crosshair';
     return;
   }
+  if (lastDownOnPoint) return;
   const { cx, cy } = getCanvasCoords(e);
   const val = pixelToVal(cx);
-  if (val < AXIS_MIN - 3 || val > AXIS_MAX + 3) return;
+  if (val < DEFAULT_MIN - 3 || val > DEFAULT_MAX + 3) return;
   if (cy < PAD_TOP - 30 || cy > LINE_Y + 10) return;
   const yf = clamp(pixelToYFrac(cy), 0.05, 0.95);
-  points.push({ id: nextId++, x: clamp(val, AXIS_MIN, AXIS_MAX), y: yf });
+  points.push({ id: nextId++, x: clamp(val, DEFAULT_MIN, DEFAULT_MAX), y: yf });
   draw();
 });
 
-canvas.addEventListener('contextmenu', (e) => {
-  e.preventDefault();
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+canvas.addEventListener('dblclick', (e) => {
   const { cx, cy } = getCanvasCoords(e);
   const idx = hitTest(cx, cy);
   if (idx >= 0) {
@@ -408,19 +445,17 @@ canvas.addEventListener('contextmenu', (e) => {
 });
 
 document.getElementById('btn-uniform').addEventListener('click', () => {
-  points = [];
-  for (let i = 0; i < 20; i++) {
-    points.push({ id: nextId++, x: Math.random() * (AXIS_MAX - AXIS_MIN) + AXIS_MIN, y: 0.15 + Math.random() * 0.7 });
+  for (let i = 0; i < 10; i++) {
+    points.push({ id: nextId++, x: Math.random() * (DEFAULT_MAX - DEFAULT_MIN) + DEFAULT_MIN, y: 0.15 + Math.random() * 0.7 });
   }
   draw();
 });
 
 document.getElementById('btn-normal').addEventListener('click', () => {
-  points = [];
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 10; i++) {
     const u1 = Math.random(), u2 = Math.random();
     const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-    points.push({ id: nextId++, x: clamp(50 + z * 15, AXIS_MIN, AXIS_MAX), y: 0.15 + Math.random() * 0.7 });
+    points.push({ id: nextId++, x: clamp(50 + z * 15, DEFAULT_MIN, DEFAULT_MAX), y: 0.15 + Math.random() * 0.7 });
   }
   draw();
 });
