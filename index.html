@@ -91,9 +91,7 @@
   }
 
   .nav-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
+    display: block;
     padding: 10px 12px;
     border-radius: 8px;
     cursor: pointer;
@@ -113,25 +111,8 @@
     color: var(--white);
   }
 
-  .nav-item.active .nav-icon {
-    color: var(--gold);
-  }
-
   .nav-item.active .nav-desc {
     color: rgba(255, 255, 255, 0.7);
-  }
-
-  .nav-icon {
-    font-size: 18px;
-    line-height: 1;
-    flex-shrink: 0;
-    margin-top: 1px;
-    color: var(--teal);
-    transition: color 0.15s;
-  }
-
-  .nav-text {
-    min-width: 0;
   }
 
   .nav-name {
@@ -213,12 +194,82 @@
     line-height: 1.6;
   }
 
+  /* ── Hamburger button (hidden on desktop) ── */
+  .menu-btn {
+    display: none;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 200;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 5px;
+    padding: 0;
+  }
+
+  .menu-btn span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: var(--teal);
+    border-radius: 1px;
+    transition: transform 0.2s, opacity 0.2s;
+  }
+
+  .menu-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .menu-btn.open span:nth-child(2) { opacity: 0; }
+  .menu-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* ── Overlay backdrop (mobile only) ── */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: rgba(0,0,0,0.25);
+  }
+
   /* ── Mobile ── */
   @media (max-width: 700px) {
-    :root { --sidebar-w: 220px; }
-    .sidebar-header { padding: 16px 14px 14px; }
-    .sidebar-nav { padding: 8px 6px; }
-    .nav-desc { display: none; }
+    .menu-btn {
+      display: flex;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      box-shadow: none;
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+      box-shadow: 4px 0 20px rgba(0,0,0,0.12);
+    }
+
+    .sidebar-overlay.visible {
+      display: block;
+    }
+
+    .sidebar-header {
+      padding: 16px 18px 14px;
+    }
+
+    .main {
+      width: 100%;
+    }
   }
 </style>
 </head>
@@ -226,8 +277,13 @@
 
 <div class="top-bar"></div>
 
+<button class="menu-btn" id="menuBtn" onclick="toggleSidebar()">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
 <div class="shell">
-  <nav class="sidebar">
+  <nav class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-brand">The GRAPH Courses</div>
       <div class="sidebar-title">Interactive Statistics Resources</div>
@@ -237,27 +293,18 @@
       <div class="nav-label">Resources</div>
 
       <a class="nav-item" data-src="mean-sd-explorer.html" onclick="load(this)">
-        <span class="nav-icon">&#xf0;</span>
-        <div class="nav-text">
-          <div class="nav-name">Mean & SD Explorer</div>
-          <div class="nav-desc">Click to add points and see the mean and standard deviation update live.</div>
-        </div>
+        <div class="nav-name">Mean &amp; SD Explorer</div>
+        <div class="nav-desc">Click to add points and see the mean and standard deviation update live.</div>
       </a>
 
       <a class="nav-item" data-src="least-squares-explorer.html" onclick="load(this)">
-        <span class="nav-icon">&#x2571;</span>
-        <div class="nav-text">
-          <div class="nav-name">Least Squares Explorer</div>
-          <div class="nav-desc">Drag sliders to fit a regression line and minimize the sum of squared residuals.</div>
-        </div>
+        <div class="nav-name">Least Squares Explorer</div>
+        <div class="nav-desc">Drag sliders to fit a regression line and minimize the sum of squared residuals.</div>
       </a>
 
       <a class="nav-item" data-src="slope-standard-error.html" onclick="load(this)">
-        <span class="nav-icon">&#x21C5;</span>
-        <div class="nav-text">
-          <div class="nav-name">Slope Standard Error</div>
-          <div class="nav-desc">Explore what affects the precision of the slope estimate through simulation.</div>
-        </div>
+        <div class="nav-name">Slope Standard Error</div>
+        <div class="nav-desc">Explore what affects the precision of the slope estimate through simulation.</div>
       </a>
     </div>
 
@@ -280,8 +327,20 @@ function load(el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
   const src = el.getAttribute('data-src');
-  const main = document.getElementById('main');
-  main.innerHTML = '<iframe src="' + src + '"></iframe>';
+  document.getElementById('main').innerHTML = '<iframe src="' + src + '"></iframe>';
+  closeSidebar();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('visible');
+  document.getElementById('menuBtn').classList.toggle('open');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('visible');
+  document.getElementById('menuBtn').classList.remove('open');
 }
 </script>
 
