@@ -292,17 +292,17 @@
     <div class="sidebar-nav">
       <div class="nav-label">Resources</div>
 
-      <a class="nav-item" data-src="mean-sd-explorer.html" onclick="load(this)">
+      <a class="nav-item" data-id="mean-sd-explorer" data-src="mean-sd-explorer.html" onclick="load(this)">
         <div class="nav-name">Mean &amp; SD Explorer</div>
         <div class="nav-desc">Click to add points and see the mean and standard deviation update live.</div>
       </a>
 
-      <a class="nav-item" data-src="least-squares-explorer.html" onclick="load(this)">
+      <a class="nav-item" data-id="least-squares-explorer" data-src="least-squares-explorer.html" onclick="load(this)">
         <div class="nav-name">Least Squares Explorer</div>
         <div class="nav-desc">Drag sliders to fit a regression line and minimize the sum of squared residuals.</div>
       </a>
 
-      <a class="nav-item" data-src="slope-standard-error.html" onclick="load(this)">
+      <a class="nav-item" data-id="slope-standard-error" data-src="slope-standard-error.html" onclick="load(this)">
         <div class="nav-name">Slope Standard Error</div>
         <div class="nav-desc">Explore what affects the precision of the slope estimate through simulation.</div>
       </a>
@@ -323,11 +323,14 @@
 </div>
 
 <script>
-function load(el) {
+function load(el, updateHash) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
-  const src = el.getAttribute('data-src');
+  var src = el.getAttribute('data-src');
   document.getElementById('main').innerHTML = '<iframe src="' + src + '"></iframe>';
+  if (updateHash !== false) {
+    history.replaceState(null, '', '#' + el.getAttribute('data-id'));
+  }
   closeSidebar();
 }
 
@@ -342,6 +345,14 @@ function closeSidebar() {
   document.getElementById('overlay').classList.remove('visible');
   document.getElementById('menuBtn').classList.remove('open');
 }
+
+(function() {
+  var hash = location.hash.replace('#', '');
+  if (hash) {
+    var target = document.querySelector('.nav-item[data-id="' + hash + '"]');
+    if (target) load(target, false);
+  }
+})();
 </script>
 
 </body>
