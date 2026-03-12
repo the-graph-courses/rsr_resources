@@ -26,8 +26,8 @@
     letter-spacing: -0.3px;
     margin-bottom: 4px;
   }
-  h1 .red { color: #dc2626; }
-  h1 .blue { color: #3b82f6; }
+  h1 .red { color: #c8962e; }
+  h1 .blue { color: #006D77; }
 
   .hint {
     text-align: center;
@@ -218,29 +218,29 @@ function draw() {
   // ±2 SD band (lighter)
   if (hasStat) {
     drawBand(lo2, hi2, bandTop, bandH,
-      'rgba(59,130,246,0.04)', 'rgba(59,130,246,0.12)',
-      'rgba(59,130,246,0.18)', 'rgba(59,130,246,0.4)',
+      'rgba(131,197,190,0.12)', 'rgba(131,197,190,0.3)',
+      'rgba(131,197,190,0.4)', 'rgba(0,109,119,0.45)',
       '\u22122 SD', '+2 SD', 30);
   }
 
   // ±1 SD band (darker)
   if (hasStat) {
     drawBand(lo1, hi1, bandTop, bandH,
-      'rgba(59,130,246,0.08)', 'rgba(59,130,246,0.25)',
-      'rgba(59,130,246,0.35)', 'rgba(59,130,246,0.6)',
+      'rgba(131,197,190,0.22)', 'rgba(131,197,190,0.5)',
+      'rgba(0,109,119,0.4)', 'rgba(0,109,119,0.7)',
       '\u22121 SD', '+1 SD', 32);
   }
 
   // Mean line
   if (vals.length > 0) {
-    ctx.strokeStyle = '#dc2626';
+    ctx.strokeStyle = '#c8962e';
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(mx, PAD_TOP - 10);
     ctx.lineTo(mx, LINE_Y - 6);
     ctx.stroke();
 
-    ctx.fillStyle = '#dc2626';
+    ctx.fillStyle = '#c8962e';
     ctx.beginPath();
     ctx.moveTo(mx, LINE_Y - 4);
     ctx.lineTo(mx - 12, LINE_Y + 16);
@@ -252,7 +252,7 @@ function draw() {
   // Mean label at top
   if (vals.length > 0) {
     ctx.font = `700 44px ${FONT}`;
-    ctx.fillStyle = '#dc2626';
+    ctx.fillStyle = '#c8962e';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.fillText(`mean = ${m.toFixed(1)}`, mx, 14);
@@ -263,7 +263,7 @@ function draw() {
     const hiX1 = bandClamp(valToPixel(hi1));
     const arrowY = 115;
 
-    ctx.strokeStyle = '#3b82f6';
+    ctx.strokeStyle = '#006D77';
     ctx.lineWidth = 3.5;
     ctx.beginPath();
     ctx.moveTo(mx, arrowY);
@@ -271,7 +271,7 @@ function draw() {
     ctx.stroke();
 
     // arrowhead
-    ctx.fillStyle = '#3b82f6';
+    ctx.fillStyle = '#006D77';
     ctx.beginPath();
     ctx.moveTo(hiX1, arrowY);
     ctx.lineTo(hiX1 - 14, arrowY - 8);
@@ -280,7 +280,7 @@ function draw() {
     ctx.fill();
 
     // tick at mean end
-    ctx.strokeStyle = '#3b82f6';
+    ctx.strokeStyle = '#006D77';
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(mx, arrowY - 10);
@@ -289,7 +289,7 @@ function draw() {
 
     // label
     ctx.font = `700 42px ${FONT}`;
-    ctx.fillStyle = '#3b82f6';
+    ctx.fillStyle = '#006D77';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
     ctx.fillText(`SD = ${s.toFixed(1)}`, (mx + hiX1) / 2, arrowY - 14);
@@ -340,7 +340,7 @@ function draw() {
   if (vals.length < 2) {
     statsEl.innerHTML = '<span style="color:#a8a29e">Add at least 2 points to see statistics</span>';
   } else if (s === 0) {
-    statsEl.innerHTML = `<span style="color:#dc2626;font-weight:700">mean = ${m.toFixed(1)}</span> &nbsp; SD = 0 (all points identical)`;
+    statsEl.innerHTML = `<span style="color:#c8962e;font-weight:700">mean = ${m.toFixed(1)}</span> &nbsp; SD = 0 (all points identical)`;
   } else {
     const in1 = vals.filter(v => v >= lo1 && v <= hi1).length;
     const in2 = vals.filter(v => v >= lo2 && v <= hi2).length;
