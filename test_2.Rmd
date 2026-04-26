@@ -1,0 +1,615 @@
+---
+title: "What the Residuals Row Really Means in the R Linear-Regression Summary"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    df_print: paged
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  collapse = TRUE,
+  fig.width = 8,
+  fig.height = 5,
+  dpi = 150
+)
+options(pillar.sigfig = 4, digits = 4)
+```
+
+```{r libs}
+pacman::p_load(tidyverse, openintro, knitr)
+```
+
+# 1. The dataset: 8 pre-term births
+
+We use the same `openintro::births14` subset we've been building the other
+lessons on — pre-term babies only, weight converted to kilograms, the last 8
+rows of the filtered table:
+
+```{r data}
+preemie_data <- openintro::births14 %>%
+  filter(premie == "premie") %>%
+  mutate(weight_kg = weight * 0.453592) %>%
+  slice_tail(n = 8) %>%
+  select(weeks, weight_kg) %>%
+  arrange(weeks, weight_kg) %>%          # renumber so #1 is bottom-left, #8 is top-right
+  mutate(row_id = row_number(), .before = 1)
+
+preemie_data
+```
+
+The research question is the same one we've had throughout:
+
+> **Given gestational age in weeks, what birth weight should we expect?**
+>
+> We measure gestational age precisely from early ultrasound, but the baby's
+> weight before delivery is unknown. A regression line turns the first (easy,
+> already known) into an estimate of the second (hard, not yet known).
+
+Before we do anything else, we assign each observation a stable **row id**
+and a matching **colour**. Observations are ordered by `weeks` ascending,
+then by `weight_kg` ascending — so on the scatterplot, baby #1 sits at the
+bottom-left and baby #8 at the top-right. The colour travels with that baby
+through every subsequent table and plot; only the first scatterplot will
+label the numbers explicitly, since from then on the colour alone is enough
+to track an observation.
+
+```{r palette}
+row_colors <- c(
+  "1" = "#E41A1C",  # red
+  "2" = "#377EB8",  # blue
+  "3" = "#4DAF4A",  # green
+  "4" = "#984EA3",  # purple
+  "5" = "#FF7F00",  # orange
+  "6" = "#F781BF",  # pink
+  "7" = "#A65628",  # brown
+  "8" = "#111111"   # near-black
+)
+
+preemie_data %>%
+  mutate(color = row_colors[as.character(row_id)]) %>%
+  knitr::kable(caption = "Color key for the 8 observations")
+```
+
+# 2. Fit the regression and look at the summary
+
+```{r fit}
+model <- lm(weight_kg ~ weeks, data = preemie_data)
+summary(model)
+```
+
+The block we want to dissect is the top of that output:
+
+```
+Residuals:
+    Min      1Q   Median      3Q     Max
+```
+
+Those five numbers are the **five-number summary of the residuals**. A
+residual is the vertical miss between an observed point and the fitted line:
+
+$$
+\text{residual}_i \;=\; y_i \;-\; \hat y_i
+$$
+
+To understand the row, we'll recompute everything from scratch.
+
+# 3. Hand-computing the residuals
+
+The fitted line is $\hat y = b_0 + b_1 x$, where $x$ is `weeks` and $\hat y$
+is predicted `weight_kg`.
+
+```{r coefs}
+b0 <- coef(model)[["(Intercept)"]]
+b1 <- coef(model)[["weeks"]]
+
+cat(sprintf("Intercept (b0) = %.4f\n", b0))
+cat(sprintf("Slope     (b1) = %.4f\n", b1))
+cat(sprintf(
+  "\nFitted line:  weight_kg_hat = %.4f + %.4f * weeks\n",
+  b0, b1
+))
+```
+
+For every one of the 8 rows we compute two new columns:
+
+1. $\hat y_i = b_0 + b_1 x_i$
+2. residual $= y_i - \hat y_i$
+
+```{r hand-table}
+hand_tbl <- preemie_data %>%
+  mutate(
+    y_hat    = round(b0 + b1 * weeks, 4),
+    residual = round(weight_kg - y_hat, 4)
+  ) %>%
+  select(row_id, weeks, weight_kg, y_hat, residual)
+
+hand_tbl
+```
+
+Line-by-line, for row 1:
+
+```{r narrate-row}
+r1 <- hand_tbl[1, ]
+cat(sprintf(
+  "Row %d:  weeks = %g,  weight_kg = %g\n  y_hat    = %.4f + %.4f * %g = %.4f\n  residual = %g - %.4f = %+.4f\n",
+  r1$row_id, r1$weeks, r1$weight_kg,
+  b0, b1, r1$weeks, r1$y_hat,
+  r1$weight_kg, r1$y_hat, r1$residual
+))
+```
+
+The remaining 7 rows use exactly the same arithmetic — the `residual` column
+in the table above is the result.
+
+# 4. Drawing the residuals on the regression line
+
+Each residual is the vertical distance from a colored point to the fitted
+line. Notice how every point keeps its color from the table.
+
+```{r plot-regression}
+plot_df <- hand_tbl %>%
+  mutate(row_factor = factor(row_id, levels = 1:8))
+
+ggplot(plot_df, aes(x = weeks, y = weight_kg, color = row_factor)) +
+  geom_abline(intercept = b0, slope = b1,
+              color = "grey25", linewidth = 0.8) +
+  geom_segment(aes(xend = weeks, yend = y_hat),
+               linewidth = 1.1, lineend = "round") +
+  geom_point(size = 4) +
+  geom_text(aes(label = paste0("#", row_id, " (", sprintf("%+.3f", residual), ")")),
+            nudge_x = 0.1, hjust = 0, size = 3.2, show.legend = FALSE) +
+  scale_color_manual(values = row_colors, name = "Row") +
+  scale_x_continuous(expand = expansion(mult = c(0.02, 0.15))) +
+  labs(
+    title    = "Each residual is a vertical miss from the regression line",
+    subtitle = "Colours correspond to the 8 rows of the dataset",
+    x = "Gestational age (weeks)",
+    y = "Birth weight (kg)"
+  ) +
+  theme_minimal(base_size = 12)
+```
+
+# 5. Sorting the residuals
+
+The five-number summary starts by sorting the residuals from smallest to
+largest.
+
+```{r sorted-tbl}
+sorted_tbl <- hand_tbl %>%
+  arrange(residual) %>%
+  mutate(sort_position = row_number()) %>%
+  select(sort_position, row_id, weeks, weight_kg, y_hat, residual)
+
+sorted_tbl
+```
+
+Even after sorting, each residual still **remembers its original row number
+(and its colour)**. That's how we can track a point from the regression plot
+to its place in the sorted list.
+
+A compact view of the sorted residuals on a number line — from here on we
+drop the `#n` labels and the legend; the **colour** is enough to track each
+observation.
+
+```{r plot-numberline, fig.height = 2.2}
+sorted_plot_df <- sorted_tbl %>%
+  mutate(row_factor = factor(row_id, levels = 1:8))
+
+ggplot(sorted_plot_df, aes(x = residual, y = 0, color = row_factor)) +
+  geom_vline(xintercept = 0, color = "grey70", linetype = "dashed") +
+  geom_point(size = 5) +
+  geom_text(aes(label = sprintf("%+.3f", residual)),
+            vjust = 2.4, size = 3.0, color = "grey30", show.legend = FALSE) +
+  scale_color_manual(values = row_colors, guide = "none") +
+  scale_y_continuous(limits = c(-0.4, 0.4), breaks = NULL) +
+  labs(x = "Residual (kg)", y = NULL,
+       title = "Residuals sorted from smallest (left) to largest (right)") +
+  theme_minimal(base_size = 12)
+```
+
+# 6. Where the five-number summary comes from (interpolation)
+
+With $n = 8$ observations, R places the quartiles using the formula
+
+$$
+h \;=\; (n - 1)\,p + 1
+$$
+
+and then **linearly interpolates** between the two residuals on either side
+of position $h$. Working it out for our data:
+
+| landmark | $p$  | $h = (8-1)p + 1$ | between positions | weight on upper |
+|----------|------|------------------|-------------------|-----------------|
+| Min      | 0    | 1                | — (exactly row 1) | —               |
+| 1Q       | 0.25 | **2.75**         | 2 and 3           | 0.75            |
+| Median   | 0.50 | **4.50**         | 4 and 5           | 0.50            |
+| 3Q       | 0.75 | **6.25**         | 6 and 7           | 0.25            |
+| Max      | 1    | 8                | — (exactly row 8) | —               |
+
+So none of the three quartiles hits a real residual — each is a weighted
+average of its two neighbours. Let's verify all three by hand.
+
+```{r interp-hand}
+r <- sorted_tbl$residual   # already sorted smallest to largest
+
+q1_hand <- r[2] + 0.75 * (r[3] - r[2])
+md_hand <- r[4] + 0.50 * (r[5] - r[4])
+q3_hand <- r[6] + 0.25 * (r[7] - r[6])
+
+cat("--- 1Q  (h = 2.75, weight 0.75 on position 3) ---\n")
+cat(sprintf("x_(2) = %.4f   (row %d)\n", r[2], sorted_tbl$row_id[2]))
+cat(sprintf("x_(3) = %.4f   (row %d)\n", r[3], sorted_tbl$row_id[3]))
+cat(sprintf("1Q  = x_(2) + 0.75 * (x_(3) - x_(2))\n"))
+cat(sprintf("    = %.4f + 0.75 * (%.4f - %.4f)\n", r[2], r[3], r[2]))
+cat(sprintf("    = %.4f\n\n", q1_hand))
+
+cat("--- Median  (h = 4.5, weight 0.50 on position 5) ---\n")
+cat(sprintf("x_(4) = %.4f   (row %d)\n", r[4], sorted_tbl$row_id[4]))
+cat(sprintf("x_(5) = %.4f   (row %d)\n", r[5], sorted_tbl$row_id[5]))
+cat(sprintf("Med = x_(4) + 0.50 * (x_(5) - x_(4))\n"))
+cat(sprintf("    = %.4f + 0.50 * (%.4f - %.4f)\n", r[4], r[5], r[4]))
+cat(sprintf("    = %.4f\n\n", md_hand))
+
+cat("--- 3Q  (h = 6.25, weight 0.25 on position 7) ---\n")
+cat(sprintf("x_(6) = %.4f   (row %d)\n", r[6], sorted_tbl$row_id[6]))
+cat(sprintf("x_(7) = %.4f   (row %d)\n", r[7], sorted_tbl$row_id[7]))
+cat(sprintf("3Q  = x_(6) + 0.25 * (x_(7) - x_(6))\n"))
+cat(sprintf("    = %.4f + 0.25 * (%.4f - %.4f)\n", r[6], r[7], r[6]))
+cat(sprintf("    = %.4f\n\n", q3_hand))
+
+cat("--- Checks against R ---\n")
+print(round(quantile(resid(model)), 4))
+cat(sprintf("\nHand 1Q  = %.4f   vs   R 1Q  = %.4f\n",
+            q1_hand, quantile(resid(model), 0.25)))
+cat(sprintf("Hand Med = %.4f   vs   R Med = %.4f\n",
+            md_hand, quantile(resid(model), 0.50)))
+cat(sprintf("Hand 3Q  = %.4f   vs   R 3Q  = %.4f\n",
+            q3_hand, quantile(resid(model), 0.75)))
+```
+
+All three agree exactly with R's own output.
+
+Visually, the three interpolated quartiles are points that sit **between**
+the coloured residuals:
+
+```{r plot-interp, fig.height = 2.8}
+q_df <- tibble(
+  landmark = c("Min", "1Q", "Median", "3Q", "Max"),
+  value    = c(min(r), q1_hand, md_hand, q3_hand, max(r))
+)
+
+ggplot() +
+  geom_vline(xintercept = 0, color = "grey70", linetype = "dashed") +
+  geom_point(
+    data = sorted_plot_df,
+    aes(x = residual, y = 0, color = row_factor), size = 5
+  ) +
+  geom_point(
+    data = q_df,
+    aes(x = value, y = 0),
+    shape = 4, size = 6, stroke = 1.4, color = "black"
+  ) +
+  geom_text(
+    data = q_df,
+    aes(x = value, y = 0, label = paste0(landmark, "\n", sprintf("%+.3f", value))),
+    vjust = 2.2, size = 3.0
+  ) +
+  scale_color_manual(values = row_colors, guide = "none") +
+  scale_y_continuous(limits = c(-0.6, 0.5), breaks = NULL) +
+  labs(x = "Residual (kg)", y = NULL,
+       title = "The five-number summary lies between real residuals",
+       subtitle = "Colored dots = actual residuals. Black X's = interpolated quartiles.") +
+  theme_minimal(base_size = 12)
+```
+
+### Summary of section 6
+
+- For $n = 8$ we have 8 actual residuals but only 2 of the five summary
+  numbers (Min and Max) coincide with real residuals.
+- The other three — 1Q, Median, 3Q — are **weighted averages** of two
+  adjacent sorted residuals.
+- The weights come from the formula $h = (n - 1)p + 1$ — the fractional
+  part of $h$ tells you how much of the upper neighbour to mix in.
+
+Slide-generator hooks:
+
+```{r slides-1, echo = FALSE}
+cat("SLIDE_DATA::N=",      nrow(preemie_data), "\n", sep = "")
+cat("SLIDE_DATA::B0=",     round(b0, 4), "\n", sep = "")
+cat("SLIDE_DATA::B1=",     round(b1, 4), "\n", sep = "")
+cat("SLIDE_DATA::WEEKS=",
+    paste(preemie_data$weeks, collapse = ","), "\n", sep = "")
+cat("SLIDE_DATA::WEIGHTS=",
+    paste(round(preemie_data$weight_kg, 3), collapse = ","), "\n", sep = "")
+cat("SLIDE_DATA::Y_HAT=",
+    paste(round(hand_tbl$y_hat, 4), collapse = ","), "\n", sep = "")
+cat("SLIDE_DATA::RESIDUALS_ORIG_ORDER=",
+    paste(round(hand_tbl$residual, 4), collapse = ","), "\n", sep = "")
+cat("SLIDE_DATA::RESIDUALS_SORTED=",
+    paste(round(sorted_tbl$residual, 4), collapse = ","), "\n", sep = "")
+cat("SLIDE_DATA::SORTED_ROW_IDS=",
+    paste(sorted_tbl$row_id, collapse = ","), "\n", sep = "")
+cat("SLIDE_DATA::MIN=",    round(min(r), 4), "\n", sep = "")
+cat("SLIDE_DATA::Q1=",     round(q1_hand, 4), "\n", sep = "")
+cat("SLIDE_DATA::MEDIAN=", round(md_hand, 4), "\n", sep = "")
+cat("SLIDE_DATA::Q3=",     round(q3_hand, 4), "\n", sep = "")
+cat("SLIDE_DATA::MAX=",    round(max(r), 4), "\n", sep = "")
+```
+
+# 7. Residual standard error: "how off are we, on average?"
+
+Just under the coefficients, R prints a line of the form:
+
+```
+Residual standard error: <some number> on <n-2> degrees of freedom
+```
+
+The **residual standard error (RSE)** is trying to answer a very natural
+question:
+
+> On average, how far off is the line from the actual points?
+
+It's the regression cousin of "average error." But the obvious ways to
+compute that "average miss" all fail for interesting reasons. Let's walk
+through each one before landing on the recipe R actually uses.
+
+## 7.1 Naive attempt #1 — just average the residuals
+
+The most natural thing to try is: sum up all the residuals, divide by $n$,
+call that the typical miss.
+
+```{r naive-mean}
+mean_residual <- mean(hand_tbl$residual)
+cat(sprintf("Mean of the %d residuals = %.6f kg\n",
+            nrow(hand_tbl), mean_residual))
+```
+
+Zero (up to rounding). That's not a coincidence and it's not about this
+specific dataset — it's a **mathematical guarantee**. Ordinary least squares
+picks the intercept and slope precisely so that the positive misses cancel
+the negative misses. No matter what data you fit, you always get this
+result. A quantity that's identical for every regression can't possibly
+describe the quality of any specific regression.
+
+Visually:
+
+```{r naive-mean-plot, fig.height = 3.6}
+naive1_df <- hand_tbl %>%
+  mutate(row_factor = factor(row_id, levels = 1:8))
+
+ggplot(naive1_df, aes(x = row_factor, y = residual, fill = row_factor)) +
+  geom_hline(yintercept = 0, color = "grey30") +
+  geom_col(width = 0.65) +
+  geom_hline(yintercept = mean(naive1_df$residual),
+             color = "red", linetype = "dashed", linewidth = 0.8) +
+  annotate("text", x = 1.1, y = 0.06,
+           label = sprintf("mean = %.4f (≈ 0)", mean(naive1_df$residual)),
+           color = "red", hjust = 0, size = 3.3) +
+  scale_fill_manual(values = row_colors, guide = "none") +
+  scale_x_discrete(labels = NULL) +
+  labs(x = "Observation (same colours as scatterplot)",
+       y = "Residual (kg)",
+       title = "Raw residuals — positives and negatives exactly cancel",
+       subtitle = "The red dashed line is the mean; it sits on 0 by construction.") +
+  theme_minimal(base_size = 12) +
+  theme(axis.ticks.x = element_blank())
+```
+
+## 7.2 Naive attempt #2 — average the absolute values
+
+The reason attempt #1 failed is sign. So fix the sign first by taking
+absolute values, *then* average. That gives the **mean absolute deviation
+(MAD)**:
+
+```{r naive-mad}
+mad_naive <- mean(abs(hand_tbl$residual))
+cat(sprintf("Mean absolute residual  = %.4f kg\n", mad_naive))
+```
+
+That's a perfectly reasonable "typical miss" number, and intuitively it
+says: "on any given baby the line is off by about
+`r round(mad_naive, 2)` kg."
+
+So why isn't this what R reports? Two reasons, one visual and one algebraic.
+
+**Visual/algebraic reason.** Look at the two candidate "distance from zero"
+functions $f(x) = |x|$ and $g(x) = x^2$:
+
+```{r abs-vs-sq, fig.height = 3}
+curves_df <- tibble(
+  x    = seq(-1, 1, length.out = 401),
+  abs  = abs(x),
+  sq   = x^2
+) %>%
+  pivot_longer(c(abs, sq), names_to = "fun", values_to = "y") %>%
+  mutate(fun = recode(fun,
+    abs = "y = |x|   (absolute value)",
+    sq  = "y = x^2  (squared)"
+  ))
+
+ggplot(curves_df, aes(x = x, y = y)) +
+  geom_line(linewidth = 1.1, color = "#377EB8") +
+  geom_vline(xintercept = 0, color = "grey70", linetype = "dashed") +
+  facet_wrap(~ fun, nrow = 1) +
+  labs(title = "Why statisticians square instead of taking absolute value",
+       subtitle = "Left: sharp corner at 0, derivative jumps. Right: perfectly smooth.",
+       x = "x (a residual)", y = "penalty") +
+  theme_minimal(base_size = 12) +
+  theme(strip.text = element_text(face = "bold"))
+```
+
+On the left, $|x|$ has a **sharp corner at zero**: its slope is $-1$ just to
+the left of zero and $+1$ just to the right. In calculus terms, the
+derivative doesn't exist at $x = 0$.
+
+On the right, $x^2$ is smooth everywhere, with derivative $2x$ — which is
+itself continuous.
+
+**Why that matters.** When we pick the "best" intercept and slope for a
+regression, we set up a calculus problem: find the values that *minimise*
+the total penalty across all residuals. Calculus wants smooth functions
+because you solve those problems by taking derivatives and setting them to
+zero. With $|x|$:
+
+- No clean derivative at zero, so no single tidy equation to solve.
+- No closed-form slope/intercept — you need an iterative algorithm.
+- No clean link to the normal distribution, so confidence intervals,
+  $p$-values and $R^2$ all get messier.
+
+With $x^2$, everything turns into a simple linear system, and the whole
+classical theory of regression — standard errors, $t$-tests,
+$F$-statistics, the lot — falls out of that one algebraic convenience.
+
+MAD is still a perfectly valid measure of error (robust regression uses it
+on purpose), but for the *standard* regression R prints, squared residuals
+win.
+
+## 7.3 The actual recipe — square, average, square-root
+
+So the winning strategy is:
+
+1. **Square each residual.** Positives and negatives now both become
+   positives; big misses get penalised disproportionately more than small
+   ones.
+2. **Average them.** That gives a "mean squared error" — but in squared
+   units (here, kg²), which doesn't mean much to a human.
+3. **Take the square-root.** That brings us back to the original units
+   (kg), where the number is directly interpretable again.
+
+And there's one twist at step 2: we divide by $n - 2$ instead of $n$.
+
+$$
+\text{RSE} \;=\; \sqrt{\frac{\sum_{i=1}^n (y_i - \hat y_i)^2}{n - 2}}
+$$
+
+Why $n - 2$? Because we used the data **twice** to fit the line — once to
+estimate the intercept and once to estimate the slope. Those two estimates
+force the residuals to satisfy two constraints (they sum to zero, and they
+are uncorrelated with $x$). So out of $n$ residuals, only $n - 2$ are really
+"free" — the other two are determined by the first $n - 2$. Dividing by the
+number of **free** residuals (the *degrees of freedom*) gives an unbiased
+estimate of the true error standard deviation. With $n = 2$, the line passes
+through both points perfectly and $n - 2 = 0$ — there's literally nothing
+left to estimate error from, which is exactly right.
+
+### Computing RSE by hand
+
+```{r rse-hand}
+residuals_vec <- hand_tbl$residual
+n             <- length(residuals_vec)
+df_resid      <- n - 2
+
+ss_resid <- sum(residuals_vec^2)
+rse_hand <- sqrt(ss_resid / df_resid)
+
+cat(sprintf("n                         = %d\n", n))
+cat(sprintf("Degrees of freedom (n-2)  = %d\n", df_resid))
+cat(sprintf("Sum of squared residuals  = %.4f\n", ss_resid))
+cat(sprintf("RSE = sqrt(%.4f / %d)\n", ss_resid, df_resid))
+cat(sprintf("    = sqrt(%.4f)\n", ss_resid / df_resid))
+cat(sprintf("    = %.4f  kg\n", rse_hand))
+
+cat(sprintf("\nR reports RSE = %.4f on %d degrees of freedom\n",
+            summary(model)$sigma, summary(model)$df[2]))
+```
+
+And the table, with squared residuals alongside, for reference:
+
+```{r rse-table}
+rse_tbl <- hand_tbl %>%
+  mutate(residual_sq = round(residual^2, 4)) %>%
+  select(row_id, weeks, weight_kg, y_hat, residual, residual_sq) %>%
+  bind_rows(
+    tibble(
+      row_id      = NA,
+      weeks       = NA,
+      weight_kg   = NA,
+      y_hat       = NA,
+      residual    = NA,
+      residual_sq = round(sum(hand_tbl$residual^2), 4)
+    )
+  )
+
+rse_tbl
+```
+
+The last row is the **sum of squared residuals (SSR)**, the engine of the
+whole calculation.
+
+A bar chart of each row's contribution to SSR (in the same colours as
+before) makes it clear that a few large-miss points dominate:
+
+```{r rse-bars, fig.height = 3.6}
+rse_bar_df <- hand_tbl %>%
+  mutate(row_factor = factor(row_id, levels = 1:8),
+         residual_sq = residual^2)
+
+ggplot(rse_bar_df,
+       aes(x = row_factor, y = residual_sq, fill = row_factor)) +
+  geom_col(width = 0.7) +
+  geom_text(aes(label = sprintf("%.3f", residual_sq)),
+            vjust = -0.4, size = 3.2, show.legend = FALSE) +
+  scale_fill_manual(values = row_colors, guide = "none") +
+  scale_x_discrete(labels = NULL) +
+  labs(x = "Observation (same colours as scatterplot)",
+       y = "Squared residual (kg²)",
+       title = "Contribution of each point to the sum of squared residuals",
+       subtitle = sprintf("Sum of squares = %.4f;  RSE = sqrt(%.4f / %d) = %.4f kg",
+                          sum(rse_bar_df$residual_sq),
+                          sum(rse_bar_df$residual_sq),
+                          df_resid, rse_hand)) +
+  theme_minimal(base_size = 12) +
+  theme(axis.ticks.x = element_blank())
+```
+
+## 7.4 What RSE means in plain English
+
+```{r rse-interp}
+mean_y <- mean(preemie_data$weight_kg)
+cat(sprintf("Mean birth weight in our sample: %.2f kg\n", mean_y))
+cat(sprintf("RSE:                             %.2f kg\n", rse_hand))
+cat(sprintf("RSE as %% of mean:                %.1f%%\n",
+            100 * rse_hand / mean_y))
+```
+
+So in this toy dataset the line typically misses each actual birth weight
+by about `r round(rse_hand, 2)` kg — roughly
+`r round(100 * rse_hand / mean_y)`% of the average birth weight. That's a
+much more honest summary of fit quality than "the mean residual is zero,"
+which is always true and never useful.
+
+```{r slides-2, echo = FALSE}
+cat("SLIDE_DATA_RSE::SSR=",    round(ss_resid, 4), "\n", sep = "")
+cat("SLIDE_DATA_RSE::DF=",     df_resid, "\n", sep = "")
+cat("SLIDE_DATA_RSE::RSE=",    round(rse_hand, 4), "\n", sep = "")
+cat("SLIDE_DATA_RSE::MEAN_Y=", round(mean_y, 4), "\n", sep = "")
+```
+
+# 8. Summary to hand to the slide generator
+
+```{r final-summary, echo = FALSE}
+cat("============================================================\n")
+cat("KEY TAKEAWAYS\n")
+cat("============================================================\n")
+cat("1. A residual is (observed y) minus (predicted y) — a vertical\n",
+    "   distance from a point to the fitted line.\n", sep = "")
+cat("2. R's 'Residuals:' row is the 5-number summary of those\n",
+    "   residuals: Min, 1Q, Median, 3Q, Max.\n", sep = "")
+cat("3. Min and Max are always the smallest/largest actual residual.\n")
+cat("4. 1Q, Median, 3Q are computed by the formula h = (n-1)*p + 1\n",
+    "   and LINEAR INTERPOLATION between the two sorted residuals on\n",
+    "   either side of position h. Only when h happens to be a whole\n",
+    "   number does a quartile coincide with a real residual.\n", sep = "")
+cat("5. Residual standard error = sqrt(SSR / (n - 2)).\n")
+cat("   - Squaring removes sign so misses don't cancel.\n")
+cat("   - Square-root restores the original units.\n")
+cat("   - n - 2 (not n) accounts for the two parameters already spent\n",
+    "     estimating intercept and slope.\n", sep = "")
+cat("6. RSE answers: 'on average, how far off is the line?'\n")
+cat("============================================================\n")
+```

@@ -1,0 +1,139 @@
+[
+  {
+    "doi": "10.5061/dryad.0k6djhb14",
+    "title": "Peak power and body mass as indices of bone loading in a healthy adult population",
+    "license": "https://spdx.org/licenses/CC0-1.0.html",
+    "sharing_link": "http://datadryad.org/dataset/doi:10.5061/dryad.0k6djhb14",
+    "files": [
+      {
+        "name": "Peak_power_and_body_mass_data-Reference_Sheet-v3.docx.pdf",
+        "error": "HTTP Error 401: Unauthorized",
+        "url": "https://datadryad.org/api/v2/files/2347301/download"
+      },
+      {
+        "name": "Peak_power_and_body_mass_data-v3.csv",
+        "error": "HTTP Error 401: Unauthorized",
+        "url": "https://datadryad.org/api/v2/files/2347300/download"
+      }
+    ],
+    "kind": "dryad",
+    "folder": "06_peak_power_bone"
+  },
+  {
+    "doi": "10.5061/dryad.nf63rb8",
+    "title": "Data from: HIV infection is an independent risk factor for decreased 6-minute walk test distance",
+    "license": "https://spdx.org/licenses/CC0-1.0.html",
+    "sharing_link": "http://datadryad.org/dataset/doi:10.5061/dryad.nf63rb8",
+    "files": [
+      {
+        "name": "Data for HIV 6MW PLOS ONE_2.xlsx",
+        "error": "HTTP Error 401: Unauthorized",
+        "url": "https://datadryad.org/api/v2/files/82437/download"
+      }
+    ],
+    "kind": "dryad",
+    "folder": "11_hiv_6mwt"
+  },
+  {
+    "record": "4946112",
+    "title": "Data from: Association between serum \u03b3-glutamyltranspeptidase and atherosclerosis: a population-based cross-sectional study",
+    "license": "cc-zero",
+    "sharing_link": null,
+    "files": [
+      {
+        "name": "data bmjopen dryad.xls",
+        "size": 289280,
+        "mime": null,
+        "url": "https://zenodo.org/api/records/4946112/files/data%20bmjopen%20dryad.xls/content"
+      }
+    ],
+    "kind": "zenodo",
+    "folder": "12_ggt_atherosclerosis"
+  },
+  {
+    "record": "4961200",
+    "title": "Data from: Association of cardiovascular risk factors with carotid intima media thickness in patients with rheumatoid arthritis with low disease activity compared to controls: a cross-sectional study",
+    "license": "cc-zero",
+    "sharing_link": null,
+    "files": [
+      {
+        "name": "traditional CVRF in relation to cIMT_PLOSONE23aug15.sav",
+        "size": 77044,
+        "mime": null,
+        "url": "https://zenodo.org/api/records/4961200/files/traditional%20CVRF%20in%20relation%20to%20cIMT_PLOSONE23aug15.sav/content"
+      }
+    ],
+    "kind": "zenodo",
+    "folder": "13_cimt_ra"
+  },
+  {
+    "doi": "10.5061/dryad.ff6bd0pq",
+    "title": "Data from: Oral contraceptive use is associated with prostate cancer: an ecologic study",
+    "license": "https://spdx.org/licenses/CC0-1.0.html",
+    "sharing_link": "http://datadryad.org/dataset/doi:10.5061/dryad.ff6bd0pq",
+    "files": [
+      {
+        "name": "whole_world_ocp.xls",
+        "error": "HTTP Error 401: Unauthorized",
+        "url": "https://datadryad.org/api/v2/files/66229/download"
+      }
+    ],
+    "kind": "dryad",
+    "folder": "14_oc_prostate"
+  },
+  {
+    "doi": "10.5061/dryad.jg413",
+    "title": "Data from: Patient and disease characteristics associated with activation for self-management in patients with diabetes, chronic obstructive pulmonary disease, chronic heart failure and chronic renal disease: a cross-sectional survey study",
+    "license": "https://spdx.org/licenses/CC0-1.0.html",
+    "sharing_link": "http://datadryad.org/dataset/doi:10.5061/dryad.jg413",
+    "files": [
+      {
+        "name": "Datafile Patient activation for self-management.sav",
+        "error": "HTTP Error 401: Unauthorized",
+        "url": "https://datadryad.org/api/v2/files/36070/download"
+      },
+      {
+        "name": "README_for_Datafile Patient activation for self-management.docx",
+        "error": "HTTP Error 401: Unauthorized",
+        "url": "https://datadryad.org/api/v2/files/36071/download"
+      }
+    ],
+    "kind": "dryad",
+    "folder": "15_pam13"
+  },
+  {
+    "doi": "10.5061/dryad.63r07",
+    "title": "Data from: Relationship among medical student resilience, educational environment and quality of life",
+    "license": "https://spdx.org/licenses/CC0-1.0.html",
+    "sharing_link": "http://datadryad.org/dataset/doi:10.5061/dryad.63r07",
+    "files": [
+      {
+        "name": "Dataset Resilience Educational Environment QoL.xlsx",
+        "error": "HTTP Error 401: Unauthorized",
+        "url": "https://datadryad.org/api/v2/files/36919/download"
+      }
+    ],
+    "kind": "dryad",
+    "folder": "16_med_student_qol"
+  },
+  {
+    "doi": "10.5061/dryad.bnzs7h4j1",
+    "title": "The prevalence and correlates of depression and anxiety symptoms among older adults in Shenzhen, China",
+    "license": "https://spdx.org/licenses/CC0-1.0.html",
+    "sharing_link": "http://datadryad.org/dataset/doi:10.5061/dryad.bnzs7h4j1",
+    "files": [
+      {
+        "name": "Mental_Health_Survey_of_the_Elderly.csv",
+        "error": "HTTP Error 401: Unauthorized",
+        "url": "https://datadryad.org/api/v2/files/2876318/download"
+      },
+      {
+        "name": "README.md",
+        "error": "HTTP Error 401: Unauthorized",
+        "url": "https://datadryad.org/api/v2/files/2876322/download"
+      }
+    ],
+    "kind": "dryad",
+    "folder": "17_depression_anxiety"
+  }
+]

@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.56">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>health_datasets_linear_regression</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="health_datasets_linear_regression_files/libs/clipboard/clipboard.min.js"></script>
+<script src="health_datasets_linear_regression_files/libs/quarto-html/quarto.js"></script>
+<script src="health_datasets_linear_regression_files/libs/quarto-html/popper.min.js"></script>
+<script src="health_datasets_linear_regression_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="health_datasets_linear_regression_files/libs/quarto-html/anchor.min.js"></script>
+<link href="health_datasets_linear_regression_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="health_datasets_linear_regression_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="health_datasets_linear_regression_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="health_datasets_linear_regression_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="health_datasets_linear_regression_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<section id="open-access-health-datasets-for-ols-linear-regression-practice" class="level1">
+<h1>Open-access health datasets for OLS linear regression practice</h1>
+<p>Curated teaching datasets for ordinary least squares. All 25 datasets are downloaded (or pulled from permissive R packages), column-renamed to tidy <code>snake_case</code>, saved as CSVs, and given a quick-view thumbnail.</p>
+<p>All processing lives in <a href="scripts/prepare_datasets.R">datasets_staging/scripts/prepare_datasets.R</a>. Raw source files are in <a href="raw/">datasets_staging/raw/</a>, cleaned CSVs in <a href="cleaned/">datasets_staging/cleaned/</a>, and thumbnails in <a href="thumbnails/">datasets_staging/thumbnails/</a>.</p>
+<section id="summary-tables" class="level2">
+<h2 class="anchored" data-anchor-id="summary-tables">Summary tables</h2>
+<p>The 25 datasets fall into two natural groups. <strong>Study datasets</strong> are the raw data from a specific published research paper — the numbers you find in the resource correspond directly to the numbers analysed in that paper. <strong>Teaching datasets</strong> were curated, sampled, or aggregated specifically for a textbook or teaching package; they come from real public sources (NHANES, ACS, NCHS, UN, NLSY) but the rows/columns you see were selected for pedagogical convenience, not to reproduce a specific paper.</p>
+<section id="a.-datasets-from-published-research-studies" class="level3">
+<h3 class="anchored" data-anchor-id="a.-datasets-from-published-research-studies">A. Datasets from published research studies</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Dataset</th>
+<th>N × p</th>
+<th>Outcome ~ main predictor</th>
+<th>Quick view</th>
+<th>R load</th>
+<th>Cleaned CSV</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>Body fat — 252 men (Johnson/Penrose)</td>
+<td>252 × 19</td>
+<td><code>bodyfat_brozek</code> ~ <code>abdomen_cm</code></td>
+<td><img src="thumbnails/01_bodyfat_johnson.png" width="180"></td>
+<td><code>read.csv("cleaned/01_bodyfat_johnson.csv")</code></td>
+<td><a href="cleaned/01_bodyfat_johnson.csv">01_bodyfat_johnson.csv</a></td>
+<td>Free, non-commercial (Fisher/JSE)</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Diabetes progression (Efron et al.)</td>
+<td>442 × 11</td>
+<td><code>progression</code> ~ <code>bmi</code></td>
+<td><img src="thumbnails/02_diabetes_efron.png" width="180"></td>
+<td><code>read.csv("cleaned/02_diabetes_efron.csv")</code></td>
+<td><a href="cleaned/02_diabetes_efron.csv">02_diabetes_efron.csv</a></td>
+<td>Public (scikit-learn default)</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>FEV lung function (Kahn/Tager)</td>
+<td>654 × 5</td>
+<td><code>fev_l</code> ~ <code>height_in</code></td>
+<td><img src="thumbnails/03_fev_kahn.png" width="180"></td>
+<td><code>read.csv("cleaned/03_fev_kahn.csv")</code></td>
+<td><a href="cleaned/03_fev_kahn.csv">03_fev_kahn.csv</a></td>
+<td>Free, non-commercial (JSE)</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>Body fat — Spanish adults (Fuster-Parra)</td>
+<td>3200 × 5</td>
+<td><code>bodyfat_pct</code> ~ <code>bmi</code></td>
+<td><img src="thumbnails/04_bodyfat_spanish.png" width="180"></td>
+<td><code>read.csv("cleaned/04_bodyfat_spanish.csv")</code></td>
+<td><a href="cleaned/04_bodyfat_spanish.csv">04_bodyfat_spanish.csv</a></td>
+<td>CC-BY 4.0 (PLOS ONE)</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>Birthweight from ultrasound (Secher)</td>
+<td>107 × 4</td>
+<td><code>birthweight_g</code> ~ <code>abdominal_diameter_mm</code></td>
+<td><img src="thumbnails/05_birthweight_secher.png" width="180"></td>
+<td><code>read.csv("cleaned/05_birthweight_secher.csv")</code></td>
+<td><a href="cleaned/05_birthweight_secher.csv">05_birthweight_secher.csv</a></td>
+<td>Textbook supplement (no explicit licence)</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>Peak power &amp; tibial bone strength (Denys)</td>
+<td>142 × 8</td>
+<td><code>bsi_compression</code> ~ <code>peak_power_w</code></td>
+<td><img src="thumbnails/06_peak_power_bone.png" width="180"></td>
+<td><code>read.csv("cleaned/06_peak_power_bone.csv")</code></td>
+<td><a href="cleaned/06_peak_power_bone.csv">06_peak_power_bone.csv</a></td>
+<td>CC0 1.0 (Dryad)</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>Alcohol metabolism &amp; sex (Frezza, NEJM)</td>
+<td>32 × 5</td>
+<td><code>first_pass_metabolism</code> ~ <code>gastric_ad_activity</code> × <code>sex</code></td>
+<td><img src="thumbnails/07_alcohol_metabolism.png" width="180"></td>
+<td><code>data(case1101, package = "Sleuth3")</code></td>
+<td><a href="cleaned/07_alcohol_metabolism.csv">07_alcohol_metabolism.csv</a></td>
+<td>GPL-2 (Sleuth3)</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>Cystic fibrosis lung function (O’Neill)</td>
+<td>25 × 10</td>
+<td><code>pe_max</code> ~ <code>weight_kg</code></td>
+<td><img src="thumbnails/08_cystic_fibrosis.png" width="180"></td>
+<td><code>data(cystfibr, package = "ISwR")</code></td>
+<td><a href="cleaned/08_cystic_fibrosis.csv">08_cystic_fibrosis.csv</a></td>
+<td>GPL-2 (ISwR)</td>
+</tr>
+<tr class="odd">
+<td>9</td>
+<td>DXA body fat — German women (Garcia)</td>
+<td>71 × 10</td>
+<td><code>dxa_fat_kg</code> ~ <code>waist_cm</code></td>
+<td><img src="thumbnails/09_bodyfat_german.png" width="180"></td>
+<td><code>data(bodyfat, package = "TH.data")</code></td>
+<td><a href="cleaned/09_bodyfat_german.csv">09_bodyfat_german.csv</a></td>
+<td>GPL-2 (TH.data)</td>
+</tr>
+<tr class="even">
+<td>10</td>
+<td>Birth weight — Baystate Medical (Hosmer)</td>
+<td>189 × 10</td>
+<td><code>birthweight_g</code> ~ <code>mother_weight_lb</code></td>
+<td><img src="thumbnails/10_birthweight_baystate.png" width="180"></td>
+<td><code>data(birthwt, package = "MASS")</code></td>
+<td><a href="cleaned/10_birthweight_baystate.csv">10_birthweight_baystate.csv</a></td>
+<td>GPL-2 (MASS)</td>
+</tr>
+<tr class="odd">
+<td>11</td>
+<td>HIV &amp; 6-minute walk distance (Frasca)</td>
+<td>427 × 23</td>
+<td><code>six_min_walk_m</code> ~ <code>age_yrs</code></td>
+<td><img src="thumbnails/11_hiv_6mwt.png" width="180"></td>
+<td><code>read.csv("cleaned/11_hiv_6mwt.csv")</code></td>
+<td><a href="cleaned/11_hiv_6mwt.csv">11_hiv_6mwt.csv</a></td>
+<td>CC0 1.0 (Dryad)</td>
+</tr>
+<tr class="even">
+<td>12</td>
+<td>Serum GGT &amp; atherosclerosis (BMJ Open)</td>
+<td>912 × 25</td>
+<td><code>pwv_max</code> ~ <code>log2_ggt</code></td>
+<td><img src="thumbnails/12_ggt_atherosclerosis.png" width="180"></td>
+<td><code>read.csv("cleaned/12_ggt_atherosclerosis.csv")</code></td>
+<td><a href="cleaned/12_ggt_atherosclerosis.csv">12_ggt_atherosclerosis.csv</a></td>
+<td>CC0 1.0 (Zenodo)</td>
+</tr>
+<tr class="odd">
+<td>13</td>
+<td>CV risk factors &amp; CIMT in RA (Ozen)</td>
+<td>470 × 48</td>
+<td><code>cimt_total</code> ~ <code>age_yrs</code></td>
+<td><img src="thumbnails/13_cimt_ra.png" width="180"></td>
+<td><code>read.csv("cleaned/13_cimt_ra.csv")</code></td>
+<td><a href="cleaned/13_cimt_ra.csv">13_cimt_ra.csv</a></td>
+<td>CC0 1.0 (Zenodo)</td>
+</tr>
+<tr class="even">
+<td>14</td>
+<td>Oral contraceptive use &amp; prostate cancer (Margel)</td>
+<td>167 × 9</td>
+<td><code>prostate_cancer_incidence</code> ~ <code>pill_use_pct</code></td>
+<td><img src="thumbnails/14_oc_prostate.png" width="180"></td>
+<td><code>read.csv("cleaned/14_oc_prostate.csv")</code></td>
+<td><a href="cleaned/14_oc_prostate.csv">14_oc_prostate.csv</a></td>
+<td>CC0 1.0 (Dryad)</td>
+</tr>
+<tr class="odd">
+<td>15</td>
+<td>Patient activation for self-management (Bos-Touwen)</td>
+<td>1154 × 94</td>
+<td><code>pam_activation_score</code> ~ <code>sf12_mental</code></td>
+<td><img src="thumbnails/15_pam13.png" width="180"></td>
+<td><code>read.csv("cleaned/15_pam13.csv")</code></td>
+<td><a href="cleaned/15_pam13.csv">15_pam13.csv</a></td>
+<td>CC0 1.0 (Dryad)</td>
+</tr>
+<tr class="even">
+<td>16</td>
+<td>Medical student resilience &amp; QoL (Tempski)</td>
+<td>1350 × 22</td>
+<td><code>whoqol_psychological</code> ~ <code>resilience_score</code></td>
+<td><img src="thumbnails/16_med_student_qol.png" width="180"></td>
+<td><code>read.csv("cleaned/16_med_student_qol.csv")</code></td>
+<td><a href="cleaned/16_med_student_qol.csv">16_med_student_qol.csv</a></td>
+<td>CC0 1.0 (Dryad)</td>
+</tr>
+<tr class="odd">
+<td>17</td>
+<td>Depression &amp; anxiety in older adults (Shenzhen)</td>
+<td>5331 × 24</td>
+<td><code>phq9_depression_score</code> ~ <code>uls_loneliness_score</code></td>
+<td><img src="thumbnails/17_depression_anxiety.png" width="180"></td>
+<td><code>read.csv("cleaned/17_depression_anxiety.csv")</code></td>
+<td><a href="cleaned/17_depression_anxiety.csv">17_depression_anxiety.csv</a></td>
+<td>CC0 1.0 (Dryad)</td>
+</tr>
+<tr class="even">
+<td>18</td>
+<td>PREVEND cognitive function &amp; aging (NL cohort)</td>
+<td>500 × 31</td>
+<td><code>rfft</code> ~ <code>age_yrs</code></td>
+<td><img src="thumbnails/18_prevend.png" width="180"></td>
+<td><code>data(prevend.samp, package = "oibiostat")</code></td>
+<td><a href="cleaned/18_prevend.csv">18_prevend.csv</a></td>
+<td>No explicit licence (oibiostat)</td>
+</tr>
+<tr class="odd">
+<td>19</td>
+<td>FAMuSS — ACTN3 genotype &amp; arm-strength gain</td>
+<td>595 × 9</td>
+<td><code>ndrm_change_pct</code> ~ <code>age_yrs</code></td>
+<td><img src="thumbnails/19_famuss.png" width="180"></td>
+<td><code>data(famuss, package = "oibiostat")</code></td>
+<td><a href="cleaned/19_famuss.csv">19_famuss.csv</a></td>
+<td>No explicit licence (oibiostat)</td>
+</tr>
+<tr class="even">
+<td>25</td>
+<td>Boston housing — NOx air pollution (Harrison &amp; Rubinfeld)</td>
+<td>506 × 13</td>
+<td><code>nox_ppm_x10m</code> ~ <code>distance_to_employment</code></td>
+<td><img src="thumbnails/25_boston.png" width="180"></td>
+<td><code>data(Boston, package = "ISLR2")</code></td>
+<td><a href="cleaned/25_boston.csv">25_boston.csv</a></td>
+<td>GPL-2 (ISLR2)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="b.-teaching-oriented-datasets-curated-sampled-for-pedagogy" class="level3">
+<h3 class="anchored" data-anchor-id="b.-teaching-oriented-datasets-curated-sampled-for-pedagogy">B. Teaching-oriented datasets (curated / sampled for pedagogy)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Dataset</th>
+<th>N × p</th>
+<th>Outcome ~ main predictor</th>
+<th>Quick view</th>
+<th>R load</th>
+<th>Cleaned CSV</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>20</td>
+<td>kidiq — child test score &amp; mother’s IQ (ROS)</td>
+<td>434 × 5</td>
+<td><code>kid_score</code> ~ <code>mom_iq</code></td>
+<td><img src="thumbnails/20_kidiq.png" width="180"></td>
+<td><code>data(kidiq, package = "rosdata")</code></td>
+<td><a href="cleaned/20_kidiq.csv">20_kidiq.csv</a></td>
+<td>BSD-3 code; data licence unstated</td>
+</tr>
+<tr class="even">
+<td>21</td>
+<td>births14 — US NCHS 2014 sample (openintro)</td>
+<td>1000 × 13</td>
+<td><code>birthweight_lb</code> ~ <code>gestation_weeks</code></td>
+<td><img src="thumbnails/21_births14.png" width="180"></td>
+<td><code>data(births14, package = "openintro")</code></td>
+<td><a href="cleaned/21_births14.csv">21_births14.csv</a></td>
+<td>CC-BY-SA 4.0 (openintro)</td>
+</tr>
+<tr class="odd">
+<td>22</td>
+<td>UN member states 2024 — global health (moderndive)</td>
+<td>193 × 13</td>
+<td><code>life_expectancy_yrs</code> ~ <code>hdi</code></td>
+<td><img src="thumbnails/22_un_member_states_2024.png" width="180"></td>
+<td><code>data(un_member_states_2024, package = "moderndive")</code></td>
+<td><a href="cleaned/22_un_member_states_2024.csv">22_un_member_states_2024.csv</a></td>
+<td>MIT (moderndive)</td>
+</tr>
+<tr class="even">
+<td>23</td>
+<td>NHANES adult sample 2009–12 (oibiostat)</td>
+<td>135 × 31</td>
+<td><code>systolic_bp</code> ~ <code>age_yrs</code></td>
+<td><img src="thumbnails/23_nhanes_adult.png" width="180"></td>
+<td><code>data(nhanes.samp.adult, package = "oibiostat")</code></td>
+<td><a href="cleaned/23_nhanes_adult.csv">23_nhanes_adult.csv</a></td>
+<td>NHANES public domain; oibiostat sample has no explicit licence</td>
+</tr>
+<tr class="odd">
+<td>24</td>
+<td>US county-level socio-economic data (usdata)</td>
+<td>3142 × 15</td>
+<td><code>unemployment_rate</code> ~ <code>poverty_rate</code></td>
+<td><img src="thumbnails/24_county.png" width="180"></td>
+<td><code>data(county, package = "usdata")</code></td>
+<td><a href="cleaned/24_county.csv">24_county.csv</a></td>
+<td>GPL-3 (usdata); Census/ACS public domain</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="load-everything-snippet" class="level2">
+<h2 class="anchored" data-anchor-id="load-everything-snippet">Load-everything snippet</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readr)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>bodyfat_johnson     <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/01_bodyfat_johnson.csv"</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>diabetes_efron      <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/02_diabetes_efron.csv"</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>fev_kahn            <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/03_fev_kahn.csv"</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>bodyfat_spanish     <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/04_bodyfat_spanish.csv"</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>birthweight_secher  <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/05_birthweight_secher.csv"</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>peak_power_bone     <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/06_peak_power_bone.csv"</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(case1101, <span class="at">package =</span> <span class="st">"Sleuth3"</span>);   alcohol_metabolism   <span class="ot">&lt;-</span> case1101</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(cystfibr, <span class="at">package =</span> <span class="st">"ISwR"</span>);      cystic_fibrosis      <span class="ot">&lt;-</span> cystfibr</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(bodyfat,  <span class="at">package =</span> <span class="st">"TH.data"</span>);   bodyfat_german       <span class="ot">&lt;-</span> bodyfat</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(birthwt,  <span class="at">package =</span> <span class="st">"MASS"</span>);      birthweight_baystate <span class="ot">&lt;-</span> birthwt</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>hiv_6mwt            <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/11_hiv_6mwt.csv"</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>ggt_atherosclerosis <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/12_ggt_atherosclerosis.csv"</span>)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>cimt_ra             <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/13_cimt_ra.csv"</span>)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>oc_prostate         <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/14_oc_prostate.csv"</span>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>pam13               <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/15_pam13.csv"</span>)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>med_student_qol     <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/16_med_student_qol.csv"</span>)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>depression_anxiety  <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/17_depression_anxiety.csv"</span>)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(prevend.samp,         <span class="at">package =</span> <span class="st">"oibiostat"</span>);  prevend              <span class="ot">&lt;-</span> prevend.samp</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(famuss,               <span class="at">package =</span> <span class="st">"oibiostat"</span>);  famuss_df            <span class="ot">&lt;-</span> famuss</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(kidiq,                <span class="at">package =</span> <span class="st">"rosdata"</span>);    kidiq_df             <span class="ot">&lt;-</span> kidiq</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(births14,             <span class="at">package =</span> <span class="st">"openintro"</span>);  births14_df          <span class="ot">&lt;-</span> births14</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(un_member_states_2024, <span class="at">package =</span> <span class="st">"moderndive"</span>); un_member_states    <span class="ot">&lt;-</span> un_member_states_2024</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(nhanes.samp.adult,    <span class="at">package =</span> <span class="st">"oibiostat"</span>);  nhanes_adult         <span class="ot">&lt;-</span> nhanes.samp.adult</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(county,               <span class="at">package =</span> <span class="st">"usdata"</span>);     county_df            <span class="ot">&lt;-</span> county</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(Boston,               <span class="at">package =</span> <span class="st">"ISLR2"</span>);      boston_df            <span class="ot">&lt;-</span> Boston</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="dataset-details" class="level2">
+<h2 class="anchored" data-anchor-id="dataset-details">Dataset details</h2>
+<p>Each section below lists the cleaned columns, primary paper/source, and the outcome + predictor used in the thumbnail. Column names in all cleaned CSVs use <code>snake_case</code>. Categorical variables are stored as factors with readable labels (e.g.&nbsp;<code>sex = male / female</code>) whenever the original coding was numeric.</p>
+<hr>
+<section id="body-fat-252-men-johnsonpenrose-jse-1996" class="level3">
+<h3 class="anchored" data-anchor-id="body-fat-252-men-johnsonpenrose-jse-1996">1 — Body fat, 252 men (Johnson/Penrose, JSE 1996)</h3>
+<p><img src="thumbnails/01_bodyfat_johnson.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 252 × 19</li>
+<li><strong>Paper:</strong> <a href="https://doi.org/10.1080/10691898.1996.11910505">Johnson 1996, DOI 10.1080/10691898.1996.11910505</a></li>
+<li><strong>Original link:</strong> <a href="http://jse.amstat.org/datasets/fat.dat.txt">fat.dat.txt</a> (<a href="http://jse.amstat.org/datasets/fat.txt">docs</a>)</li>
+<li><strong>License:</strong> free for non-commercial use (Dr.&nbsp;A. Garth Fisher, BYU)</li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/01_bodyfat_johnson.csv">01_bodyfat_johnson.csv</a></li>
+<li><strong>Columns:</strong> <code>case, bodyfat_brozek, bodyfat_siri, density, age, weight_lb, height_in, adiposity_bmi, fat_free_wt_lb, neck_cm, chest_cm, abdomen_cm, hip_cm, thigh_cm, knee_cm, ankle_cm, biceps_cm, forearm_cm, wrist_cm</code></li>
+<li><strong>Notes:</strong> classic textbook OLS / variable-selection example. Known typos for cases 42, 48, 76, 96, 182.</li>
+</ul>
+<hr>
+</section>
+<section id="diabetes-progression-efron-et-al.-annals-of-stats-2004" class="level3">
+<h3 class="anchored" data-anchor-id="diabetes-progression-efron-et-al.-annals-of-stats-2004">2 — Diabetes progression (Efron et al., Annals of Stats 2004)</h3>
+<p><img src="thumbnails/02_diabetes_efron.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 442 × 11</li>
+<li><strong>Paper:</strong> <a href="https://doi.org/10.1214/009053604000000067">Efron et al.&nbsp;2004, DOI 10.1214/009053604000000067</a></li>
+<li><strong>Original link:</strong> <a href="https://www4.stat.ncsu.edu/~boos/var.select/diabetes.tab.txt">diabetes.tab.txt</a></li>
+<li><strong>License:</strong> public (scikit-learn ships it as its default regression example)</li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/02_diabetes_efron.csv">02_diabetes_efron.csv</a></li>
+<li><strong>Columns:</strong> <code>age, sex, bmi, bp_mean, total_cholesterol, ldl, hdl, tc_hdl_ratio, log_serum_triglycerides, glucose, progression</code></li>
+<li><strong>Notes:</strong> full-rank OLS reaches R² ≈ 0.51. Column renames mirror the LARS paper’s <code>S1…S6</code>.</li>
+</ul>
+<hr>
+</section>
+<section id="fev-lung-function-in-youths-kahntager-jse-2005" class="level3">
+<h3 class="anchored" data-anchor-id="fev-lung-function-in-youths-kahntager-jse-2005">3 — FEV lung function in youths (Kahn/Tager, JSE 2005)</h3>
+<p><img src="thumbnails/03_fev_kahn.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 654 × 5</li>
+<li><strong>Paper:</strong> <a href="https://doi.org/10.1080/10691898.2005.11910559">Kahn 2005, DOI 10.1080/10691898.2005.11910559</a></li>
+<li><strong>Original link:</strong> <a href="http://jse.amstat.org/datasets/fev.dat.txt">fev.dat.txt</a> (<a href="http://jse.amstat.org/datasets/fev.txt">docs</a>)</li>
+<li><strong>License:</strong> free for non-commercial use (JSE)</li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/03_fev_kahn.csv">03_fev_kahn.csv</a></li>
+<li><strong>Columns:</strong> <code>age_yrs, fev_l, height_in, sex, smoke</code></li>
+<li><strong>Notes:</strong> canonical confounding demo — naive smoker vs non-smoker comparison reverses sign once you adjust for age.</li>
+</ul>
+<hr>
+</section>
+<section id="body-fat-spanish-adults-fuster-parra-et-al.-plos-one-2015" class="level3">
+<h3 class="anchored" data-anchor-id="body-fat-spanish-adults-fuster-parra-et-al.-plos-one-2015">4 — Body fat, Spanish adults (Fuster-Parra et al., PLOS ONE 2015)</h3>
+<p><img src="thumbnails/04_bodyfat_spanish.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 3,200 × 5</li>
+<li><strong>Paper:</strong> <a href="https://doi.org/10.1371/journal.pone.0122291">Fuster-Parra et al.&nbsp;2015, DOI 10.1371/journal.pone.0122291</a></li>
+<li><strong>Original link:</strong> <a href="https://journals.plos.org/plosone/article/file?type=supplementary&amp;id=10.1371/journal.pone.0122291.s001">PLOS supplementary S1</a> (despite the <code>.xlsx</code> extension the file is a quoted text table)</li>
+<li><strong>License:</strong> CC-BY 4.0 (PLOS ONE supplements)</li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/04_bodyfat_spanish.csv">04_bodyfat_spanish.csv</a></li>
+<li><strong>Columns:</strong> <code>age, sex, bai, bmi, bodyfat_pct</code></li>
+<li><strong>Notes:</strong> paper explicitly uses OLS with asymptotic SEs. Gender originally coded 1 = male, 2 = female — decoded to a factor.</li>
+</ul>
+<hr>
+</section>
+<section id="birthweight-from-ultrasound-secher-via-ekstrøm-sørensen-2015" class="level3">
+<h3 class="anchored" data-anchor-id="birthweight-from-ultrasound-secher-via-ekstrøm-sørensen-2015">5 — Birthweight from ultrasound (Secher, via Ekstrøm &amp; Sørensen 2015)</h3>
+<p><img src="thumbnails/05_birthweight_secher.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 107 × 4</li>
+<li><strong>Source:</strong> Ekstrøm CT &amp; Sørensen H, <em>Introduction to Statistical Data Analysis for the Life Sciences</em> (2015), textbook supplement</li>
+<li><strong>Original link:</strong> <a href="https://staff.pubhealth.ku.dk/~linearpredictors/datafiles/BirthWeight.csv">BirthWeight.csv</a> (semicolon separator)</li>
+<li><strong>License:</strong> textbook supplement, publicly downloadable</li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/05_birthweight_secher.csv">05_birthweight_secher.csv</a></li>
+<li><strong>Columns:</strong> <code>id, biparietal_diameter_mm, abdominal_diameter_mm, birthweight_g</code></li>
+<li><strong>Notes:</strong> ideal first OLS example — two predictors only, clean linear relationship.</li>
+</ul>
+<hr>
+</section>
+<section id="peak-power-tibial-bone-strength-denys-yingling-msse-2022" class="level3">
+<h3 class="anchored" data-anchor-id="peak-power-tibial-bone-strength-denys-yingling-msse-2022">6 — Peak power &amp; tibial bone strength (Denys &amp; Yingling, MSSE 2022)</h3>
+<p><img src="thumbnails/06_peak_power_bone.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 142 × 8 (79 female, 63 male)</li>
+<li><strong>Paper:</strong> <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9186462/">Denys et al., <em>Med Sci Sports Exerc</em> 2022, PMC9186462</a></li>
+<li><strong>Dryad:</strong> <a href="https://datadryad.org/dataset/doi:10.5061/dryad.0k6djhb14">10.5061/dryad.0k6djhb14</a></li>
+<li><strong>License:</strong> CC0 1.0 (Dryad)</li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/06_peak_power_bone.csv">06_peak_power_bone.csv</a></li>
+<li><strong>Columns:</strong> <code>subject_id, sex, age_bin, body_mass_kg, peak_power_w, relative_peak_power, bsi_compression, polar_strength_strain_index</code></li>
+<li><strong>Notes:</strong> hierarchical OLS testing whether peak power (estimated from vertical-jump height via Sayer’s equation) adds to body-mass prediction of tibial bone strength (<code>bsi_compression</code> for trabecular / <code>polar_strength_strain_index</code> for cortical). Gender decoded from 1 = female, 2 = male; <code>age_bin</code> kept as 1–6 (decade-wise bins from the original file).</li>
+</ul>
+<hr>
+</section>
+<section id="alcohol-metabolism-sex-frezza-et-al.-nejm-1990" class="level3">
+<h3 class="anchored" data-anchor-id="alcohol-metabolism-sex-frezza-et-al.-nejm-1990">7 — Alcohol metabolism &amp; sex (Frezza et al., NEJM 1990)</h3>
+<p><img src="thumbnails/07_alcohol_metabolism.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 32 × 5</li>
+<li><strong>Paper:</strong> <a href="https://doi.org/10.1056/NEJM199001113220205">Frezza et al.&nbsp;1990, DOI 10.1056/NEJM199001113220205</a></li>
+<li><strong>Source:</strong> <code>Sleuth3::case1101</code></li>
+<li><strong>License:</strong> GPL-2 (via Sleuth3)</li>
+<li><strong>Load:</strong> <code>data(case1101, package = "Sleuth3")</code></li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/07_alcohol_metabolism.csv">07_alcohol_metabolism.csv</a></li>
+<li><strong>Columns:</strong> <code>subject, first_pass_metabolism, gastric_ad_activity, sex, alcohol_status</code></li>
+<li><strong>Notes:</strong> landmark NEJM study — great for teaching interactions (sex × gastric activity).</li>
+</ul>
+<hr>
+</section>
+<section id="cystic-fibrosis-lung-function-oneill-1983" class="level3">
+<h3 class="anchored" data-anchor-id="cystic-fibrosis-lung-function-oneill-1983">8 — Cystic fibrosis lung function (O’Neill 1983)</h3>
+<p><img src="thumbnails/08_cystic_fibrosis.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 25 × 10</li>
+<li><strong>Paper:</strong> O’Neill et al.&nbsp;(1983), <em>American Review of Respiratory Disease</em>, 128:1051.</li>
+<li><strong>Source:</strong> <code>ISwR::cystfibr</code></li>
+<li><strong>License:</strong> GPL-2 (via ISwR)</li>
+<li><strong>Load:</strong> <code>data(cystfibr, package = "ISwR")</code></li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/08_cystic_fibrosis.csv">08_cystic_fibrosis.csv</a></li>
+<li><strong>Columns:</strong> <code>age_yrs, sex, height_cm, weight_kg, bmp_pct, fev1_pct, residual_volume, functional_residual_capacity, total_lung_capacity, pe_max</code></li>
+<li><strong>Notes:</strong> small-sample OLS with 9 clinical predictors — good for stepwise selection / multicollinearity discussion.</li>
+</ul>
+<hr>
+</section>
+<section id="dxa-body-fat-german-women-garcia-et-al.-obesity-2005" class="level3">
+<h3 class="anchored" data-anchor-id="dxa-body-fat-german-women-garcia-et-al.-obesity-2005">9 — DXA body fat, German women (Garcia et al., Obesity 2005)</h3>
+<p><img src="thumbnails/09_bodyfat_german.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 71 × 10</li>
+<li><strong>Paper:</strong> <a href="https://doi.org/10.1038/oby.2005.67">Garcia et al.&nbsp;2005, DOI 10.1038/oby.2005.67</a></li>
+<li><strong>Source:</strong> <code>TH.data::bodyfat</code></li>
+<li><strong>License:</strong> GPL-2 (via TH.data)</li>
+<li><strong>Load:</strong> <code>data(bodyfat, package = "TH.data")</code></li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/09_bodyfat_german.csv">09_bodyfat_german.csv</a></li>
+<li><strong>Columns:</strong> <code>age_yrs, dxa_fat_kg, waist_cm, hip_cm, elbow_breadth_cm, knee_breadth_cm, anthro_3a, anthro_3b, anthro_3c, anthro_4</code></li>
+<li><strong>Notes:</strong> DXA is the gold-standard outcome. Paper uses backward-elimination OLS.</li>
+</ul>
+<hr>
+</section>
+<section id="birth-weight-baystate-medical-hosmer-lemeshow-1989" class="level3">
+<h3 class="anchored" data-anchor-id="birth-weight-baystate-medical-hosmer-lemeshow-1989">10 — Birth weight, Baystate Medical (Hosmer &amp; Lemeshow 1989)</h3>
+<p><img src="thumbnails/10_birthweight_baystate.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 189 × 10</li>
+<li><strong>Source reference:</strong> Hosmer DW &amp; Lemeshow S, <em>Applied Logistic Regression</em> (1989)</li>
+<li><strong>Source:</strong> <code>MASS::birthwt</code> (also mirrored as <a href="https://vincentarelbundock.github.io/Rdatasets/csv/MASS/birthwt.csv">Rdatasets CSV</a>)</li>
+<li><strong>License:</strong> GPL-2 (via MASS)</li>
+<li><strong>Load:</strong> <code>data(birthwt, package = "MASS")</code></li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/10_birthweight_baystate.csv">10_birthweight_baystate.csv</a></li>
+<li><strong>Columns:</strong> <code>birthweight_g, low_birthweight, mother_age_yrs, mother_weight_lb, race, smoked_during_pregnancy, previous_premature_labours, history_hypertension, uterine_irritability, physician_visits_1st_trimester</code></li>
+<li><strong>Notes:</strong> classic logistic-regression dataset but <code>birthweight_g</code> is routinely re-used for OLS teaching. Race decoded from 1/2/3 to <code>white/black/other</code>; binary flags converted to <code>logical</code>.</li>
+</ul>
+<hr>
+</section>
+<section id="hiv-6-minute-walk-test-frasca-et-al.-plos-one-2019" class="level3">
+<h3 class="anchored" data-anchor-id="hiv-6-minute-walk-test-frasca-et-al.-plos-one-2019">11 — HIV &amp; 6-minute walk test (Frasca et al., PLOS ONE 2019)</h3>
+<p><img src="thumbnails/11_hiv_6mwt.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 427 × 23</li>
+<li><strong>Paper:</strong> <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0212975">Frasca et al.&nbsp;2019, DOI 10.1371/journal.pone.0212975</a></li>
+<li><strong>Dryad:</strong> <a href="https://datadryad.org/dataset/doi:10.5061/dryad.nf63rb8">10.5061/dryad.nf63rb8</a></li>
+<li><strong>License:</strong> CC0 1.0 (Dryad)</li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/11_hiv_6mwt.csv">11_hiv_6mwt.csv</a></li>
+<li><strong>Columns:</strong> <code>hiv_status, age_yrs, sex, cd4_count, pack_years, on_antiretroviral, systolic_bp_pre, diastolic_bp_pre, six_min_walk_m, mmrc_dyspnoea, sgrq_symptoms, sgrq_activity, sgrq_impacts, sgrq_total, haemoglobin, viral_load_detectable, post_fvc_pct_pred, dlco_pct_pred, post_fev1_pct_pred, post_fev1_fvc_ratio, viral_load_copies, smoking_status, drug_use</code></li>
+<li><strong>Notes:</strong> continuous outcome (distance walked in 6 minutes); works as a single-predictor OLS demo and as a richer multivariable model controlling for HIV status + lung function.</li>
+</ul>
+<hr>
+</section>
+<section id="serum-γ-gtp-atherosclerosis-bmj-open-2014" class="level3">
+<h3 class="anchored" data-anchor-id="serum-γ-gtp-atherosclerosis-bmj-open-2014">12 — Serum γ-GTP &amp; atherosclerosis (BMJ Open 2014)</h3>
+<p><img src="thumbnails/12_ggt_atherosclerosis.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 912 × 25</li>
+<li><strong>Paper:</strong> <a href="https://bmjopen.bmj.com/content/4/10/e005413">BMJ Open 2014</a></li>
+<li><strong>Zenodo:</strong> <a href="https://zenodo.org/records/4946112">record 4946112</a></li>
+<li><strong>License:</strong> CC0 1.0 (Zenodo)</li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/12_ggt_atherosclerosis.csv">12_ggt_atherosclerosis.csv</a></li>
+<li><strong>Columns:</strong> <code>id, age, bmi, systolic_bp, diastolic_bp, ast, alt, ggt, log2_ggt, fasting_glucose, uric_acid, total_cholesterol, triglycerides, hdl_cholesterol, ldl_cholesterol, current_smoker, ex_smoker, alcohol_use, exercise, fatty_liver, egfr, post_menopausal, abi_max, pwv_max, sex</code></li>
+<li><strong>Notes:</strong> cross-sectional health-check data; many plausible continuous outcomes (PWVmax, ABImax, cIMT surrogates).</li>
+</ul>
+<hr>
+</section>
+<section id="cv-risk-factors-carotid-intima-media-thickness-in-ra-plos-one-2015" class="level3">
+<h3 class="anchored" data-anchor-id="cv-risk-factors-carotid-intima-media-thickness-in-ra-plos-one-2015">13 — CV risk factors &amp; carotid intima-media thickness in RA (PLOS ONE 2015)</h3>
+<p><img src="thumbnails/13_cimt_ra.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 470 × 48</li>
+<li><strong>Paper:</strong> <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0140844">Ozen et al., PLOS ONE 2015</a></li>
+<li><strong>Zenodo:</strong> <a href="https://zenodo.org/records/4961200">record 4961200</a></li>
+<li><strong>License:</strong> CC0 1.0 (Zenodo)</li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/13_cimt_ra.csv">13_cimt_ra.csv</a></li>
+<li><strong>Columns (48):</strong> <code>id, sex, age_yrs, bmi, waist_cm, systolic_bp, diastolic_bp, total_cholesterol, hdl_cholesterol, ldl_cholesterol, triglycerides, crp, smoking, hypertension, statins, ra, das28_bse, das28_crp, cimt_total, anti_ccp, apo_b_vnumber, plaques, ra_4_groups, ra_healthy, ra_ht_hc, ra_ldl_cat, hx_hypertension, antihypertensives, hx_dyslipidaemia, height_cm, weight_kg, prednisone, glucose, apo_a, apo_b, cv_risk, rheumatoid_factor, erosive_ra, ra_disease_duration, ldl_cutoff_2_5, nsaid, hydroxychloroquine, sulfasalazine, methotrexate, leflunomide, anti_tnf, other_biologicals, azathioprine</code></li>
+<li><strong>Notes:</strong> SPSS <code>.sav</code> file — <code>haven::read_sav()</code> + <code>zap_labels()</code> gives a clean tibble. Mixed Dutch/English column names cleaned up.</li>
+</ul>
+<hr>
+</section>
+<section id="oral-contraceptive-use-prostate-cancer-margel-fleshner-bmj-open-2011" class="level3">
+<h3 class="anchored" data-anchor-id="oral-contraceptive-use-prostate-cancer-margel-fleshner-bmj-open-2011">14 — Oral-contraceptive use &amp; prostate cancer (Margel &amp; Fleshner, BMJ Open 2011)</h3>
+<p><img src="thumbnails/14_oc_prostate.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 167 × 9</li>
+<li><strong>Paper:</strong> <a href="https://bmjopen.bmj.com/content/1/2/e000311">Margel &amp; Fleshner, BMJ Open 2011</a></li>
+<li><strong>Dryad:</strong> <a href="https://datadryad.org/dataset/doi:10.5061/dryad.ff6bd0pq">10.5061/dryad.ff6bd0pq</a></li>
+<li><strong>License:</strong> CC0 1.0 (Dryad)</li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/14_oc_prostate.csv">14_oc_prostate.csv</a></li>
+<li><strong>Columns:</strong> <code>country, gdp_usd, prostate_cancer_incidence, prostate_cancer_mortality, pill_use_pct, iud_use_pct, condom_use_pct, vaginal_barrier_use_pct, europe</code></li>
+<li><strong>Notes:</strong> ecological (country-level) data — one row per country. Several numeric columns arrived as strings in the original <code>.xls</code> and are coerced to numeric on import.</li>
+</ul>
+<hr>
+</section>
+<section id="patient-activation-for-self-management-bos-touwen-et-al.-plos-one-2015" class="level3">
+<h3 class="anchored" data-anchor-id="patient-activation-for-self-management-bos-touwen-et-al.-plos-one-2015">15 — Patient activation for self-management (Bos-Touwen et al., PLOS ONE 2015)</h3>
+<p><img src="thumbnails/15_pam13.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 1,154 × 94</li>
+<li><strong>Paper:</strong> <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0126400">Bos-Touwen et al., PLOS ONE 2015</a></li>
+<li><strong>Dryad:</strong> <a href="https://datadryad.org/dataset/doi:10.5061/dryad.jg413">10.5061/dryad.jg413</a> (SPSS <code>.sav</code> + README)</li>
+<li><strong>License:</strong> CC0 1.0 (Dryad)</li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/15_pam13.csv">15_pam13.csv</a></li>
+<li><strong>Outcome of interest:</strong> <code>pam_activation_score</code> (continuous 0–100 PAM-13 score). Also <code>pam_level</code> 1–4.</li>
+<li><strong>Key predictors:</strong> <code>sf12_physical</code>, <code>sf12_mental</code>, <code>hads_depression</code>, <code>hads_anxiety</code>, <code>ipq_total</code>, <code>support_total</code>, <code>charlson_index</code>, <code>age_yrs</code>, <code>bmi</code>, <code>disease</code>, <code>education_level</code>, <code>financial_distress</code>.</li>
+<li><strong>All 94 columns:</strong> identifier/demographics first — <code>subject_id, sex, age_yrs, bmi, height_cm, weight_kg, education_level, living_situation, financial_distress, smoking_code, disease, disease_severity, disease_duration_yrs, n_comorbidities, charlson_index</code> — then derived scores (<code>pam_activation_score, pam_level, sf12_total, sf12_physical, sf12_mental, hads_depression, hads_anxiety, ipq_total, support_family, support_friends, support_significant_other, support_total, egfr, egfr_ml_min, nyha, nyha_class, gold_stage, ethnicity_code, care_allowance, dm_medication</code>), then the raw item-level scales <code>pam1…pam13, sf1…sf12, hads1…hads14, ipq1…ipq8, ssup1…ssup12</code>.</li>
+<li><strong>Notes:</strong> multiple linear regression on PAM-13 as outcome. The item-level columns let you reconstruct subscales or play with item-response modelling.</li>
+</ul>
+<hr>
+</section>
+<section id="medical-student-resilience-qol-tempski-et-al.-plos-one-2015" class="level3">
+<h3 class="anchored" data-anchor-id="medical-student-resilience-qol-tempski-et-al.-plos-one-2015">16 — Medical student resilience &amp; QoL (Tempski et al., PLOS ONE 2015)</h3>
+<p><img src="thumbnails/16_med_student_qol.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 1,350 × 22</li>
+<li><strong>Paper:</strong> <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0131535">Tempski et al., PLOS ONE 2015</a></li>
+<li><strong>Dryad:</strong> <a href="https://datadryad.org/dataset/doi:10.5061/dryad.63r07">10.5061/dryad.63r07</a></li>
+<li><strong>License:</strong> CC0 1.0 (Dryad)</li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/16_med_student_qol.csv">16_med_student_qol.csv</a></li>
+<li><strong>Columns:</strong> <code>subject_id, sex, group, overall_qol, medical_school_qol, whoqol_physical, whoqol_psychological, whoqol_social, whoqol_environment, dreem_learning, dreem_teachers, dreem_academic_self_perception, dreem_atmosphere, dreem_social_self_perception, dreem_global, resilience_score, bdi, age_yrs, school_legal_status, school_location, state_anxiety, trait_anxiety</code></li>
+<li><strong>Notes:</strong> the original Excel file has a title banner on row 1 and real headers on row 2 — the script reads with <code>skip = 1</code>. Outcome is any of the WHOQOL/DREEM subscales; predictors include <code>resilience_score</code>, <code>bdi</code>, <code>state_anxiety</code>, <code>trait_anxiety</code>.</li>
+</ul>
+<hr>
+</section>
+<section id="depression-anxiety-in-older-adults-shenzhen-bmj-open-2024" class="level3">
+<h3 class="anchored" data-anchor-id="depression-anxiety-in-older-adults-shenzhen-bmj-open-2024">17 — Depression &amp; anxiety in older adults, Shenzhen (BMJ Open 2024)</h3>
+<p><img src="thumbnails/17_depression_anxiety.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 5,331 × 24</li>
+<li><strong>Paper:</strong> <a href="https://bmjopen.bmj.com/content/14/2/e077078">BMJ Open 2024, article e077078</a></li>
+<li><strong>Dryad:</strong> <a href="https://datadryad.org/dataset/doi:10.5061/dryad.bnzs7h4j1">10.5061/dryad.bnzs7h4j1</a></li>
+<li><strong>License:</strong> CC0 1.0 (Dryad)</li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/17_depression_anxiety.csv">17_depression_anxiety.csv</a></li>
+<li><strong>Columns:</strong> <code>subject_code, education_level, marital_status, has_chronic_disease, income_level, drinking_status, smoking_status, self_rated_health, sleep_hours, phq9_depression_score, gad7_anxiety_score, isi_insomnia_score, ad8_cognitive_score, csid_cognitive_score, uls_loneliness_score, depressive_symptoms, anxiety_symptoms, mild_cognitive_impairment, early_dementia, insomnia, marital_status_code, has_chronic_disease_code, drinking_code, smoking_code</code></li>
+<li><strong>Notes:</strong> all the categorical codes documented in the Dryad README are decoded here into labelled factors (education 1–5 → <code>primary_or_below…master_plus</code>, drinking 1–3 → <code>non_drinker / ex_drinker / current_drinker</code>, etc.). Binary symptom flags are stored as <code>logical</code>. The original numeric codes are retained as <code>*_code</code> columns so anyone wanting to reproduce the paper’s exact regressions can still use them.</li>
+</ul>
+<hr>
+</section>
+<section id="prevend-cognitive-function-aging-dutch-cohort-via-oibiostat" class="level3">
+<h3 class="anchored" data-anchor-id="prevend-cognitive-function-aging-dutch-cohort-via-oibiostat">18 — PREVEND cognitive function &amp; aging (Dutch cohort, via <code>oibiostat</code>)</h3>
+<p><img src="thumbnails/18_prevend.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 500 × 31 (random sub-sample of the 4,095-participant PREVEND cohort)</li>
+<li><strong>Study:</strong> Prevention of REnal and Vascular ENd-stage Disease (PREVEND), University Medical Center Groningen. See the <a href="https://github.com/OI-Biostat/oi_biostat_data">oibiostat data docs</a> and Joosten et al.&nbsp;2014 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4086841/">PMC4086841</a>).</li>
+<li><strong>Source:</strong> <code>oibiostat::prevend.samp</code></li>
+<li><strong>License:</strong> <code>oibiostat</code> has no explicit licence (its DESCRIPTION says <em>“No licensing yet”</em>); the underlying PREVEND data are governed by UMC Groningen. Redistribution is legally gray — intended for teaching alongside the OpenIntro Biostatistics textbook.</li>
+<li><strong>Load:</strong> <code>data(prevend.samp, package = "oibiostat")</code></li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/18_prevend.csv">18_prevend.csv</a></li>
+<li><strong>Columns:</strong> <code>subject_id, sex, age_yrs, ethnicity, education, rfft, bmi, systolic_bp, diastolic_bp, mean_arterial_pressure, egfr, total_cholesterol, hdl_cholesterol, cvd, diabetes, hypertension, smoking_status, statin_user, framingham_risk_score, vat, albuminuria_v1, albuminuria_v2, statin_solubility_code, days_on_statin, years_on_statin, defined_daily_dose, propensity_score, propensity_quintile, genetic_risk_score, match_id_1, match_id_2</code></li>
+<li><strong>Notes:</strong> <code>rfft</code> = Ruff Figural Fluency Test score, an executive-function measure. Teaching uses include simple OLS (<code>rfft ~ age_yrs</code>), education as a confounder (<code>rfft ~ age_yrs + education</code>), and statin-use effects on cognition. Integer code columns (<code>gender_code</code>, <code>ethnicity_code</code>, <code>education_code</code>, <code>smoking_code</code>) were decoded into the factors <code>sex</code>, <code>ethnicity</code>, <code>education</code>, <code>smoking_status</code>; binary flags are stored as <code>logical</code>.</li>
+</ul>
+<hr>
+</section>
+<section id="famuss-actn3-genotype-resistance-training-via-oibiostat" class="level3">
+<h3 class="anchored" data-anchor-id="famuss-actn3-genotype-resistance-training-via-oibiostat">19 — FAMuSS — ACTN3 genotype &amp; resistance training (via <code>oibiostat</code>)</h3>
+<p><img src="thumbnails/19_famuss.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 595 × 9</li>
+<li><strong>Study:</strong> Functional SNPs Associated with Muscle Size and Strength (FAMuSS), University of Massachusetts. Classic genetic-epidemiology training dataset; see Thompson et al.&nbsp;2004 (<a href="https://doi.org/10.1249/01.MSS.0000142301.87942.76">DOI 10.1249/01.mss.0000142301.87942.76</a>).</li>
+<li><strong>Source:</strong> <code>oibiostat::famuss</code></li>
+<li><strong>License:</strong> <code>oibiostat</code> has no explicit licence — see row 18 note.</li>
+<li><strong>Load:</strong> <code>data(famuss, package = "oibiostat")</code></li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/19_famuss.csv">19_famuss.csv</a></li>
+<li><strong>Columns:</strong> <code>ndrm_change_pct, drm_change_pct, sex, age_yrs, race, height_in, weight_lb, actn3_genotype, bmi</code></li>
+<li><strong>Notes:</strong> outcome is % change in non-dominant arm strength after 12 weeks of supervised resistance training. Great for teaching categorical predictors (<code>actn3_genotype</code> = CC / CT / TT) + confounders (<code>sex</code>, <code>age_yrs</code>, <code>race</code>, <code>bmi</code>).</li>
+</ul>
+<hr>
+</section>
+<section id="kidiq-child-test-score-mothers-iq-regression-and-other-stories" class="level3">
+<h3 class="anchored" data-anchor-id="kidiq-child-test-score-mothers-iq-regression-and-other-stories">20 — kidiq — child test score &amp; mother’s IQ (Regression and Other Stories)</h3>
+<p><img src="thumbnails/20_kidiq.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 434 × 5</li>
+<li><strong>Source:</strong> Gelman, Hill &amp; Vehtari, <em>Regression and Other Stories</em> (2020) — <a href="https://avehtari.github.io/ROS-Examples/KidIQ/kidiq.html">kidiq dataset</a></li>
+<li><strong>Package:</strong> <code>rosdata::kidiq</code> (from <a href="https://github.com/avehtari/ROS-Examples">avehtari/ROS-Examples</a>, install via <code>remotes::install_github("avehtari/ROS-Examples", subdir = "rpackage")</code>)</li>
+<li><strong>License:</strong> <code>rosdata</code> DESCRIPTION says <em>“Code BSD-3 + for data see each data source directory”</em> — but those directories don’t contain data licences. Underlying NLSY data are public. Redistribution is legally gray outside of teaching contexts.</li>
+<li><strong>Load:</strong> <code>data(kidiq, package = "rosdata")</code></li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/20_kidiq.csv">20_kidiq.csv</a></li>
+<li><strong>Columns:</strong> <code>kid_score, mom_iq, mom_high_school, mom_work, mom_age_yrs</code></li>
+<li><strong>Notes:</strong> canonical first-week multiple-regression example — <code>kid_score ~ mom_iq + mom_high_school</code> with an interaction term demonstrates how education modifies the IQ–score slope.</li>
+</ul>
+<hr>
+</section>
+<section id="births14-us-nchs-2014-live-births-via-openintro" class="level3">
+<h3 class="anchored" data-anchor-id="births14-us-nchs-2014-live-births-via-openintro">21 — births14 — US NCHS 2014 live births (via <code>openintro</code>)</h3>
+<p><img src="thumbnails/21_births14.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 1,000 × 13 (random sample of US live births in 2014)</li>
+<li><strong>Source:</strong> <a href="https://www.cdc.gov/nchs/data_access/vitalstatsonline.htm">US CDC National Center for Health Statistics, 2014 natality file</a>; redistributed in <code>openintro::births14</code>.</li>
+<li><strong>License:</strong> CC-BY-SA 4.0 (via openintro textbook)</li>
+<li><strong>Load:</strong> <code>data(births14, package = "openintro")</code></li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/21_births14.csv">21_births14.csv</a></li>
+<li><strong>Columns:</strong> <code>father_age_yrs, mother_age_yrs, mother_maturity, gestation_weeks, premature, prenatal_visits, weight_gain_lb, birthweight_lb, low_birthweight, sex, smoking_habit, marital_status, white_mother</code></li>
+<li><strong>Notes:</strong> much larger and more recent than the other two birth-weight datasets (rows 5 and 10). Rich multivariable OLS: <code>birthweight_lb ~ gestation_weeks + mother_age_yrs + prenatal_visits + weight_gain_lb + smoking_habit</code>. Binary outcome <code>premature</code> / <code>low_birthweight</code> are also useful contrasts for logistic regression.</li>
+</ul>
+<hr>
+</section>
+<section id="un-member-states-2024-global-health-indicators-via-moderndive" class="level3">
+<h3 class="anchored" data-anchor-id="un-member-states-2024-global-health-indicators-via-moderndive">22 — UN member states 2024 — global-health indicators (via <code>moderndive</code>)</h3>
+<p><img src="thumbnails/22_un_member_states_2024.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 193 × 13 (one row per UN member state)</li>
+<li><strong>Source:</strong> compiled by the <a href="https://moderndive.com/">ModernDive</a> authors from UN, World Bank, UNDP and WHO data; shipped in the development version of <code>moderndive</code> (≥ 0.7.0).</li>
+<li><strong>License:</strong> MIT (redistributed via <code>moderndive</code>); underlying data: UN / World Bank / UNDP (mostly CC-BY).</li>
+<li><strong>Raw source:</strong> <code>datasets_staging/raw/18_un_member_states/un_member_states_2024.rda</code> (copied from the <a href="https://github.com/moderndive/moderndive/blob/master/data/un_member_states_2024.rda">moderndive GitHub repo</a>, since <code>moderndive</code> 0.7+ is not yet installable on older R).</li>
+<li><strong>Load:</strong> <code>data(un_member_states_2024, package = "moderndive")</code> <em>(needs <code>moderndive</code> ≥ 0.7.0)</em></li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/22_un_member_states_2024.csv">22_un_member_states_2024.csv</a></li>
+<li><strong>Columns:</strong> <code>country, iso_code, continent, region, income_group, population, area_km2, gdp_per_capita_usd, obesity_rate_2016_pct, obesity_rate_2024_pct, life_expectancy_yrs, fertility_rate, hdi</code></li>
+<li><strong>Notes:</strong> ecological / population-level. Classic teaching examples: <code>life_expectancy_yrs ~ hdi</code>, <code>life_expectancy_yrs ~ gdp_per_capita_usd + continent</code>, <code>fertility_rate_2022 ~ life_expectancy_yrs</code>. Drops the Olympic-medal and capital-city columns that the upstream file carries — those aren’t health-relevant.</li>
+</ul>
+<hr>
+</section>
+<section id="nhanes-adult-sample-200912-via-oibiostat" class="level3">
+<h3 class="anchored" data-anchor-id="nhanes-adult-sample-200912-via-oibiostat">23 — NHANES adult sample, 2009–12 (via <code>oibiostat</code>)</h3>
+<p><img src="thumbnails/23_nhanes_adult.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 135 × 31 (random sample of US adults aged ≥ 20)</li>
+<li><strong>Source:</strong> <a href="https://www.cdc.gov/nchs/nhanes/">US CDC National Health and Nutrition Examination Survey</a>, cycles 2009–2010 and 2011–2012; sample redistributed in <code>oibiostat::nhanes.samp.adult</code>.</li>
+<li><strong>License:</strong> The underlying NHANES data is US-government public domain — no restrictions. The specific 135-row sample in <code>oibiostat</code> has no explicit licence (see row 18 note); if you need a clean legal basis for redistribution, re-sample directly from the <a href="https://cran.r-project.org/package=NHANES"><code>NHANES</code> CRAN package</a> (which ships the full public-domain data) or from the CDC.</li>
+<li><strong>Load:</strong> <code>data(nhanes.samp.adult, package = "oibiostat")</code></li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/23_nhanes_adult.csv">23_nhanes_adult.csv</a></li>
+<li><strong>Columns:</strong> <code>subject_id, survey_year, sex, age_yrs, age_decade, race, education_level, marital_status, hh_income_midpoint, poverty_ratio, home_ownership, work_status, weight_kg, height_cm, bmi, pulse, systolic_bp, diastolic_bp, direct_hdl, total_cholesterol, diabetes, general_health, phys_health_bad_days, ment_health_bad_days, sleep_hours, sleep_trouble, phys_active, phys_active_days, alcohol_days_year, smoked_100, smoke_now</code></li>
+<li><strong>Notes:</strong> we keep the OLS-useful columns and drop reproductive/sexual-behaviour and urine-flow columns from the upstream <code>oibiostat</code> file. Obvious teaching targets: <code>systolic_bp ~ age_yrs + bmi + poverty_ratio</code>, <code>bmi ~ phys_active_days + age_yrs</code>, <code>total_cholesterol ~ age_yrs + bmi + smoked_100</code>.</li>
+</ul>
+<hr>
+</section>
+<section id="us-county-level-socio-economic-data-via-usdata" class="level3">
+<h3 class="anchored" data-anchor-id="us-county-level-socio-economic-data-via-usdata">24 — US county-level socio-economic data (via <code>usdata</code>)</h3>
+<p><img src="thumbnails/24_county.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 3,142 × 15 (one row per US county)</li>
+<li><strong>Source:</strong> compiled by the OpenIntro / usdata authors from the US Census ACS 5-year estimates and related public sources; see <code>?usdata::county</code>.</li>
+<li><strong>License:</strong> <code>usdata</code> pkg is GPL-3; underlying US Census/ACS data is public domain.</li>
+<li><strong>Load:</strong> <code>data(county, package = "usdata")</code></li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/24_county.csv">24_county.csv</a></li>
+<li><strong>Columns:</strong> <code>county_name, state, population_2000, population_2010, population_2017, population_change_pct, poverty_rate, homeownership_rate, multi_unit_housing_pct, unemployment_rate, metro, median_edu, per_capita_income, median_hh_income, smoking_ban</code></li>
+<li><strong>Notes:</strong> ecological (population-level) — excellent for teaching health-equity framings where the county is the unit of analysis. Useful models: <code>unemployment_rate ~ poverty_rate + median_edu + metro</code>, <code>median_hh_income ~ median_edu + metro + state</code>. Category-rich <code>median_edu</code> (<code>below_hs</code>/<code>hs_diploma</code>/<code>some_college</code>/<code>bachelors</code>) shows how OLS treats an ordered factor.</li>
+</ul>
+<hr>
+</section>
+<section id="boston-housing-nox-air-pollution-via-islr2" class="level3">
+<h3 class="anchored" data-anchor-id="boston-housing-nox-air-pollution-via-islr2">25 — Boston housing — NOx air pollution (via <code>ISLR2</code>)</h3>
+<p><img src="thumbnails/25_boston.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 506 × 13 (one row per census tract in the Boston SMSA, 1970)</li>
+<li><strong>Paper:</strong> Harrison &amp; Rubinfeld 1978, <em>Journal of Environmental Economics and Management</em> — <a href="https://doi.org/10.1016/0095-0696(78)90006-2">“Hedonic housing prices and the demand for clean air”</a>.</li>
+<li><strong>Source:</strong> <code>ISLR2::Boston</code></li>
+<li><strong>License:</strong> GPL-2 (via <code>ISLR2</code>)</li>
+<li><strong>Load:</strong> <code>data(Boston, package = "ISLR2")</code></li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/25_boston.csv">25_boston.csv</a></li>
+<li><strong>Columns:</strong> <code>per_capita_crime_rate, large_lot_residential_pct, non_retail_business_pct, near_charles_river, nox_ppm_x10m, avg_rooms_per_dwelling, pct_built_before_1940, distance_to_employment, highway_access_idx, property_tax_per_10k, pupil_teacher_ratio, lower_status_pct, median_home_value_usd_1k</code></li>
+<li><strong>Notes:</strong> borderline public-health — included for the <strong>environmental-health framing</strong>. <code>nox_ppm_x10m</code> (nitric-oxide concentration, ppm × 10⁷) is a cardiopulmonary-relevant air-pollution exposure. Teaching example: <code>nox_ppm_x10m ~ distance_to_employment + highway_access_idx + non_retail_business_pct</code>. The classic ISL example using <code>medv</code> (median home value) as outcome is also available, if you want to frame it as a disadvantage/SDoH proxy instead of as pure economics.</li>
+</ul>
+</section>
+</section>
+<section id="license-check-for-the-can-we-ship-it-in-a-package-question" class="level2">
+<h2 class="anchored" data-anchor-id="license-check-for-the-can-we-ship-it-in-a-package-question">License check for the “can we ship it in a package?” question</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Redistribute in an R data package?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>⚠️ Non-commercial only. Dr.&nbsp;Fisher’s JSE permission statement says “freely distribute and use for non-commercial purposes”. Incompatible with CRAN / GPL / MIT (all of which permit commercial use).</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>✅ Public. Redistributed by scikit-learn and by several R packages.</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>⚠️ Non-commercial only, same JSE terms as row 1.</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>✅ CC-BY 4.0 — redistributable with attribution.</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>⚠️ Textbook supplement, <strong>no explicit licence</strong> — safest is to link to the file rather than re-host, or email Ekstrøm/Sørensen.</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>✅ CC0 1.0 (Dryad).</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>✅ Already in <code>Sleuth3</code> (GPL-2).</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>✅ Already in <code>ISwR</code> (GPL-2).</td>
+</tr>
+<tr class="odd">
+<td>9</td>
+<td>✅ Already in <code>TH.data</code> (GPL-2).</td>
+</tr>
+<tr class="even">
+<td>10</td>
+<td>✅ Already in <code>MASS</code> (GPL-2/GPL-3).</td>
+</tr>
+<tr class="odd">
+<td>11</td>
+<td>✅ CC0 1.0 (Dryad).</td>
+</tr>
+<tr class="even">
+<td>12</td>
+<td>✅ CC0 1.0 (Zenodo).</td>
+</tr>
+<tr class="odd">
+<td>13</td>
+<td>✅ CC0 1.0 (Zenodo).</td>
+</tr>
+<tr class="even">
+<td>14</td>
+<td>✅ CC0 1.0 (Dryad).</td>
+</tr>
+<tr class="odd">
+<td>15</td>
+<td>✅ CC0 1.0 (Dryad).</td>
+</tr>
+<tr class="even">
+<td>16</td>
+<td>✅ CC0 1.0 (Dryad).</td>
+</tr>
+<tr class="odd">
+<td>17</td>
+<td>✅ CC0 1.0 (Dryad).</td>
+</tr>
+<tr class="even">
+<td>18</td>
+<td>⚠️ <code>oibiostat</code> has <strong>no explicit licence</strong> (DESCRIPTION: <em>“No licensing yet”</em>). Clear educational intent, but legally gray — OK in a non-commercial / teaching package, risky for CRAN.</td>
+</tr>
+<tr class="odd">
+<td>19</td>
+<td>⚠️ Same as row 18 (also via <code>oibiostat</code>).</td>
+</tr>
+<tr class="even">
+<td>20</td>
+<td>⚠️ <code>rosdata</code>: code is BSD-3 but <strong>data licence unstated</strong>. Best used as a <code>Suggests</code> dependency rather than re-bundled.</td>
+</tr>
+<tr class="odd">
+<td>21</td>
+<td>⚠️ <code>openintro</code> sample is <strong>CC-BY-SA 4.0</strong> — OK to bundle, but <em>share-alike</em> forces your package to also be CC-BY-SA 4.0 (or a compatible copyleft licence). Incompatible with MIT/BSD. Underlying NCHS data is public domain — safer to re-sample directly.</td>
+</tr>
+<tr class="even">
+<td>22</td>
+<td>✅ <code>moderndive</code> is MIT; compiled from UN/World Bank/UNDP public data.</td>
+</tr>
+<tr class="odd">
+<td>23</td>
+<td>⚠️ The <code>oibiostat</code> sample has no explicit licence (see row 18), but the <strong>underlying NHANES data is US-government public domain</strong> — just re-sample from the <code>NHANES</code> CRAN package or the CDC directly.</td>
+</tr>
+<tr class="even">
+<td>24</td>
+<td>✅ <code>usdata</code> is GPL-3; underlying US Census/ACS is public domain.</td>
+</tr>
+<tr class="odd">
+<td>25</td>
+<td>✅ Already in <code>ISLR2</code> (GPL-2).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Short version for a public, non-commercial, teaching-oriented package on GitHub:</strong> all 25 are usable. For a more general-purpose package (CRAN-compatible, any licence), you’d want to:</p>
+<ul>
+<li><strong>Drop or link-only</strong> rows 1, 3, 5 (non-commercial / no licence).</li>
+<li><strong>Suggest rather than re-bundle</strong> rows 18, 19, 20 (no explicit data licence — let users load them from the upstream package).</li>
+<li><strong>Re-sample from upstream public data</strong> for row 23 (load via the <code>NHANES</code> CRAN package) and optionally row 21 (re-sample the public-domain NCHS file).</li>
+<li><strong>Mind the share-alike</strong> on row 21 (forces copyleft downstream).</li>
+<li>Everything else is genuinely “bundle and go”: rows 2, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 22, 24, 25.</li>
+</ul>
+</section>
+<section id="next-step-turn-this-into-a-tiny-r-data-package" class="level2">
+<h2 class="anchored" data-anchor-id="next-step-turn-this-into-a-tiny-r-data-package">Next step: turn this into a tiny R data package</h2>
+<p>The easiest way to let learners access everything with a single <code>data(...)</code> call is to wrap the cleaned CSVs in a package:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Sketch only — in a fresh package dir:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>usethis<span class="sc">::</span><span class="fu">create_package</span>(<span class="st">"tgcDatasets"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>cleaned <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="st">"datasets_staging/cleaned"</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                      <span class="at">pattern =</span> <span class="st">"^</span><span class="sc">\\</span><span class="st">d{2}_.*</span><span class="sc">\\</span><span class="st">.csv$"</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (path <span class="cf">in</span> cleaned) {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  slug <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">"^</span><span class="sc">\\</span><span class="st">d{2}_"</span>, <span class="st">""</span>, tools<span class="sc">::</span><span class="fu">file_path_sans_ext</span>(<span class="fu">basename</span>(path)))</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(slug, <span class="fu">read.csv</span>(path))</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  usethis<span class="sc">::</span><span class="fu">use_data</span>(<span class="at">list =</span> slug, <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Then learners just <code>install.packages("tgcDatasets")</code> and <code>data(diabetes_efron)</code> (or <code>data(hiv_6mwt)</code>, <code>data(pam13)</code>, etc.). License-wise you’d release the package as GPL-2 (compatible with rows 7–10) and add a <code>DATA_LICENCE</code> file per dataset documenting the upstream licence from the table above.</p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

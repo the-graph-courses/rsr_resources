@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Regression Diagnostics Explorer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  html, body { margin: 0; padding: 0; background: #fafaf9; }
+  body { overflow-x: auto; }
+  #loading { font-family: Inter, system-ui, sans-serif; padding: 24px; color: #78716c; }
+</style>
+</head>
+<body>
+<div id="root"><div id="loading">Loading…</div></div>
+<script>
+window.addEventListener("error", function(e){
+  var r = document.getElementById("root");
+  if (r && r.querySelector("#loading")) {
+    r.innerHTML = '<pre style="font-family:ui-monospace,Menlo,monospace;color:#b91c1c;background:#fef2f2;padding:24px;white-space:pre-wrap;border-radius:8px;margin:24px;">Error loading explorer:\n'+(e.message||"")+"\n"+(e.filename||"")+":"+(e.lineno||"")+":"+(e.colno||"")+"</pre>";
+  }
+});
+</script>
+<script src="./regression-diagnostics.bundle.js"></script>
+</body>
+</html>

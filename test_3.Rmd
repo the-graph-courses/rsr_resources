@@ -1,0 +1,294 @@
+---
+title: "Residuals in Simple Linear Regression"
+author: "R Tutorial Notes"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(openintro)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+```
+
+This file builds two tiny examples from `openintro::births14`:
+
+1. A 5-row example where residual quartiles from `summary(lm(...))` land exactly on observed points.
+2. A 6-row example where quartiles are interpolated.
+
+The workflow is:
+
+- filter to preemies,
+- convert birth weight from lbs to kg,
+- `slice_tail()` to make the dataset intentionally small,
+- fit `birth_wt_kg ~ weeks`,
+- hand-compute residuals as `y - ŷ`,
+- compare the residual summary (`Min`, `1Q`, `Median`, `3Q`, `Max`),
+- connect this to residual standard error.
+
+```{r data-prep}
+preemies <- openintro::births14 %>%
+  filter(premie == "premie") %>%
+  mutate(
+    birth_wt_kg = weight * 0.45359237,
+    obs_id = row_number()
+  )
+
+exact_data <- preemies %>% tail(5)
+interp_data <- preemies %>% tail(6)
+```
+
+```{r fit-exact}
+exact_fit <- lm(birth_wt_kg ~ weeks, data = exact_data)
+exact_data <- exact_data %>%
+  mutate(
+    yhat = predict(exact_fit, newdata = exact_data),
+    residual = birth_wt_kg - yhat,
+    abs_residual = abs(residual),
+    squared_residual = residual^2
+  )
+
+exact_summary <- summary(exact_fit)$coefficients
+exact_resid_summary <- summary(exact_data$residual)
+exact_quartiles <- quantile(exact_data$residual, probs = c(0, 0.25, 0.5, 0.75, 1), type = 7)
+
+exact_resid_sorted <- exact_data %>% arrange(residual) %>%
+  mutate(quartile_role = c("min", "Q1", "Median", "Q3", "max"))
+
+cat("EXACT 5-ROW EXAMPLE (tail of preemies)\n")
+cat("Formula: y = intercept + slope * weeks\n")
+cat(sprintf("y = %.6f + %.6f*weeks\n", exact_fit$coefficients[[1]], exact_fit$coefficients[[2]]))
+cat(sprintf("n = %d\n\n", nrow(exact_data)))
+cat("obs_id,weeks,weight_lb,weight_kg,y_hat,actual_minus_fitted\n")
+for (i in seq_len(nrow(exact_data))) {
+  cat(sprintf(
+    "%d,%d,%.2f,%.4f,%.4f,%.4f\n",
+    exact_data$obs_id[i],
+    exact_data$weeks[i],
+    exact_data$weight[i],
+    exact_data$birth_wt_kg[i],
+    exact_data$yhat[i],
+    exact_data$residual[i]
+  ))
+}
+cat("\nresidual summary from R (exact 5-point fit)\n")
+cat(capture.output(exact_resid_summary), sep = "\n")
+cat("\nquantiles extracted directly from quantile(..., type = 7)\n")
+cat(sprintf("Min: %0.4f\n", exact_quartiles[[1]]))
+cat(sprintf("1Q: %0.4f\n", exact_quartiles[[2]]))
+cat(sprintf("Median: %0.4f\n", exact_quartiles[[3]]))
+cat(sprintf("3Q: %0.4f\n", exact_quartiles[[4]]))
+cat(sprintf("Max: %0.4f\n\n", exact_quartiles[[5]]))
+```
+
+```{r exact-table}
+kable(
+  exact_data %>%
+    select(obs_id, weeks, birth_wt_kg, yhat, residual) %>%
+    mutate(
+      hand_math = sprintf("%.4f - %.4f = %.4f", birth_wt_kg, yhat, residual)
+    ),
+  caption = "Exact 5-row example: exact hand computation y - ŷ = residual",
+  digits = 4
+)
+```
+
+```{r exact-plot}
+ggplot(exact_data, aes(weeks, birth_wt_kg)) +
+  geom_point(size = 3, color = "steelblue") +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, color = "black") +
+  geom_segment(aes(xend = weeks, yend = yhat), alpha = 0.8, linewidth = 1, color = "tomato") +
+  geom_text(
+    aes(label = round(residual, 3), y = yhat),
+    vjust = -1,
+    size = 3.5
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Exact 5-row example: observed points and residual segments",
+    x = "Gestational age (weeks)",
+    y = "Birth weight (kg)",
+    subtitle = "Vertical segments are residuals (observed - fitted)"
+  )
+```
+
+```{r exact-residual-plot}
+ggplot(exact_data, aes(weeks, residual)) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 1, color = "gray40") +
+  geom_segment(aes(xend = weeks, y = 0, yend = residual), linewidth = 1, color = "tomato") +
+  geom_point(aes(color = residual > 0), size = 3) +
+  geom_text(aes(label = round(residual, 3)), vjust = -0.9, size = 3.3) +
+  scale_color_manual(values = c("TRUE" = "steelblue", "FALSE" = "darkred"), guide = "none") +
+  theme_minimal() +
+  labs(
+    title = "Residuals with zero line (5-row case)",
+    x = "Gestational age (weeks)",
+    y = "Residual (kg)",
+    subtitle = "Negative = below line, Positive = above line"
+  )
+```
+
+In this 5-point example, the residual quartiles are exactly equal to observed residual points because with type-7 quantiles and `n = 5`, the positions become:
+
+- `.25*(n-1)+1 = 2`,
+- `.50*(n-1)+1 = 3`,
+- `.75*(n-1)+1 = 4`.
+
+So min, 1Q, median, 3Q, and max align to the 1st, 2nd, 3rd, 4th, 5th residuals in sorted order.
+
+## Second example: quartile values are interpolated
+
+```{r fit-interpolated}
+interp_fit <- lm(birth_wt_kg ~ weeks, data = interp_data)
+interp_data <- interp_data %>%
+  mutate(
+    yhat = predict(interp_fit, newdata = interp_data),
+    residual = birth_wt_kg - yhat,
+    abs_residual = abs(residual),
+    squared_residual = residual^2
+  )
+
+interp_summary <- summary(interp_data$residual)
+interp_quartiles <- quantile(interp_data$residual, probs = c(0, 0.25, 0.5, 0.75, 1), type = 7)
+interp_sorted <- interp_data %>% arrange(residual)
+interp_n <- nrow(interp_data)
+interp_probs <- c(0, 0.25, 0.5, 0.75, 1)
+interp_h <- (interp_n - 1) * interp_probs + 1
+
+cat("INTERPOLATED 6-ROW EXAMPLE (tail of preemies)\n")
+cat(sprintf("n = %d\n", interp_n))
+cat(sprintf("y = %.6f + %.6f*weeks\n", interp_fit$coefficients[[1]], interp_fit$coefficients[[2]]))
+cat("\nobs_id,weeks,weight_lb,weight_kg,y_hat,actual_minus_fitted\n")
+for (i in seq_len(nrow(interp_data))) {
+  cat(sprintf(
+    "%d,%d,%.2f,%.4f,%.4f,%.4f\n",
+    interp_data$obs_id[i],
+    interp_data$weeks[i],
+    interp_data$weight[i],
+    interp_data$birth_wt_kg[i],
+    interp_data$yhat[i],
+    interp_data$residual[i]
+  ))
+}
+cat("\nresidual summary from R (6-point fit)\n")
+cat(capture.output(interp_summary), sep = "\n")
+cat("\nquantiles from quantile(..., type = 7)\n")
+cat(sprintf("Min: %0.4f\n", interp_quartiles[[1]]))
+cat(sprintf("1Q: %0.4f\n", interp_quartiles[[2]]))
+cat(sprintf("Median: %0.4f\n", interp_quartiles[[3]]))
+cat(sprintf("3Q: %0.4f\n", interp_quartiles[[4]]))
+cat(sprintf("Max: %0.4f\n\n", interp_quartiles[[5]]))
+```
+
+```{r interp-quantile-formula}
+interp_q_table <- tibble(
+  stat = c("Min", "Q1", "Median", "Q3", "Max"),
+  prob = interp_probs,
+  h = interp_h,
+  lower_idx = floor(interp_h),
+  upper_idx = ceiling(interp_h),
+  lower_resid = interp_sorted$residual[floor(interp_h)],
+  upper_resid = interp_sorted$residual[ceiling(interp_h)],
+  w = interp_h - floor(interp_h),
+  quantile_value = unname(interp_quartiles)
+) %>%
+  mutate(
+    interpolated = (1 - w) * lower_resid + w * upper_resid,
+    exact_match = abs(quantile_value - interpolated) < 1e-10,
+    formula_note = ifelse(
+      floor(h) == ceiling(h),
+      "exact point",
+      sprintf("((1-%.2f)*x[%d]) + (%.2f*x[%d])", w, lower_idx, w, upper_idx)
+    )
+  )
+
+cat("What the quartile calculator is doing for the 6-point case:\n")
+print(interp_q_table)
+cat("\nInterpreting this table:\n")
+cat("- In this case, Q1 and Q3 are usually fractional positions (e.g., 2.75 and 4.75).\n")
+cat("- That means R is taking weighted blends of neighboring residuals; these are not\n")
+cat("- necessarily equal to any observed residual.\n\n")
+
+kable(interp_q_table, digits = 4, caption = "How type-7 interpolation creates quartiles when n = 6")
+```
+
+```{r interp-plots}
+ggplot(interp_data, aes(weeks, birth_wt_kg)) +
+  geom_point(size = 3, color = "steelblue") +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, color = "black") +
+  geom_segment(aes(xend = weeks, yend = yhat), linewidth = 1, color = "tomato") +
+  geom_text(
+    aes(label = round(residual, 3), y = yhat),
+    vjust = -1,
+    size = 3.5
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Interpolation case: residual segments are still computed the same way",
+    x = "Gestational age (weeks)",
+    y = "Birth weight (kg)",
+    subtitle = "But summary quantiles are not all from one observed residual"
+  )
+
+ggplot(interp_data, aes(weeks, residual)) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 1, color = "gray40") +
+  geom_segment(aes(xend = weeks, y = 0, yend = residual), linewidth = 1, color = "tomato") +
+  geom_point(aes(color = residual > 0), size = 3) +
+  geom_text(aes(label = round(residual, 3)), vjust = -0.9, size = 3.3) +
+  scale_color_manual(values = c("TRUE" = "steelblue", "FALSE" = "darkred"), guide = "none") +
+  theme_minimal() +
+  labs(
+    title = "Residuals with zero line (6-row case)",
+    x = "Gestational age (weeks)",
+    y = "Residual (kg)",
+    subtitle = "Quartile lines may land between points and are interpolated"
+  )
+```
+
+## Residual standard error (RSE)
+
+Residual standard error is the "typical size" of residuals, but on the original units (`kg`).
+
+- We cannot average residuals directly because positive and negative errors cancel and sum to ~0.
+- We cannot just average absolute residuals if you want a statistic that works nicely in algebra.
+- So we square residuals, sum those squares (RSS), divide by `n - p`, then square-root.
+- `p = 2` here because a simple line has 2 estimated coefficients (`intercept`, `slope`).
+
+```{r rse-calculation}
+rse_data <- exact_data
+rss <- sum(rse_data$residual^2)
+n <- nrow(rse_data)
+p <- 2
+rse <- sqrt(rss / (n - p))
+
+cat("RSE (exact 5-row example)\n")
+cat(sprintf("RSS = %.6f\n", rss))
+cat(sprintf("n = %d\n", n))
+cat(sprintf("p = %d\n", p))
+cat(sprintf("RSE = sqrt(RSS / (n - p)) = sqrt(%.6f / %d) = %.6f\n", rss, n - p, rse))
+
+cat("\nQuick comparison with lm output:\n")
+cat(sprintf("sigma = %0.6f (this should match)\n", summary(exact_fit)$sigma))
+```
+
+```{r rse-table}
+kable(
+  rse_data %>%
+    summarise(
+      RSS = sum(residual^2),
+      n = n(),
+      `n - p` = n() - 2,
+      RSE = sqrt(sum(residual^2) / (n() - 2))
+    ),
+  digits = 6,
+  caption = "Residual standard error formula for the exact 5-row model"
+)
+```
+
+```{r conclusion}
+cat("What to take into the slides:\n")
+cat("- RSE is the standard deviation-like scale for model residuals in original units.\n")
+cat("- Min/1Q/Median/3Q/Max in model output are summary quantities of the sorted residuals.\n")
+cat("- For small n (here n=5), some quartiles can coincide exactly with observed residuals.\n")
+cat("- For other n values, RSE computation stays the same, but quartiles can be interpolated.\n")
+```

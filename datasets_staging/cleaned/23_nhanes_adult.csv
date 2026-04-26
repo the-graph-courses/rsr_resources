@@ -1,0 +1,136 @@
+subject_id,survey_year,sex,age_yrs,age_decade,race,education_level,marital_status,hh_income_midpoint,poverty_ratio,home_ownership,work_status,weight_kg,height_cm,bmi,pulse,systolic_bp,diastolic_bp,direct_hdl,total_cholesterol,diabetes,general_health,phys_health_bad_days,ment_health_bad_days,sleep_hours,sleep_trouble,phys_active,phys_active_days,alcohol_days_year,smoked_100,smoke_now
+63147,2011_12,male,41, 40-49,White,Some College,Married,30000,1.41,Own,NotWorking,106.8,188.8,30,88,112,76,1.19,4.84,FALSE,Fair,12,30,9,TRUE,FALSE,NA,2,FALSE,NA
+57165,2009_10,male,48, 40-49,Black,High School,Married,30000,1.36,Own,NotWorking,77.4,168.2,27.36,70,123,69,1.22,3.75,FALSE,Fair,20,30,3,TRUE,TRUE,3,0,TRUE,No
+69465,2011_12,female,50, 50-59,White,College Grad,Divorced,40000,2.16,Own,NotWorking,70.5,161.8,26.9,76,152,103,2.43,5.92,FALSE,Vgood,0,0,6,TRUE,TRUE,4,364,FALSE,NA
+57313,2009_10,female,74, 70+,White,College Grad,Widowed,50000,4.16,Own,NotWorking,61.7,158.1,24.68,64,132,81,NA,NA,FALSE,Vgood,0,0,6,FALSE,TRUE,7,52,TRUE,No
+56047,2009_10,female,27, 20-29,White,9 - 11th Grade,NeverMarried,87500,3.51,Own,Working,70.3,168.1,24.88,74,107,58,1.84,4.78,FALSE,Fair,2,0,6,FALSE,FALSE,NA,24,TRUE,Yes
+57056,2009_10,male,26, 20-29,Mexican,High School,NeverMarried,12500,0.39,Own,Working,92.6,165.8,33.69,78,126,75,1.4,6.96,FALSE,Fair,0,0,6,FALSE,FALSE,NA,168,TRUE,Yes
+54643,2009_10,female,41, 40-49,White,College Grad,Married,60000,2.33,Own,Working,55.6,155.6,22.96,82,111,76,1.24,5.77,FALSE,Good,4,5,6,FALSE,FALSE,NA,4,TRUE,No
+53095,2009_10,female,52, 50-59,White,9 - 11th Grade,NeverMarried,2500,0.05,Other,NotWorking,82,156.4,33.52,96,114,71,1.6,6.03,FALSE,Fair,0,5,4,TRUE,FALSE,NA,364,TRUE,Yes
+67434,2011_12,male,56, 50-59,White,College Grad,Married,100000,5,Own,Working,88.2,181.4,26.8,44,137,77,1.11,5.25,FALSE,NA,NA,NA,7,FALSE,TRUE,4,NA,FALSE,NA
+60273,2009_10,male,39, 30-39,Black,9 - 11th Grade,Married,50000,1.35,Own,Working,119,178.1,37.52,60,122,78,0.85,5.66,FALSE,Excellent,0,0,4,FALSE,FALSE,NA,0,FALSE,NA
+58162,2009_10,female,32, 30-39,White,Some College,Married,40000,1.59,Rent,NotWorking,122.6,164.2,45.47,72,124,89,0.93,8.15,TRUE,Fair,20,10,8,FALSE,TRUE,3,0,FALSE,NA
+58284,2009_10,female,72, 70+,White,College Grad,Married,87500,5,Own,NotWorking,69.4,166,25.19,88,103,66,1.94,5.35,FALSE,Vgood,2,0,8,FALSE,FALSE,NA,4,FALSE,NA
+62180,2011_12,male,35, 30-39,White,College Grad,Married,22500,0.87,Own,Working,89,178.7,27.9,66,107,66,0.85,3.7,FALSE,Good,0,8,7,TRUE,FALSE,NA,2,FALSE,NA
+70881,2011_12,male,23, 20-29,White,College Grad,NeverMarried,70000,4.76,Own,Working,78.8,174.7,25.8,66,113,54,1.24,5.07,FALSE,Vgood,2,3,6,TRUE,TRUE,NA,52,FALSE,NA
+60165,2009_10,female,49, 40-49,Black,High School,Married,22500,0.87,Rent,NotWorking,69.3,168.6,24.38,116,118,85,2.84,6.26,FALSE,NA,NA,NA,4,TRUE,FALSE,NA,NA,TRUE,Yes
+69896,2011_12,male,49, 40-49,White,High School,NeverMarried,100000,2.86,Rent,Working,74.6,177.1,23.8,68,120,77,0.98,6.98,FALSE,Good,7,14,4,FALSE,FALSE,NA,6,TRUE,Yes
+67785,2011_12,female,38, 30-39,White,9 - 11th Grade,Married,17500,1.21,Rent,NotWorking,65.1,163.1,24.5,68,92,58,0.93,3.36,FALSE,Good,2,2,5,FALSE,TRUE,5,0,TRUE,Yes
+67285,2011_12,female,70, 70+,Hispanic,College Grad,Widowed,30000,2.89,Own,Working,89.7,156.6,36.6,70,152,84,1.34,5.17,FALSE,Excellent,2,0,8,FALSE,FALSE,NA,0,FALSE,NA
+69403,2011_12,male,61, 60-69,White,College Grad,Divorced,30000,2.86,Rent,Working,116.2,171.1,39.7,NA,NA,NA,1.63,6.15,FALSE,Vgood,0,0,5,FALSE,FALSE,5,1,TRUE,No
+65620,2011_12,female,25, 20-29,White,College Grad,NeverMarried,87500,2.75,Rent,Working,57.4,160.7,22.2,78,103,74,1.55,3.75,FALSE,Vgood,0,4,7,FALSE,TRUE,3,156,FALSE,NA
+67190,2011_12,female,36, 30-39,White,College Grad,Married,87500,4.5,Own,Working,93.1,184.5,27.3,60,129,66,1.24,3.85,FALSE,Fair,20,10,7,TRUE,TRUE,3,0,TRUE,Yes
+51912,2009_10,female,27, 20-29,White,9 - 11th Grade,Married,2500,0.17,Rent,NotWorking,95.9,158.2,38.32,98,92,66,1.11,5.4,FALSE,Fair,30,30,4,TRUE,FALSE,NA,0,TRUE,Yes
+71564,2011_12,male,25, 20-29,White,High School,Married,7500,0.36,Rent,NotWorking,100.9,169.1,35.3,96,124,78,0.85,4.58,FALSE,Good,0,20,6,FALSE,FALSE,5,0,FALSE,NA
+66522,2011_12,female,46, 40-49,White,College Grad,Married,100000,5,Own,Working,71.3,162.6,27,60,110,79,1.4,4.24,FALSE,Vgood,0,2,8,FALSE,TRUE,5,5,TRUE,No
+60740,2009_10,female,26, 20-29,White,9 - 11th Grade,LivePartner,70000,3.17,Own,Working,50.2,168.4,17.7,92,111,61,1.73,4.29,FALSE,Good,15,30,4,TRUE,FALSE,NA,52,TRUE,No
+58845,2009_10,male,63, 60-69,White,9 - 11th Grade,Widowed,70000,4.46,Own,NotWorking,101.1,163.8,37.68,62,106,70,1.29,5.28,TRUE,Fair,30,30,6,FALSE,FALSE,NA,24,TRUE,Yes
+70225,2011_12,male,25, 20-29,White,College Grad,Married,70000,4.42,Other,Working,113.1,182.6,33.9,80,112,86,0.93,4.78,FALSE,Good,0,0,6,FALSE,TRUE,5,48,TRUE,No
+70702,2011_12,male,26, 20-29,White,High School,Married,50000,1.48,Rent,Working,65.3,181.1,19.9,76,123,74,1.32,4.16,FALSE,Fair,2,0,6,FALSE,FALSE,NA,156,TRUE,Yes
+62634,2011_12,male,68, 60-69,White,9 - 11th Grade,Married,50000,3.06,Own,NotWorking,103.3,177.9,32.6,70,130,73,1.32,5.22,FALSE,Good,0,0,8,TRUE,TRUE,NA,104,TRUE,No
+59541,2009_10,male,49, 40-49,White,High School,Divorced,40000,1.91,Rent,NotWorking,112.1,180,34.6,88,95,70,0.78,6.31,TRUE,Fair,10,2,6,TRUE,FALSE,NA,104,TRUE,No
+55369,2009_10,female,40, 40-49,White,College Grad,Married,87500,3.4,Own,Working,75.6,161.5,28.99,60,124,82,1.29,4.47,FALSE,Good,0,0,7,FALSE,TRUE,5,3,TRUE,No
+60321,2009_10,female,38, 30-39,White,College Grad,Married,100000,4.99,Own,Working,96.4,163.6,36.02,78,118,78,0.88,4.37,FALSE,Good,0,5,7,FALSE,TRUE,1,0,FALSE,NA
+67290,2011_12,male,25, 20-29,White,Some College,NeverMarried,40000,0.09,Own,NotWorking,108.6,177.7,34.4,80,125,95,0.78,5.33,FALSE,Good,0,0,7,FALSE,TRUE,7,0,FALSE,NA
+55590,2009_10,female,26, 20-29,Hispanic,College Grad,Married,100000,5,Own,Working,49,156.6,19.98,66,98,65,1.68,4.09,FALSE,Excellent,0,4,7,TRUE,TRUE,2,12,FALSE,NA
+63510,2011_12,female,56, 50-59,White,Some College,Married,100000,5,Own,Working,57.8,163.6,21.6,64,111,67,1.6,6.1,FALSE,Vgood,0,0,7,FALSE,TRUE,1,260,FALSE,NA
+58543,2009_10,female,39, 30-39,Other,Some College,Married,50000,1.69,Own,Working,105,176.4,33.74,NA,NA,NA,1.42,4.63,FALSE,NA,NA,NA,6,FALSE,TRUE,5,NA,TRUE,Yes
+62575,2011_12,female,24, 20-29,White,Some College,Married,NA,NA,Own,NotWorking,54.4,157.4,22,86,133,66,1.16,5.61,FALSE,Excellent,0,30,6,FALSE,FALSE,2,3,FALSE,NA
+63297,2011_12,male,50, 50-59,White,College Grad,Married,87500,5,Own,Working,94.2,175.5,30.6,78,110,79,0.85,3.18,FALSE,Good,2,0,9,FALSE,TRUE,NA,0,FALSE,NA
+56903,2009_10,female,24, 20-29,White,College Grad,NeverMarried,40000,3.88,Rent,Working,57.6,159.5,22.64,78,101,64,1.81,3.96,FALSE,Excellent,0,2,7,FALSE,TRUE,4,260,FALSE,NA
+69767,2011_12,male,56, 50-59,Other,Some College,Divorced,40000,1.97,Own,NotWorking,125.1,166.1,45.3,82,160,87,0.91,4.24,FALSE,Good,0,0,7,FALSE,TRUE,NA,NA,FALSE,NA
+71581,2011_12,male,36, 30-39,Mexican,High School,Married,70000,2.82,Rent,Working,134.9,186.7,38.7,102,127,56,1.29,5.33,TRUE,Fair,0,0,8,FALSE,TRUE,NA,12,FALSE,NA
+63445,2011_12,female,21, 20-29,Mexican,Some College,NeverMarried,2500,0.01,Rent,Looking,59.4,140,30.3,64,102,57,1.66,4.97,FALSE,Vgood,0,10,8,FALSE,TRUE,6,NA,FALSE,NA
+69521,2011_12,male,74, 70+,White,Some College,Married,30000,2.04,Own,NotWorking,78.7,173.9,26,68,112,59,1.03,4.24,FALSE,Good,0,0,8,FALSE,TRUE,2,364,TRUE,No
+62720,2011_12,male,58, 50-59,White,College Grad,Married,100000,5,Own,Working,73.8,168.1,26.1,84,128,76,1.47,6.44,FALSE,Good,0,0,6,FALSE,FALSE,NA,2,FALSE,NA
+59171,2009_10,female,74, 70+,White,High School,Married,40000,2.29,Own,NotWorking,82.2,160.2,32.03,72,125,77,1.47,3.7,FALSE,Vgood,0,0,7,FALSE,FALSE,NA,4,TRUE,No
+70064,2011_12,female,38, 30-39,White,High School,Divorced,40000,2.2,Rent,Working,74.3,153,31.7,86,98,71,1.06,4.99,TRUE,Fair,7,14,7,TRUE,FALSE,2,NA,TRUE,Yes
+60375,2009_10,female,21, 20-29,Mexican,College Grad,NeverMarried,30000,1.36,Rent,Working,39.7,151.6,17.27,80,91,55,1.89,4.27,FALSE,Good,0,3,7,FALSE,FALSE,NA,24,FALSE,NA
+53154,2009_10,male,55, 50-59,White,Some College,NeverMarried,2500,0.09,Own,NotWorking,76.9,184.6,22.57,94,129,74,2.48,5.48,TRUE,Fair,30,10,6,FALSE,FALSE,NA,0,TRUE,Yes
+60369,2009_10,female,38, 30-39,Black,College Grad,Married,100000,5,Own,NotWorking,77.9,163,29.32,66,139,95,1.55,4.97,FALSE,NA,NA,NA,7,TRUE,TRUE,2,NA,TRUE,Yes
+70251,2011_12,female,43, 40-49,Mexican,High School,Married,NA,NA,Own,Working,72.8,166.5,26.3,96,120,84,1.86,5.4,FALSE,Excellent,0,5,8,FALSE,TRUE,5,NA,FALSE,NA
+58838,2009_10,male,62, 60-69,White,Some College,Married,87500,5,Own,Working,103.6,187.1,29.59,64,146,74,1.45,7.19,FALSE,Vgood,0,6,6,FALSE,TRUE,3,52,TRUE,No
+67627,2011_12,male,25, 20-29,Black,College Grad,NeverMarried,100000,5,Own,Working,112.7,172.9,37.7,76,135,83,1.71,5.15,FALSE,Good,0,4,8,FALSE,TRUE,NA,104,FALSE,NA
+58824,2009_10,female,59, 50-59,White,High School,Widowed,12500,1.29,Own,NotWorking,114.3,166.9,41.03,68,112,59,1.09,5.64,FALSE,Fair,2,15,6,TRUE,FALSE,NA,2,TRUE,Yes
+62415,2011_12,female,27, 20-29,White,Some College,Married,100000,5,Own,Working,76.4,169,26.7,74,91,53,1.99,5.84,FALSE,Vgood,2,1,9,FALSE,FALSE,NA,NA,FALSE,NA
+55947,2009_10,male,75, 70+,White,High School,Married,NA,NA,Own,Working,65.3,174.9,21.35,62,164,67,1.55,4.6,FALSE,NA,NA,NA,6,FALSE,FALSE,NA,NA,TRUE,Yes
+65133,2011_12,female,47, 40-49,White,College Grad,Married,12500,0.93,Rent,NotWorking,79.1,163,29.8,94,123,61,1.29,4.03,FALSE,Good,0,20,6,FALSE,TRUE,NA,260,TRUE,No
+64676,2011_12,female,56, 50-59,Hispanic,Some College,LivePartner,70000,3.67,Own,Working,55.9,153.5,23.7,72,129,69,1.27,7.94,FALSE,Fair,1,0,7,FALSE,FALSE,NA,12,FALSE,NA
+56715,2009_10,male,29, 20-29,Other,Some College,Married,70000,2.81,Rent,Working,103.1,173.3,34.33,94,104,62,0.91,4.84,FALSE,Vgood,0,0,10,FALSE,FALSE,NA,5,TRUE,Yes
+66547,2011_12,male,65, 60-69,White,College Grad,Married,100000,5,Own,Working,98.5,187.5,28,76,123,75,1.11,6.18,FALSE,Excellent,0,0,9,FALSE,TRUE,7,312,FALSE,NA
+58972,2009_10,male,42, 40-49,Mexican,8th Grade,Divorced,30000,1.72,Own,Working,59.1,170.5,20.33,76,151,85,3.72,6.39,FALSE,Excellent,0,0,8,FALSE,TRUE,1,96,TRUE,Yes
+52268,2009_10,male,29, 20-29,White,Some College,NeverMarried,100000,NA,Own,Working,65.3,166.3,23.61,60,122,61,1.06,4.76,FALSE,Excellent,0,5,8,TRUE,TRUE,3,60,FALSE,NA
+55436,2009_10,female,57, 50-59,Other,8th Grade,Divorced,NA,NA,Rent,NotWorking,71.9,156.9,29.21,76,130,85,NA,NA,TRUE,Poor,0,0,10,FALSE,FALSE,NA,NA,FALSE,NA
+67516,2011_12,female,47, 40-49,Black,Some College,NeverMarried,30000,1.47,Rent,Working,95.3,168.8,33.4,80,126,81,1.45,5.56,FALSE,Good,2,3,8,TRUE,TRUE,NA,36,FALSE,NA
+70196,2011_12,male,37, 30-39,Mexican,8th Grade,NeverMarried,22500,0.78,Own,Working,87.8,168.5,30.9,64,95,45,1.03,5.92,FALSE,Fair,0,0,8,FALSE,FALSE,NA,0,FALSE,NA
+55487,2009_10,female,23, 20-29,Hispanic,Some College,LivePartner,30000,0,Rent,Working,69.7,161.5,26.72,66,113,66,1.29,4.01,FALSE,Good,0,5,8,FALSE,TRUE,2,24,TRUE,Yes
+70358,2011_12,female,44, 40-49,White,Some College,Divorced,50000,4.41,Own,Working,59.5,168.8,20.9,76,112,69,1.73,5.4,FALSE,Good,1,0,8,FALSE,TRUE,NA,24,TRUE,No
+70438,2011_12,male,42, 40-49,White,College Grad,Married,100000,5,Own,NotWorking,108.3,173.1,36.1,64,122,69,1.06,6.31,FALSE,Vgood,0,0,8,FALSE,TRUE,NA,208,FALSE,NA
+62229,2011_12,female,31, 30-39,White,College Grad,Married,30000,1.31,Own,Working,84.1,171.4,28.6,78,122,84,1.29,3.57,FALSE,Good,0,0,6,FALSE,TRUE,NA,12,TRUE,No
+57650,2009_10,female,26, 20-29,Other,College Grad,Married,70000,2.95,Own,Working,61.7,153.2,26.29,62,120,55,0.98,3.85,FALSE,Fair,0,0,7,FALSE,TRUE,4,0,FALSE,NA
+59453,2009_10,male,26, 20-29,Other,College Grad,LivePartner,87500,3.69,Rent,Working,68.3,175.1,22.28,58,129,72,1.16,4.91,FALSE,Good,4,4,7,FALSE,TRUE,2,52,FALSE,NA
+56254,2009_10,female,59, 50-59,White,9 - 11th Grade,Divorced,12500,1.11,Own,Working,51.7,154.9,21.55,64,132,65,1.11,4.4,TRUE,Fair,30,6,6,FALSE,TRUE,7,6,TRUE,Yes
+64514,2011_12,female,31, 30-39,Hispanic,9 - 11th Grade,LivePartner,17500,0.81,Rent,Looking,53,153.9,22.4,88,107,73,1.11,4.91,FALSE,Good,0,13,6,FALSE,FALSE,5,24,TRUE,Yes
+58622,2009_10,male,52, 50-59,White,High School,Married,17500,1.24,Own,NotWorking,119.9,175.7,38.84,78,127,81,1.27,8.77,FALSE,Good,30,0,6,TRUE,FALSE,NA,24,TRUE,Yes
+55709,2009_10,male,59, 50-59,Black,High School,Married,87500,4.2,Own,Working,85.4,188.2,24.11,56,117,66,1.16,4.6,FALSE,Fair,0,0,7,FALSE,FALSE,NA,52,TRUE,Yes
+62616,2011_12,female,37, 30-39,Other,8th Grade,Married,17500,0.69,Rent,Working,51.8,164,19.3,82,109,73,1.42,4.03,FALSE,Good,0,0,8,FALSE,FALSE,NA,NA,FALSE,NA
+55567,2009_10,male,40, 40-49,Mexican,High School,Married,60000,2.72,Own,Working,90.3,179.9,27.9,64,115,74,1.27,5.2,FALSE,Good,0,0,7,FALSE,TRUE,2,5,TRUE,No
+55189,2009_10,male,64, 60-69,White,Some College,Divorced,NA,NA,Own,Looking,80.5,179.7,24.93,90,114,63,1.03,7.21,FALSE,Excellent,0,0,7,FALSE,TRUE,5,6,TRUE,Yes
+56900,2009_10,male,31, 30-39,White,High School,Married,40000,1.67,Own,Working,86.5,182.1,26.09,56,113,73,1.32,3.9,FALSE,Vgood,0,2,6,FALSE,FALSE,NA,6,TRUE,No
+58225,2009_10,male,41, 40-49,White,College Grad,Married,100000,5,Own,Working,108.7,178.7,34.04,88,136,90,1.29,6.96,FALSE,Fair,0,0,6,FALSE,TRUE,5,208,FALSE,NA
+64336,2011_12,male,31, 30-39,White,9 - 11th Grade,LivePartner,40000,1.21,Rent,Working,98.5,179.6,30.5,82,120,77,1.09,3.67,FALSE,Good,0,14,7,FALSE,FALSE,NA,2,TRUE,Yes
+67887,2011_12,female,67, 60-69,Other,Some College,Married,87500,5,Own,NotWorking,57,157.4,23,60,134,69,1.73,4.68,FALSE,Vgood,1,0,7,FALSE,TRUE,6,6,FALSE,NA
+60152,2009_10,male,42, 40-49,White,College Grad,Married,100000,5,Own,Working,89,185.2,25.95,70,107,62,1.14,4.5,FALSE,Vgood,0,1,7,FALSE,TRUE,2,104,FALSE,NA
+54732,2009_10,female,36, 30-39,White,High School,LivePartner,17500,0.98,Own,Working,161.7,183,48.28,64,117,71,1.53,5.17,FALSE,Vgood,1,3,7,TRUE,FALSE,NA,0,FALSE,NA
+64803,2011_12,male,35, 30-39,White,Some College,Married,30000,1.16,Rent,NotWorking,99.7,185.1,29.1,76,126,93,0.7,4.6,FALSE,NA,NA,NA,7,FALSE,FALSE,3,NA,TRUE,No
+61051,2009_10,female,44, 40-49,White,College Grad,NeverMarried,87500,5,Rent,Working,64.2,165.8,23.35,80,101,61,1.14,6.13,FALSE,NA,NA,NA,9,TRUE,FALSE,NA,NA,FALSE,NA
+52152,2009_10,male,70, 70+,White,Some College,Divorced,60000,5,Own,Working,92.9,180.1,28.64,54,118,78,1.19,5.79,FALSE,Good,0,0,6,TRUE,TRUE,7,24,TRUE,Yes
+67668,2011_12,female,70, 70+,White,Some College,Widowed,22500,0.98,Own,NotWorking,96.6,174.2,31.8,76,160,84,0.93,4.45,TRUE,Good,2,7,8,FALSE,FALSE,2,NA,TRUE,No
+69097,2011_12,male,31, 30-39,Hispanic,9 - 11th Grade,Married,12500,0.4,Rent,Working,79.4,166.2,28.7,62,112,76,1.5,6.15,FALSE,Good,0,0,8,FALSE,FALSE,NA,100,FALSE,NA
+61085,2009_10,female,51, 50-59,White,Some College,Married,100000,5,Own,NotWorking,70.4,168.1,24.91,64,124,75,1.91,5.07,FALSE,Good,30,0,8,FALSE,FALSE,NA,156,FALSE,NA
+67118,2011_12,female,33, 30-39,White,Some College,Divorced,30000,1.34,Rent,Working,81.5,161.8,31.1,76,113,61,1.19,4.37,FALSE,Good,3,5,5,FALSE,FALSE,4,52,TRUE,No
+71119,2011_12,male,36, 30-39,White,Some College,Married,100000,5,Own,Working,92.3,191.3,25.2,62,117,67,1.37,3.47,FALSE,Vgood,0,0,6,TRUE,TRUE,5,156,TRUE,No
+60854,2009_10,female,61, 60-69,White,High School,Married,70000,4.67,Own,NotWorking,104.5,164.3,38.71,68,108,50,1.09,4.47,TRUE,Fair,0,2,8,FALSE,FALSE,NA,3,FALSE,NA
+66439,2011_12,female,48, 40-49,Mexican,High School,NeverMarried,40000,1.53,Own,Working,90.1,159.3,35.5,56,124,79,2.22,4.86,FALSE,Good,0,0,6,FALSE,FALSE,6,6,TRUE,Yes
+55676,2009_10,male,26, 20-29,White,Some College,NeverMarried,100000,4.51,Own,Working,69.1,174.2,22.77,74,108,68,1.53,4.71,FALSE,NA,NA,NA,5,TRUE,TRUE,3,NA,TRUE,Yes
+63391,2011_12,male,70, 70+,Hispanic,Some College,Married,40000,1.15,Rent,NotWorking,88.5,169.9,30.7,58,137,79,1.42,4.27,FALSE,Good,0,0,8,FALSE,TRUE,NA,1,TRUE,No
+54939,2009_10,female,30, 30-39,White,College Grad,Married,NA,NA,Own,Working,58.7,168.6,20.65,56,106,65,1.86,5.22,FALSE,Excellent,0,0,8,FALSE,TRUE,5,24,FALSE,NA
+55456,2009_10,male,25, 20-29,Mexican,High School,LivePartner,22500,1.09,Rent,Working,71.5,168.2,25.27,60,106,54,1.68,5.56,FALSE,Excellent,0,0,7,FALSE,TRUE,1,52,FALSE,NA
+71093,2011_12,male,50, 50-59,White,High School,LivePartner,100000,5,Own,Working,78.5,169.2,27.4,74,129,78,1.29,6.03,FALSE,Vgood,0,0,6,FALSE,TRUE,3,260,TRUE,Yes
+63721,2011_12,female,22, 20-29,White,High School,NeverMarried,50000,2.43,Own,Looking,51.6,168.1,18.3,62,118,64,1.32,3.54,FALSE,Good,0,7,9,FALSE,TRUE,NA,6,FALSE,NA
+70581,2011_12,female,63, 60-69,White,9 - 11th Grade,Married,40000,2.86,Own,Working,66.6,154.5,27.9,82,114,70,1.29,6.83,FALSE,Vgood,2,10,7,FALSE,FALSE,3,12,FALSE,NA
+58611,2009_10,male,48, 40-49,White,College Grad,Separated,70000,3.82,Rent,Working,139.1,183,41.54,44,154,91,0.93,4.16,FALSE,Good,7,2,7,FALSE,FALSE,NA,104,TRUE,No
+52120,2009_10,female,25, 20-29,White,9 - 11th Grade,Married,NA,NA,Rent,NotWorking,102.4,159.1,40.45,96,114,56,1.76,6.49,FALSE,Good,15,30,2,TRUE,FALSE,NA,9,TRUE,Yes
+67834,2011_12,female,33, 30-39,White,Some College,NeverMarried,50000,2.75,Rent,Working,76.3,164.5,28.2,70,102,71,1.5,4.6,FALSE,Vgood,4,0,8,TRUE,TRUE,4,1,TRUE,No
+60186,2009_10,male,34, 30-39,Black,Some College,NeverMarried,50000,1.39,Rent,Working,84.3,182.3,25.37,66,118,69,NA,NA,FALSE,Good,0,0,6,TRUE,TRUE,4,52,FALSE,NA
+67192,2011_12,female,55, 50-59,White,Some College,Married,50000,2.7,Own,Working,76.5,165.1,28.1,NA,NA,NA,2.43,5.66,FALSE,Fair,0,30,8,FALSE,FALSE,1,260,TRUE,Yes
+57267,2009_10,male,56, 50-59,Black,Some College,Married,12500,0.82,Rent,NotWorking,57.3,171.2,19.55,50,NA,NA,1.55,4.94,FALSE,Good,2,3,8,TRUE,TRUE,3,364,TRUE,Yes
+55250,2009_10,female,24, 20-29,White,College Grad,NeverMarried,70000,3.17,Own,Working,137.6,167.8,48.87,82,127,83,0.98,5.51,FALSE,Fair,20,15,8,FALSE,TRUE,4,52,FALSE,NA
+69170,2011_12,female,51, 50-59,Mexican,8th Grade,Married,70000,2.95,Own,Working,78.4,152.3,33.8,80,129,79,1.24,5.87,FALSE,Fair,0,0,9,FALSE,TRUE,NA,NA,FALSE,NA
+51991,2009_10,male,35, 30-39,White,Some College,Married,40000,1.59,Own,Working,82.5,169.2,28.82,80,121,67,1.19,4.97,FALSE,Vgood,0,0,6,FALSE,TRUE,1,8,FALSE,NA
+61582,2009_10,male,39, 30-39,White,College Grad,Married,40000,1.22,Other,Working,62.2,182.8,18.61,72,101,55,1.94,4.4,FALSE,Vgood,2,1,7,TRUE,FALSE,NA,0,FALSE,NA
+62674,2011_12,female,33, 30-39,White,College Grad,Married,30000,1.16,Rent,Working,59.7,166.5,21.5,80,99,67,1.99,6.57,FALSE,Excellent,0,30,7,FALSE,TRUE,NA,8,FALSE,NA
+67897,2011_12,female,71, 70+,White,College Grad,Married,100000,5,Own,NotWorking,44,160.6,17.1,64,113,65,2.33,5.79,FALSE,Vgood,9,0,6,TRUE,TRUE,NA,156,FALSE,NA
+57287,2009_10,female,33, 30-39,White,Some College,Married,30000,0.97,Own,NotWorking,104.5,156.2,42.83,98,128,62,1.29,3.83,TRUE,NA,NA,NA,7,TRUE,TRUE,5,NA,FALSE,NA
+63560,2011_12,male,40, 40-49,White,High School,Married,40000,1.17,Other,Working,98.9,178.2,31.1,NA,NA,NA,0.98,4.4,FALSE,Good,0,2,7,FALSE,FALSE,NA,1,FALSE,NA
+70359,2011_12,male,80,NA,White,Some College,Married,87500,5,Own,NotWorking,86.7,181.8,26.2,68,129,68,1.78,4.94,FALSE,Vgood,0,0,9,FALSE,TRUE,NA,312,TRUE,No
+64882,2011_12,male,65, 60-69,White,College Grad,Married,87500,5,Own,Working,91.9,182.4,27.6,62,130,83,1.91,5.9,FALSE,Excellent,0,0,8,FALSE,TRUE,NA,52,FALSE,NA
+62720,2011_12,male,58, 50-59,White,College Grad,Married,100000,5,Own,Working,73.8,168.1,26.1,84,128,76,1.47,6.44,FALSE,Good,0,0,6,FALSE,FALSE,NA,2,FALSE,NA
+53526,2009_10,female,62, 60-69,White,College Grad,Married,100000,5,Own,Working,95.1,170.6,32.68,80,107,77,1.34,5.61,FALSE,Vgood,0,0,7,FALSE,FALSE,NA,156,TRUE,No
+69460,2011_12,male,50, 50-59,Hispanic,8th Grade,Married,70000,2.44,Rent,Working,89.2,174.3,29.4,62,133,75,0.93,5.28,FALSE,Fair,0,0,7,FALSE,FALSE,NA,52,TRUE,Yes
+63288,2011_12,female,58, 50-59,Black,College Grad,Married,NA,NA,Own,Working,93.6,165.2,34.3,60,169,71,1.32,4.6,TRUE,NA,NA,NA,8,FALSE,TRUE,NA,NA,FALSE,NA
+58185,2009_10,male,69, 60-69,Other,9 - 11th Grade,Married,100000,4.21,Own,NotWorking,53.7,156.7,21.87,76,130,21,0.98,3.7,FALSE,NA,NA,NA,6,FALSE,TRUE,7,NA,FALSE,NA
+69207,2011_12,female,30, 30-39,Black,High School,NeverMarried,22500,1.52,Rent,Working,187.5,164.8,69,74,108,72,0.96,4.42,FALSE,Fair,3,7,8,FALSE,FALSE,NA,5,FALSE,NA
+69516,2011_12,male,74, 70+,White,Some College,Married,60000,3.74,Own,NotWorking,88.1,176.2,28.4,98,134,68,1.22,5.43,FALSE,Fair,30,0,9,FALSE,FALSE,NA,364,TRUE,Yes
+62301,2011_12,male,23, 20-29,Black,9 - 11th Grade,NeverMarried,NA,NA,Own,Working,101.9,175.6,33,72,118,54,1.14,4.55,FALSE,Excellent,3,2,11,FALSE,FALSE,NA,48,FALSE,NA
+69421,2011_12,female,68, 60-69,White,Some College,Married,40000,2.64,Own,Looking,65.4,158.8,25.9,76,138,75,1.86,5.09,FALSE,Good,0,0,9,TRUE,TRUE,NA,168,TRUE,No
+61964,2009_10,female,80,NA,White,Some College,Married,17500,1.55,Own,NotWorking,51.7,164.3,19.15,52,152,68,2.22,5.22,FALSE,Good,14,30,5,TRUE,TRUE,6,NA,FALSE,NA
+61684,2009_10,female,25, 20-29,White,College Grad,LivePartner,50000,0.92,Rent,Working,73.7,162.5,27.91,76,113,66,1.84,5.77,FALSE,Vgood,2,0,7,FALSE,TRUE,5,36,FALSE,NA
+68440,2011_12,male,46, 40-49,White,Some College,Married,NA,NA,Own,Working,80.7,177.9,25.5,58,93,66,1.37,6,FALSE,Vgood,0,0,6,FALSE,TRUE,NA,156,TRUE,Yes
+64526,2011_12,female,49, 40-49,White,College Grad,LivePartner,50000,1.95,Rent,Working,98.8,158.1,39.5,62,136,79,1.03,5.59,FALSE,Good,3,5,6,TRUE,TRUE,NA,180,FALSE,NA
+56723,2009_10,female,28, 20-29,White,8th Grade,LivePartner,40000,2.29,Rent,Working,75.6,174.3,24.88,70,109,71,1.27,4.27,FALSE,Vgood,2,15,6,FALSE,TRUE,3,260,FALSE,NA
+53351,2009_10,female,27, 20-29,White,College Grad,LivePartner,100000,5,Own,Working,83.8,180.6,25.69,60,110,62,1.89,6.13,FALSE,Vgood,1,0,6,FALSE,TRUE,6,208,TRUE,No
+52265,2009_10,male,25, 20-29,White,College Grad,NeverMarried,87500,5,Rent,Working,69.2,184.4,20.35,80,107,62,1.5,3.88,FALSE,Vgood,0,0,8,FALSE,TRUE,3,52,FALSE,NA
+51780,2009_10,female,54, 50-59,White,College Grad,Married,100000,5,Own,Working,53.9,160.1,21.03,78,131,69,1.32,5.79,FALSE,Excellent,0,0,6,TRUE,TRUE,6,0,FALSE,NA
+68301,2011_12,male,59, 50-59,White,High School,Divorced,100000,0.63,Rent,Working,107.6,181.6,32.6,70,202,99,1.09,7.4,FALSE,Fair,0,0,8,FALSE,FALSE,5,208,TRUE,Yes
+61687,2009_10,male,57, 50-59,White,High School,Married,100000,5,Own,Working,121.6,173.5,40.4,66,124,66,1.06,5.87,TRUE,Fair,30,0,6,TRUE,TRUE,3,40,FALSE,NA
