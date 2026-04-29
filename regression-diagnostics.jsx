@@ -64,11 +64,11 @@ lin_border:{label:"Age & Systolic Blood Pressure",desc:"Age vs. systolic BP from
 lin_bad:{label:"Study Hours & Quiz Score",desc:"Weekly study hours vs. quiz score (%). Going from almost no studying to moderate studying lifts scores sharply, while extra hours past that add little, since you are brushing the top of the scale. That bend is nowhere near straight.",xLabel:"Weekly study hours",yLabel:"Quiz score (%)",points:(()=>{const xs=[2,4,6,9,11,13,15,17,18,20,21,23,26,29,31,34,37,39,41,43,46,48,51,53,54,56,58,60,61,62];const ns=[.8,-1,1,-.8,.5,-1,.6,-1.2,.4,-1,.7,-1.1,.9,-1,.5,-1.2,.8,-.9,.6,-1,.5,-1.1,.9,-1.2,.8,-1,.6,-1.1,.9,-1.2];return xs.map((x,i)=>{const y=96*(1-Math.exp(-x/9.8))+ns[i]*2.2;return{x,y:+Math.min(y,99.9).toFixed(1)};});})()},
 hom_good:{label:"Exercise Duration & Calories Burned",desc:"Minutes of exercise vs. calories burned. The spread stays consistent from short to long workouts.",xLabel:"Exercise duration (minutes)",yLabel:"Calories burned",points:(()=>{const xs=[15,20,22,25,28,30,33,35,37,40,42,45,48,50,52,55,58,60,63,65,18,27,34,39,44,49,54,57,62,36];const ns=[12,-8,15,-10,6,-14,9,-7,16,-11,5,-13,10,-6,14,-9,7,-12,11,-8,13,-10,8,-15,6,-11,14,-7,9,-12];return xs.map((x,i)=>({x,y:+(50+5.8*x+ns[i]).toFixed(0)}));})()},
 hom_border:{label:"Education & Health Literacy",desc:"Years of education vs. health literacy score. Scores widen slightly at higher education levels, but the pattern is subtle.",xLabel:"Years of education",yLabel:"Health literacy score",points:(()=>{const xs=[8,9,10,10,11,11,12,12,12,13,13,14,14,14,15,15,16,16,16,17,17,18,18,19,20,9,11,13,15,17];const ns=[1.5,-1,2,-1.5,2.5,-2,1.5,-2.5,3,-1,2.5,-2,3,-3,2,-3.5,3.5,-2.5,4,-3,3.5,-4,3,-4.5,5,1,-2,2.5,-3,3.5];return xs.map((x,i)=>({x,y:+(20+4*x+ns[i]*(1+(x-14)*.04)).toFixed(1)}));})()},
-hom_bad:{label:"Income & Medical Spending",desc:"Household income ($K) vs. annual out-of-pocket medical spending. Wealthier households show much more variable spending, creating a clear fan shape.",xLabel:"Household income ($K)",yLabel:"Medical spending ($)",points:(()=>{const xs=[20,25,28,32,35,38,42,45,48,52,55,58,62,65,68,72,75,80,85,90,95,100,110,120,22,40,56,70,88,105];const ns=[-.4,.7,-.3,.9,-.6,.5,-.7,1,-.5,.8,-1,.6,1.1,-.9,-1.3,1.5,-.8,1.7,-1.1,-1.8,1.4,-2,2.4,1.2,-.5,-1,1.6,-1.4,1.9,-2.3];const ms=[3,-5,4,-2,-6,7,-3,8,1,-7,-4,6,-8,5,2,-1,-9,4,-3,6,-5,8,-7,5,9,-2,6,-8,7,-4];return xs.map((x,i)=>({x,y:+(200+12*x+ns[i]*x*1.2+ms[i]*4).toFixed(0)}));})()},
+hom_bad:{label:"Income & Medical Spending",desc:"Household income ($K) vs. annual out-of-pocket medical spending. Wealthier households show much more variable spending, creating a clear fan shape.",xLabel:"Household income ($K)",yLabel:"Medical spending ($)",points:(()=>{const xs=[20,25,28,32,35,38,42,45,48,52,55,58,62,65,68,72,75,80,85,90,95,100,110,120,22,40,56,70,88,105];const ns=[-.6,1.1,-.4,1.3,-.9,.7,-1.1,1.5,-.7,1.2,-1.5,.9,1.7,-1.3,-2,2.3,-1.2,2.6,-1.7,-2.7,2.1,-3,3.6,1.8,-.7,-1.5,2.4,-2.1,2.9,-3.5];const ms=[7,-11,9,-4,-13,15,-7,17,3,-15,-9,13,-17,11,5,-3,-19,9,-7,13,-11,17,-15,11,19,-5,13,-17,15,-9];return xs.map((x,i)=>({x,y:+(200+12*x+ns[i]*x*1.5+ms[i]*6).toFixed(0)}));})()},
 inf_good:{label:"BMI & Total Cholesterol",desc:"BMI vs. total cholesterol (mg/dL) from a routine health screening. No point exerts outsized influence.",xLabel:"BMI",yLabel:"Total cholesterol (mg/dL)",points:(()=>{const xs=[19,20,21,21.5,22,22.5,23,23.5,24,24.5,25,25.5,26,26.5,27,27.5,28,28.5,29,29.5,30,30.5,31,31.5,32,20.5,23.5,26,28,30];const ns=[5,-3,7,-4,2,-6,4,-2,8,-5,3,-7,5,-3,6,-4,7,-5,3,-6,8,-4,5,-7,6,4,-5,3,-4,7];return xs.map((x,i)=>({x,y:+(120+4.5*x+ns[i]*2).toFixed(0)}));})()},
 inf_border:{label:"Unusually Healthy Elder",desc:"Age vs. systolic BP, with one 78-year-old whose BP is lower than expected. High leverage, but roughly on trend.",xLabel:"Age (years)",yLabel:"Systolic BP",points:(()=>{const xs=[30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64,66,68,33,39,45,51,57,63,35,43,55,61];const ns=[3,-2,4,-3,1,-4,2,-1,5,-3,2,-4,3,-2,4,-1,5,-3,2,-4,3,-2,1,-3,4,-2,2,-3,1,-4];const p=xs.map((x,i)=>({x,y:+(90+.8*x+ns[i]*2).toFixed(0)}));p.push({x:78,y:140});return p;})()},
 inf_bad:{label:"Data Entry Error in BMI Study",desc:"Same cholesterol screening, but one record has BMI=42 with cholesterol=130. Likely a data entry error. Cook's distance flags it immediately.",xLabel:"BMI",yLabel:"Total cholesterol (mg/dL)",points:(()=>{const xs=[19,20,21,22,23,23.5,24,24.5,25,25.5,26,26.5,27,27.5,28,28.5,29,29.5,30,30.5,31,20.5,23,25.5,27,29,22,24.5,26.5,28.5];const ns=[5,-3,7,-4,2,-6,4,-2,8,-5,3,-7,5,-3,6,-4,7,-5,3,-6,8,4,-5,3,-4,7,-3,6,-5,4];const p=xs.map((x,i)=>({x,y:+(120+4.5*x+ns[i]*2).toFixed(0)}));p.push({x:42,y:130});return p;})()},
-norm_good:{label:"Height & Lung Capacity",desc:"Height (cm) vs. lung capacity (L) for 30 adults. Prediction errors distribute symmetrically.",xLabel:"Height (cm)",yLabel:"Lung capacity (L)",points:(()=>{const xs=[155,157,159,160,162,163,165,166,167,168,170,171,172,173,174,175,177,178,180,182,184,186,188,190,158,164,169,176,181,185];const ns=[.15,-.1,.08,-.2,.12,-.05,.18,-.14,.03,-.17,.11,-.08,.16,-.12,.06,-.19,.13,-.07,.1,-.15,.09,-.11,.17,-.13,.04,-.16,.14,-.09,.07,-.06];return xs.map((x,i)=>({x,y:+(-3+.042*x+ns[i]).toFixed(2)}));})()},
+norm_good:{label:"Height & Lung Capacity",desc:"Height (cm) vs. lung capacity (L) for 60 adults. Prediction errors distribute symmetrically.",xLabel:"Height (cm)",yLabel:"Lung capacity (L)",points:(()=>{let s=20260429;const r=()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};const z=()=>(Math.sqrt(-2*Math.log(Math.max(r(),1e-9)))*Math.cos(2*Math.PI*r())+Math.sqrt(-2*Math.log(Math.max(r(),1e-9)))*Math.cos(2*Math.PI*r()))/Math.SQRT2;const n=60;const xs=Array.from({length:n},(_,i)=>155+(i/(n-1))*35+(r()-.5)*1.2);const raw=xs.map(()=>z());const m=raw.reduce((a,v)=>a+v,0)/n;const sd=Math.sqrt(raw.reduce((a,v)=>a+(v-m)**2,0)/(n-1))||1;return xs.map((x,i)=>{const std=(raw[i]-m)/sd;return{x:+x.toFixed(1),y:+(-3+.042*x+std*0.18).toFixed(2)};});})()},
 norm_border:{label:"Hours of Sleep & Sick Days",desc:"Average nightly sleep vs. sick days per year. Most people follow the trend, with only a mild tail wiggle.",xLabel:"Average nightly sleep (hours)",yLabel:"Sick days per year",points:(()=>{const xs=[5,5.5,5.5,6,6,6.5,6.5,6.5,7,7,7,7,7.5,7.5,7.5,7.5,8,8,8,8,8.5,8.5,8.5,9,9,5,6,7,8,8.5];const ns=[-1.1,.2,-.3,.45,-.1,.3,-.2,.5,-.15,.1,-.3,.25,-.4,.15,.05,-.25,.35,-.1,.2,-.35,1.0,.3,-.2,-.15,-.4,.9,.4,-.05,.15,-.8];return xs.map((x,i)=>({x,y:+(18-1.5*x+ns[i]*1.1).toFixed(1)}));})()},
 norm_bad:{label:"Poverty Rate & ER Visits",desc:"Neighborhood poverty rate (%) vs. ER visits per 1,000. Most follow the trend, but several neighborhoods have extremely high visit rates. Clearly right-skewed residuals.",xLabel:"Neighborhood poverty rate (%)",yLabel:"ER visits per 1,000",points:(()=>{const xs=[5,7,8,10,12,13,15,16,18,19,20,22,23,25,27,28,30,32,34,35,37,38,40,42,6,14,21,29,36,41];const sk=[.1,.05,.15,.05,3.4,.1,.2,.08,4.2,.08,.12,.06,5.1,.12,.2,.04,3.2,.15,.08,.06,6.2,.08,.16,.02,.1,.1,4.8,.05,.12,6.7];return xs.map((x,i)=>({x,y:+(80+3.5*x+sk[i]*22-6).toFixed(0)}));})()},
 };
@@ -82,7 +82,7 @@ sample:[
 ],
 uncorrelated:[
 {q:"The scatterplot shows one dot per patient, coloured and labelled by clinic (clinic 1, clinic 2, clinic 3). The points from each site bunch together in their own group. You pool every patient, ignore the clinic labels, and fit a single ordinary least squares line. For the usual regression assumptions, what is the main concern?",v:"cluster",opts:["The slope is biased because variability within clinics is larger than variability between clinics","Patients seen at the same clinic tend to have correlated prediction errors, so the rows are not independent observations"],ans:1,explain:"Shared clinic context makes residuals within a site tend to look alike; that violates independence and understates uncertainty if you pretend you have unrelated patients. Option A mixes up variance components with slope bias: clustering mainly affects standard errors and effective sample size, not the slope estimate by itself."},
-{q:"Residuals are plotted against the order rows appear in the dataset (for example, time of collection). The values drift in blocks: several consecutive points sit above zero, then several below, then above again, instead of switching sign almost every step. Which interpretation best matches that pattern?",v:"time",opts:["Heteroscedasticity: the typical spread of residuals changes systematically along the sequence","The errors on nearby rows tend to line up on the same side of zero, so they are not independent along the sequence","Omitted variable bias: the model has left out a predictor that always increases with row order"],ans:1,explain:"Smooth runs and waves in collection order mean neighbouring errors are positively related (serial dependence or autocorrelation), not independent noise. Heteroscedasticity is a changing spread, which this plot does not emphasise. A single omitted variable that only trends upward would not by itself produce alternating blocks above and below zero."},
+{q:"Residuals are plotted in the order rows were collected (e.g., over time). They move in runs: several points above zero, then several below, then above again, rather than flipping sign at each step. What does this suggest?",v:"time",opts:["Heteroscedasticity: the spread of residuals changes along the sequence","Nearby rows have residuals on the same side of zero, so they are not independent","Omitted variable bias: a missing predictor that increases with row order"],ans:1,explain:"Runs and waves in collection order mean neighbouring errors are positively related (autocorrelation), not independent. Heteroscedasticity is a changing spread, which is not the main feature here. A predictor that only trends upward would not produce alternating runs above and below zero."},
 ],
 multicollinearity:[
 {q:"A researcher fits the model:\u00A0\u00A0blood_pressure = \u03B2\u2080 + \u03B2\u2081\u00B7age + \u03B5. Why can multicollinearity not occur in this model?",opts:["There is only one predictor","The predictor is normally distributed"],ans:0,explain:"Multicollinearity means predictors overlap with other predictors. A simple regression has only one predictor, so there is no second predictor for it to be collinear with."},
@@ -90,27 +90,25 @@ multicollinearity:[
 {q:"Education and income are strongly correlated in your data and you include both as predictors. What should you expect compared with a model that uses only one of them?",opts:["The standard errors of the individual coefficients will tend to be larger, even though the total R\u00B2 may change only modestly","Including both predictors will roughly double the model's explanatory power, since each predictor contributes independent information"],ans:0,explain:"Highly correlated predictors leave the model unable to separate their individual contributions, which inflates the standard errors. The shared information is largely already in either predictor alone, so R\u00B2 often does not increase by much."},
 ],
 shape:[
-{q:"The dots clearly trace a curve, yet a straight regression line cuts across them. What does that mean for a single reported slope?",v:"curve",opts:["The slope misrepresents the effect because it is not constant across x","Nothing; the slope is still valid"],ans:0,explain:"A straight line forces one average slope onto a relationship whose slope changes across x."},
+{q:"The dots clearly trace a curve, yet a straight regression line cuts across them. What does that mean for a single reported slope?",v:"curve",opts:["The slope misrepresents the effect because the relationship is not actually linear. A fix is to let the model bend, for example by log-transforming the predictor or adding a polynomial term so the curve shape can be captured","The slope is still valid as the average rate of change, since OLS already gives the best straight-line fit and the data points scatter on either side of it"],ans:0,explain:"A straight line forces one average slope onto a relationship whose slope changes across x. The usual fix is to let the model bend: a log or square-root transform of the predictor, or a polynomial term such as x squared, often handles a saturating curve like this one."},
 {q:"In this residuals-vs-fitted plot, what is the most reassuring feature for the linearity assumption?",v:"resid_good",opts:["The smoother stays close to zero across the full range of fitted values","The positive and negative residuals balance out, summing to roughly zero"],ans:0,explain:"A flat smoother near zero means the linear form is not leaving a systematic pattern. The fact that residuals sum to zero is automatic for OLS and tells you nothing about whether the relationship is linear; a clear U-shape can sum to zero just as easily."},
-{q:"A transformation can sometimes repair curvature. The explanation plot below shows the same data plotted as y vs x (curved) and as log(y) vs x (much straighter). In one or two sentences, explain why a log transform of y can turn a curved relationship into a roughly linear one.",ev:"log_fix",prose:"A log transformation compresses large values of y much more than small ones. When y grows multiplicatively with x, for example exponential growth or a saturating decay, taking log(y) linearises the relationship, and a straight line becomes a much better summary. The same regression machinery applies after transforming, but the slope is now interpreted on the log scale (e.g. as a percentage change in y per unit of x)."},
 ],
 homogeneity:[
 {q:"Three residual-vs-fitted patterns are shown. Which one most clearly indicates heteroscedasticity?",v:"het_pick",opts:["The middle panel","The left panel","The right panel"],ans:0,explain:"Heteroscedasticity means the spread of residuals changes with the fitted value. The middle panel shows residuals widening from left to right, the classic fan. The left panel has roughly constant spread (homoscedastic), and the right panel shows a U-shape, which is a linearity issue rather than a variance one."},
-{q:"In this scale-location plot, what does the upward-sloping smoother indicate?",v:"scale_loc",opts:["Residual spread is increasing with fitted values","The residuals are becoming more normal"],ans:0,explain:"The y-axis is error magnitude (\u221A|standardised residual|). A rising smoother means typical residual size grows as fitted values increase, which is heteroscedasticity."},
 {q:"When residual variance is clearly non-constant, why are the usual confidence intervals unreliable?",opts:["The standard formula assumes constant variance, so the resulting interval can be too narrow or too wide","The slope estimate itself becomes biased, so any interval centred on it lands in the wrong place"],ans:0,explain:"OLS standard errors are derived under the assumption of constant variance, and heteroscedasticity distorts that calculation. Robust (HC) standard errors recompute it without that assumption. The slope itself can still be unbiased."},
 {q:"Why might income vs. medical spending look like a fan-shaped scatter?",v:"income_fan",opts:["Higher-income households have more discretionary spending, so individual choices add more variability at the top","Higher-income households spend more on average, so the regression line is steeper at the high end"],ans:0,explain:"The fan is about variance, not the mean. At higher incomes, spending depends more on personal choice, which inflates the spread. A steeper average slope at the top would be a linearity issue, not heteroscedasticity."},
 ],
 influential:[
-{q:"Three panels show different points marked in red. Which point is most influential on the fitted line?",v:"outlier_types",opts:["The off-trend point with high leverage (right panel)","The low-leverage outlier (left panel)","The high-leverage point on the line (middle panel)"],ans:0,explain:"Influence usually requires both ingredients: unusual x-position and a sizable residual. The right-panel point has both."},
-{q:"The red point in this leverage-vs-residual plot sits near the Cook's distance contour. Why is that point flagged as concerning?",v:"lev_resid",opts:["It combines an unusual X value with a sizeable residual, so removing it could meaningfully shift the fitted line","It has the largest leverage of any point, which alone is enough to make it concerning regardless of where it sits relative to the line"],ans:0,explain:"Influence is the combination of leverage and residual size. A point with high leverage but a tiny residual sits roughly on the line and barely moves the fit; leverage on its own is not enough. The Cook's-distance contour captures both ingredients together."},
-{q:"Cook's distance combines two ingredients. Which pair is correct?",v:"cooks_combine",opts:["Leverage (unusual X) and residual size (off the line)","The number of predictors and the residual standard error"],ans:0,explain:"A point with high leverage but a tiny residual may not matter much. A point with both high leverage and a large residual can strongly move the fit."},
-{q:"The figure shows the same data fitted with and without the red point. What is the danger this illustrates for the conclusions you would report?",v:"slope_shift",opts:["The reported relationship may rest heavily on a single observation rather than on the overall pattern","Removing flagged points always tightens the confidence interval and improves R\u00B2"],ans:0,explain:"The danger is not that the observation exists; it is that the scientific story can flip when one point is excluded. R\u00B2 and CI behaviour after removal depends on the data; it is not guaranteed in either direction."},
+{q:"Three panels show different points marked in red. Which point is most influential on the fitted line?",v:"outlier_types",opts:["The low-leverage outlier (left panel)","The high-leverage point on the line (middle panel)","The off-trend point with high leverage (right panel)"],ans:2,explain:"Influence usually requires both ingredients: unusual x-position and a sizable residual. The right-panel point has both."},
+{q:"Which pair of ingredients does Cook's distance combine to flag a point as influential?",ev:"cooks_combine",opts:["The number of predictors and the residual standard error","Leverage (unusual X) and residual size (off the line)","The sample size and the model's R\u00B2"],ans:1,explain:"Cook's distance combines how unusual a point's X value is (leverage) with how far its Y sits from the fitted line (residual). A point needs both to meaningfully move the line: high leverage with a tiny residual barely shifts the fit, and a big residual at an average X value pulls less than one at the edge."},
+{q:"In this leverage-vs-residual plot, the red point sits near the Cook's distance contour. Why is that a concern?",v:"lev_resid",opts:["Its X value is unusual and its residual is large, so removing it could meaningfully shift the fitted line","Its leverage alone is the largest in the dataset, which is enough to flag it regardless of its residual","It has the largest residual in the dataset, which is enough to flag it regardless of its X value"],ans:0,explain:"The Cook's distance contour combines leverage and residual size. A point sitting near it has unusual amounts of both, so dropping it could meaningfully change the slope. Either ingredient on its own is not enough."},
+{q:"The figure below shows the same data fitted with and without the red point. What is the danger this illustrates for the conclusions you would report?",v:"slope_shift",opts:["The reported slope may rest heavily on a single observation rather than on the overall pattern","Removing flagged points always tightens the confidence interval and improves R\u00B2","The point should be deleted before reporting any results"],ans:0,explain:"The concern is that one observation can change the headline conclusion. R\u00B2 and CI behaviour after removal depends on the data, and silently dropping flagged points is not good practice. The right response is usually to investigate the point and report sensitivity of the result with and without it."},
 ],
 normality:[
-{q:"In this detrended Q-Q plot, the points trail away from the zero line at both ends, while the middle stays close to it. What is this most likely a sign of?",v:"qq_heavy_tails",opts:["Heavier tails than a normal distribution","Approximately normal residuals","A non-linear x-y relationship"],ans:0,explain:"In a detrended Q-Q plot, the diagonal of the regular Q-Q has been flattened to a horizontal zero line. Points pulling away at both ends are the signature of heavier-than-normal tails (often extreme outliers). The middle staying close to zero rules out a strong overall skew, and a Q-Q plot speaks to the residual distribution, not the x-y relationship itself."},
-{q:"In this detrended Q-Q plot, the points scatter randomly around the horizontal zero line, mostly within the shaded confidence band. What does that suggest about the residuals?",v:"worm",opts:["Roughly consistent with a normal distribution","Clearly skewed","Heavy tails"],ans:0,explain:"In the detrended version, the diagonal of a regular Q-Q has been flattened to horizontal. Random bouncing around zero, with most points inside the confidence band, is the signature of approximate normality."},
-{q:"For which sample size does the normality assumption matter most for the usual p-values and confidence intervals?",ev:"clt_safety",opts:["The small (n = 10) sample","The large (n = 200) sample, because of the CLT"],ans:0,explain:"With small samples, p-values and confidence intervals lean more heavily on the normality assumption. With large samples, the CLT often helps, but it is not a magic fix for extreme outliers, dependence, or the wrong model shape."},
-{q:"What does non-normality of residuals primarily affect?",ev:"pred_vs_inf",opts:["The reported confidence intervals and p-values","The fitted predictions, but not the standard errors"],ans:0,explain:"The fitted line can still be useful for prediction. The bigger concern is whether the usual uncertainty statements are trustworthy."},
+{q:"In this detrended Q-Q plot, the points trail away from the zero line at both ends, while the middle stays close to it. What is this most likely a sign of?",v:"qq_heavy_tails",opts:["Heavier tails than a normal distribution","Approximately normal residuals"],ans:0,explain:"In a detrended Q-Q plot, the diagonal of the regular Q-Q has been flattened to a horizontal zero line. Points pulling away at both ends are the signature of heavier-than-normal tails (often extreme outliers). The middle staying close to zero rules out a strong overall skew."},
+{q:"In this detrended Q-Q plot, the points scatter randomly around the horizontal zero line, mostly within the shaded confidence band. What does that suggest about the residuals?",v:"worm",opts:["Roughly normal residuals","Heavy-tailed residuals","Skewed residuals"],ans:0,explain:"In the detrended version, the diagonal of a regular Q-Q has been flattened to horizontal. Random bouncing around zero with most points inside the confidence band is the signature of approximate normality. Heavy tails would push the ends away from zero, and a skewed distribution would tilt the points systematically above or below zero across the plot."},
+{q:"For which sample size does the normality assumption matter most?",ev:"clt_safety",opts:["The small (n = 10) sample","The large (n = 200) sample, because of the CLT"],ans:0,explain:"With small samples, p-values and confidence intervals lean more heavily on the normality assumption. With large samples, the CLT often helps, but it is not a magic fix for extreme outliers, dependence, or the wrong model shape."},
+{q:"What does non-normality of residuals primarily affect?",opts:["The reported confidence intervals and p-values","The fitted predictions, but not the standard errors"],ans:0,explain:"The fitted line can still be useful for prediction. The bigger concern is whether the usual uncertainty statements are trustworthy."},
 ],
 exogeneity:[
 {q:"A study reports that more physical therapy visits predict higher pain scores. The diagram suggests one reason this slope cannot be read as 'therapy causes more pain.' What is the issue?",v:"confound",opts:["An omitted common cause (injury severity) drives both variables","The sample size is too small"],ans:0,explain:"Injury severity can increase both the number of therapy visits and the pain score. The therapy-visits slope is therefore not a clean causal effect on pain."},
@@ -180,14 +178,15 @@ const SUNSHINE=[
     {text:"If they look like **data errors, correct or remove them** and refit.",
       links:[{title:"r-statistics.co: Outlier detection and treatment in R",short:"r-statistics.co",url:"https://r-statistics.co/Outlier-Treatment-With-R.html"},{title:"UCLA OARC: Robust regression in R",short:"UCLA",url:"https://stats.oarc.ucla.edu/r/dae/robust-regression/"}]},
     {text:"If they look real, **report results with and without** them (sensitivity analysis).",
-      links:[{title:"RMPH §5.26: Sensitivity analysis",short:"RMPH",url:"https://www.bookdown.org/rwnahhas/RMPH/mlr-sensitivity.html"},{title:"sensemakr: Sensitivity analysis tools for OLS",short:"sensemakr",url:"https://cran.r-project.org/web/packages/sensemakr/vignettes/sensemakr.html"}]}
+      links:[{title:"RMPH §5.26: Sensitivity analysis",short:"RMPH",url:"https://www.bookdown.org/rwnahhas/RMPH/mlr-sensitivity.html"}]}
   ],
   examples:{good:"inf_good",borderline:"inf_border",bad:"inf_bad"}},
 {key:"normality",letter:"N",label:"Normality of Residuals",type:"diagnostic",diagKey:"normality",color:"#6B46C1",colorSoft:"#E9D8FD",summary:"Do prediction errors follow a bell curve?",
+  plotCaption:"Detrended normal Q–Q plot",
   readingPlotNames:["Detrended normal Q–Q plot","Normal Q–Q plot"],
   explanation:"The residuals should be roughly bell-shaped. The fitted line itself does not need perfectly normal residuals, but the usual confidence intervals and p-values do, especially in small samples. Strong skew, heavy tails, or extreme outliers make those uncertainty statements unreliable.",
   plotGuide:"**X-axis: theoretical normal quantiles.** Where each residual would sit if the residuals were exactly normal.\n**Y-axis: deviation from the normal line.** How far the observed residual quantile lands from that theoretical position. The diagonal of a regular Q-Q plot has been 'flattened' to a horizontal zero line (this is the detrended Q-Q used by performance::check_model).\nA shaded confidence band gives a tolerance. As long as most points scatter inside the band, mild departures are not a concern. A systematic curve, an S-shape, or many points outside the band suggests the residual distribution is not normal.",
-  whatBreaks:"**Confidence intervals and p-values can be unreliable**, especially in small samples. Coefficient estimates are **not biased simply because residuals deviate from normality**. The bigger risk is when 'non-normal' really means extreme outliers or a misspecified model, which can genuinely distort the fit.",
+  whatBreaks:"**Confidence intervals and p-values can be unreliable**, especially in small samples. With **large samples**, mild deviations from normality are often less serious because the CLT helps the sampling distribution of the coefficients.",
   formalTestList:[
     {text:"**Shapiro-Wilk test**.",
       links:[{title:"STHDA: Normality test in R (Shapiro-Wilk, Q-Q)",url:"https://www.sthda.com/english/wiki/normality-test-in-r"},{title:"UW-Madison SSCC: Normality diagnostics in R",url:"https://sscc.wisc.edu/sscc/pubs/RegDiag-R/normality.html"}]}
@@ -198,7 +197,7 @@ const SUNSHINE=[
     {text:"**Investigate extreme values** that may be skewing the residuals.",
       links:[{title:"Stats and R: Outliers detection in R",short:"Stats and R",url:"https://statsandr.com/blog/outliers-detection-in-r/"},{title:"car::outlierTest reference",short:"outlierTest",url:"https://rdrr.io/cran/car/man/outlierTest.html"}]},
     {text:"With **large samples**, mild non-normality is often less serious. The CLT helps the sampling distribution of the coefficients.",
-      links:[{title:"RMPH: Linear regression assumptions",short:"RMPH",url:"https://bookdown.org/rwnahhas/RMPH/slr-assumptions.html"},{title:"Penn State STAT 501: Errors must be normal",short:"PSU",url:"https://online.stat.psu.edu/stat501/lesson/4/4.6"}]}
+      links:[{title:"RMPH: Linear regression assumptions",short:"RMPH",url:"https://bookdown.org/rwnahhas/RMPH/slr-assumptions.html"}]}
   ],
   examples:{good:"norm_good",borderline:"norm_border",bad:"norm_bad"}},
 {key:"exogeneity",letter:"E",label:"Exogeneity",type:"info",color:"#8B6914",colorSoft:"#F0E4C8",summary:"Is the predictor independent of the error term?"},
@@ -405,7 +404,7 @@ function QuizVisual({type,color="#2B6CB0"}){
     <line x1="22" y1="84" x2="282" y2="84" stroke={BD}/>
     <line x1="22" y1="14" x2="22" y2="84" stroke={BD}/>
     {Array.from({length:13},(_,i)=>{const t=i/12;const x=30+i*21;const yBase=74-62*(1-Math.exp(-4.2*t));const y=yBase+(i%2?1.8:-2.2);return <circle key={i} cx={x} cy={y} r="3.2" fill={color} opacity=".78"/>;})}
-    <line x1="24" y1="73" x2="282" y2="24" stroke={RF} strokeWidth="2.2"/>
+    <line x1="24" y1="55" x2="282" y2="2" stroke={RF} strokeWidth="2.2"/>
     <text x="152" y="98" textAnchor="middle" fontSize="9.5" fill={SB}>straight line cannot follow the bend</text>
   </svg>;
 
@@ -438,23 +437,9 @@ function QuizVisual({type,color="#2B6CB0"}){
     <line x1="22" y1="14" x2="22" y2="84" stroke={BD}/>
     <line x1="22" x2="282" y1="50" y2="50" stroke={DH} strokeDasharray="4,3" opacity=".55"/>
     <path d="M 22 50 Q 152 51 282 49" fill="none" stroke={SM} strokeWidth="2.5"/>
-    {Array.from({length:13},(_,i)=>{const x=34+i*20;const y=50+([4,-5,2,-3,5,-2,3,-4,5,-3,2,-4,3][i]);return <circle key={i} cx={x} cy={y} r="3" fill={color} opacity=".75"/>;})}
+    {Array.from({length:13},(_,i)=>{const x=34+i*20;const y=50+([14,-10,-5,17,-14,6,-11,9,4,-13,-7,15,-5][i]);return <circle key={i} cx={x} cy={y} r="3" fill={color} opacity=".75"/>;})}
     <text x="14" y="48" textAnchor="middle" fontSize="10" fill={SB} transform="rotate(-90,14,48)">resid.</text>
     <text x="152" y="98" textAnchor="middle" fontSize="9.5" fill={SB}>fitted →</text>
-  </svg>;
-
-  // log_fix: before (curve) and after log transform (straight)
-  if(type==="log_fix")return <svg viewBox="0 0 300 110" style={s}>
-    <text x="76" y="14" textAnchor="middle" fontSize="11" fill={SB} fontWeight="700">y vs x</text>
-    <text x="226" y="14" textAnchor="middle" fontSize="11" fill={SB} fontWeight="700">log(y) vs x</text>
-    <rect x="14" y="20" width="124" height="68" fill="none" stroke={BD} rx="4"/>
-    <rect x="162" y="20" width="124" height="68" fill="none" stroke={BD} rx="4"/>
-    <path d="M 18 84 Q 80 22 134 24" fill="none" stroke={color} strokeWidth="2"/>
-    {[[28,76],[42,58],[58,42],[78,32],[100,28],[124,26]].map(([x,y],i)=><circle key={`a${i}`} cx={x} cy={y} r="3" fill={color}/>)}
-    <line x1="166" y1="80" x2="282" y2="28" stroke={color} strokeWidth="2"/>
-    {[[174,76],[192,66],[208,56],[226,46],[244,38],[262,30]].map(([x,y],i)=><circle key={`b${i}`} cx={x} cy={y} r="3" fill={color}/>)}
-    <text x="76" y="103" textAnchor="middle" fontSize="9.5" fill={SB}>curved</text>
-    <text x="226" y="103" textAnchor="middle" fontSize="9.5" fill={SM} fontWeight="700">straightened</text>
   </svg>;
 
   /* ── HOMOGENEITY ───────────────────────────────────────────── */
@@ -536,23 +521,23 @@ function QuizVisual({type,color="#2B6CB0"}){
 
   /* ── INFLUENTIAL POINTS ────────────────────────────────────── */
   // outlier_types: 3 panels: outlier-low-lev, high-lev-on-trend, off-trend-high-lev
-  if(type==="outlier_types")return <svg viewBox="0 0 300 110" style={s}>
+  if(type==="outlier_types"){const NEU="#94a3b8";return <svg viewBox="0 0 300 110" style={s}>
     <rect x="6" y="22" width="92" height="64" fill="none" stroke={BD} rx="3"/>
     <line x1="10" y1="76" x2="94" y2="32" stroke={SM} strokeWidth="1.6"/>
-    {[[20,68],[34,58],[48,48],[62,40],[80,30]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="2.6" fill={color}/>)}
-    <circle cx="42" cy="60" r="4" fill={RF}/>
+    {[[16,72],[24,68],[30,64],[36,60],[42,56],[48,52],[54,48],[60,44],[66,40],[72,38],[80,32],[88,28]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="2.4" fill={NEU}/>)}
+    <circle cx="40" cy="38" r="4" fill={RF}/>
     <text x="52" y="16" textAnchor="middle" fontSize="9.5" fill={SB} fontWeight="700">left panel</text>
     <rect x="104" y="22" width="92" height="64" fill="none" stroke={BD} rx="3"/>
     <line x1="108" y1="76" x2="192" y2="32" stroke={SM} strokeWidth="1.6"/>
-    {[[114,72],[126,64],[140,54],[152,46]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="2.6" fill={color}/>)}
-    <circle cx="186" cy="34" r="4" fill={RF}/>
+    {[[114,72],[122,68],[128,64],[134,60],[140,56],[146,52],[152,48],[158,44],[164,42]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="2.4" fill={NEU}/>)}
+    <circle cx="188" cy="34" r="4" fill={RF}/>
     <text x="150" y="16" textAnchor="middle" fontSize="9.5" fill={SB} fontWeight="700">middle panel</text>
     <rect x="202" y="22" width="92" height="64" fill="none" stroke={BD} rx="3"/>
     <line x1="206" y1="64" x2="290" y2="34" stroke={SM} strokeWidth="1.6"/>
-    {[[214,68],[226,60],[240,52],[252,46]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="2.6" fill={color}/>)}
+    {[[210,68],[218,64],[226,60],[234,56],[242,52],[250,48],[258,44],[266,42],[272,40]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="2.4" fill={NEU}/>)}
     <circle cx="284" cy="74" r="5" fill={RF}/>
     <text x="248" y="16" textAnchor="middle" fontSize="9.5" fill={SB} fontWeight="700">right panel</text>
-  </svg>;
+  </svg>;}
 
   // lev_resid: leverage vs std residual with Cook's contour, one influential point
   if(type==="lev_resid")return <svg viewBox="0 0 300 110" style={s}>
@@ -561,7 +546,7 @@ function QuizVisual({type,color="#2B6CB0"}){
     <line x1="40" x2="284" y1="50" y2="50" stroke={DH} strokeDasharray="3,3" opacity=".5"/>
     <path d="M 40 18 Q 150 40 284 47" fill="none" stroke={SM} strokeDasharray="6,5" strokeWidth="1.4" opacity=".75"/>
     <path d="M 40 82 Q 150 60 284 53" fill="none" stroke={SM} strokeDasharray="6,5" strokeWidth="1.4" opacity=".75"/>
-    {[[64,46],[78,56],[96,42],[112,54],[130,48],[148,52],[168,46],[188,48]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="2.8" fill={color} opacity=".78"/>)}
+    {[[64,46],[78,56],[96,42],[112,54],[130,48],[148,52],[168,46],[188,48]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="2.8" fill="#94a3b8" opacity=".85"/>)}
     <circle cx="262" cy="22" r="5" fill={RF}/>
     <text x="160" y="104" textAnchor="middle" fontSize="9.5" fill={SB}>leverage →</text>
     <text x="22" y="50" textAnchor="middle" fontSize="9.5" fill={SB} transform="rotate(-90,22,50)">std r</text>
@@ -574,7 +559,7 @@ function QuizVisual({type,color="#2B6CB0"}){
     <line x1="28" y1="14" x2="28" y2="80" stroke={BD}/>
     <line x1="28" x2="282" y1="40" y2="40" stroke={RF} strokeDasharray="4,3" opacity=".7"/>
     <text x="282" y="36" textAnchor="end" fontSize="9.5" fill={RF}>Cook's D threshold</text>
-    {[8,12,7,14,9,11,8,15,10,13,9,11,46].map((h,i)=>{const x=42+i*18;const flagged=h>30;return <line key={i} x1={x} x2={x} y1={80} y2={80-h} stroke={flagged?RF:color} strokeWidth="6" strokeLinecap="round"/>;})}
+    {[8,12,7,14,9,11,8,15,10,13,9,11,46].map((h,i)=>{const x=42+i*18;const flagged=h>30;return <line key={i} x1={x} x2={x} y1={80} y2={80-h} stroke={flagged?RF:"#94a3b8"} strokeWidth="6" strokeLinecap="round"/>;})}
     <text x="155" y="96" textAnchor="middle" fontSize="9.5" fill={SB}>observation index</text>
     <text x="14" y="48" textAnchor="middle" fontSize="10" fill={SB} transform="rotate(-90,14,48)">Cook's D</text>
   </svg>;
@@ -596,24 +581,24 @@ function QuizVisual({type,color="#2B6CB0"}){
   </svg>;
 
   // slope_shift: same scatter, line with vs without an influential point
-  if(type==="slope_shift")return <svg viewBox="0 0 300 100" style={s}>
+  if(type==="slope_shift"){const NEU="#94a3b8";return <svg viewBox="0 0 300 100" style={s}>
     <line x1="22" y1="84" x2="282" y2="84" stroke={BD}/>
     <line x1="22" y1="14" x2="22" y2="84" stroke={BD}/>
-    {[[42,72],[62,68],[84,65],[106,61],[128,58],[150,54],[172,51],[194,47],[216,44],[238,40]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="3.2" fill={color} opacity=".82"/>)}
-    <circle cx="266" cy="18" r="5.2" fill={RF} stroke="#fff" strokeWidth="1"/>
-    <line x1="36" y1="73" x2="248" y2="39" stroke={DH} strokeWidth="2.2" strokeDasharray="5,4" opacity=".82"/>
-    <line x1="36" y1="77" x2="274" y2="20" stroke={RF} strokeWidth="2.4"/>
-    <rect x="164" y="10" width="112" height="34" rx="4" fill="#fff" stroke={BD}/>
-    <line x1="172" y1="21" x2="194" y2="21" stroke={DH} strokeWidth="2" strokeDasharray="4,3"/>
-    <text x="200" y="24" fontSize="9.5" fill={SB}>without red</text>
-    <line x1="172" y1="34" x2="194" y2="34" stroke={RF} strokeWidth="2.2"/>
-    <text x="200" y="37" fontSize="9.5" fill={RF} fontWeight="700">with red</text>
+    {[[42,60],[58,55],[72,62],[88,52],[104,58],[120,50],[136,55],[152,48],[168,53],[184,46]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="3" fill={NEU} opacity=".9"/>)}
+    <circle cx="266" cy="20" r="5.2" fill={RF} stroke="#fff" strokeWidth="1"/>
+    <line x1="36" y1="58" x2="200" y2="48" stroke={DH} strokeWidth="2.2" strokeDasharray="5,4" opacity=".85"/>
+    <line x1="36" y1="63" x2="278" y2="24" stroke={RF} strokeWidth="2.4"/>
+    <rect x="32" y="10" width="120" height="30" rx="4" fill="#fff" stroke={BD}/>
+    <line x1="40" y1="21" x2="62" y2="21" stroke={DH} strokeWidth="2" strokeDasharray="4,3"/>
+    <text x="68" y="24" fontSize="9.5" fill={SB}>without red</text>
+    <line x1="40" y1="34" x2="62" y2="34" stroke={RF} strokeWidth="2.2"/>
+    <text x="68" y="37" fontSize="9.5" fill={RF} fontWeight="700">with red</text>
     <text x="152" y="98" textAnchor="middle" fontSize="9.5" fill={SB}>one point reshapes the slope</text>
-  </svg>;
+  </svg>;}
 
   /* ── NORMALITY ─────────────────────────────────────────────── */
   // qq_heavy_tails: detrended Q-Q showing S-shape, heavy tails at both ends
-  if(type==="qq_heavy_tails")return <svg viewBox="0 0 300 100" style={s}>
+  if(type==="qq_heavy_tails")return <svg viewBox="0 0 300 112" style={s}>
     <line x1="22" y1="84" x2="282" y2="84" stroke={BD}/>
     <line x1="22" y1="14" x2="22" y2="84" stroke={BD}/>
     <path d="M 30 38 Q 152 46 274 38 L 274 62 Q 152 54 30 62 Z" fill={SM} opacity=".13"/>
@@ -626,11 +611,11 @@ function QuizVisual({type,color="#2B6CB0"}){
       else dev=middleNoise;
       return <circle key={i} cx={x} cy={50+dev} r="2.7" fill={color} opacity=".78"/>;
     })}
-    <text x="155" y="98" textAnchor="middle" fontSize="9.5" fill={SB}>detrended Q-Q · normal quantile →</text>
+    <text x="155" y="105" textAnchor="middle" fontSize="9.5" fill={SB}>detrended Q-Q · normal quantile →</text>
   </svg>;
 
   // worm: detrended Q-Q with random scatter inside a confidence band
-  if(type==="worm")return <svg viewBox="0 0 300 100" style={s}>
+  if(type==="worm")return <svg viewBox="0 0 300 112" style={s}>
     <line x1="22" y1="84" x2="282" y2="84" stroke={BD}/>
     <line x1="22" y1="14" x2="22" y2="84" stroke={BD}/>
     <path d="M 30 36 Q 152 44 274 36 L 274 64 Q 152 56 30 64 Z" fill={SM} opacity=".13"/>
@@ -639,16 +624,16 @@ function QuizVisual({type,color="#2B6CB0"}){
       const dev=[5,-4,3,-2,4,-3,1,-4,2,-1,3,-3,4,-2,1,-3,2,-4][i];
       return <circle key={i} cx={x} cy={50+dev} r="2.7" fill={color} opacity=".78"/>;
     })}
-    <text x="155" y="98" textAnchor="middle" fontSize="9.5" fill={SB}>detrended Q-Q · normal quantile →</text>
+    <text x="155" y="105" textAnchor="middle" fontSize="9.5" fill={SB}>detrended Q-Q · normal quantile →</text>
   </svg>;
 
   // tails: detrended Q-Q with red dots at the ends, blue middle
-  if(type==="tails")return <svg viewBox="0 0 300 100" style={s}>
+  if(type==="tails")return <svg viewBox="0 0 300 112" style={s}>
     <line x1="22" y1="84" x2="282" y2="84" stroke={BD}/>
     <line x1="22" y1="14" x2="22" y2="84" stroke={BD}/>
     <line x1="22" x2="282" y1="50" y2="50" stroke={SM} strokeWidth="2.2" opacity=".85"/>
     {[34,56,80,104,128,154,180,206,230,254,278].map((x,i)=>{const offTail=i<2||i>8;const dev=offTail?(i<2?16:20):[2,-3,1,-2,3,-1,2][i-2];return <circle key={i} cx={x} cy={50+dev} r="3" fill={offTail?RF:color} opacity={offTail ? .85 : .7}/>;})}
-    <text x="155" y="98" textAnchor="middle" fontSize="9.5" fill={SB}>detrended Q-Q · normal quantile →</text>
+    <text x="155" y="105" textAnchor="middle" fontSize="9.5" fill={SB}>detrended Q-Q · normal quantile →</text>
   </svg>;
 
   // clt_safety: small-n irregular density vs large-n smooth bell
@@ -1021,6 +1006,80 @@ function ClusteredDiags(){
   </div>;
 }
 
+function ExogeneityDiags(){
+  // 24 weeks across 3 temperature tiers. Within each tier, ice cream sales and
+  // shark attacks have essentially no relationship; the strong overall slope is
+  // entirely between-tier (driven by the hidden temperature variable).
+  const[showColors,setShowColors]=useState(false);
+  const data=[
+    {ic:2,sa:2,t:1}, {ic:3,sa:3,t:1},{ic:2,sa:2,t:1}, {ic:4,sa:4,t:1},
+    {ic:3,sa:3,t:1},{ic:4,sa:2,t:1}, {ic:2,sa:3,t:1},{ic:3,sa:4,t:1},
+    {ic:5,sa:9,t:2},{ic:6,sa:11,t:2},{ic:7,sa:10,t:2},{ic:5,sa:13,t:2},
+    {ic:6,sa:14,t:2},{ic:7,sa:9,t:2},{ic:6,sa:8,t:2},{ic:5,sa:12,t:2},
+    {ic:9,sa:22,t:3},{ic:10,sa:26,t:3},{ic:11,sa:23,t:3},{ic:12,sa:25,t:3},
+    {ic:9,sa:27,t:3},{ic:10,sa:20,t:3},{ic:11,sa:26,t:3},{ic:12,sa:21,t:3}
+  ];
+  const n=data.length;
+  const mic=data.reduce((s,d)=>s+d.ic,0)/n;
+  const msa=data.reduce((s,d)=>s+d.sa,0)/n;
+  let sxx=0,sxy=0;
+  data.forEach(d=>{const dx=d.ic-mic;sxx+=dx*dx;sxy+=dx*(d.sa-msa);});
+  const slope=sxy/sxx, intercept=msa-slope*mic;
+  const lx=ic=>30+((ic-1)/12)*162;
+  const ly=sa=>96-(sa/30)*78;
+  const baseColor="#8B6914";
+  const tColors={1:"#3B82C4",2:"#C9A04A",3:"#C53030"};
+  const tNames={1:"Cool",2:"Mild",3:"Hot"};
+  const fillFor=t=>showColors?tColors[t]:"#A89968";
+  return <div>
+    <button onClick={()=>setShowColors(v=>!v)} style={{margin:"8px 0 10px",padding:"7px 12px",borderRadius:999,border:`1.5px solid ${baseColor}`,background:showColors?baseColor:"#fff",color:showColors?"#fff":baseColor,fontSize:12,fontWeight:800,fontFamily:"inherit",cursor:"pointer"}}>
+      {showColors?"Hide":"Reveal"} the lurking variable
+    </button>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,margin:"0 0 12px"}}>
+    <div style={{background:`${baseColor}10`,borderRadius:10,padding:12,border:`1.5px solid ${baseColor}55`}}>
+      <div style={{fontSize:12,fontWeight:700,color:baseColor,marginBottom:6}}>The data</div>
+      <svg viewBox="0 0 200 120" style={{width:"100%",height:"auto"}}>
+        <line x1="30" x2="30" y1="15" y2="98" stroke={C.border} strokeWidth=".8"/>
+        <line x1="30" x2="194" y1="98" y2="98" stroke={C.border} strokeWidth=".8"/>
+        <line x1={lx(1)} y1={ly(intercept+slope*1)} x2={lx(13)} y2={ly(intercept+slope*13)} stroke="#444" strokeWidth="1.4" strokeDasharray="3,2.5" opacity=".55"/>
+        {data.map((d,i)=><circle key={i} cx={lx(d.ic)} cy={ly(d.sa)} r="3.5" fill={fillFor(d.t)} stroke="#fff" strokeWidth=".7" opacity=".88"/>)}
+        <text x="112" y="114" textAnchor="middle" fontSize="10" fill={C.sub}>Ice cream sales</text>
+        <text x="10" y="58" textAnchor="middle" fontSize="10" fill={C.sub} transform="rotate(-90,10,58)">Shark attacks</text>
+      </svg>
+      {showColors && <div style={{display:"flex",gap:14,fontSize:11,color:C.sub,justifyContent:"center",marginTop:6}}>
+        {[1,2,3].map(t=><span key={t} style={{display:"inline-flex",alignItems:"center",gap:4}}><span style={{display:"inline-block",width:9,height:9,borderRadius:"50%",background:tColors[t]}}/>{tNames[t]}</span>)}
+      </div>}
+      <div style={{fontSize:11,color:baseColor,lineHeight:1.5,marginTop:4,fontWeight:600}}>{showColors?<>Within each tier the slope is flat. The whole apparent effect is between tiers.</>:<>Shark attacks rise with ice cream sales.</>}</div>
+    </div>
+    <div style={{background:C.bg,borderRadius:10,padding:12,border:`1.5px solid ${C.border}`,display:"flex",flexDirection:"column"}}>
+      <div style={{fontSize:12,fontWeight:700,color:baseColor,marginBottom:6}}>The hidden cause</div>
+      {showColors ? <>
+        <svg viewBox="0 0 200 120" style={{width:"100%",height:"auto"}}>
+          <defs>
+            <marker id="arrExoGold" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill={baseColor}/></marker>
+            <marker id="arrExoGray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#666"/></marker>
+          </defs>
+          <ellipse cx="100" cy="25" rx="44" ry="14" fill={baseColor} fillOpacity=".18" stroke={baseColor} strokeWidth="1.6"/>
+          <text x="100" y="29" textAnchor="middle" fontSize="11" fill={baseColor} fontWeight="800">Temperature</text>
+          <ellipse cx="42" cy="92" rx="34" ry="13" fill="#fff" stroke="#666" strokeWidth="1.4"/>
+          <text x="42" y="95" textAnchor="middle" fontSize="9.5" fill="#333" fontWeight="700">Ice cream</text>
+          <ellipse cx="158" cy="92" rx="34" ry="13" fill="#fff" stroke="#666" strokeWidth="1.4"/>
+          <text x="158" y="95" textAnchor="middle" fontSize="9.5" fill="#333" fontWeight="700">Shark attacks</text>
+          <path d="M 80 36 Q 60 60 47 80" fill="none" stroke={baseColor} strokeWidth="1.8" markerEnd="url(#arrExoGold)"/>
+          <path d="M 120 36 Q 140 60 153 80" fill="none" stroke={baseColor} strokeWidth="1.8" markerEnd="url(#arrExoGold)"/>
+          <line x1="77" y1="92" x2="125" y2="92" stroke="#666" strokeWidth="1.4" strokeDasharray="4,3" markerEnd="url(#arrExoGray)"/>
+          <text x="101" y="88" textAnchor="middle" fontSize="11" fill="#C53030" fontWeight="800">?</text>
+        </svg>
+        <div style={{fontSize:11,color:C.sub,lineHeight:1.5,marginTop:4}}>Temperature drives both. OLS only sees the dashed arrow, whose slope absorbs the path through temperature.</div>
+      </> : <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",color:C.muted,fontSize:13,padding:"24px 12px",textAlign:"center"}}>
+        <div style={{fontSize:54,fontWeight:300,opacity:.3,lineHeight:1}}>?</div>
+        <div style={{marginTop:6}}>Click reveal to see what is driving both.</div>
+      </div>}
+    </div>
+    </div>
+  </div>;
+}
+
 /* ── INFO PANELS ─────────────────────────────────────────────────────── */
 const ul={margin:0,paddingLeft:20,fontSize:14,lineHeight:1.75,color:C.text};
 const pa={margin:0,fontSize:14,lineHeight:1.75,color:C.text};
@@ -1063,6 +1122,82 @@ function downloadText(filename,text,mime="text/plain"){
 async function copyText(text){
   try{if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(text);return true;}}catch(_){}
   try{const ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();const ok=document.execCommand("copy");document.body.removeChild(ta);return ok;}catch(_){return false;}
+}
+
+function normalityDemoPoints(n=180,seedIn=20260429){
+  let seed=seedIn>>>0;
+  const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+  const normal=()=>Math.sqrt(-2*Math.log(Math.max(rand(),1e-9)))*Math.cos(2*Math.PI*rand());
+  const raw=Array.from({length:n},(_,i)=>{
+    const x=1+(i/(n-1))*11+(rand()-.5)*.25;
+    const noise=(normal()+normal())/Math.SQRT2;
+    return{x,noise};
+  });
+  const m=raw.reduce((a,p)=>a+p.noise,0)/n;
+  const sd=Math.sqrt(raw.reduce((a,p)=>a+(p.noise-m)**2,0)/Math.max(n-1,1))||1;
+  return raw.map(p=>{
+    const z=(p.noise-m)/sd;
+    return{x:+p.x.toFixed(2),y:+(18+2.4*p.x+z*2.6).toFixed(2)};
+  });
+}
+
+function NormalityWalkthrough({color="#6B46C1"}){
+  const[demoPoints,setDemoPoints]=useState(()=>normalityDemoPoints());
+  const[hiIdx,setHiIdx]=useState(null);
+  const[custom,setCustom]=useState(false);
+  const model=useMemo(()=>ols(demoPoints),[demoPoints]);
+  if(!model)return null;
+  const res=model.residuals||[],std=model.studentRes||model.stdRes||[];
+  if(res.length<3||std.length<3)return null;
+  const idx=res.map((_,i)=>i+1);
+  const qq=qqPts(std),worm=qqWorm(std);
+  const mean=std.reduce((a,v)=>a+v,0)/std.length;
+  const sd=Math.sqrt(std.reduce((a,v)=>a+(v-mean)**2,0)/Math.max(std.length-1,1));
+  const binCount=Math.min(10,Math.max(6,Math.round(Math.sqrt(std.length))));
+  let mn=Math.min(...std),mx=Math.max(...std);
+  const ext=Math.max(Math.abs(mn),Math.abs(mx),3);
+  mn=-ext;mx=ext;
+  const bw=(mx-mn)/binCount;
+  const bins=Array.from({length:binCount},(_,i)=>({lo:mn+i*bw,hi:mn+(i+1)*bw,count:0}));
+  std.forEach(r=>{const i=Math.min(binCount-1,Math.max(0,Math.floor((r-mn)/bw)));bins[i].count+=1;});
+  const card=(title,body,plot)=><div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:10,boxShadow:"0 2px 10px rgba(0,0,0,.035)"}}>
+    <div style={{fontSize:13,fontWeight:800,color,marginBottom:3}}>{title}</div>
+    <div style={{fontSize:11.5,color:C.sub,lineHeight:1.4,marginBottom:6}}>{body}</div>
+    {plot}
+  </div>;
+  return <div style={{background:"#F7F2FF",border:"1.5px solid #D8C8F0",borderRadius:14,padding:16,marginTop:16}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12,marginBottom:10}}>
+      <div>
+        <div style={{fontSize:16,fontWeight:800,color,marginBottom:4}}>Want more on Q-Q plots?</div>
+        <p style={{...pa,fontSize:13}}>This larger demo starts with roughly normal residuals so the histogram and Q-Q plots are easier to read. Drag the base scatterplot points to see all four residual views update.</p>
+      </div>
+      <button onClick={()=>{setDemoPoints(normalityDemoPoints(undefined,(Math.random()*2**31)>>>0));setHiIdx(null);setCustom(false);}} style={{padding:"6px 10px",borderRadius:8,border:`1.5px solid ${color}`,background:custom?color:"#fff",color:custom?"#fff":color,fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>New random sample</button>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"minmax(500px, 1.45fr) minmax(220px, .55fr)",gap:12,alignItems:"start",marginBottom:12}}>
+      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:10,boxShadow:"0 2px 10px rgba(0,0,0,.035)"}}>
+        <div style={{fontSize:13,fontWeight:800,color,marginBottom:3}}>Base scatterplot</div>
+        <div style={{fontSize:11.5,color:C.sub,lineHeight:1.4,marginBottom:6}}>The residuals below come from this fitted line. Drag, add, or remove points.</div>
+        <Scatter points={demoPoints} setPoints={setDemoPoints} model={model} hiIdx={hiIdx} onHi={setHiIdx} onEdit={()=>setCustom(true)} xLabel="Predictor" yLabel="Outcome"/>
+      </div>
+      <div style={{background:"#FFFFFF",border:`2px solid ${color}55`,borderRadius:12,padding:14,boxShadow:`0 5px 16px ${color}18`}}>
+        <div style={{fontSize:14,fontWeight:900,color,marginBottom:10}}>Helpful Q-Q Plot Videos</div>
+        <div style={{display:"flex",flexDirection:"column",gap:9}}>
+          <a href="https://www.youtube.com/watch?v=okjYjClSjOg" target="_blank" rel="noopener noreferrer" style={{display:"block",padding:"10px 12px",borderRadius:10,background:`${color}12`,border:`1.5px solid ${color}35`,color,textDecoration:"none",fontSize:13,fontWeight:900,lineHeight:1.25}}>StatQuest: Q-Q plots</a>
+          <a href="https://www.youtube.com/watch?v=X9_ISJ0YpGw" target="_blank" rel="noopener noreferrer" style={{display:"block",padding:"10px 12px",borderRadius:10,background:`${color}12`,border:`1.5px solid ${color}35`,color,textDecoration:"none",fontSize:13,fontWeight:900,lineHeight:1.25}}>JB Statistics: Q-Q plots</a>
+        </div>
+      </div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+      {card("1. Residuals", "Start with the prediction errors: actual minus fitted.", <CF xs={idx} ys={[...res,0]} xL="Observation" yL="Residual" w={330} h={220}>{(sx,sy,w)=><>{<line x1={0} x2={w} y1={sy(0)} y2={sy(0)} stroke={C.dash} strokeWidth={1} strokeDasharray="5,5" opacity={.55}/>} {res.map((r,i)=><circle key={i} cx={sx(i+1)} cy={sy(r)} r="3.5" fill={color} opacity=".75"/>)}</>}</CF>)}
+      {card("2. Histogram", "Standardize the residuals (z-scores) so the spread is comparable to a normal distribution. The histogram should look bell-shaped, centered at 0.", <CF xs={[mn,mx]} ys={[0,...bins.map(b=>b.count)]} xL="Standardized residual" yL="Count" w={330} h={220}>{(sx,sy,_,ph)=><>{bins.map((b,i)=><rect key={i} x={sx(b.lo)+1} y={sy(b.count)} width={Math.max(1,sx(b.hi)-sx(b.lo)-2)} height={ph-sy(b.count)} fill={color} opacity=".45" stroke={color} strokeWidth=".7"/>)}</>}</CF>)}
+      {card("3. Normal Q-Q plot", "Sort the standardized residuals and compare them with where normal residuals would fall. The y-axis matches the histogram's x-axis.", <CF xs={qq.map(q=>q.th)} ys={[...qq.map(q=>q.sa),...qq.map(q=>mean+sd*q.th)]} xL="Theoretical normal quantile" yL="Standardized residual" w={330} h={220}>{(sx,sy)=><>{<line x1={sx(Math.min(...qq.map(q=>q.th)))} x2={sx(Math.max(...qq.map(q=>q.th)))} y1={sy(mean+sd*Math.min(...qq.map(q=>q.th)))} y2={sy(mean+sd*Math.max(...qq.map(q=>q.th)))} stroke={C.smooth} strokeWidth={2} opacity=".65"/>}{qq.map((q,i)=><circle key={i} cx={sx(q.th)} cy={sy(q.sa)} r="3.3" fill={color} opacity=".75"/>)}</>}</CF>)}
+      {card("4. Detrended Q-Q plot", "Flatten the Q-Q line to zero so departures are easier to see.", <CF xs={worm.map(q=>q.th)} ys={[...worm.map(q=>q.dev),...worm.map(q=>q.lo),...worm.map(q=>q.hi),0]} xL="Theoretical normal quantile" yL="Deviation from line" w={330} h={220}>{(sx,sy,w)=>{
+        const top=worm.map(q=>`L${sx(q.th)},${sy(q.hi)}`).join(" ");
+        const bot=[...worm].reverse().map(q=>`L${sx(q.th)},${sy(q.lo)}`).join(" ");
+        return <>{worm.length>1&&<path d={`M${sx(worm[0].th)},${sy(worm[0].hi)} ${top.slice(1)} ${bot} Z`} fill={color} opacity=".12" stroke="none"/>}<line x1={0} x2={w} y1={sy(0)} y2={sy(0)} stroke={C.smooth} strokeWidth={2} opacity=".75"/>{worm.map((q,i)=><circle key={i} cx={sx(q.th)} cy={sy(q.dev)} r="3.3" fill={color} opacity=".75"/>)}</>;
+      }}</CF>)}
+    </div>
+  </div>;
 }
 
 const INFO={
@@ -1146,18 +1281,20 @@ multicollinearity:()=><div style={{display:"flex",flexDirection:"column",gap:14}
 </div>,
 
 exogeneity:()=><div style={{display:"flex",flexDirection:"column",gap:14}}>
-  <div><Hd>What it means</Hd><p style={pa}>The predictor should not be correlated with anything else that affects Y. If a lurking variable drives both X and Y, the model blames X for an effect it does not actually have.</p></div>
-  <div><Hd>Example</Hd><p style={pa}>You regress <b>pain scores</b> on <b>physical therapy visits</b> and find a positive slope. The problem: <b>injury severity</b> can drive both. It sits in the error term and is correlated with the predictor, so the coefficient is biased.</p></div>
-  <div><Hd>What goes wrong</Hd><p style={pa}>The slope estimate is <b>biased</b>, so it no longer cleanly measures the effect you intend to estimate. More data alone does not fix this.</p></div>
-  <div><Hd>How to assess</Hd><p style={pa}>There is no diagnostic plot for this. It is about <b>research design and causal reasoning</b>.</p></div>
+  <div style={{background:"#FFF8E1",border:"1.5px solid #E8D080",borderRadius:8,padding:"12px 16px",fontSize:14,color:"#6B5B1F",lineHeight:1.6}}>
+    <b>Exogeneity is different from the other assumptions.</b> They ask whether the model fits the data. Exogeneity asks whether the slope is <b>causal</b>: would changing X really change Y by the slope? Without it, the slope still describes and predicts; only the causal reading is wrong.
+  </div>
+  <div><Hd>Example</Hd><p style={pa}>Across summer weeks, weekly <b>ice cream sales</b> and weekly <b>shark attacks</b> rise and fall together. Of course ice cream does not summon sharks. <b>Air temperature</b> drives both.</p></div>
+  <ExogeneityDiags/>
+  <div><Hd>How to assess</Hd><p style={pa}>No residual plot can certify exogeneity. Ask: could some third variable drive both X and Y?</p></div>
   <div><Hd>How to fix</Hd><FixList items={[
     {text:"**Randomized experiments** solve it by design: random assignment breaks the link between predictor and unobserved confounders."},
     {text:"**Add control variables** for plausible confounders in a multiple regression.",
-      links:[{title:"RMPH: Confounding and adjustment",short:"RMPH",url:"https://bookdown.org/rwnahhas/RMPH/mlr-confounding.html"},{title:"Andrew Heiss: DAGs and confounders in R",short:"Heiss",url:"https://evalf20.classes.andrewheiss.com/example/confounding-sensitivity/"}]},
+      links:[{title:"R-bloggers: Controlling for confounders in R",short:"R-bloggers",url:"https://www.r-bloggers.com/2022/01/simple-examples-to-understand-what-confounders-colliders-mediators-and-moderators-are-and-how-to-control-for-variables-in-r-with-regression-and-propensity-score-matching/"},{title:"Andrew Heiss: DAGs and adjustment sets in R",short:"Heiss",url:"https://evalf20.classes.andrewheiss.com/example/dags/"}]},
     {text:"Use **instrumental-variables regression** when a valid instrument is available.",
       links:[{title:"Econometrics with R, Ch. 12: IV regression",short:"EWR",url:"https://www.econometrics-with-r.org/12-ivr.html"},{title:"Andrew Heiss: Instrumental variables in R",short:"Heiss",url:"https://evalf20.classes.andrewheiss.com/example/iv/"}]},
     {text:"At minimum: **draw a DAG** and ask whether a third variable drives both X and Y.",
-      links:[{title:"ggdag: Drawing causal DAGs in R",short:"ggdag",url:"https://r-causal.github.io/ggdag/"},{title:"Causal Inference in R, Ch. 5: DAGs",short:"R-causal",url:"https://www.r-causal.org/chapters/05-dags"}]}
+      links:[{title:"ggdag: Drawing causal DAGs in R",short:"ggdag",url:"https://r-causal.github.io/ggdag/"},{title:"Causal Inference in R, Ch. 4: DAGs",short:"R-causal",url:"https://www.r-causal.org/chapters/04-dags"}]}
   ]}/></div>
   <p style={{...pa,marginTop:4,color:C.muted,fontStyle:"italic"}}>We will return to this with multiple regression and causal inference.</p>
 </div>,
@@ -1180,7 +1317,7 @@ function DiagPanel({item,points,setPoints,model,custom,setCustom}){
   const handleCopyR=async()=>{if(!points.length)return;const ok=await copyText(pointsToR(points,datasetSlug));if(ok){setCopied(true);setTimeout(()=>setCopied(false),1500);}};
   const tabOrder=["good","borderline","bad"];const tabIcons={good:"\u2713",borderline:"~",bad:"\u2717"};const tabLabels={good:"Good Fit",borderline:"Borderline",bad:"Clear Violation"};
   const diagTypes=["linearity","homogeneity","influential","normality"];
-  const diagMeta=Object.fromEntries(diagTypes.map(type=>{const d=SUNSHINE.find(s=>s.diagKey===type);const names=d?.readingPlotNames||[];return[type,{name:names[1]?`${names[0]} (${names[1]})`:names[0],color:d?.color||C.sub}];}));
+  const diagMeta=Object.fromEntries(diagTypes.map(type=>{const d=SUNSHINE.find(s=>s.diagKey===type);const names=d?.readingPlotNames||[];const name=d?.plotCaption??(names[1]?`${names[0]} (${names[1]})`:names[0]);return[type,{name,color:d?.color||C.sub}];}));
   const pill=k=>({padding:"8px 16px",borderRadius:20,fontSize:13,fontWeight:active===k?700:500,border:`1.5px solid ${active===k?item.color:C.border}`,background:active===k?item.colorSoft:"transparent",color:active===k?item.color:C.muted,cursor:"pointer",transition:"all .15s",whiteSpace:"nowrap"});
   const smBtn={padding:"4px 10px",borderRadius:6,border:`1px solid ${C.border}`,background:"transparent",fontSize:11,color:C.muted,cursor:"pointer",fontFamily:"inherit"};
 
@@ -1233,7 +1370,9 @@ function DiagPanel({item,points,setPoints,model,custom,setCustom}){
       <div style={{marginTop:14}}><Hd>What goes wrong when violated</Hd><p style={pa}><MdBold text={item.whatBreaks}/></p></div>
       <div style={{marginTop:14}}><Hd>Formal test</Hd><FixList items={item.formalTestList}/></div>
       <div style={{marginTop:14}}><Hd>How to fix</Hd><FixList items={item.howToFixList}/></div>
-      <Quiz questions={MCQ[item.key]} color={item.color}/>
+      {item.key==="normality"&&<Quiz questions={MCQ[item.key]} color={item.color}/>}
+      {item.key==="normality"&&<NormalityWalkthrough color={item.color}/>}
+      {item.key!=="normality"&&<Quiz questions={MCQ[item.key]} color={item.color}/>}
     </div>
   </div>;
 }
@@ -1257,14 +1396,14 @@ export default function App(){
         <p style={{fontSize:14,color:C.sub,margin:"6px 0 0",lineHeight:1.5}}>Click any letter below to explore that assumption. Simple linear regression focus.</p>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(8, minmax(0, 1fr))",gap:5,marginBottom:20}}>
-        <div style={{gridColumn:"1 / 3"}}/>
-        <div style={{gridColumn:"3 / span 5",textAlign:"center",fontSize:11,fontWeight:700,color:C.teal,lineHeight:1.35,paddingBottom:2}}>
+        <div style={{gridColumn:"1 / 4"}}/>
+        <div style={{gridColumn:"4 / span 4",textAlign:"center",fontSize:11,fontWeight:700,color:C.teal,lineHeight:1.35,paddingBottom:2,paddingLeft:18,paddingRight:18}}>
           Checkable with{" "}
           <code style={{background:C.tealBg,padding:"1px 6px",borderRadius:4,color:C.tealDark,fontFamily:"JetBrains Mono, monospace",fontSize:10,fontWeight:600}}>performance::check_model(model)</code>
         </div>
         <div style={{gridColumn:"8 / 9"}}/>
-        <div style={{gridColumn:"1 / 3"}}/>
-        <div style={{gridColumn:"3 / span 5",height:8,borderTop:`2px solid ${C.teal}`,borderLeft:`2px solid ${C.teal}`,borderRight:`2px solid ${C.teal}`,borderTopLeftRadius:8,borderTopRightRadius:8,alignSelf:"end"}}/>
+        <div style={{gridColumn:"1 / 4"}}/>
+        <div style={{gridColumn:"4 / span 4",height:8,borderTop:`2px solid ${C.teal}`,borderLeft:`2px solid ${C.teal}`,borderRight:`2px solid ${C.teal}`,borderTopLeftRadius:8,borderTopRightRadius:8,alignSelf:"end",marginLeft:18,marginRight:18}}/>
         <div style={{gridColumn:"8 / 9"}}/>
         {SUNSHINE.map(item=>{const isA=selected===item.key;const isD=item.type==="diagnostic";return <button key={item.key} onClick={()=>handleSel(item.key)} style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"10px 6px 6px",borderRadius:12,minWidth:0,border:`2.5px solid ${isA?item.color:C.border}`,background:isA?item.colorSoft:C.card,cursor:"pointer",transition:"all .2s",position:"relative",boxShadow:isA?`0 3px 16px ${item.color}25`:"0 1px 3px #0001",transform:isA?"translateY(-2px)":"none"}}>
           <span style={{fontWeight:800,fontSize:27,lineHeight:1,color:isA?item.color:"#A09A90"}}>{item.letter}</span>
@@ -1280,8 +1419,8 @@ export default function App(){
           {showNote?"Hide note":"A note on reading diagnostic plots"}
         </button>
         {showNote&&<div style={{marginTop:8,padding:"14px 18px",background:C.card,border:`1.5px solid ${C.border}`,borderRadius:12,fontSize:14,color:C.sub,lineHeight:1.7,maxWidth:700}}>
-          <p style={{margin:"0 0 8px"}}>Reading diagnostic plots is more of a learned skill than a mechanical pass/fail test. Two analysts can look at the same plot and disagree about whether a violation is present. With practice you develop a sense for what random scatter looks like versus a real pattern.</p>
-          <p style={{margin:0}}>If linear regression is central to your analysis, it is good practice to <b>report your assumption checks</b> (typically in supplementary materials) so readers can judge for themselves.</p>
+          <p style={{margin:"0 0 8px"}}>Reading these plots is a learned skill, and two analysts can disagree on the same plot. <b>Formal tests</b> (Breusch-Pagan, Shapiro-Wilk, etc.) sound more objective but are not a clean fix: they over-reject in large samples (flagging trivial departures) and miss real violations in small ones. Use them as a supplement to the plots, not a replacement.</p>
+          <p style={{margin:0}}>If regression is central to your analysis, <b>report your checks</b> (often in supplementary materials) so readers can judge for themselves.</p>
         </div>}
       </div>}
     </div>
