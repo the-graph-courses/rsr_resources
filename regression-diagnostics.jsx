@@ -59,7 +59,7 @@ function loess(xV,yV,nP=60,span=0.75,degree=2){
 
 /* ── DATASETS ────────────────────────────────────────────────────────── */
 const DS={
-lin_good:{label:"Exercise & Resting Heart Rate",desc:"Weekly exercise hours vs. resting heart rate (bpm) for 30 adults in a wellness program. A clean, linear negative relationship.",points:(()=>{const xs=[1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,2,3,4.5,6,7,8,9,1.5,5,8.5];const ns=[2,-1,3,-2,1,-3,2,-1,4,-2,1,-3,2,-4,3,-1,2,-2,1,-3,0,2,-1,3,-2,1,-1,2,-3,1];return xs.map((x,i)=>({x,y:+(82-2.2*x+ns[i]*1.8).toFixed(1)}));})()},
+lin_good:{label:"Exercise & Cardiovascular Fitness",desc:"Weekly exercise hours vs. VO\u2082 max (mL/kg/min) for 30 adults in a wellness program. A clean, linear positive relationship.",points:(()=>{const xs=[1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,2,3,4.5,6,7,8,9,1.5,5,8.5];const ns=[2,-1,3,-2,1,-3,2,-1,4,-2,1,-3,2,-4,3,-1,2,-2,1,-3,0,2,-1,3,-2,1,-1,2,-3,1];return xs.map((x,i)=>({x,y:+(28+1.6*x+ns[i]*1.0).toFixed(1)}));})()},
 lin_border:{label:"Age & Systolic Blood Pressure",desc:"Age vs. systolic BP from a community screening. BP rises with age, possibly accelerating slightly. Subtle enough to debate.",points:(()=>{const xs=[25,28,31,34,37,40,43,46,49,52,55,58,61,64,67,70,27,33,39,45,51,57,63,69,30,36,42,48,54,60];const ns=[3,-2,4,-3,1,-4,2,-1,5,-3,2,-5,3,-1,4,-2,5,-3,2,-4,3,-2,1,-3,4,-2,2,-3,1,-4];return xs.map((x,i)=>({x:+x.toFixed(0),y:+(100+.45*x+.003*x*x+ns[i]*2.5).toFixed(0)}));})()},
 lin_bad:{label:"Drug Dosage & Pain Relief",desc:"Analgesic dosage (mg) vs. pain relief score. Relief rises fast at low doses but clearly plateaus. A straight line badly misses this curve.",points:(()=>{const xs=[2,4,6,8,10,14,18,22,26,30,35,40,45,50,55,60,65,70,3,9,16,24,32,42,52,62,7,20,38,58];const ns=[1,-1,1.5,-1,.5,-1.5,1,-.5,1.5,-1,.5,-1,1,-1.5,.5,-1,1.5,-.5,1,-1,.5,1,-1.5,.5,-1,1,-.5,1.5,-1,.5];return xs.map((x,i)=>({x,y:+(18*Math.sqrt(x)+ns[i]*2.5).toFixed(1)}));})()},
 hom_good:{label:"Exercise Duration & Calories Burned",desc:"Minutes of exercise vs. calories burned. The spread stays consistent from short to long workouts.",points:(()=>{const xs=[15,20,22,25,28,30,33,35,37,40,42,45,48,50,52,55,58,60,63,65,18,27,34,39,44,49,54,57,62,36];const ns=[12,-8,15,-10,6,-14,9,-7,16,-11,5,-13,10,-6,14,-9,7,-12,11,-8,13,-10,8,-15,6,-11,14,-7,9,-12];return xs.map((x,i)=>({x,y:+(50+5.8*x+ns[i]).toFixed(0)}));})()},
@@ -124,7 +124,7 @@ exogeneity:[
 
 /* ── SUNSHINE CONFIG ─────────────────────────────────────────────────── */
 const SUNSHINE=[
-{key:"sample",letter:"S",label:"Sample Size",type:"info",color:"#9B6B2F",colorSoft:"#F5E6D0",summary:"Do you have enough observations for stable estimates?"},
+{key:"sample",letter:"S",label:"Sample Size",type:"info",color:"#9B6B2F",colorSoft:"#F5E6D0",summary:"Do you have enough observations for your model?"},
 {key:"uncorrelated",letter:"U",label:"Uncorrelated Errors",type:"info",color:"#2E86AB",colorSoft:"#D0EAF5",summary:"Are residuals independent of each other?"},
 {key:"multicollinearity",letter:"N",label:"No Multicollinearity",type:"info",color:"#6B6B6B",colorSoft:"#ECECEC",summary:"Are predictors too correlated? (Multiple regression only)"},
 {key:"shape",letter:"S",label:"Shape",labelParen:"(Linearity)",type:"diagnostic",diagKey:"linearity",color:"#2B6CB0",colorSoft:"#D4E3F5",summary:"Is the relationship actually a straight line?",
@@ -190,7 +190,6 @@ function iconTypeForHeading(children){
 function Hd({children}){return <div style={{display:"flex",alignItems:"center",gap:8,fontSize:15,fontWeight:700,color:"var(--accent, #3D3832)",marginBottom:7,borderLeft:"3px solid currentColor",paddingLeft:10}}>
   <IconGlyph type={iconTypeForHeading(children)}/><span>{children}</span>
 </div>;}
-function Lnk({href,children}){return <a href={href} target="_blank" rel="noopener noreferrer" style={{color:"#2B6CB0",textDecoration:"underline"}}>{children}</a>;}
 
 /* ── MINI ICONS ──────────────────────────────────────────────────────── */
 function MiniIcon({type}){const s={width:38,height:22,display:"block",margin:"4px auto 0"};
@@ -1005,23 +1004,16 @@ async function copyText(text){
 
 const INFO={
 sample:()=><div style={{display:"flex",flexDirection:"column",gap:16}}>
-  <div><Hd>What it means</Hd><p style={pa}>You need enough observations for regression estimates to be stable. Too few, and the slope bounces around unpredictably from sample to sample.</p></div>
-  <div><Hd>Rules of thumb</Hd><ul style={ul}>
-    <li><b>Simple linear regression:</b> around <b>20 observations</b> is a common minimum starting point, and 30+ is often more comfortable. Treat this as guidance, not a magic cutoff.</li>
-    <li><b>Multiple regression:</b> a common starting point is <b>10 to 15 observations per predictor</b>. Tabachnick and Fidell (2019) recommend <b>N &ge; 50 + 8k</b> (k = number of predictors) for testing the overall model. Green (1991) suggests <b>N &ge; 104 + k</b> for individual predictors.</li>
-    <li><b>Effect size matters:</b> strong relationships need fewer observations. Subtle effects need more.</li>
-  </ul></div>
-  <div><Hd>What goes wrong with too few</Hd><ul style={ul}>
-    <li>Coefficient estimates become <b>unstable</b> across different samples.</li>
-    <li>Confidence intervals become very <b>wide</b>, making it hard to draw conclusions.</li>
-    <li>The model may <b>overfit</b>: capturing noise rather than real patterns.</li>
-  </ul></div>
-  <div style={{background:"#F5F3EE",borderRadius:8,padding:"10px 14px"}}>
-    <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:.5,marginBottom:4}}>REFERENCES</div>
-    <ul style={{...ul,fontSize:12,color:C.sub}}>
-      <li>Field, A. (2018). <i>Discovering Statistics Using IBM SPSS Statistics</i> (5th ed.). Sage. <Lnk href="https://us.sagepub.com/en-us/nam/discovering-statistics-using-ibm-spss-statistics/book257672">Publisher</Lnk></li>
-      <li>Tabachnick, B. G., & Fidell, L. S. (2019). <i>Using Multivariate Statistics</i> (7th ed.). Pearson. <Lnk href="https://www.pearson.com/en-us/subject-catalog/p/using-multivariate-statistics/P200000003097">Publisher</Lnk></li>
-      <li>Green, S. B. (1991). How many subjects does it take to do a regression analysis? <i>Multivariate Behavioral Research, 26</i>(3), 499-510. <Lnk href="https://doi.org/10.1207/s15327906mbr2603_7">DOI</Lnk></li>
+  <div><Hd>The key rule</Hd><p style={pa}>A common rule of thumb is to aim for at least <b>10 observations per parameter</b> you are estimating.</p></div>
+  <div><Hd>What counts as a parameter?</Hd>
+    <p style={pa}>In regression, every coefficient the model has to estimate is a parameter. For simple linear regression (for example, birthweight predicted by gestational age), there are two: the <b>intercept</b> and the <b>slope</b>. So the rule suggests at least <b>20</b> observations.</p>
+    <p style={{...pa,marginTop:10}}>If you fit birthweight on gestational weeks plus mother's weight, you now have <b>three</b> parameters: the intercept, the slope for gestational weeks, and the slope for mother's weight. That pushes the minimum to <b>30</b>.</p>
+  </div>
+  <div><Hd>Why it matters</Hd>
+    <p style={pa}>Small samples make slopes and confidence intervals <b>noisier</b>, and they make the usual checks on your model harder to read. Two issues show up again and again:</p>
+    <ul style={ul}>
+      <li><b>You cannot really check your assumptions.</b> Residual plots need enough points to be interpretable. With very few observations you are trusting linearity, constant variance, and normality without being able to verify them.</li>
+      <li><b>Individual observations dominate.</b> One unusual data point can drag the entire regression line, and with small <i>n</i> you may not even notice it is happening.</li>
     </ul>
   </div>
 </div>,
