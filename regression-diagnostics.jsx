@@ -70,7 +70,7 @@ inf_border:{label:"Unusually Healthy Elder",desc:"Age vs. systolic BP, with one 
 inf_bad:{label:"Data Entry Error in BMI Study",desc:"Same cholesterol screening, but one record has BMI=42 with cholesterol=130. Likely a data entry error. Cook's distance flags it immediately.",xLabel:"BMI",yLabel:"Total cholesterol (mg/dL)",points:(()=>{const xs=[19,20,21,22,23,23.5,24,24.5,25,25.5,26,26.5,27,27.5,28,28.5,29,29.5,30,30.5,31,20.5,23,25.5,27,29,22,24.5,26.5,28.5];const ns=[5,-3,7,-4,2,-6,4,-2,8,-5,3,-7,5,-3,6,-4,7,-5,3,-6,8,4,-5,3,-4,7,-3,6,-5,4];const p=xs.map((x,i)=>({x,y:+(120+4.5*x+ns[i]*2).toFixed(0)}));p.push({x:42,y:130});return p;})()},
 norm_good:{label:"Height & Lung Capacity",desc:"Height (cm) vs. lung capacity (L) for 60 adults. Prediction errors distribute symmetrically.",xLabel:"Height (cm)",yLabel:"Lung capacity (L)",points:(()=>{let s=20260429;const r=()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};const z=()=>(Math.sqrt(-2*Math.log(Math.max(r(),1e-9)))*Math.cos(2*Math.PI*r())+Math.sqrt(-2*Math.log(Math.max(r(),1e-9)))*Math.cos(2*Math.PI*r()))/Math.SQRT2;const n=60;const xs=Array.from({length:n},(_,i)=>155+(i/(n-1))*35+(r()-.5)*1.2);const raw=xs.map(()=>z());const m=raw.reduce((a,v)=>a+v,0)/n;const sd=Math.sqrt(raw.reduce((a,v)=>a+(v-m)**2,0)/(n-1))||1;return xs.map((x,i)=>{const std=(raw[i]-m)/sd;return{x:+x.toFixed(1),y:+(-3+.042*x+std*0.18).toFixed(2)};});})()},
 norm_border:{label:"Hours of Sleep & Sick Days",desc:"Average nightly sleep vs. sick days per year. Most people follow the trend, with only a mild tail wiggle.",xLabel:"Average nightly sleep (hours)",yLabel:"Sick days per year",points:(()=>{const xs=[5,5.5,5.5,6,6,6.5,6.5,6.5,7,7,7,7,7.5,7.5,7.5,7.5,8,8,8,8,8.5,8.5,8.5,9,9,5,6,7,8,8.5];const ns=[-1.1,.2,-.3,.45,-.1,.3,-.2,.5,-.15,.1,-.3,.25,-.4,.15,.05,-.25,.35,-.1,.2,-.35,1.0,.3,-.2,-.15,-.4,.9,.4,-.05,.15,-.8];return xs.map((x,i)=>({x,y:+(18-1.5*x+ns[i]*1.1).toFixed(1)}));})()},
-norm_bad:{label:"Poverty Rate & ER Visits",desc:"Neighborhood poverty rate (%) vs. ER visits per 1,000. Most follow the trend, but several neighborhoods have extremely high visit rates. Clearly right-skewed residuals.",xLabel:"Neighborhood poverty rate (%)",yLabel:"ER visits per 1,000",points:(()=>{const xs=[5,7,8,10,12,13,15,16,18,19,20,22,23,25,27,28,30,32,34,35,37,38,40,42,6,14,21,29,36,41];const sk=[.1,.05,.15,.05,3.4,.1,.2,.08,4.2,.08,.12,.06,5.1,.12,.2,.04,3.2,.15,.08,.06,6.2,.08,.16,.02,.1,.1,4.8,.05,.12,6.7];return xs.map((x,i)=>({x,y:+(80+3.5*x+sk[i]*22-6).toFixed(0)}));})()},
+norm_bad:{label:"Poverty Rate & ER Visits",desc:"Neighborhood poverty rate (%) vs. ER visits per 1,000. Most follow the trend, but several neighborhoods have extremely high visit rates. Clearly right-skewed residuals.",xLabel:"Neighborhood poverty rate (%)",yLabel:"ER visits per 1,000",points:(()=>{let s=20260512;const r=()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};const z=()=>Math.sqrt(-2*Math.log(Math.max(r(),1e-9)))*Math.cos(2*Math.PI*r());const xs=[5,7,8,10,12,13,15,16,18,19,20,22,23,25,27,28,30,32,34,35,37,38,40,42,6,14,21,29,36,41];const skewIdx=new Set([4,8,12,16,20,26,29]);return xs.map((x,i)=>{const noise=z()*9;const skew=skewIdx.has(i)?60+r()*55:0;return{x,y:Math.max(0,Math.round(80+3.5*x+noise+skew))};});})()},
 };
 
 /* ── MCQ DATA ────────────────────────────────────────────────────────── */
@@ -81,13 +81,13 @@ sample:[
 {q:"Which statement about sample size is most accurate?",opts:["You should almost never fit regression with fewer than 30 observations","Small samples can be fit, but estimates and diagnostics are fragile","Sample size only matters in multiple regression"],ans:1,explain:"There is no magic cutoff. The key teaching point is that small samples make slopes, standard errors, and diagnostic plots less stable."},
 ],
 uncorrelated:[
-{q:"The scatterplot shows one dot per patient, coloured and labelled by clinic (clinic 1, clinic 2, clinic 3). The points from each site bunch together in their own group. You pool every patient, ignore the clinic labels, and fit a single ordinary least squares line. For the usual regression assumptions, what is the main concern?",v:"cluster",opts:["The slope is biased because variability within clinics is larger than variability between clinics","Patients seen at the same clinic tend to have correlated prediction errors, so the rows are not independent observations"],ans:1,explain:"Shared clinic context makes residuals within a site tend to look alike; that violates independence and understates uncertainty if you pretend you have unrelated patients. Option A mixes up variance components with slope bias: clustering mainly affects standard errors and effective sample size, not the slope estimate by itself."},
-{q:"Residuals are plotted in the order rows were collected (e.g., over time). They move in runs: several points above zero, then several below, then above again, rather than flipping sign at each step. What does this suggest?",v:"time",opts:["Heteroscedasticity: the spread of residuals changes along the sequence","Nearby rows have residuals on the same side of zero, so they are not independent","Omitted variable bias: a missing predictor that increases with row order"],ans:1,explain:"Runs and waves in collection order mean neighbouring errors are positively related (autocorrelation), not independent. Heteroscedasticity is a changing spread, which is not the main feature here. A predictor that only trends upward would not produce alternating runs above and below zero."},
+{q:"You collect patient outcomes from 10 clinics and fit a single OLS regression that ignores which clinic each patient came from. Patients from the same clinic share staff, scheduling, and case mix. Which assumption is most directly threatened?",opts:["Independence of errors","Linearity of the relationship","Normality of residuals"],ans:0,explain:"Patients from the same clinic share context, so their residuals tend to look alike. That makes the rows non-independent, which inflates apparent precision (standard errors are too small). Linearity and normality are not the main issue here."},
+{q:"Residuals plotted in collection order move in runs of similar values rather than flipping sign at each step. What does this suggest?",v:"time",opts:["Heteroscedasticity: the spread of residuals changes along the sequence","Nearby rows have residuals on the same side of zero, so they are not independent","Omitted variable bias: a missing predictor that increases with row order"],ans:1,explain:"Runs and waves in collection order mean neighbouring errors are positively related (autocorrelation), not independent. Heteroscedasticity is a changing spread, which is not the main feature here. A predictor that only trends upward would not produce alternating runs above and below zero."},
 ],
 multicollinearity:[
 {q:"A researcher fits the model:\u00A0\u00A0blood_pressure = \u03B2\u2080 + \u03B2\u2081\u00B7age + \u03B5. Why can multicollinearity not occur in this model?",opts:["There is only one predictor","The predictor is normally distributed"],ans:0,explain:"Multicollinearity means predictors overlap with other predictors. A simple regression has only one predictor, so there is no second predictor for it to be collinear with."},
 {q:"A model is fit as:\u00A0\u00A0health_score = \u03B2\u2080 + \u03B2\u2081\u00B7education + \u03B2\u2082\u00B7income + \u03B5. Education and income turn out to be very strongly correlated with each other in the data. What does this imply for the coefficient estimates?",opts:["The two predictors carry overlapping information, making it hard to estimate their separate effects","The predictors will jointly produce non-normal residuals"],ans:0,explain:"The overlap means the predictors move together, so the model has trouble deciding which predictor deserves credit for the shared part of the signal. The coefficient standard errors inflate."},
-{q:"Education and income are strongly correlated in your data and you include both as predictors. What should you expect compared with a model that uses only one of them?",opts:["The standard errors of the individual coefficients will tend to be larger, even though the total R\u00B2 may change only modestly","Including both predictors will roughly double the model's explanatory power, since each predictor contributes independent information"],ans:0,explain:"Highly correlated predictors leave the model unable to separate their individual contributions, which inflates the standard errors. The shared information is largely already in either predictor alone, so R\u00B2 often does not increase by much."},
+{q:"Education and income are strongly correlated in your data and you include both as predictors. What should you expect compared with a model that uses only one of them?",opts:["Larger standard errors on each coefficient, with little change in R\u00B2","Roughly double the explanatory power, since each predictor adds new information"],ans:0,explain:"Highly correlated predictors leave the model unable to separate their individual contributions, which inflates the standard errors. The shared information is largely already in either predictor alone, so R\u00B2 often does not increase by much."},
 ],
 shape:[
 {q:"The dots clearly trace a curve, yet a straight regression line cuts across them. What does that mean for a single reported slope?",v:"curve",opts:["The slope misrepresents the effect because the relationship is not actually linear. A fix is to let the model bend, for example by log-transforming the predictor or adding a polynomial term so the curve shape can be captured","The slope is still valid as the average rate of change, since OLS already gives the best straight-line fit and the data points scatter on either side of it"],ans:0,explain:"A straight line forces one average slope onto a relationship whose slope changes across x. The usual fix is to let the model bend: a log or square-root transform of the predictor, or a polynomial term such as x squared, often handles a saturating curve like this one."},
@@ -101,7 +101,7 @@ homogeneity:[
 influential:[
 {q:"Three panels show different points marked in red. Which point is most influential on the fitted line?",v:"outlier_types",opts:["The low-leverage outlier (left panel)","The high-leverage point on the line (middle panel)","The off-trend point with high leverage (right panel)"],ans:2,explain:"Influence usually requires both ingredients: unusual x-position and a sizable residual. The right-panel point has both."},
 {q:"Which pair of ingredients does Cook's distance combine to flag a point as influential?",ev:"cooks_combine",opts:["The number of predictors and the residual standard error","Leverage (unusual X) and residual size (off the line)","The sample size and the model's R\u00B2"],ans:1,explain:"Cook's distance combines how unusual a point's X value is (leverage) with how far its Y sits from the fitted line (residual). A point needs both to meaningfully move the line: high leverage with a tiny residual barely shifts the fit, and a big residual at an average X value pulls less than one at the edge."},
-{q:"In this leverage-vs-residual plot, the red point sits near the Cook's distance contour. Why is that a concern?",v:"lev_resid",opts:["Its X value is unusual and its residual is large, so removing it could meaningfully shift the fitted line","Its leverage alone is the largest in the dataset, which is enough to flag it regardless of its residual","It has the largest residual in the dataset, which is enough to flag it regardless of its X value"],ans:0,explain:"The Cook's distance contour combines leverage and residual size. A point sitting near it has unusual amounts of both, so dropping it could meaningfully change the slope. Either ingredient on its own is not enough."},
+{q:"In this leverage-vs-residual plot, the red point sits near the Cook's distance contour. Why is that a concern?",v:"lev_resid",opts:["Its X value is unusual and its residual is large, so removing it could meaningfully shift the fitted line","Its leverage alone is enough to flag it, regardless of where it sits relative to the line"],ans:0,explain:"The Cook's distance contour combines leverage and residual size. A point sitting near it has unusual amounts of both, so dropping it could meaningfully change the slope. Leverage on its own is not enough."},
 {q:"The figure below shows the same data fitted with and without the red point. What is the danger this illustrates for the conclusions you would report?",v:"slope_shift",opts:["The reported slope may rest heavily on a single observation rather than on the overall pattern","Removing flagged points always tightens the confidence interval and improves R\u00B2","The point should be deleted before reporting any results"],ans:0,explain:"The concern is that one observation can change the headline conclusion. R\u00B2 and CI behaviour after removal depends on the data, and silently dropping flagged points is not good practice. The right response is usually to investigate the point and report sensitivity of the result with and without it."},
 ],
 normality:[
@@ -127,7 +127,10 @@ const SUNSHINE=[
   readingPlotNames:["Residuals vs fitted","Residual plot"],
   explanation:"The relationship between predictor and outcome should follow a straight line. With one predictor you can sometimes spot curvature in the scatter plot, but the fitted-vs-residuals plot shows it more clearly: a smooth line near zero means linear, a U-shape or arch means curved.",
   plotGuide:"**X-axis: fitted values.** The model's predicted y for each observation.\n**Y-axis: residuals.** Actual minus predicted y, the part of the data the line did not capture.\nThe dashed horizontal line at zero marks perfect predictions. The green smooth line traces the average residual at each fitted value. If it curves, the real relationship is not linear.",
-  whatBreaks:"**Predictions can be systematically off** in some regions of x, and the **slope estimate is biased relative to the true effect**.",
+  whatBreaks:{items:[
+    {status:"bad",text:"**Slope:** biased, since a single line cannot capture a curved relationship."},
+    {status:"bad",text:"**SEs, CIs, and p-values:** unreliable, since they are built on the wrong model."}
+  ],bottomLine:"predictions are systematically off in some regions of x."},
   formalTestList:[
     {text:"**Ramsey RESET test**.",
       links:[{title:"lmtest::resettest reference (CRAN)",url:"https://search.r-project.org/CRAN/refmans/lmtest/html/resettest.html"},{title:"MetricGate: RESET test tutorial in R",url:"https://metricgate.com/docs/reset-test/"}]}
@@ -145,7 +148,10 @@ const SUNSHINE=[
   readingPlotNames:["Scale–location plot","\u221A|standardized residuals| vs fitted"],
   explanation:"The spread of prediction errors should stay roughly constant across the range of the predictor. If the residuals fan out or shrink (heteroscedasticity), the standard errors are wrong, so confidence intervals and p-values cannot be trusted.",
   plotGuide:"**X-axis: fitted values.** The model's predicted y for each observation.\n**Y-axis: \u221A|standardized residuals|.** Error magnitude on a z-score-like scale, with the square root compressing the tail so your eye can judge whether the smooth line is flat.\nA flat line means constant spread. An upward slope means variance is growing with the fitted value.",
-  whatBreaks:"**Standard errors are typically off** (often understated). **Confidence intervals and p-values become unreliable**. If the line is otherwise the right model and there are no omitted-variable problems, the coefficient can still be unbiased, but the usual inference around it cannot be trusted.",
+  whatBreaks:{items:[
+    {status:"good",text:"**Slope:** typically still unbiased."},
+    {status:"bad",text:"**SEs, CIs, and p-values:** the SE formula is wrong (often understated), so CIs are too narrow and p-values too small."}
+  ],bottomLine:"the line itself is roughly right, but the uncertainty around it cannot be trusted."},
   formalTestList:[
     {text:"**Breusch-Pagan test**.",
       links:[{title:"Statology: Breusch-Pagan test in R",url:"https://www.statology.org/breusch-pagan-test-r/"},{title:"lmtest::bptest reference (CRAN)",url:"https://search.r-project.org/CRAN/refmans/lmtest/html/bptest.html"}]}
@@ -161,9 +167,12 @@ const SUNSHINE=[
   examples:{good:"hom_good",borderline:"hom_border",bad:"hom_bad"}},
 {key:"influential",letter:"I",label:"Influential Points",type:"diagnostic",diagKey:"influential",color:"#C53030",colorSoft:"#FED7D7",summary:"Is any single point pulling the regression line too much?",
   readingPlotNames:["Residuals vs leverage","Leverage plot"],
-  explanation:"An influential observation pulls the regression line toward itself. To do that it has to be unusual in two ways at once: far from the other X values (high leverage) and far from where the line would sit without it (large residual).",
+  explanation:"An influential observation is one whose removal would noticeably change the fitted line. The biggest culprits combine two features: an unusual X value (high leverage) and a sizable residual (off where the line would otherwise sit). High leverage on its own does not always make a point influential, but when paired with a large residual it almost always does.",
   plotGuide:"**X-axis: leverage.** How unusual the observation's predictor value is.\n**Y-axis: standardized residual.** How far the observation sits from the fitted line, on a z-score-like scale.\nThe dashed curve is a Cook's distance contour at the F(0.5, p, n−p) quantile (matching R's performance::check_model). Points beyond the curve combine high leverage with a large residual, the two ingredients of an influential observation.",
-  whatBreaks:"A single observation can **shift the slope substantially**. Your **conclusions may depend on one data point**.",
+  whatBreaks:{items:[
+    {status:"bad",text:"**Slope:** can shift substantially when a single influential point is removed."},
+    {status:"bad",text:"**SEs, CIs, and p-values:** also unstable, since they too depend on that one point."}
+  ],bottomLine:"your headline conclusion may rest on a single observation."},
   formalTestList:[
     {text:"**Cook's distance**: overall influence on fitted values. Typical threshold for simple regression: F(0.5, p, n−p) ≈ 0.7.",
       links:[{title:"Statology: Identify influential points with Cook's distance",url:"https://www.statology.org/how-to-identify-influential-data-points-using-cooks-distance/"},{title:"RMPH §5.23: Influential observations",url:"https://bookdown.org/rwnahhas/RMPH/mlr-influence.html"}]},
@@ -186,7 +195,10 @@ const SUNSHINE=[
   readingPlotNames:["Detrended normal Q–Q plot","Normal Q–Q plot"],
   explanation:"The residuals should be roughly bell-shaped. The fitted line itself does not need perfectly normal residuals, but the usual confidence intervals and p-values do, especially in small samples. Strong skew, heavy tails, or extreme outliers make those uncertainty statements unreliable.",
   plotGuide:"**X-axis: theoretical normal quantiles.** Where each residual would sit if the residuals were exactly normal.\n**Y-axis: deviation from the normal line.** How far the observed residual quantile lands from that theoretical position. The diagonal of a regular Q-Q plot has been 'flattened' to a horizontal zero line (this is the detrended Q-Q used by performance::check_model).\nA shaded confidence band gives a tolerance. As long as most points scatter inside the band, mild departures are not a concern. A systematic curve, an S-shape, or many points outside the band suggests the residual distribution is not normal.",
-  whatBreaks:"**Confidence intervals and p-values can be unreliable**, especially in small samples. With **large samples**, mild deviations from normality are often less serious because the CLT helps the sampling distribution of the coefficients.",
+  whatBreaks:{items:[
+    {status:"good",text:"**Slope:** still unbiased."},
+    {status:"warn",text:"**SEs, CIs, and p-values:** the SE itself is roughly right, but CIs and p-values rely on a t-distribution that only holds under normality, so they can be off in small samples."}
+  ],bottomLine:"with large samples, mild deviations are usually fine because of the CLT."},
   formalTestList:[
     {text:"**Shapiro-Wilk test**.",
       links:[{title:"STHDA: Normality test in R (Shapiro-Wilk, Q-Q)",url:"https://www.sthda.com/english/wiki/normality-test-in-r"},{title:"UW-Madison SSCC: Normality diagnostics in R",url:"https://sscc.wisc.edu/sscc/pubs/RegDiag-R/normality.html"}]}
@@ -245,6 +257,22 @@ function FixList({items}){if(!items||!items.length)return null;return <ul style=
     <span><MdBold text={it.text}/></span>{it.links&&it.links.length>0&&<RLinks links={it.links}/>}
   </li>)}
 </ul>;}
+
+function WhatBreaks({data}){
+  if(!data)return null;
+  if(Array.isArray(data))return <ul style={{margin:0,paddingLeft:20,fontSize:14,lineHeight:1.75,color:"#1c1917"}}>{data.map((line,i)=><li key={i}><span style={{whiteSpace:"pre"}}><MdBold text={line}/></span></li>)}</ul>;
+  if(typeof data==="string")return <p style={{margin:0,fontSize:14,lineHeight:1.75,color:"#1c1917"}}><MdBold text={data}/></p>;
+  const STATUS={good:{glyph:"✓",color:"#2F855A"},bad:{glyph:"✗",color:"#C53030"},warn:{glyph:"⚠",color:"#B7791F"}};
+  return <div>
+    <ul style={{margin:0,padding:0,listStyle:"none",display:"flex",flexDirection:"column",gap:6}}>
+      {(data.items||[]).map((it,i)=>{const s=STATUS[it.status]||STATUS.bad;return <li key={i} style={{fontSize:14,lineHeight:1.5,color:"#1c1917",display:"flex",gap:8,alignItems:"flex-start"}}>
+        <span aria-hidden="true" style={{color:s.color,fontWeight:700,flexShrink:0,minWidth:14,textAlign:"center",lineHeight:1.5}}>{s.glyph}</span>
+        <span><MdBold text={it.text}/></span>
+      </li>;})}
+    </ul>
+    {data.bottomLine&&<p style={{margin:"10px 0 0",fontSize:14,lineHeight:1.6,color:C.sub}}>Overall, <MdBold text={data.bottomLine}/></p>}
+  </div>;
+}
 
 /* ── MINI ICONS ──────────────────────────────────────────────────────── */
 function MiniIcon({type}){const s={width:38,height:22,display:"block",margin:"4px auto 0"};
@@ -523,7 +551,7 @@ function QuizVisual({type,color="#2B6CB0"}){
   // outlier_types: 3 panels: outlier-low-lev, high-lev-on-trend, off-trend-high-lev
   if(type==="outlier_types"){const NEU="#94a3b8";return <svg viewBox="0 0 300 110" style={s}>
     <rect x="6" y="22" width="92" height="64" fill="none" stroke={BD} rx="3"/>
-    <line x1="10" y1="76" x2="94" y2="32" stroke={SM} strokeWidth="1.6"/>
+    <line x1="10" y1="78" x2="94" y2="26" stroke={SM} strokeWidth="1.6"/>
     {[[16,72],[24,68],[30,64],[36,60],[42,56],[48,52],[54,48],[60,44],[66,40],[72,38],[80,32],[88,28]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="2.4" fill={NEU}/>)}
     <circle cx="40" cy="38" r="4" fill={RF}/>
     <text x="52" y="16" textAnchor="middle" fontSize="9.5" fill={SB} fontWeight="700">left panel</text>
@@ -533,7 +561,7 @@ function QuizVisual({type,color="#2B6CB0"}){
     <circle cx="188" cy="34" r="4" fill={RF}/>
     <text x="150" y="16" textAnchor="middle" fontSize="9.5" fill={SB} fontWeight="700">middle panel</text>
     <rect x="202" y="22" width="92" height="64" fill="none" stroke={BD} rx="3"/>
-    <line x1="206" y1="64" x2="290" y2="34" stroke={SM} strokeWidth="1.6"/>
+    <line x1="206" y1="60" x2="290" y2="46" stroke={SM} strokeWidth="1.6"/>
     {[[210,68],[218,64],[226,60],[234,56],[242,52],[250,48],[258,44],[266,42],[272,40]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="2.4" fill={NEU}/>)}
     <circle cx="284" cy="74" r="5" fill={RF}/>
     <text x="248" y="16" textAnchor="middle" fontSize="9.5" fill={SB} fontWeight="700">right panel</text>
@@ -547,7 +575,7 @@ function QuizVisual({type,color="#2B6CB0"}){
     <path d="M 40 18 Q 150 40 284 47" fill="none" stroke={SM} strokeDasharray="6,5" strokeWidth="1.4" opacity=".75"/>
     <path d="M 40 82 Q 150 60 284 53" fill="none" stroke={SM} strokeDasharray="6,5" strokeWidth="1.4" opacity=".75"/>
     {[[64,46],[78,56],[96,42],[112,54],[130,48],[148,52],[168,46],[188,48]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="2.8" fill="#94a3b8" opacity=".85"/>)}
-    <circle cx="262" cy="22" r="5" fill={RF}/>
+    <circle cx="262" cy="40" r="5" fill={RF}/>
     <text x="160" y="104" textAnchor="middle" fontSize="9.5" fill={SB}>leverage →</text>
     <text x="22" y="50" textAnchor="middle" fontSize="9.5" fill={SB} transform="rotate(-90,22,50)">std r</text>
     <text x="278" y="60" textAnchor="end" fontSize="9" fill={SM}>Cook's D = 0.5</text>
@@ -899,16 +927,16 @@ function AutocorrDiags(){
   // residual sign, so the 28 rows carry far less information than 28 fresh ones.
   const[showColors,setShowColors]=useState(false);
   const data=[
-    {d:1,wk:false,p:20,v:11},{d:2,wk:false,p:15,v:9}, {d:3,wk:false,p:25,v:14},
-    {d:4,wk:false,p:30,v:14},{d:5,wk:false,p:18,v:10},{d:6,wk:true, p:22,v:15},
-    {d:7,wk:true, p:28,v:16},{d:8,wk:false,p:35,v:16},{d:9,wk:false,p:12,v:9},
-    {d:10,wk:false,p:20,v:11},{d:11,wk:false,p:38,v:17},{d:12,wk:false,p:24,v:11},
-    {d:13,wk:true, p:15,v:12},{d:14,wk:true, p:30,v:18},{d:15,wk:false,p:22,v:13},
-    {d:16,wk:false,p:28,v:13},{d:17,wk:false,p:10,v:8}, {d:18,wk:false,p:20,v:12},
-    {d:19,wk:false,p:32,v:14},{d:20,wk:true, p:18,v:13},{d:21,wk:true, p:25,v:16},
-    {d:22,wk:false,p:15,v:10},{d:23,wk:false,p:30,v:14},{d:24,wk:false,p:22,v:12},
-    {d:25,wk:false,p:18,v:11},{d:26,wk:false,p:26,v:12},{d:27,wk:true, p:20,v:14},
-    {d:28,wk:true, p:28,v:16}
+    {d:1,wk:false,p:20,v:10},{d:2,wk:false,p:15,v:9}, {d:3,wk:false,p:25,v:10},
+    {d:4,wk:false,p:30,v:11},{d:5,wk:false,p:18,v:9}, {d:6,wk:true, p:22,v:15},
+    {d:7,wk:true, p:28,v:17},{d:8,wk:false,p:35,v:11},{d:9,wk:false,p:12,v:8},
+    {d:10,wk:false,p:20,v:10},{d:11,wk:false,p:38,v:11},{d:12,wk:false,p:24,v:10},
+    {d:13,wk:true, p:15,v:14},{d:14,wk:true, p:30,v:18},{d:15,wk:false,p:22,v:10},
+    {d:16,wk:false,p:28,v:11},{d:17,wk:false,p:10,v:8}, {d:18,wk:false,p:20,v:10},
+    {d:19,wk:false,p:32,v:11},{d:20,wk:true, p:18,v:14},{d:21,wk:true, p:25,v:16},
+    {d:22,wk:false,p:15,v:9}, {d:23,wk:false,p:30,v:11},{d:24,wk:false,p:22,v:10},
+    {d:25,wk:false,p:18,v:9}, {d:26,wk:false,p:26,v:10},{d:27,wk:true, p:20,v:14},
+    {d:28,wk:true, p:28,v:17}
   ];
   const n=data.length;
   const mp=data.reduce((s,r)=>s+r.p,0)/n;
@@ -1204,24 +1232,24 @@ const INFO={
 sample:()=><div style={{display:"flex",flexDirection:"column",gap:16}}>
   <div><Hd>The key rule</Hd><p style={pa}>A common rule of thumb is to aim for at least <b>10 observations per parameter</b> you are estimating.</p></div>
   <div><Hd>What counts as a parameter?</Hd>
-    <p style={pa}>In regression, every coefficient the model has to estimate is a parameter. For simple linear regression (for example, birthweight predicted by gestational age), there are two: the <b>intercept</b> and the <b>slope</b>. So the rule suggests at least <b>20</b> observations.</p>
-    <p style={{...pa,marginTop:10}}>If you fit birthweight on gestational weeks plus mother's weight, you now have <b>three</b> parameters: the intercept, the slope for gestational weeks, and the slope for mother's weight. That pushes the minimum to <b>30</b>.</p>
+    <p style={pa}>Each coefficient counts as a parameter. Simple linear regression has two (intercept and slope), so the rule suggests at least <b>20</b> observations.</p>
+    <p style={{...pa,marginTop:10}}>Add a second predictor and you have three parameters, pushing the minimum to <b>30</b>.</p>
   </div>
   <div><Hd>Why it matters</Hd>
-    <p style={pa}>Small samples make slopes and confidence intervals <b>noisier</b>, and they make the usual checks on your model harder to read. Two issues show up again and again:</p>
+    <p style={pa}>Small samples produce noisier estimates and weaker diagnostics. Two issues come up again and again:</p>
     <ul style={ul}>
-      <li><b>You cannot really check your assumptions.</b> Residual plots need enough points to be interpretable. With very few observations you are trusting linearity, constant variance, and normality without being able to verify them.</li>
-      <li><b>Individual observations dominate.</b> One unusual data point can drag the entire regression line, and with small <i>n</i> you may not even notice it is happening.</li>
+      <li><b>You cannot really check your assumptions.</b> Residual plots need enough points to be interpretable.</li>
+      <li><b>Individual observations dominate.</b> One unusual point can drag the line, and with small <i>n</i> you may not notice.</li>
     </ul>
   </div>
 </div>,
 
 uncorrelated:()=><div style={{display:"flex",flexDirection:"column",gap:18}}>
-  <div><Hd>What it means</Hd><p style={pa}>Each observation's prediction error should carry no information about any other. If knowing one residual helps you guess the next, the errors are correlated and the model is treating linked observations as if they were independent.</p></div>
+  <div><Hd>What it means</Hd><p style={pa}>Each observation's prediction error should carry no information about any other. If knowing one residual helps you guess the next, the errors are correlated.</p></div>
 
   <div style={{background:"#F5F0FF",border:"1.5px solid #D0C0E8",borderRadius:12,padding:16,display:"flex",flexDirection:"column",gap:14}}>
     <div style={{fontSize:16,fontWeight:700,color:"#6B46C1"}}>Violation type 1: Clustered data</div>
-    <div><Hd>What is happening</Hd><p style={pa}>Observations in the same group (hospital, school, neighborhood) tend to resemble each other. Their errors are correlated.</p>
+    <div><p style={pa}>Observations in the same group (hospital, school, neighborhood) tend to resemble each other. Their errors are correlated.</p>
     <p style={{...pa,marginTop:6}}><b>Example:</b> you regress patient satisfaction on minutes with doctor, using patients from 10 clinics. Same-clinic patients share staff, scheduling, and crowding, so their residuals will be correlated.</p></div>
     <ClusteredDiags/>
     <div><Hd>What goes wrong</Hd><ul style={ul}><li><b>Standard errors tend to be too small.</b> The model overestimates how much independent information the data contain.</li><li><b>Confidence intervals are typically too narrow</b> and <b>p-values typically too small.</b></li></ul></div>
@@ -1242,7 +1270,7 @@ uncorrelated:()=><div style={{display:"flex",flexDirection:"column",gap:18}}>
   <div style={{background:"#F0F8FF",border:"1.5px solid #B8D8F0",borderRadius:12,padding:16,display:"flex",flexDirection:"column",gap:14}}>
     <div style={{fontSize:16,fontWeight:700,color:"#2E86AB"}}>Violation type 2: Autocorrelation (time-ordered data)</div>
     <div><Hd>What is happening</Hd><p style={pa}>When data is collected over time, nearby observations often have similar residuals.</p>
-    <p style={{...pa,marginTop:6}}><b>Example:</b> 28 days of emergency-department asthma visits, regressed on the day's pollution reading. The scatter shows a real positive slope. Pollution does drive visits. But people also tend to come on weekends, when they aren't at work or school. Day-of-week isn't in the model, so the weekend bump spills into the residuals: weekend pairs of larger-than-expected residuals, then weekday runs of five smaller-than-expected ones. The slope on pollution stays roughly correct, but the standard-error formula treats every day as fresh information when really the data acts like clusters in time. The 28 rows are closer to about 10 effective independent observations.</p></div>
+    <p style={{...pa,marginTop:6}}><b>Example:</b> 28 days of emergency-department asthma visits regressed on daily pollution. The slope is real, but visits also rise on weekends, and day-of-week isn't in the model. Weekends and weekdays show up as runs of similar residuals. The slope stays roughly right, but the standard errors are computed as if every day were independent, when the 28 rows behave more like ~10 effective observations.</p></div>
     <AutocorrDiags/>
     <div><Hd>What goes wrong</Hd><ul style={ul}><li><b>Standard errors tend to be too small.</b> The model overestimates how much independent information the data contain.</li><li><b>Confidence intervals are typically too narrow</b> and <b>p-values typically too small.</b></li></ul></div>
     <div><Hd>How to assess</Hd><FixList items={[
@@ -1271,7 +1299,7 @@ multicollinearity:()=><div style={{display:"flex",flexDirection:"column",gap:14}
     <li><b>Perfect multicollinearity:</b> one predictor is an exact linear function of another (e.g., temperature in Celsius and in Fahrenheit). The model cannot be estimated at all. Software will drop one variable or throw an error.</li>
     <li><b>Imperfect multicollinearity</b> (the practical concern): predictors are highly but not perfectly correlated; for example, <b>years of education</b> and <b>household income</b> predicting health outcomes. Software can fit the model, but the slopes for those predictors are hard to pin down separately.</li>
   </ul></div>
-  <div><Hd>What goes wrong</Hd><p style={pa}>With perfect multicollinearity, you cannot obtain unique coefficient estimates. With strong imperfect multicollinearity, individual slopes are hard to interpret (they can shift a lot with small changes in the data), and their standard errors are inflated so tests and intervals for those coefficients are unreliable.</p></div>
+  <div><Hd>What goes wrong</Hd><p style={pa}>With <b>perfect multicollinearity</b>, you <b>cannot obtain unique coefficient estimates</b>. With strong <b>imperfect multicollinearity</b>, individual slopes are <b>hard to interpret</b> (they can shift a lot with small changes in the data), and their <b>standard errors are inflated</b>, so tests and intervals for those coefficients are <b>unreliable</b>.</p></div>
   <div><Hd>How to assess</Hd><FixList items={[
     {text:"**VIF (variance inflation factor)** for each predictor. Values above 5 or 10 are commonly treated as a problem.",
       links:[{title:"Statology: Calculate VIF in R",short:"Statology",url:"https://www.statology.org/variance-inflation-factor-r/"},{title:"STHDA: Multicollinearity essentials and VIF in R",short:"STHDA",url:"https://www.sthda.com/english/articles/39-regression-model-diagnostics/160-multicollinearity-essentials-and-vif-in-r/"}]},
@@ -1282,7 +1310,10 @@ multicollinearity:()=><div style={{display:"flex",flexDirection:"column",gap:14}
 
 exogeneity:()=><div style={{display:"flex",flexDirection:"column",gap:14}}>
   <div style={{background:"#FFF8E1",border:"1.5px solid #E8D080",borderRadius:8,padding:"12px 16px",fontSize:14,color:"#6B5B1F",lineHeight:1.6}}>
-    <b>Exogeneity is different from the other assumptions.</b> They ask whether the model fits the data. Exogeneity asks whether the slope is <b>causal</b>: would changing X really change Y by the slope? Without it, the slope still describes and predicts; only the causal reading is wrong.
+    <ul style={{...ul,marginTop:0,marginBottom:0,color:"inherit"}}>
+      <li><b>Exogeneity is different</b> from the usual “does the model fit?” questions. It asks whether the slope is actually <b>causal</b>: would changing X really move Y by about that much?</li>
+      <li>If exogeneity fails, you can still describe and predict with the slope. You just shouldn’t treat it as a causal effect.</li>
+    </ul>
   </div>
   <div><Hd>Example</Hd><p style={pa}>Across summer weeks, weekly <b>ice cream sales</b> and weekly <b>shark attacks</b> rise and fall together. Of course ice cream does not summon sharks. <b>Air temperature</b> drives both.</p></div>
   <ExogeneityDiags/>
@@ -1366,8 +1397,8 @@ function DiagPanel({item,points,setPoints,model,custom,setCustom}){
     </div>
     <div style={{"--accent":item.color,background:C.card,border:`1.5px solid ${C.border}`,borderTop:`7px solid ${item.color}`,borderRadius:16,padding:22,boxShadow:C.shadow}}>
       <Hd>What it means</Hd><p style={pa}>{item.explanation}</p>
-      <div style={{marginTop:14}}><Hd>Reading the plots:</Hd>{item.readingPlotNames?.length?<p style={{...pa,marginTop:2,marginBottom:10,fontSize:14,fontWeight:400,lineHeight:1.45,color:item.color}}>{item.readingPlotNames.join(" · ")}</p>:null}<div style={{...pa,display:"flex",flexDirection:"column",gap:4,marginTop:0}}>{item.plotGuide.split("\n").map((line,i)=><div key={i}><MdBold text={line}/></div>)}</div></div>
-      <div style={{marginTop:14}}><Hd>What goes wrong when violated</Hd><p style={pa}><MdBold text={item.whatBreaks}/></p></div>
+      <div style={{marginTop:14}}><Hd>Reading the plots:</Hd>{item.readingPlotNames?.length?<p style={{...pa,marginTop:2,marginBottom:10,fontSize:14,fontWeight:400,lineHeight:1.45,color:item.color}}>{item.readingPlotNames[0]}{item.readingPlotNames[1]?<span style={{color:C.muted,fontStyle:"italic"}}> (also called {item.readingPlotNames[1]})</span>:null}</p>:null}<div style={{...pa,display:"flex",flexDirection:"column",gap:4,marginTop:0}}>{item.plotGuide.split("\n").map((line,i)=><div key={i}><MdBold text={line}/></div>)}</div></div>
+      <div style={{marginTop:14}}><Hd>Effect on your results</Hd><WhatBreaks data={item.whatBreaks}/></div>
       <div style={{marginTop:14}}><Hd>Formal test</Hd><FixList items={item.formalTestList}/></div>
       <div style={{marginTop:14}}><Hd>How to fix</Hd><FixList items={item.howToFixList}/></div>
       {item.key==="normality"&&<Quiz questions={MCQ[item.key]} color={item.color}/>}
@@ -1396,14 +1427,14 @@ export default function App(){
         <p style={{fontSize:14,color:C.sub,margin:"6px 0 0",lineHeight:1.5}}>Click any letter below to explore that assumption. Simple linear regression focus.</p>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(8, minmax(0, 1fr))",gap:5,marginBottom:20}}>
-        <div style={{gridColumn:"1 / 4"}}/>
-        <div style={{gridColumn:"4 / span 4",textAlign:"center",fontSize:11,fontWeight:700,color:C.teal,lineHeight:1.35,paddingBottom:2,paddingLeft:18,paddingRight:18}}>
+        <div style={{gridColumn:"1 / 3"}}/>
+        <div style={{gridColumn:"3 / span 5",textAlign:"center",fontSize:11,fontWeight:700,color:C.teal,lineHeight:1.35,paddingBottom:2,paddingLeft:18,paddingRight:18}}>
           Checkable with{" "}
           <code style={{background:C.tealBg,padding:"1px 6px",borderRadius:4,color:C.tealDark,fontFamily:"JetBrains Mono, monospace",fontSize:10,fontWeight:600}}>performance::check_model(model)</code>
         </div>
         <div style={{gridColumn:"8 / 9"}}/>
-        <div style={{gridColumn:"1 / 4"}}/>
-        <div style={{gridColumn:"4 / span 4",height:8,borderTop:`2px solid ${C.teal}`,borderLeft:`2px solid ${C.teal}`,borderRight:`2px solid ${C.teal}`,borderTopLeftRadius:8,borderTopRightRadius:8,alignSelf:"end",marginLeft:18,marginRight:18}}/>
+        <div style={{gridColumn:"1 / 3"}}/>
+        <div style={{gridColumn:"3 / span 5",height:8,borderTop:`2px solid ${C.teal}`,borderLeft:`2px solid ${C.teal}`,borderRight:`2px solid ${C.teal}`,borderTopLeftRadius:8,borderTopRightRadius:8,alignSelf:"end",marginLeft:18,marginRight:18}}/>
         <div style={{gridColumn:"8 / 9"}}/>
         {SUNSHINE.map(item=>{const isA=selected===item.key;const isD=item.type==="diagnostic";return <button key={item.key} onClick={()=>handleSel(item.key)} style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"10px 6px 6px",borderRadius:12,minWidth:0,border:`2.5px solid ${isA?item.color:C.border}`,background:isA?item.colorSoft:C.card,cursor:"pointer",transition:"all .2s",position:"relative",boxShadow:isA?`0 3px 16px ${item.color}25`:"0 1px 3px #0001",transform:isA?"translateY(-2px)":"none"}}>
           <span style={{fontWeight:800,fontSize:27,lineHeight:1,color:isA?item.color:"#A09A90"}}>{item.letter}</span>
