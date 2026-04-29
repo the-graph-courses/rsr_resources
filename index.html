@@ -21,6 +21,7 @@
     --white: #ffffff;
     --border: #e7e5e4;
     --sidebar-w: 280px;
+    --collapse-btn-size: 26px;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -41,6 +42,7 @@
   .shell {
     display: flex;
     height: calc(100vh - 4px);
+    position: relative;
   }
 
   /* ── Sidebar ── */
@@ -52,6 +54,56 @@
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    transition: width 0.2s ease, transform 0.25s ease;
+  }
+
+  .shell.collapsed .sidebar {
+    width: 0;
+    border-right: none;
+    overflow: hidden;
+  }
+
+  /* ── Desktop collapser button ── */
+  .collapse-btn {
+    position: absolute;
+    top: 18px;
+    left: var(--sidebar-w);
+    transform: translateX(-50%);
+    width: var(--collapse-btn-size);
+    height: var(--collapse-btn-size);
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--white);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--teal);
+    font-size: 14px;
+    line-height: 1;
+    z-index: 50;
+    transition: left 0.2s ease, background 0.15s, color 0.15s;
+    padding: 0;
+  }
+
+  .collapse-btn:hover {
+    background: var(--teal-bg);
+  }
+
+  .shell.collapsed .collapse-btn {
+    left: 0;
+    transform: translateX(0);
+  }
+
+  .collapse-btn svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.2s ease;
+  }
+
+  .shell.collapsed .collapse-btn svg {
+    transform: rotate(180deg);
   }
 
   .sidebar-header {
@@ -243,6 +295,10 @@
       display: flex;
     }
 
+    .collapse-btn {
+      display: none;
+    }
+
     .sidebar {
       position: fixed;
       top: 0;
@@ -282,7 +338,12 @@
 </button>
 <div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
 
-<div class="shell">
+<div class="shell" id="shell">
+  <button class="collapse-btn" id="collapseBtn" onclick="toggleCollapse()" title="Collapse sidebar" aria-label="Collapse sidebar">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <polyline points="10 3 5 8 10 13"></polyline>
+    </svg>
+  </button>
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-brand">The GRAPH Courses</div>
@@ -355,6 +416,27 @@ function closeSidebar() {
   document.getElementById('overlay').classList.remove('visible');
   document.getElementById('menuBtn').classList.remove('open');
 }
+
+function toggleCollapse() {
+  var shell = document.getElementById('shell');
+  var btn = document.getElementById('collapseBtn');
+  var collapsed = shell.classList.toggle('collapsed');
+  try { localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); } catch (e) {}
+  btn.setAttribute('title', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+  btn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+}
+
+(function() {
+  try {
+    if (localStorage.getItem('sidebarCollapsed') === '1') {
+      var shell = document.getElementById('shell');
+      var btn = document.getElementById('collapseBtn');
+      shell.classList.add('collapsed');
+      btn.setAttribute('title', 'Expand sidebar');
+      btn.setAttribute('aria-label', 'Expand sidebar');
+    }
+  } catch (e) {}
+})();
 
 (function() {
   var hash = location.hash.replace('#', '');
