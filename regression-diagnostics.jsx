@@ -78,11 +78,10 @@ const MCQ={
 sample:[
 {q:"Both panels show the same true relationship; a single new red point has been added to each. In which panel did the new point most reshape the fitted line?",v:"sample",opts:["The n = 8 panel","The n = 80 panel"],ans:0,explain:"With only 8 observations, one unusual point can noticeably rotate the fitted line. With 80 observations, the same kind of point has much less leverage over the whole estimate."},
 {q:"The two intervals shown are centred on the same slope estimate. Which sample size produced the wider confidence interval?",v:"sample_ci",opts:["n = 200","n = 15"],ans:1,explain:"The point estimate is the same, but the smaller sample has more uncertainty, so its confidence interval is wider."},
-{q:"A model is fit on n = 8 observations. The residuals-vs-fitted plot looks \u201Cclean\u201D \u2014 points scattered fairly evenly around zero, with no obvious curve, fan, or extreme outlier. What is the right takeaway?",v:"sample_residual_ok",opts:["With only 8 residuals, even a flat-looking plot is weak evidence \u2014 patterns that violate the assumptions can stay invisible at this sample size","The residuals show no systematic problem, so the modeling assumptions appear satisfied and the usual coefficient estimates and confidence intervals can be reported with the standard interpretation"],ans:0,explain:"Diagnostic plots are weak with very small samples because there are too few residuals to reveal patterns reliably. A flat-looking plot is not the same as evidence that the assumption holds."},
-{q:"Which statement about sample size is most accurate?",opts:["Never fit regression with fewer than 30 observations","Small samples can be fit, but estimates and diagnostics are fragile","Sample size only matters in multiple regression"],ans:1,explain:"There is no magic cutoff. The key teaching point is that small samples make slopes, standard errors, and diagnostic plots less stable."},
+{q:"Which statement about sample size is most accurate?",opts:["You should almost never fit regression with fewer than 30 observations","Small samples can be fit, but estimates and diagnostics are fragile","Sample size only matters in multiple regression"],ans:1,explain:"There is no magic cutoff. The key teaching point is that small samples make slopes, standard errors, and diagnostic plots less stable."},
 ],
 uncorrelated:[
-{q:"The picture groups dots into three clinics. What is the concern?",v:"cluster",opts:["Within-clinic residual variance exceeds between-clinic variance, biasing the slope estimate","Residuals from the same clinic look alike, so observations are not fully independent"],ans:1,explain:"Patients in the same clinic share staff, systems, and local conditions, so their residuals tend to look alike. The within-vs-between variance phrasing in option A sounds technical, but cluster correlation primarily inflates the standard errors \u2014 it does not by itself bias the slope."},
+{q:"The picture groups dots into three clinics. What is the concern?",v:"cluster",opts:["Within-clinic residual variance exceeds between-clinic variance, biasing the slope estimate","Residuals from the same clinic look alike, so observations are not fully independent"],ans:1,explain:"Patients in the same clinic share staff, systems, and local conditions, so their residuals tend to look alike. The within-vs-between variance phrasing in option A sounds technical, but cluster correlation primarily inflates the standard errors; it does not by itself bias the slope."},
 {q:"In the picture, residuals plotted in collection order show long runs of positive, then negative, then positive values. What does this suggest?",v:"time",opts:["Normal random variation","Autocorrelation"],ans:1,explain:"Random residuals should bounce around zero without long runs. A wave or run in collection order suggests nearby observations have related errors."},
 {q:"Which of these assumptions is hardest to diagnose from the four standard residual plots alone?",ev:"four_diag",opts:["Linearity","Normality","Independence"],ans:2,explain:"The standard diagnostic plots can look clean even when observations are not independent. Independence depends heavily on how the data were collected."},
 ],
@@ -93,20 +92,20 @@ multicollinearity:[
 ],
 shape:[
 {q:"The dots clearly trace a curve, yet a straight regression line cuts across them. What does that mean for a single reported slope?",v:"curve",opts:["The slope misrepresents the effect because it is not constant across x","Nothing; the slope is still valid"],ans:0,explain:"A straight line forces one average slope onto a relationship whose slope changes across x."},
-{q:"In this residuals-vs-fitted plot, what is the most reassuring feature for the linearity assumption?",v:"resid_good",opts:["The smoother stays close to zero across the full range of fitted values","The positive and negative residuals balance out, summing to roughly zero"],ans:0,explain:"A flat smoother near zero means the linear form is not leaving a systematic pattern. The fact that residuals sum to zero is automatic for OLS and tells you nothing about whether the relationship is linear \u2014 a clear U-shape can sum to zero just as easily."},
-{q:"A transformation can sometimes repair curvature. The explanation plot below shows the same data plotted as y vs x (curved) and as log(y) vs x (much straighter). In one or two sentences, explain why a log transform of y can turn a curved relationship into a roughly linear one.",ev:"log_fix",prose:"A log transformation compresses large values of y much more than small ones. When y grows multiplicatively with x \u2014 for example, exponential growth or a saturating decay \u2014 taking log(y) linearises the relationship, and a straight line becomes a much better summary. The same regression machinery applies after transforming, but the slope is now interpreted on the log scale (e.g. as a percentage change in y per unit of x)."},
+{q:"In this residuals-vs-fitted plot, what is the most reassuring feature for the linearity assumption?",v:"resid_good",opts:["The smoother stays close to zero across the full range of fitted values","The positive and negative residuals balance out, summing to roughly zero"],ans:0,explain:"A flat smoother near zero means the linear form is not leaving a systematic pattern. The fact that residuals sum to zero is automatic for OLS and tells you nothing about whether the relationship is linear; a clear U-shape can sum to zero just as easily."},
+{q:"A transformation can sometimes repair curvature. The explanation plot below shows the same data plotted as y vs x (curved) and as log(y) vs x (much straighter). In one or two sentences, explain why a log transform of y can turn a curved relationship into a roughly linear one.",ev:"log_fix",prose:"A log transformation compresses large values of y much more than small ones. When y grows multiplicatively with x, for example exponential growth or a saturating decay, taking log(y) linearises the relationship, and a straight line becomes a much better summary. The same regression machinery applies after transforming, but the slope is now interpreted on the log scale (e.g. as a percentage change in y per unit of x)."},
 ],
 homogeneity:[
-{q:"Three residual-vs-fitted patterns are shown. Which one most clearly indicates heteroscedasticity?",v:"het_pick",opts:["The middle panel","The left panel","The right panel"],ans:0,explain:"Heteroscedasticity means the spread of residuals changes with the fitted value. The middle panel shows residuals widening from left to right \u2014 the classic fan. The left panel has roughly constant spread (homoscedastic), and the right panel shows a U-shape, which is a linearity issue rather than a variance one."},
+{q:"Three residual-vs-fitted patterns are shown. Which one most clearly indicates heteroscedasticity?",v:"het_pick",opts:["The middle panel","The left panel","The right panel"],ans:0,explain:"Heteroscedasticity means the spread of residuals changes with the fitted value. The middle panel shows residuals widening from left to right, the classic fan. The left panel has roughly constant spread (homoscedastic), and the right panel shows a U-shape, which is a linearity issue rather than a variance one."},
 {q:"In this scale-location plot, what does the upward-sloping smoother indicate?",v:"scale_loc",opts:["Residual spread is increasing with fitted values","The residuals are becoming more normal"],ans:0,explain:"The y-axis is error magnitude (\u221A|standardised residual|). A rising smoother means typical residual size grows as fitted values increase, which is heteroscedasticity."},
 {q:"When residual variance is clearly non-constant, why are the usual confidence intervals unreliable?",opts:["The standard formula assumes constant variance, so the resulting interval can be too narrow or too wide","The slope estimate itself becomes biased, so any interval centred on it lands in the wrong place"],ans:0,explain:"OLS standard errors are derived under the assumption of constant variance, and heteroscedasticity distorts that calculation. Robust (HC) standard errors recompute it without that assumption. The slope itself can still be unbiased."},
 {q:"Why might income vs. medical spending look like a fan-shaped scatter?",v:"income_fan",opts:["Higher-income households have more discretionary spending, so individual choices add more variability at the top","Higher-income households spend more on average, so the regression line is steeper at the high end"],ans:0,explain:"The fan is about variance, not the mean. At higher incomes, spending depends more on personal choice, which inflates the spread. A steeper average slope at the top would be a linearity issue, not heteroscedasticity."},
 ],
 influential:[
 {q:"Three panels show different points marked in red. Which point is most influential on the fitted line?",v:"outlier_types",opts:["The off-trend point with high leverage (right panel)","The low-leverage outlier (left panel)","The high-leverage point on the line (middle panel)"],ans:0,explain:"Influence usually requires both ingredients: unusual x-position and a sizable residual. The right-panel point has both."},
-{q:"The red point in this leverage-vs-residual plot sits near the Cook's distance contour. Why is that point flagged as concerning?",v:"lev_resid",opts:["It combines an unusual X value with a sizeable residual, so removing it could meaningfully shift the fitted line","It has the largest leverage of any point, which alone is enough to make it concerning regardless of where it sits relative to the line"],ans:0,explain:"Influence is the combination of leverage and residual size. A point with high leverage but a tiny residual sits roughly on the line and barely moves the fit \u2014 leverage on its own is not enough. The Cook's-distance contour captures both ingredients together."},
+{q:"The red point in this leverage-vs-residual plot sits near the Cook's distance contour. Why is that point flagged as concerning?",v:"lev_resid",opts:["It combines an unusual X value with a sizeable residual, so removing it could meaningfully shift the fitted line","It has the largest leverage of any point, which alone is enough to make it concerning regardless of where it sits relative to the line"],ans:0,explain:"Influence is the combination of leverage and residual size. A point with high leverage but a tiny residual sits roughly on the line and barely moves the fit; leverage on its own is not enough. The Cook's-distance contour captures both ingredients together."},
 {q:"Cook's distance combines two ingredients. Which pair is correct?",v:"cooks_combine",opts:["Leverage (unusual X) and residual size (off the line)","The number of predictors and the residual standard error"],ans:0,explain:"A point with high leverage but a tiny residual may not matter much. A point with both high leverage and a large residual can strongly move the fit."},
-{q:"The figure shows the same data fitted with and without the red point. What is the danger this illustrates for the conclusions you would report?",v:"slope_shift",opts:["The reported relationship may rest heavily on a single observation rather than on the overall pattern","Removing flagged points always tightens the confidence interval and improves R\u00B2"],ans:0,explain:"The danger is not that the observation exists \u2014 it is that the scientific story can flip when one point is excluded. R\u00B2 and CI behaviour after removal depends on the data; it is not guaranteed in either direction."},
+{q:"The figure shows the same data fitted with and without the red point. What is the danger this illustrates for the conclusions you would report?",v:"slope_shift",opts:["The reported relationship may rest heavily on a single observation rather than on the overall pattern","Removing flagged points always tightens the confidence interval and improves R\u00B2"],ans:0,explain:"The danger is not that the observation exists; it is that the scientific story can flip when one point is excluded. R\u00B2 and CI behaviour after removal depends on the data; it is not guaranteed in either direction."},
 ],
 normality:[
 {q:"In this detrended Q-Q plot, the points trail away from the zero line at both ends, while the middle stays close to it. What is this most likely a sign of?",v:"qq_heavy_tails",opts:["Heavier tails than a normal distribution","Approximately normal residuals","A non-linear x-y relationship"],ans:0,explain:"In a detrended Q-Q plot, the diagonal of the regular Q-Q has been flattened to a horizontal zero line. Points pulling away at both ends are the signature of heavier-than-normal tails (often extreme outliers). The middle staying close to zero rules out a strong overall skew, and a Q-Q plot speaks to the residual distribution, not the x-y relationship itself."},
@@ -132,24 +131,32 @@ const SUNSHINE=[
   plotGuide:"**X-axis: fitted values.** The model's predicted y for each observation.\n**Y-axis: residuals.** Actual minus predicted y, the part of the data the line did not capture.\nThe dashed horizontal line at zero marks perfect predictions. The green smooth line traces the average residual at each fitted value. If it curves, the real relationship is not linear.",
   formalTest:"Ramsey RESET test",whatBreaks:"**Predictions can be systematically off** in some regions of x, and the **slope estimate is biased relative to the true effect**.",
   howToFix:"Try **transforming the predictor** (log, square root), **adding a polynomial term**, or using a **non-linear model**.",
+  assessLinks:[{title:"UW-Madison SSCC: Linearity diagnostics in R",url:"https://sscc.wisc.edu/sscc/pubs/RegDiag-R/linearity.html"},{title:"RMPH: Checking the linearity assumption (bookdown)",url:"https://bookdown.org/rwnahhas/RMPH/mlr-linearity.html"}],
+  fixLinks:[{title:"STHDA: Polynomial and spline regression in R",url:"https://www.sthda.com/english/articles/40-regression-analysis/162-nonlinear-regression-essentials-in-r-polynomial-and-spline-regression-models/"},{title:"Statology: Polynomial regression in R, step-by-step",url:"https://www.statology.org/polynomial-regression-r/"}],
   examples:{good:"lin_good",borderline:"lin_border",bad:"lin_bad"}},
 {key:"homogeneity",letter:"H",label:"Homogeneity of Variance",labelParen:"(Homoscedasticity)",type:"diagnostic",diagKey:"homogeneity",color:"#2F855A",colorSoft:"#D4EDDF",summary:"Does the spread of residuals stay constant?",
   explanation:"The variance of prediction errors should be roughly the same at every level of the predictor. When it fans out (heteroscedasticity), confidence intervals and p-values become unreliable.",
   plotGuide:"**X-axis: fitted values.** The model's predicted y for each observation.\n**Y-axis: \u221A|standardized residuals|.** Error magnitude on a z-score-like scale, with the square root compressing the tail so your eye can judge whether the smooth line is flat.\nA flat line means constant spread. An upward slope means variance is growing with the fitted value.",
   formalTest:"Breusch-Pagan test",whatBreaks:"**Standard errors are typically off** (often understated). **Confidence intervals and p-values become unreliable**. If the line is otherwise the right model and there are no omitted-variable problems, the coefficient can still be unbiased, but the usual inference around it cannot be trusted.",
   howToFix:"Use **robust standard errors** (HC3). Or **transform the outcome** (log often stabilizes variance). Or use **weighted least squares**.",
+  assessLinks:[{title:"Statology: Breusch-Pagan test in R",url:"https://www.statology.org/breusch-pagan-test-r/"},{title:"lmtest::bptest reference (CRAN)",url:"https://search.r-project.org/CRAN/refmans/lmtest/html/bptest.html"}],
+  fixLinks:[{title:"UVA Library: Understanding robust standard errors",url:"https://library.virginia.edu/data/articles/understanding-robust-standard-errors"},{title:"r-econometrics: HC robust errors with sandwich",url:"https://www.r-econometrics.com/methods/hcrobusterrors/"}],
   examples:{good:"hom_good",borderline:"hom_border",bad:"hom_bad"}},
 {key:"influential",letter:"I",label:"Influential Points",type:"diagnostic",diagKey:"influential",color:"#C53030",colorSoft:"#FED7D7",summary:"Is any single point pulling the regression line too much?",
   explanation:"An influential observation disproportionately determines where the line goes. It needs to be unusual in two ways: far from the other X values (high leverage) and far from where the line would go without it (large residual).",
   plotGuide:"**X-axis: leverage.** How unusual the observation's predictor value is.\n**Y-axis: standardized residual.** How far the observation sits from the fitted line, on a z-score-like scale.\nThe dashed curve is a Cook's distance contour at the F(0.5, p, n−p) quantile (matching R's performance::check_model). Points beyond the curve combine high leverage with a large residual, the two ingredients of an influential observation.",
   formalTest:"Cook's distance (typical threshold for simple regression: F(0.5, p, n−p) ≈ 0.7), DFFITS, DFBETAS",whatBreaks:"A single observation can **shift the slope substantially**. Your **conclusions may depend on one data point**.",
   howToFix:"**Investigate flagged points**. If they look like data errors, **correct or remove them**. If they are real, **consider reporting results with and without them**.",
+  assessLinks:[{title:"Statology: Identify influential points with Cook's distance",url:"https://www.statology.org/how-to-identify-influential-data-points-using-cooks-distance/"},{title:"olsrr vignette: Measures of influence in R",url:"https://cran.r-project.org/web/packages/olsrr/vignettes/influence_measures.html"}],
+  fixLinks:[{title:"UCLA OARC: Robust regression in R",url:"https://stats.oarc.ucla.edu/r/dae/robust-regression/"},{title:"r-statistics.co: Outlier detection and treatment in R",url:"https://r-statistics.co/Outlier-Treatment-With-R.html"}],
   examples:{good:"inf_good",borderline:"inf_border",bad:"inf_bad"}},
 {key:"normality",letter:"N",label:"Normality of Residuals",type:"diagnostic",diagKey:"normality",color:"#6B46C1",colorSoft:"#E9D8FD",summary:"Do prediction errors follow a bell curve?",
   explanation:"Normal residuals are mainly important for the usual confidence intervals and p-values, especially with small samples. The fitted line itself does not need perfectly normal residuals to be useful, but strong skew, heavy tails, or extreme outliers can make the uncertainty statements misleading.",
   plotGuide:"**X-axis: theoretical normal quantiles.** Where each residual would sit if the residuals were exactly normal.\n**Y-axis: deviation from the normal line.** How far the observed residual quantile lands from that theoretical position. The diagonal of a regular Q-Q plot has been 'flattened' to a horizontal zero line (this is the detrended Q-Q used by performance::check_model).\nA shaded confidence band gives a tolerance. As long as most points scatter inside the band, mild departures are not a concern. A systematic curve, an S-shape, or many points outside the band suggests the residual distribution is not normal.",
   formalTest:"Shapiro-Wilk test",whatBreaks:"**Confidence intervals and p-values can be unreliable**, especially in small samples. Coefficient estimates are **not biased simply because residuals deviate from normality**. The bigger risk is when 'non-normal' really means extreme outliers or a misspecified model, which can genuinely distort the fit.",
   howToFix:"Try **transforming the outcome** (log, square root). **Investigate extreme values**. With large samples, moderate non-normality is often less serious.",
+  assessLinks:[{title:"UW-Madison SSCC: Normality diagnostics in R",url:"https://sscc.wisc.edu/sscc/pubs/RegDiag-R/normality.html"},{title:"STHDA: Normality test in R (Shapiro-Wilk, Q-Q)",url:"https://www.sthda.com/english/wiki/normality-test-in-r"}],
+  fixLinks:[{title:"Statology: Box-Cox transformation in R",url:"https://www.statology.org/box-cox-transformation-in-r/"},{title:"Applied Statistics with R, Ch. 14: Transformations",url:"https://book.stat420.org/transformations.html"}],
   examples:{good:"norm_good",borderline:"norm_border",bad:"norm_bad"}},
 {key:"exogeneity",letter:"E",label:"Exogeneity",type:"info",color:"#8B6914",colorSoft:"#F0E4C8",summary:"Is the predictor independent of the error term?"},
 ];
@@ -190,6 +197,10 @@ function iconTypeForHeading(children){
 function Hd({children}){return <div style={{display:"flex",alignItems:"center",gap:8,fontSize:15,fontWeight:700,color:"var(--accent, #3D3832)",marginBottom:7,borderLeft:"3px solid currentColor",paddingLeft:10}}>
   <IconGlyph type={iconTypeForHeading(children)}/><span>{children}</span>
 </div>;}
+function RLinks({label="R examples",links}){if(!links||!links.length)return null;return <div style={{fontSize:12.5,color:"#57534e",marginTop:6,lineHeight:1.55}}>
+  <span style={{fontWeight:600,fontStyle:"italic",marginRight:6}}>{label}:</span>
+  {links.map((l,i)=><span key={i}>{i>0&&<span style={{color:"#a8a29e",margin:"0 6px"}}>·</span>}<a href={l.url} target="_blank" rel="noopener noreferrer" style={{color:"#006D77",textDecoration:"none",borderBottom:"1px dotted #83C5BE"}}>{l.title}</a></span>)}
+</div>;}
 
 /* ── MINI ICONS ──────────────────────────────────────────────────────── */
 function MiniIcon({type}){const s={width:38,height:22,display:"block",margin:"4px auto 0"};
@@ -224,7 +235,7 @@ function QuizVisual({type,color="#2B6CB0"}){
 
   // sample_ci: same point estimate, two CI widths (sample size hidden)
   if(type==="sample_ci")return <svg viewBox="0 0 300 100" style={s}>
-    <text x="150" y="14" textAnchor="middle" fontSize="11" fill={SB}>same slope estimate \u00B1 CI</text>
+    <text x="150" y="14" textAnchor="middle" fontSize="11" fill={SB}>same slope estimate ± CI</text>
     <line x1="50" x2="280" y1="50" y2="50" stroke={GR} strokeDasharray="3,3"/>
     <line x1="62" x2="240" y1="38" y2="38" stroke={color} strokeWidth="2.4"/>
     <line x1="62" x2="62" y1="33" y2="43" stroke={color} strokeWidth="2.4"/>
@@ -860,53 +871,52 @@ function Scatter({points,setPoints,model,hiIdx,onHi,onEdit}){
 
 /* ── AUTOCORRELATION DIAGRAMS ────────────────────────────────────────── */
 function AutocorrDiags(){
-  // 20 weeks of flu surveillance. Flu has a single peak around weeks 8..10 that happens
-  // to coincide with the warmest weeks. The naive scatter looks like a clean positive
-  // relationship. The time view reveals the peak is one short outbreak whose timing
-  // overlaps with the warm spell, so the apparent temperature effect is largely a
-  // co-trend rather than a causal driver.
+  // 20 days of support data. Tickets have one sustained launch incident around days
+  // 8..10 that happens to coincide with the largest ad spend. The naive scatter looks
+  // like a clean positive relationship. The time view reveals a wave of unmodelled
+  // incident dynamics, which would leave neighboring residuals with similar signs.
   const data=[
-    {w:1,t:8,f:26},{w:2,t:11,f:32},{w:3,t:9,f:28},{w:4,t:13,f:38},{w:5,t:16,f:48},
-    {w:6,t:19,f:58},{w:7,t:22,f:70},{w:8,t:24,f:78},{w:9,t:25,f:82},{w:10,t:23,f:74},
-    {w:11,t:20,f:62},{w:12,t:17,f:52},{w:13,t:14,f:42},{w:14,t:11,f:34},{w:15,t:9,f:28},
-    {w:16,t:7,f:24},{w:17,t:8,f:26},{w:18,t:10,f:30},{w:19,t:6,f:22},{w:20,t:9,f:28}
+    {d:1,a:8,y:26},{d:2,a:11,y:32},{d:3,a:9,y:28},{d:4,a:13,y:38},{d:5,a:16,y:48},
+    {d:6,a:19,y:58},{d:7,a:22,y:70},{d:8,a:24,y:78},{d:9,a:25,y:82},{d:10,a:23,y:74},
+    {d:11,a:20,y:62},{d:12,a:17,y:52},{d:13,a:14,y:42},{d:14,a:11,y:34},{d:15,a:9,y:28},
+    {d:16,a:7,y:24},{d:17,a:8,y:26},{d:18,a:10,y:30},{d:19,a:6,y:22},{d:20,a:9,y:28}
   ];
-  // Left panel: temperature 6..25 -> x 24..192; flu 22..82 -> y 96..18
-  const tx=t=>24+((t-6)/19)*168;
-  const fy=f=>96-((f-22)/60)*78;
-  // Right panel: week 1..20 -> x 24..186; flu uses same fy mapping
-  const wx=w=>24+((w-1)/19)*162;
-  const tsPath=data.map((p,i)=>`${i?"L":"M"}${wx(p.w)},${fy(p.f)}`).join(" ");
+  // Left panel: ad spend 6..25 -> x 24..192; tickets 22..82 -> y 96..18
+  const ax=a=>24+((a-6)/19)*168;
+  const ty=y=>96-((y-22)/60)*78;
+  // Right panel: day 1..20 -> x 24..186; tickets use same ty mapping
+  const dx=d=>24+((d-1)/19)*162;
+  const tsPath=data.map((p,i)=>`${i?"L":"M"}${dx(p.d)},${ty(p.y)}`).join(" ");
   return <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,margin:"12px 0"}}>
     <div style={{background:C.bg,borderRadius:10,padding:12,border:`1.5px solid ${C.border}`}}>
-      <div style={{fontSize:12,fontWeight:700,color:"#2E86AB",marginBottom:6}}>Flu cases vs. temperature (looks fine)</div>
+      <div style={{fontSize:12,fontWeight:700,color:"#2E86AB",marginBottom:6}}>Support tickets vs. ad spend (looks fine)</div>
       <svg viewBox="0 0 200 120" style={{width:"100%",height:"auto"}}>
         <line x1="24" x2="24" y1="18" y2="98" stroke={C.border} strokeWidth=".8"/>
         <line x1="24" x2="194" y1="98" y2="98" stroke={C.border} strokeWidth=".8"/>
-        <line x1={tx(6)} y1={fy(22)} x2={tx(25)} y2={fy(82)} stroke="#2E86AB" strokeWidth="1.6" opacity=".4"/>
-        {data.map(p=><g key={p.w}>
-          <circle cx={tx(p.t)} cy={fy(p.f)} r="6" fill="#fff" stroke="#2E86AB" strokeWidth="1.4"/>
-          <text x={tx(p.t)} y={fy(p.f)+2.7} textAnchor="middle" fontSize="7.2" fill="#2E86AB" fontWeight="700">{p.w}</text>
+        <line x1={ax(6)} y1={ty(22)} x2={ax(25)} y2={ty(82)} stroke="#2E86AB" strokeWidth="1.6" opacity=".4"/>
+        {data.map(p=><g key={p.d}>
+          <circle cx={ax(p.a)} cy={ty(p.y)} r="6" fill="#fff" stroke="#2E86AB" strokeWidth="1.4"/>
+          <text x={ax(p.a)} y={ty(p.y)+2.7} textAnchor="middle" fontSize="7.2" fill="#2E86AB" fontWeight="700">{p.d}</text>
         </g>)}
-        <text x="112" y="115" textAnchor="middle" fontSize="10" fill={C.sub}>Temperature</text>
-        <text x="10" y="60" textAnchor="middle" fontSize="10" fill={C.sub} transform="rotate(-90,10,60)">Flu cases</text>
+        <text x="112" y="115" textAnchor="middle" fontSize="10" fill={C.sub}>Ad spend</text>
+        <text x="10" y="60" textAnchor="middle" fontSize="10" fill={C.sub} transform="rotate(-90,10,60)">Tickets</text>
       </svg>
-      <div style={{fontSize:11,color:C.sub,lineHeight:1.5,marginTop:4}}>Warmer weeks have more flu cases, with a clean positive slope. Each circle is a single week, labelled by week number.</div>
+      <div style={{fontSize:11,color:C.sub,lineHeight:1.5,marginTop:4}}>Higher-spend days have more tickets, with a clean positive slope. Each circle is a single day, labelled by day number.</div>
     </div>
     <div style={{background:"#FFF5F5",borderRadius:10,padding:12,border:"1.5px solid #FED7D7"}}>
-      <div style={{fontSize:12,fontWeight:700,color:"#C53030",marginBottom:6}}>Same flu cases, plotted by week</div>
+      <div style={{fontSize:12,fontWeight:700,color:"#C53030",marginBottom:6}}>Same tickets, plotted by day</div>
       <svg viewBox="0 0 200 120" style={{width:"100%",height:"auto"}}>
         <line x1="18" x2="18" y1="18" y2="98" stroke={C.border} strokeWidth=".8"/>
         <line x1="18" x2="192" y1="98" y2="98" stroke={C.border} strokeWidth=".8"/>
         <path d={tsPath} fill="none" stroke="#C53030" strokeWidth="1.2" opacity=".55"/>
-        {data.map(p=><g key={p.w}>
-          <circle cx={wx(p.w)} cy={fy(p.f)} r="5.4" fill="#fff" stroke="#C53030" strokeWidth="1.4"/>
-          <text x={wx(p.w)} y={fy(p.f)+2.5} textAnchor="middle" fontSize="6.8" fill="#C53030" fontWeight="700">{p.w}</text>
+        {data.map(p=><g key={p.d}>
+          <circle cx={dx(p.d)} cy={ty(p.y)} r="5.4" fill="#fff" stroke="#C53030" strokeWidth="1.4"/>
+          <text x={dx(p.d)} y={ty(p.y)+2.5} textAnchor="middle" fontSize="6.8" fill="#C53030" fontWeight="700">{p.d}</text>
         </g>)}
-        <text x="105" y="115" textAnchor="middle" fontSize="10" fill={C.sub}>Week number</text>
-        <text x="8" y="60" textAnchor="middle" fontSize="10" fill={C.sub} transform="rotate(-90,8,60)">Flu cases</text>
+        <text x="105" y="115" textAnchor="middle" fontSize="10" fill={C.sub}>Day number</text>
+        <text x="8" y="60" textAnchor="middle" fontSize="10" fill={C.sub} transform="rotate(-90,8,60)">Tickets</text>
       </svg>
-      <div style={{fontSize:11,color:"#C53030",lineHeight:1.5,marginTop:4,fontWeight:600}}>The whole positive relationship comes from a single outbreak peak around weeks 8 to 10. That peak happens to overlap with the warmest weeks, so the regression treats warmth as the driver. Adjacent weeks share unmodelled outbreak dynamics, so the observations are not independent. The same week labels appear in both panels for tracking.</div>
+      <div style={{fontSize:11,color:"#C53030",lineHeight:1.5,marginTop:4,fontWeight:600}}>The positive relationship is driven by a sustained launch incident around days 8 to 10. That incident overlaps with the highest ad spend, so the regression treats spending as the driver. Adjacent days share unmodelled incident dynamics, so the residuals would form runs instead of independent noise. The same day labels appear in both panels for tracking.</div>
     </div>
   </div>;
 }
@@ -1023,22 +1033,30 @@ uncorrelated:()=><div style={{display:"flex",flexDirection:"column",gap:18}}>
 
   <div style={{background:"#F5F0FF",border:"1.5px solid #D0C0E8",borderRadius:12,padding:16,display:"flex",flexDirection:"column",gap:14}}>
     <div style={{fontSize:16,fontWeight:700,color:"#6B46C1"}}>Violation type 1: Clustered data</div>
-    <div><Hd>What is happening</Hd><p style={pa}>Observations within the same group (same hospital, same school, same neighborhood) tend to be more alike than observations from other groups. The errors within a cluster are correlated.</p>
-    <p style={{...pa,marginTop:6}}><b>Example:</b> you regress patient satisfaction on minutes spent with the provider, with patients drawn from 10 clinics. Patients at the same clinic share the same staff, scheduling system, and crowding level. Their residuals will be correlated.</p></div>
+    <div><Hd>What is happening</Hd><p style={pa}>Observations in the same group (hospital, school, neighborhood) tend to resemble each other. Their errors are correlated.</p>
+    <p style={{...pa,marginTop:6}}><b>Example:</b> you regress patient satisfaction on minutes with doctor, using patients from 10 clinics. Same-clinic patients share staff, scheduling, and crowding, so their residuals will be correlated.</p></div>
     <ClusteredDiags/>
-    <div><Hd>How to assess</Hd><ul style={ul}><li><b>Think about data collection.</b> Are observations grouped by site, school, provider, family?</li><li>Compute the <b>intraclass correlation coefficient (ICC)</b> to measure how much variance is between vs. within clusters.</li></ul></div>
+    <div><Hd>How to assess</Hd><ul style={ul}><li><b>Think about data collection.</b> Are observations grouped by site, school, provider, family?</li><li>Compute the <b>intraclass correlation coefficient (ICC)</b> to measure how much variance is between vs. within clusters.</li></ul>
+      <RLinks links={[{title:"performance::icc — ICC for mixed models",url:"https://easystats.github.io/performance/reference/icc.html"},{title:"R-bloggers: ICC in R quick guide",url:"https://www.r-bloggers.com/2021/06/intraclass-correlation-coefficient-in-r-quick-guide/"}]}/>
+    </div>
     <div><Hd>What goes wrong</Hd><p style={pa}>Standard errors tend to be too small and p-values too optimistic. The effective sample size is smaller than it looks.</p></div>
-    <div><Hd>How to fix</Hd><ul style={ul}><li>Use <b>multilevel/mixed-effects models</b> that account for grouping.</li><li>Use <b>cluster-robust standard errors</b> as a simpler option.</li><li>At minimum, <b>acknowledge</b> the clustering as a limitation.</li></ul></div>
+    <div><Hd>How to fix</Hd><ul style={ul}><li>Use <b>multilevel/mixed-effects models</b> that account for grouping.</li><li>Use <b>cluster-robust standard errors</b> as a simpler option.</li><li>At minimum, <b>acknowledge</b> the clustering as a limitation.</li></ul>
+      <RLinks links={[{title:"Mixed Models with R (Michael Clark)",url:"https://m-clark.github.io/mixed-models-with-R/"},{title:"Miratrix: MLM and cluster-robust SE",url:"https://lmiratrix.github.io/MLM/robust_mlm.html"}]}/>
+    </div>
   </div>
 
   <div style={{background:"#F0F8FF",border:"1.5px solid #B8D8F0",borderRadius:12,padding:16,display:"flex",flexDirection:"column",gap:14}}>
     <div style={{fontSize:16,fontWeight:700,color:"#2E86AB"}}>Violation type 2: Autocorrelation (time-ordered data)</div>
     <div><Hd>What is happening</Hd><p style={pa}>When data is collected over time, nearby observations often have similar residuals. Errors form runs or waves instead of bouncing randomly.</p>
-    <p style={{...pa,marginTop:6}}><b>Example:</b> you regress weekly flu cases on temperature. The scatter shows a clean positive slope, suggesting warmer weeks bring more flu. Plotting flu over time tells a different story: a single outbreak happened to peak during the warmest weeks. The naive regression reads that coincidence as a temperature effect.</p></div>
+    <p style={{...pa,marginTop:6}}><b>Example:</b> you regress daily support tickets on ad spend. The scatter shows a clean positive slope, suggesting higher ad spend brings more tickets. Plotting tickets over time tells a different story: a sustained launch incident happened to peak during the highest-spend days. The naive regression reads that coincidence as an ad-spend effect, and the unmodelled incident leaves nearby days with related errors.</p></div>
     <AutocorrDiags/>
-    <div><Hd>How to assess</Hd><ul style={ul}><li><b>Plot residuals in collection order</b> (by time, by sequence). Look for runs or waves.</li><li><b>Durbin-Watson test</b> checks for first-order autocorrelation.</li></ul></div>
+    <div><Hd>How to assess</Hd><ul style={ul}><li><b>Plot residuals in collection order</b> (by time, by sequence). Look for runs or waves.</li><li><b>Durbin-Watson test</b> checks for first-order autocorrelation.</li></ul>
+      <RLinks links={[{title:"Statology: Durbin-Watson test in R",url:"https://www.statology.org/durbin-watson-test-r/"},{title:"lmtest::dwtest reference",url:"https://rdrr.io/cran/lmtest/man/dwtest.html"}]}/>
+    </div>
     <div><Hd>What goes wrong</Hd><ul style={ul}><li><b>Standard errors tend to be too small.</b> The model overestimates how much independent information the data contain.</li><li><b>Confidence intervals are typically too narrow</b> and <b>p-values typically too small.</b></li></ul></div>
-    <div><Hd>How to fix</Hd><ul style={ul}><li>Use a <b>time-series model</b> (e.g., ARIMA, GLS with autocorrelated errors).</li><li>Add <b>lagged variables</b> as predictors.</li><li>Use <b>Newey-West standard errors</b>.</li></ul></div>
+    <div><Hd>How to fix</Hd><ul style={ul}><li>Use a <b>time-series model</b> (e.g., ARIMA, GLS with autocorrelated errors).</li><li>Add <b>lagged variables</b> as predictors.</li><li>Use <b>Newey-West standard errors</b>.</li></ul>
+      <RLinks links={[{title:"Econometrics with R: HAC standard errors",url:"https://www.econometrics-with-r.org/15.4-hac-standard-errors.html"},{title:"sandwich package vignette (CRAN)",url:"https://cran.r-project.org/web/packages/sandwich/vignettes/sandwich.pdf"}]}/>
+    </div>
   </div>
 </div>,
 
@@ -1051,7 +1069,9 @@ multicollinearity:()=><div style={{display:"flex",flexDirection:"column",gap:14}
     <li><b>Perfect multicollinearity:</b> one predictor is an exact linear function of another (e.g., temperature in Celsius and in Fahrenheit). The model cannot be estimated at all. Software will drop one variable or throw an error.</li>
     <li><b>Imperfect multicollinearity</b> (the practical concern): predictors are highly but not perfectly correlated. For instance, <b>years of education</b> and <b>household income</b> in a model predicting health outcomes. The model can be estimated, but coefficients become unstable and standard errors inflate.</li>
   </ul></div>
-  <div><Hd>How to assess</Hd><ul style={ul}><li><b>VIF (Variance Inflation Factor)</b>. Above 5 or 10 is commonly treated as a problem.</li><li><b>Correlation matrix</b> of predictors.</li></ul></div>
+  <div><Hd>How to assess</Hd><ul style={ul}><li><b>VIF (Variance Inflation Factor)</b>. Above 5 or 10 is commonly treated as a problem.</li><li><b>Correlation matrix</b> of predictors.</li></ul>
+    <RLinks links={[{title:"STHDA: Multicollinearity essentials and VIF in R",url:"https://www.sthda.com/english/articles/39-regression-model-diagnostics/160-multicollinearity-essentials-and-vif-in-r/"},{title:"Statology: Calculate VIF in R",url:"https://www.statology.org/variance-inflation-factor-r/"}]}/>
+  </div>
 </div>,
 
 exogeneity:()=><div style={{display:"flex",flexDirection:"column",gap:14}}>
@@ -1064,7 +1084,9 @@ exogeneity:()=><div style={{display:"flex",flexDirection:"column",gap:14}}>
     <li><b>Add control variables</b> in multiple regression.</li>
     <li><b>Instrumental variables</b> in some observational settings.</li>
     <li>At minimum: ask whether a third variable drives both X and Y.</li>
-  </ul></div>
+  </ul>
+    <RLinks links={[{title:"Econometrics with R, Ch. 12: IV regression",url:"https://www.econometrics-with-r.org/12-ivr.html"},{title:"Andrew Heiss: Instrumental variables in R",url:"https://evalf20.classes.andrewheiss.com/example/iv/"}]}/>
+  </div>
   <p style={{...pa,marginTop:4,color:C.muted,fontStyle:"italic"}}>We will return to this with multiple regression and causal inference.</p>
 </div>,
 };
@@ -1096,9 +1118,9 @@ function DiagPanel({item,points,setPoints,model,custom,setCustom}){
       <div style={{fontSize:14,color:C.sub,marginBottom:14,fontStyle:"italic"}}>{item.summary}</div>
       <Hd>What it means</Hd><p style={pa}>{item.explanation}</p>
       <div style={{marginTop:14}}><Hd>Reading the plot</Hd><div style={{...pa,color:C.sub,display:"flex",flexDirection:"column",gap:4}}>{item.plotGuide.split("\n").map((line,i)=><div key={i}><MdBold text={line}/></div>)}</div></div>
-      <div style={{marginTop:14}}><Hd>Formal test</Hd><p style={pa}>{item.formalTest}.</p></div>
+      <div style={{marginTop:14}}><Hd>Formal test</Hd><p style={pa}>{item.formalTest}.</p><RLinks links={item.assessLinks}/></div>
       <div style={{marginTop:14}}><Hd>What goes wrong when violated</Hd><p style={pa}><MdBold text={item.whatBreaks}/></p></div>
-      <div style={{marginTop:14}}><Hd>How to fix</Hd><p style={pa}><MdBold text={item.howToFix}/></p></div>
+      <div style={{marginTop:14}}><Hd>How to fix</Hd><p style={pa}><MdBold text={item.howToFix}/></p><RLinks links={item.fixLinks}/></div>
       <Quiz questions={MCQ[item.key]} color={item.color}/>
       <div style={{marginTop:18,borderTop:`1px solid ${C.border}`,paddingTop:14}}>
         <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:.8,marginBottom:4}}>
