@@ -1,0 +1,630 @@
+---
+title: "Confounding catalog"
+subtitle: "Pooled vs adjusted OLS: sex/gender as confounder (NHANES, FAMuSS, AIS, OpenIntro NHANES 500)"
+author: "Research Statistics with R — Health Sciences"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    theme: cosmo
+    fig-cap-location: top
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(broom)
+library(patchwork)
+library(DAAG)
+library(performance)
+library(oibiostat)
+
+theme_set(
+  theme_minimal(base_size = 13) +
+    theme(
+      plot.title    = element_text(face = "bold"),
+      plot.subtitle = element_text(colour = "grey35", size = rel(0.92)),
+      legend.position = "top"
+    )
+)
+
+pal_fm <- c(female = "#9b2226", male = "#005f73")
+
+parallel_pred_grid <- function(d, x_col, sex_col, mod_adj) {
+  xs <- d[[x_col]]
+  sex_lev <- levels(d[[sex_col]])
+  xseq <- seq(min(xs, na.rm = TRUE), max(xs, na.rm = TRUE), length.out = 80)
+  grid <- expand.grid(v_x = xseq, v_s = sex_lev, stringsAsFactors = FALSE)
+  names(grid) <- c(x_col, sex_col)
+  grid[[sex_col]] <- factor(grid[[sex_col]], levels = sex_lev)
+  grid$fit <- predict(mod_adj, newdata = grid)
+  grid
+}
+
+# Left: pooled lm(Y ~ X). Right: same scatter coloured by sex + parallel lines from lm(Y ~ X + sex).
+plot_naive_vs_adjusted <- function(d, x_col, y_col, sex_col, mod_adj, xlab, ylab) {
+  grid <- parallel_pred_grid(d, x_col, sex_col, mod_adj)
+  p_pool <- ggplot(d, aes(.data[[x_col]], .data[[y_col]])) +
+    geom_point(alpha = 0.35, colour = "grey35", size = 2) +
+    geom_smooth(method = "lm", se = FALSE, colour = "#1b4332", linewidth = 1) +
+    labs(
+      title = "Bivariate (pooled)",
+      subtitle = "lm(Y ~ X) — ignores sex",
+      x = xlab, y = ylab
+    )
+  p_adj <- ggplot(d, aes(.data[[x_col]], .data[[y_col]], colour = .data[[sex_col]])) +
+    geom_point(alpha = 0.42, size = 2) +
+    geom_line(
+      data = grid,
+      mapping = aes(
+        x = .data[[x_col]], y = .data[["fit"]], colour = .data[[sex_col]]
+      ),
+      linewidth = 1,
+      inherit.aes = FALSE
+    ) +
+    scale_colour_manual(values = pal_fm, name = NULL) +
+    labs(
+      title = "Multivariate (additive)",
+      subtitle = "lm(Y ~ X + sex) — parallel slopes; intercept shift by sex",
+      x = xlab, y = ylab
+    )
+  p_pool + p_adj + plot_layout(widths = c(1, 1))
+}
+```
+
+## Overview
+
+**Confounding catalog:** these examples all share the same **geometry**: **sex** is associated with the **predictor** and with the **outcome**, so a **pooled** `Y ~ X` slope can **mislead**. The figures **contrast** that pooled fit with **`lm(Y ~ X + sex)` — parallel lines** (one shared slope for `X`, sex-specific intercepts), which is what standard **additive** multiple regression fits when there is **no interaction**. What changes by dataset is whether the coefficient on `X` **attenuates** or **reverses sign** once `sex` is included.
+
+| Example | Data source | Pooled vs adjusted (plain language) |
+|---------|-------------|-------------------------------------|
+| **Pulse ~ height** | `oibiostat::nhanes.samp.adult` ([NHANES](https://www.cdc.gov/nchs/nhanes/) subsample) | Marginal **negative** pulse–height trend driven by sex; **+ sex** leaves height **not** predictive |
+| **Strength gain ~ height** | `19_famuss.csv` (FAMuSS) | Strong pooled slope **dulls** after **+ sex** (near **non-significance**) |
+| **Ferritin ~ weight** | `DAAG::ais` | Strong pooled slope **attenuates** after **+ sex** |
+| **% body fat ~ height** | `DAAG::ais` | Pooled slope **negative**; **+ sex** gives **positive** height slope (flip) |
+| **Testosterone ~ weight** | `oibiostat::nhanes.samp.adult.500` ([OpenIntro page](https://www.openintro.org/data/index.php?data=nhanes.samp.adult.500)) | **Sign flip:** pooled **positive**, `+` sex **negative** (matches common `lm(Testosterone ~ Weight + Gender)` teaching example) |
+| **Testosterone ~ BMI** | same `nhanes.samp.adult.500` object | **Contrast:** pooled slope on BMI already **negative** here; `+` sex refines it and typical inference **strengthens** (compare to the weight-driven flip above) |
+
+::: {.callout-note}
+## Additive vs interaction
+**Parallel lines** match **`lm(Y ~ X + sex)`** (no `X:sex` term). If you fit **`lm(Y ~ X * sex)`**, slopes for `X` are allowed to **differ** by sex—then within-sex OLS **can** match the fitted lines, but the **multivariate** story is no longer “one slope for everyone holding sex constant.” This catalog sticks to the **additive** (parallel) case so the plots line up with the coefficient on `X` from standard introductory multiple regression.
+:::
+
+::: {.callout-note}
+## Smaller NHANES extract (`n` ≈ 130)
+The pulse–height section uses **`data(nhanes.samp.adult, package = "oibiostat")`** (same rows as `oibiostat`’s adult NHANES extract; a **`snake_case`** mirror lives at `datasets_staging/cleaned/23_nhanes_adult.csv` if you prefer CSV). In national, survey-weighted NHANES, **within-sex** pulse–height slopes need not be literally zero, but the **composition story** (shorter mean vs higher pulse among women) is stable. Treat the plots here as **methods / intuition**, not publishable population inference.
+:::
+
+## 1. Resting pulse vs height (attenuation toward null)
+
+**Mechanism:** On average, **women** tend to have **higher** resting pulse and **shorter** stature than men. In a **pooled** sample you can see **pulse decreasing with height** (taller people skew male; men skew lower pulse). **Within sex**, that trend is typically **weak** — the pooled line was largely a **composition** artifact.
+
+```{r}
+#| label: pulse-load
+data(nhanes.samp.adult, package = "oibiostat")
+nhx <- nhanes.samp.adult |>
+  filter(!is.na(Pulse), !is.na(Height), !is.na(Gender)) |>
+  transmute(
+    pulse = Pulse,
+    height_cm = Height,
+    sex = factor(Gender, levels = c("female", "male"))
+  )
+```
+
+Complete cases: *N* = **`r nrow(nhx)`**.
+
+```{r}
+#| label: pulse-describe
+nhx |>
+  group_by(sex) |>
+  summarise(
+    n = n(),
+    mean_pulse = mean(pulse),
+    sd_pulse = sd(pulse),
+    mean_height_cm = mean(height_cm),
+    sd_height = sd(height_cm),
+    .groups = "drop"
+  ) |>
+  knitr::kable(digits = 2, caption = "Pulse and height by sex (NHANES adult subsample)")
+```
+
+```{r}
+#| label: pulse-models
+mod_pulse_bi  <- lm(pulse ~ height_cm, data = nhx)
+mod_pulse_adj <- lm(pulse ~ height_cm + sex, data = nhx)
+
+bind_rows(
+  tidy(mod_pulse_bi)  |> mutate(model = "Bivariate"),
+  tidy(mod_pulse_adj) |> mutate(model = "+ sex")
+) |>
+  filter(term %in% c("(Intercept)", "height_cm", "sexmale")) |>
+  select(model, term, estimate, std.error, statistic, p.value) |>
+  knitr::kable(digits = 3, caption = "Pulse ~ height (+ sex)")
+```
+
+```{r}
+#| label: fig-pulse
+#| fig-height: 5
+#| fig-cap: "Left: pooled lm(pulse ~ height). Right: parallel predictions from lm(pulse ~ height + sex)."
+plot_naive_vs_adjusted(
+  nhx, "height_cm", "pulse", "sex", mod_pulse_adj,
+  "Height (cm)", "Resting pulse (bpm)"
+)
+```
+
+### Diagnostics — pulse ~ height (bivariate, ignores sex)
+
+```{r}
+#| label: fig-pulse-check-bi
+#| fig-width: 14
+#| fig-height: 11
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-cap: "`performance::check_model` for `lm(pulse ~ height_cm)`."
+plot(performance::check_model(mod_pulse_bi, base_size = 11, size_title = 12))
+```
+
+### Diagnostics — pulse ~ height + sex
+
+```{r}
+#| label: fig-pulse-check-adj
+#| fig-width: 14
+#| fig-height: 11
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-cap: "`performance::check_model` for `lm(pulse ~ height_cm + sex)`."
+plot(performance::check_model(mod_pulse_adj, base_size = 11, size_title = 12))
+```
+
+## 2. Strength-training response vs height — FAMuSS (attenuation)
+
+```{r}
+#| label: famuss-load
+fam <- read_csv("datasets_staging/cleaned/19_famuss.csv", show_col_types = FALSE) |>
+  filter(!is.na(ndrm_change_pct), !is.na(height_in), !is.na(sex)) |>
+  mutate(sex = factor(sex, levels = c("female", "male")))
+mod_fam_bi  <- lm(ndrm_change_pct ~ height_in, data = fam)
+mod_fam_adj <- lm(ndrm_change_pct ~ height_in + sex, data = fam)
+```
+
+*FAMuSS —* *N* = **`r nrow(fam)`**.
+
+```{r}
+#| label: famuss-table
+bind_rows(
+  tidy(mod_fam_bi)  |> mutate(model = "Bivariate"),
+  tidy(mod_fam_adj) |> mutate(model = "+ sex")
+) |>
+  filter(term %in% c("(Intercept)", "height_in", "sexmale")) |>
+  select(model, term, estimate, std.error, statistic, p.value) |>
+  knitr::kable(digits = 3, caption = "Non-dominant arm % strength change ~ height (+ sex)")
+```
+
+```{r}
+#| label: fig-famuss
+#| fig-height: 5
+#| fig-cap: "FAMuSS: pooled % change ~ height vs parallel fits from lm(ndrm_change_pct ~ height_in + sex)."
+plot_naive_vs_adjusted(
+  fam, "height_in", "ndrm_change_pct", "sex", mod_fam_adj,
+  "Height (inches)", "Non-dominant arm % strength change"
+)
+```
+
+### Diagnostics — % strength change ~ height (bivariate)
+
+```{r}
+#| label: fig-famuss-check-bi
+#| fig-width: 14
+#| fig-height: 11
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-cap: "`performance::check_model` for `lm(ndrm_change_pct ~ height_in)` (FAMuSS)."
+plot(performance::check_model(mod_fam_bi, base_size = 11, size_title = 12))
+```
+
+### Diagnostics — % strength change ~ height + sex
+
+```{r}
+#| label: fig-famuss-check-adj
+#| fig-width: 14
+#| fig-height: 11
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-cap: "`performance::check_model` for `lm(ndrm_change_pct ~ height_in + sex)`."
+plot(performance::check_model(mod_fam_adj, base_size = 11, size_title = 12))
+```
+
+## 3. Plasma ferritin vs body weight — AIS (attenuation)
+
+```{r}
+#| label: ais-ferr-load
+data(ais, package = "DAAG")
+ais_fer <- ais |>
+  filter(!is.na(ferr), !is.na(wt), !is.na(sex)) |>
+  mutate(sex = factor(sex, levels = c("f", "m"), labels = c("female", "male")))
+mod_fer_bi  <- lm(ferr ~ wt, data = ais_fer)
+mod_fer_adj <- lm(ferr ~ wt + sex, data = ais_fer)
+```
+
+*AIS athletes — ferritin / weight; N* = **`r nrow(ais_fer)`**.
+
+```{r}
+#| label: ais-ferr-table
+bind_rows(
+  tidy(mod_fer_bi)  |> mutate(model = "Bivariate"),
+  tidy(mod_fer_adj) |> mutate(model = "+ sex")
+) |>
+  filter(term %in% c("(Intercept)", "wt", "sexmale")) |>
+  select(model, term, estimate, std.error, statistic, p.value) |>
+  knitr::kable(digits = 3, caption = "Ferritin ~ weight (+ sex), AIS")
+```
+
+```{r}
+#| label: fig-ais-ferr
+#| fig-height: 5
+#| fig-cap: "Pooled ferr ~ weight vs parallel predictions from lm(ferr ~ wt + sex)."
+plot_naive_vs_adjusted(
+  ais_fer, "wt", "ferr", "sex", mod_fer_adj,
+  "Weight (kg)", "Plasma ferritin (ng/dL)"
+)
+```
+
+### Diagnostics — ferritin ~ weight (bivariate)
+
+```{r}
+#| label: fig-ais-ferr-check-bi
+#| fig-width: 14
+#| fig-height: 11
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-cap: "`performance::check_model` for `lm(ferr ~ wt)` (AIS)."
+plot(performance::check_model(mod_fer_bi, base_size = 11, size_title = 12))
+```
+
+### Diagnostics — ferritin ~ weight + sex
+
+```{r}
+#| label: fig-ais-ferr-check-adj
+#| fig-width: 14
+#| fig-height: 11
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-cap: "`performance::check_model` for `lm(ferr ~ wt + sex)`."
+plot(performance::check_model(mod_fer_adj, base_size = 11, size_title = 12))
+```
+
+## 4. Percent body fat vs height — AIS (sign reversal)
+
+```{r}
+#| label: ais-bf-load
+ais_bf <- ais |>
+  filter(!is.na(pcBfat), !is.na(ht), !is.na(sex)) |>
+  mutate(sex = factor(sex, levels = c("f", "m"), labels = c("female", "male")))
+mod_bf_bi  <- lm(pcBfat ~ ht, data = ais_bf)
+mod_bf_adj <- lm(pcBfat ~ ht + sex, data = ais_bf)
+```
+
+*N* = **`r nrow(ais_bf)`** (same `DAAG::ais` cohort).
+
+```{r}
+#| label: ais-bf-table
+bind_rows(
+  tidy(mod_bf_bi)  |> mutate(model = "Bivariate"),
+  tidy(mod_bf_adj) |> mutate(model = "+ sex")
+) |>
+  filter(term %in% c("(Intercept)", "ht", "sexmale")) |>
+  select(model, term, estimate, std.error, statistic, p.value) |>
+  knitr::kable(digits = 4, caption = "% body fat ~ height (+ sex), AIS — note sign on `ht`")
+```
+
+```{r}
+#| label: fig-ais-bf
+#| fig-height: 5
+#| fig-cap: "Pooled pcBfat ~ height vs parallel lm(pcBfat ~ ht + sex) (common positive slope for height)."
+plot_naive_vs_adjusted(
+  ais_bf, "ht", "pcBfat", "sex", mod_bf_adj,
+  "Height (cm)", "Percent body fat (%)"
+)
+```
+
+### Diagnostics — % body fat ~ height (bivariate)
+
+```{r}
+#| label: fig-ais-bf-check-bi
+#| fig-width: 14
+#| fig-height: 11
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-cap: "`performance::check_model` for `lm(pcBfat ~ ht)` (AIS)."
+plot(performance::check_model(mod_bf_bi, base_size = 11, size_title = 12))
+```
+
+### Diagnostics — % body fat ~ height + sex
+
+```{r}
+#| label: fig-ais-bf-check-adj
+#| fig-width: 14
+#| fig-height: 11
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-cap: "`performance::check_model` for `lm(pcBfat ~ ht + sex)`."
+plot(performance::check_model(mod_bf_adj, base_size = 11, size_title = 12))
+```
+
+## 5. Testosterone vs body weight — OpenIntro `nhanes.samp.adult.500`
+
+The [**OpenIntro** `nhanes.samp.adult.500`](https://www.openintro.org/data/index.php?data=nhanes.samp.adult.500) dataset is a sample of **500 adults** from NHANES (same variable structure as `nhanes.samp`). Lab **Testosterone** is missing for many rows; the analysis uses everyone with **non-missing** `Testosterone`, `Weight`, and `Gender` (typically *N* ≈ **230**—much more than the 200-row `nhanes.samp` extract).
+
+Teaching code often runs:
+
+```r
+lm(Testosterone ~ Weight + Gender, data = d)
+```
+
+Here we use **`sex = factor(Gender, levels = c("female", "male"))`** and **`lm(Testosterone ~ Weight + sex)`** — the same additive model (female baseline), which matches **`Gender`** in R when levels are ordered **female** then **male**. Parallel-line plots use that fitted model.
+
+::: {.callout-note}
+## Textbook pattern (this extract)
+| Model | Slope on weight | *p* (typical) |
+|-------|-----------------|---------------|
+| `lm(Testosterone ~ Weight, …)` | **positive** | **≈ 5.7 × 10⁻⁵** |
+| `lm(Testosterone ~ Weight + Gender, …)` | **negative** | **≈ 0.013** |
+
+The **`oibiostat`** build of **`nhanes.samp.adult.500`** reproduces these **orders of magnitude** when you filter to complete `Testosterone` / `Weight` / `Gender`.
+:::
+
+```{r}
+#| label: nh-testosterone-load
+data(nhanes.samp.adult.500, package = "oibiostat")
+nh_500 <- nhanes.samp.adult.500 |>
+  filter(!is.na(Testosterone), !is.na(Weight), !is.na(Gender)) |>
+  mutate(
+    sex = factor(Gender, levels = c("female", "male")),
+    log_testosterone = log(Testosterone)
+  )
+nh_500_bmi <- nhanes.samp.adult.500 |>
+  filter(!is.na(Testosterone), !is.na(BMI), !is.na(Gender)) |>
+  mutate(
+    sex = factor(Gender, levels = c("female", "male")),
+    log_testosterone = log(Testosterone)
+  )
+```
+
+Complete cases: *N* = **`r nrow(nh_500)`** (`r sum(nh_500$sex == "female")` female, `r sum(nh_500$sex == "male")` male).
+
+```{r}
+#| label: nh-testosterone-models
+mod_T_bi  <- lm(Testosterone ~ Weight, data = nh_500)
+mod_T_adj <- lm(Testosterone ~ Weight + sex, data = nh_500)
+mod_log_bi  <- lm(log_testosterone ~ Weight, data = nh_500)
+mod_log_adj <- lm(log_testosterone ~ Weight + sex, data = nh_500)
+
+t_T_weight <- bind_rows(
+  tidy(mod_T_bi)  |> mutate(model = "Bivariate (raw T)"),
+  tidy(mod_T_adj) |> mutate(model = "+ sex (raw T)")
+) |>
+  filter(term %in% c("(Intercept)", "Weight", "sexmale")) |>
+  select(model, term, estimate, std.error, statistic, p.value)
+
+t_log_weight <- bind_rows(
+  tidy(mod_log_bi)  |> mutate(model = "Bivariate (log T)"),
+  tidy(mod_log_adj) |> mutate(model = "+ sex (log T)")
+) |>
+  filter(term %in% c("(Intercept)", "Weight", "sexmale")) |>
+  select(model, term, estimate, std.error, statistic, p.value)
+
+knitr::kable(
+  t_T_weight,
+  digits = 4,
+  caption = "Testosterone (ng/dL) ~ Weight (kg): focus on row `Weight`"
+)
+
+knitr::kable(
+  t_log_weight,
+  digits = 5,
+  caption = "Same participants on log scale (parallel-lines geometry still matches `lm(log(T) ~ Weight + sex)`)"
+)
+```
+
+Coefficients above correspond to the two **figures** below (same **pooled vs parallel** layout for raw and log outcome).
+
+```{r}
+#| label: fig-nh-testosterone
+#| fig-height: 5
+#| fig-cap: "Raw testosterone (ng/dL): pooled lm(Testosterone ~ Weight) vs parallel lm(Testosterone ~ Weight + sex)."
+plot_naive_vs_adjusted(
+  nh_500, "Weight", "Testosterone", "sex", mod_T_adj,
+  "Weight (kg)", "Testosterone (ng/dL)"
+)
+```
+
+```{r}
+#| label: fig-nh-testosterone-log
+#| fig-height: 5
+#| fig-cap: "Log testosterone: pooled lm(log(Testosterone) ~ Weight) vs parallel lm(log(Testosterone) ~ Weight + sex)."
+plot_naive_vs_adjusted(
+  nh_500, "Weight", "log_testosterone", "sex", mod_log_adj,
+  "Weight (kg)", "log(Testosterone)"
+)
+```
+
+### Diagnostics — raw testosterone ~ weight (bivariate)
+
+```{r}
+#| label: fig-nh-testosterone-check-bi
+#| fig-width: 14
+#| fig-height: 11
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-cap: "`performance::check_model` for `lm(Testosterone ~ Weight)` (ng/dL)."
+plot(performance::check_model(mod_T_bi, base_size = 11, size_title = 12))
+```
+
+### Diagnostics — raw testosterone ~ weight + sex
+
+```{r}
+#| label: fig-nh-testosterone-check-adj
+#| fig-width: 14
+#| fig-height: 11
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-cap: "`performance::check_model` for `lm(Testosterone ~ Weight + sex)`."
+plot(performance::check_model(mod_T_adj, base_size = 11, size_title = 12))
+```
+
+### Diagnostics — log(testosterone) ~ weight (bivariate)
+
+```{r}
+#| label: fig-nh-testosterone-log-check-bi
+#| fig-width: 14
+#| fig-height: 11
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-cap: "`performance::check_model` for `lm(log_testosterone ~ Weight)`."
+plot(performance::check_model(mod_log_bi, base_size = 11, size_title = 12))
+```
+
+### Diagnostics — log(testosterone) ~ weight + sex
+
+```{r}
+#| label: fig-nh-testosterone-log-check-adj
+#| fig-width: 14
+#| fig-height: 11
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-cap: "`performance::check_model` for `lm(log_testosterone ~ Weight + sex)`."
+plot(performance::check_model(mod_log_adj, base_size = 11, size_title = 12))
+```
+
+## 6. Testosterone vs BMI — same OpenIntro adults
+
+The same **`nhanes.samp.adult.500`** object includes **BMI** (`kg/m²`). Restricting to complete **`Testosterone`**, **`BMI`**, and **`Gender`** reproduces the same *N* as the weight-based filters in this file (**230** here), but the **geometry of the pooled line** can differ: adiposity adjusted for height is not the same predictor as weight alone.
+
+Complete cases (BMI analysis): *N* = **`r nrow(nh_500_bmi)`** (`nh_500` / `nh_500_bmi` are both prepared in the **`nh-testosterone-load`** chunk above).
+
+```{r}
+#| label: nh-testosterone-bmi-models
+mod_T_bmi_bi  <- lm(Testosterone ~ BMI, data = nh_500_bmi)
+mod_T_bmi_adj <- lm(Testosterone ~ BMI + sex, data = nh_500_bmi)
+mod_log_bmi_bi  <- lm(log_testosterone ~ BMI, data = nh_500_bmi)
+mod_log_bmi_adj <- lm(log_testosterone ~ BMI + sex, data = nh_500_bmi)
+
+t_T_bmi <- bind_rows(
+  tidy(mod_T_bmi_bi)  |> mutate(model = "Bivariate (raw T)"),
+  tidy(mod_T_bmi_adj) |> mutate(model = "+ sex (raw T)")
+) |>
+  filter(term %in% c("(Intercept)", "BMI", "sexmale")) |>
+  select(model, term, estimate, std.error, statistic, p.value)
+
+t_log_bmi <- bind_rows(
+  tidy(mod_log_bmi_bi)  |> mutate(model = "Bivariate (log T)"),
+  tidy(mod_log_bmi_adj) |> mutate(model = "+ sex (log T)")
+) |>
+  filter(term %in% c("(Intercept)", "BMI", "sexmale")) |>
+  select(model, term, estimate, std.error, statistic, p.value)
+
+knitr::kable(
+  t_T_bmi,
+  digits = 4,
+  caption = "Testosterone (ng/dL) ~ BMI (kg/m²): focus on row `BMI`"
+)
+
+knitr::kable(
+  t_log_bmi,
+  digits = 5,
+  caption = "Same participants on log scale: `lm(log(T) ~ BMI + sex)`"
+)
+```
+
+```{r}
+#| label: fig-nh-testosterone-bmi
+#| fig-height: 5
+#| fig-cap: "Raw testosterone (ng/dL): pooled `lm(Testosterone ~ BMI)` vs parallel `lm(Testosterone ~ BMI + sex)`."
+plot_naive_vs_adjusted(
+  nh_500_bmi, "BMI", "Testosterone", "sex", mod_T_bmi_adj,
+  "BMI (kg/m²)", "Testosterone (ng/dL)"
+)
+```
+
+```{r}
+#| label: fig-nh-testosterone-bmi-log
+#| fig-height: 5
+#| fig-cap: "Log testosterone: pooled `lm(log(Testosterone) ~ BMI)` vs parallel `lm(log(Testosterone) ~ BMI + sex)`."
+plot_naive_vs_adjusted(
+  nh_500_bmi, "BMI", "log_testosterone", "sex", mod_log_bmi_adj,
+  "BMI (kg/m²)", "log(Testosterone)"
+)
+```
+
+### Diagnostics — raw testosterone ~ BMI (bivariate)
+
+```{r}
+#| label: fig-nh-testosterone-bmi-check-bi
+#| fig-width: 14
+#| fig-height: 11
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-cap: "`performance::check_model` for `lm(Testosterone ~ BMI)` (ng/dL)."
+plot(performance::check_model(mod_T_bmi_bi, base_size = 11, size_title = 12))
+```
+
+### Diagnostics — raw testosterone ~ BMI + sex
+
+```{r}
+#| label: fig-nh-testosterone-bmi-check-adj
+#| fig-width: 14
+#| fig-height: 11
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-cap: "`performance::check_model` for `lm(Testosterone ~ BMI + sex)`."
+plot(performance::check_model(mod_T_bmi_adj, base_size = 11, size_title = 12))
+```
+
+### Diagnostics — log(testosterone) ~ BMI (bivariate)
+
+```{r}
+#| label: fig-nh-testosterone-bmi-log-check-bi
+#| fig-width: 14
+#| fig-height: 11
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-cap: "`performance::check_model` for `lm(log_testosterone ~ BMI)`."
+plot(performance::check_model(mod_log_bmi_bi, base_size = 11, size_title = 12))
+```
+
+### Diagnostics — log(testosterone) ~ BMI + sex
+
+```{r}
+#| label: fig-nh-testosterone-bmi-log-check-adj
+#| fig-width: 14
+#| fig-height: 11
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-cap: "`performance::check_model` for `lm(log_testosterone ~ BMI + sex)`."
+plot(performance::check_model(mod_log_bmi_adj, base_size = 11, size_title = 12))
+```
+
+## Take-home
+
+1. **Pulse ~ height** on the NHANES subsample illustrates **attenuation**: the marginal effect of height is a **mixture** of physiology and **sex composition**; conditioning on sex strips most of it.
+2. **FAMuSS** and **ferritin ~ weight** show **strong bivariate slopes** that **shrink** when sex is added — good for "**don't trust the pooled line**" without requiring a full **sign flip**.
+3. **`pcBfat ~ height`** in **AIS** is the **visual sign reversal** when you compare pooled `lm(Y ~ X)` to parallel **`lm(Y ~ X + sex)`** fits.
+4. **Testosterone ~ weight** using [**`nhanes.samp.adult.500`**](https://www.openintro.org/data/index.php?data=nhanes.samp.adult.500) (`lm(Testosterone ~ Weight + Gender)`): strong **sign flip** on weight with many complete lab rows; compare **raw** vs **log** figures and tables.
+5. **Testosterone ~ BMI** on the **same** complete cases illustrates how swapping the adiposity predictor changes the **pooled** story (Section 6); compare coefficients and plots to **weight**.
+
+### Related in this repo
+
+- [Health datasets for OLS practice](datasets_staging/health_datasets_linear_regression.html) — curated extracts and column documentation (includes peak power / bone strength and other teaching-friendly CSVs under `datasets_staging/cleaned/`).
+
+::: {.callout-important}
+## Packages
+
+`readr`, `dplyr`, `ggplot2`, `broom`, `patchwork`, `DAAG`, `oibiostat`, `performance` (uses `see` for the diagnostic panels). If needed: `install.packages(c("tidyverse", "broom", "patchwork", "DAAG", "oibiostat", "performance"))`.
+:::
