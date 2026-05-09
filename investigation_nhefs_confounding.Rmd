@@ -1,0 +1,266 @@
+---
+title: "Investigation: Is NHEFS a Better Teaching Example for Confounding?"
+subtitle: "Evaluating `dbp ~ ht + sex` and three alternatives in the same cohort"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    theme: cosmo
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width  = 6.5,
+  fig.height = 4.2,
+  dpi    = 110
+)
+```
+
+## Why this investigation
+
+A reviewer suggested replacing the country-level UN dataset (`life_expectancy_yrs ~ obesity + income_group`) with an **individual-level** example from the **NHEFS** cohort:
+
+> *Y = `dbp`, X = `ht`, Z = `sex`. The bivariate slope is +0.128 (p < 0.001), the adjusted slope collapses to ~0 (p ≈ 0.99), and the within-sex slopes are essentially zero. Clean suppression/collapse for a multiple-regression lesson.*
+
+The motivation is reasonable: a CDC follow-up study with patients beats a 193-country panel for a *health-sciences* course. This document **(a) verifies that claim** on the actual data, **(b) evaluates it as a teaching example**, and **(c) explores three alternatives** in the same dataset that might serve the lesson better.
+
+## Setup
+
+```{r packages}
+library(tidyverse)
+library(broom)
+library(causaldata)   # ships nhefs and nhefs_complete
+library(knitr)
+theme_set(theme_minimal(base_size = 12))
+```
+
+```{r load}
+d <- nhefs_complete |>
+  mutate(sex = factor(sex, levels = c(0, 1), labels = c("male", "female")))
+
+dim(d)
+```
+
+NHEFS-complete is **`r nrow(d)` participants × `r ncol(d)` variables** from the NHANES I Epidemiologic Follow-up Study, with full data on the variables Hernán & Robins use in *Causal Inference*. The variables we'll use:
+
+| Variable | Description |
+|---|---|
+| `dbp` | Diastolic blood pressure, 1982 (mm Hg) |
+| `sbp` | Systolic blood pressure, 1982 (mm Hg) |
+| `ht` | Height (cm) |
+| `wt71` | Weight at baseline 1971 (kg) |
+| `smokeintensity` | Cigarettes per day, 1971 |
+| `sex` | 0 = male, 1 = female |
+
+```{r quick-look}
+d |>
+  group_by(sex) |>
+  summarise(
+    n = n(),
+    mean_ht = mean(ht),
+    mean_dbp = mean(dbp, na.rm = TRUE),
+    mean_sbp = mean(sbp, na.rm = TRUE),
+    mean_wt71 = mean(wt71),
+    mean_smokeint = mean(smokeintensity)
+  ) |>
+  kable(digits = 1, caption = "Group means by sex")
+```
+
+The relevant pattern is already visible: men are taller, slightly heavier, smoke more, and have higher blood pressure. *Anything* that differs by sex is going to be entangled with everything else that differs by sex.
+
+## Candidate A — the proposed example: `dbp ~ ht + sex`
+
+### Bivariate model
+
+```{r mod-A1}
+modA1 <- lm(dbp ~ ht, data = d)
+tidy(modA1) |> kable(digits = 4)
+glance(modA1) |> select(r.squared, p.value, nobs) |> kable(digits = 4)
+```
+
+Slope = **+0.128 mm Hg per cm of height**, p ≈ 2 × 10⁻⁵, R² = 0.012.
+
+### Adjusted for sex
+
+```{r mod-A2}
+modA2 <- lm(dbp ~ ht + sex, data = d)
+tidy(modA2) |> kable(digits = 4)
+glance(modA2) |> select(r.squared, p.value, nobs) |> kable(digits = 4)
+```
+
+The slope on `ht` collapses to **0.0006 (p = 0.99)**.
+
+### Within-sex slopes
+
+```{r mod-A3}
+bind_rows(
+  tidy(lm(dbp ~ ht, data = filter(d, sex == "male")))   |> mutate(group = "Males"),
+  tidy(lm(dbp ~ ht, data = filter(d, sex == "female"))) |> mutate(group = "Females")
+) |>
+  filter(term == "ht") |>
+  select(group, estimate, std.error, p.value) |>
+  kable(digits = 4)
+```
+
+Both within-sex slopes are essentially zero. **Claim verified.**
+
+### Visualisation
+
+```{r plot-A}
+d |>
+  filter(!is.na(dbp)) |>
+  ggplot(aes(ht, dbp)) +
+  geom_point(alpha = 0.25, aes(colour = sex)) +
+  geom_smooth(method = "lm", se = FALSE, aes(colour = sex)) +
+  geom_smooth(method = "lm", se = FALSE,
+              aes(group = 1), colour = "black", linewidth = 0.7, linetype = "dashed") +
+  labs(
+    x = "Height (cm)", y = "Diastolic BP (mm Hg)",
+    colour = "Sex",
+    caption = "Black dashed line: pooled (bivariate). Coloured lines: within-sex slopes."
+  )
+```
+
+You can see the mechanism by eye: the male and female point clouds sit at different heights *and* different DBPs. The dashed pooled line slopes up because it is connecting the female cluster (shorter, lower DBP) to the male cluster (taller, higher DBP). Within each cluster, the relationship is flat.
+
+### Pedagogical evaluation of Candidate A
+
+What this example does well:
+
+- ✅ Individual-level health data — no ecological-fallacy worries.
+- ✅ Real CDC cohort, properly health-sciences.
+- ✅ The slope-collapse is dramatic and statistically clean (p 10⁻⁵ → 0.99).
+- ✅ The mechanism is so intuitive a class can guess the confounder unprompted.
+
+What this example does *not* do well:
+
+- ⚠ **Low R²** in absolute terms (0.012 → 0.024). Students who just learned about R² will notice that "almost nothing is being explained" and may struggle to take the result seriously.
+- ⚠ **Height predicting BP isn't a clinically interesting question.** Nobody asks it, no clinician reads BP-by-height curves. The lesson lands as "of course men are taller and have higher BP", which is intellectually unsatisfying.
+- ⚠ **The bivariate effect is purely a statistical artifact**, not a true relationship that gets exaggerated or revealed. There's no "wrong answer" to be misled by — there's no answer at all.
+
+This is a *clean* example but a slightly *sterile* one. Compare it with the UN obesity → life-expectancy puzzle, where the wrong bivariate answer (more obesity ⇒ longer life) is genuinely shocking to students before they understand the confounder.
+
+## Candidate B — `sbp ~ ht + sex` (a sign-flip variant)
+
+A more dramatic version of the same logic uses systolic BP. Bivariate: no relationship. Adjusted for sex: **the slope flips negative.**
+
+```{r mod-B}
+modB1 <- lm(sbp ~ ht, data = d)
+modB2 <- lm(sbp ~ ht + sex, data = d)
+
+bind_rows(
+  tidy(modB1) |> filter(term == "ht") |> mutate(model = "Bivariate"),
+  tidy(modB2) |> filter(term == "ht") |> mutate(model = "Adjusted for sex")
+) |>
+  select(model, estimate, std.error, p.value) |>
+  kable(digits = 4, caption = "ht slope on systolic BP, before vs after adjustment")
+```
+
+```{r plot-B}
+d |>
+  filter(!is.na(sbp)) |>
+  ggplot(aes(ht, sbp)) +
+  geom_point(alpha = 0.25, aes(colour = sex)) +
+  geom_smooth(method = "lm", se = FALSE, aes(colour = sex)) +
+  geom_smooth(method = "lm", se = FALSE,
+              aes(group = 1), colour = "black", linewidth = 0.7, linetype = "dashed") +
+  labs(x = "Height (cm)", y = "Systolic BP (mm Hg)", colour = "Sex")
+```
+
+This is a textbook **suppression** pattern: the sex-mediated up-shift cancels the within-sex down-slope, leaving the pooled line nearly flat. Adjusting for sex *reveals* a relationship that the bivariate model concealed.
+
+Verdict: **statistically more dramatic** than Candidate A (a sign-flip is more memorable than a collapse), but inherits the same clinical-relevance complaint — height predicting BP isn't a question anyone asks.
+
+## Candidate C — `wt71 ~ smokeintensity + sex` (clinically interesting)
+
+Here's a question students *will* care about: do heavier smokers weigh more?
+
+```{r mod-C}
+modC1 <- lm(wt71 ~ smokeintensity, data = d)
+modC2 <- lm(wt71 ~ smokeintensity + sex, data = d)
+
+bind_rows(
+  tidy(modC1) |> filter(term == "smokeintensity") |> mutate(model = "Bivariate"),
+  tidy(modC2) |> filter(term == "smokeintensity") |> mutate(model = "Adjusted for sex")
+) |>
+  select(model, estimate, std.error, p.value) |>
+  kable(digits = 4, caption = "smokeintensity slope on weight (kg), before vs after adjustment")
+```
+
+The story:
+
+* Bivariate: each additional cigarette/day is associated with **+0.13 kg** of body weight (p < 0.001). Naïve students often expect the *opposite* (smoking suppresses appetite), so this is already counterintuitive.
+* Adjusted for sex: the effect drops to **+0.009 kg (p = 0.77)** — gone.
+* Why? Men in this cohort smoke ~5 cig/day more than women *and* weigh ~13 kg more. The bivariate slope was sex-confounding, not a behavioural effect.
+
+```{r plot-C}
+d |>
+  ggplot(aes(smokeintensity, wt71)) +
+  geom_point(alpha = 0.2, aes(colour = sex)) +
+  geom_smooth(method = "lm", se = FALSE, aes(colour = sex)) +
+  geom_smooth(method = "lm", se = FALSE,
+              aes(group = 1), colour = "black", linewidth = 0.7, linetype = "dashed") +
+  labs(x = "Cigarettes per day (1971)", y = "Weight (kg, 1971)", colour = "Sex")
+```
+
+Verdict: **the most pedagogically valuable variant.** It's about a behaviour students recognise (smoking), it produces a counterintuitive bivariate result, and the adjustment changes both the magnitude *and* the believability of the finding. R² grows from 0.01 to 0.17, so it also looks like a sensible model after adjustment.
+
+## Candidate D — `sbp ~ wt71 + sex + age` (multivariable in earnest)
+
+Once you have students comfortable with one categorical confounder, you can foreshadow next-week's content (multiple confounders) on the same dataset. Heavier people have higher SBP — but is that just sex, or is it something more?
+
+```{r mod-D}
+m_uni <- lm(sbp ~ wt71, data = d)
+m_sex <- lm(sbp ~ wt71 + sex, data = d)
+m_full <- lm(sbp ~ wt71 + sex + age, data = d)
+
+bind_rows(
+  tidy(m_uni)  |> filter(term == "wt71") |> mutate(model = "Bivariate"),
+  tidy(m_sex)  |> filter(term == "wt71") |> mutate(model = "+ sex"),
+  tidy(m_full) |> filter(term == "wt71") |> mutate(model = "+ sex + age")
+) |>
+  select(model, estimate, std.error, p.value) |>
+  kable(digits = 4, caption = "wt71 slope on systolic BP across nested models")
+```
+
+Slope shrinks but stays positive across all three models. **A real effect that gets attenuated, not eliminated.** That's a different lesson from A/B/C: not all adjustment kills your finding. Worth showing as a *contrast* so students don't internalise "adding variables always destroys the effect."
+
+## Side-by-side comparison
+
+```{r comparison-table, echo=FALSE}
+tribble(
+  ~Candidate, ~`Y ~ X (+ Z)`, ~`Bivariate β (p)`, ~`Adjusted β (p)`, ~`R² before → after`, ~`Pattern`, ~`Clinical interest`,
+  "A (proposed)", "dbp ~ ht + sex",            "+0.128 (1.96e-5)", "+0.001 (0.99)",   "0.012 → 0.024", "Collapse",  "Low",
+  "B",            "sbp ~ ht + sex",            "+0.063 (0.25)",    "-0.262 (5e-4)",   "0.001 → 0.024", "Sign flip / suppression", "Low",
+  "C",            "wt71 ~ smokeintensity + sex","+0.130 (7e-5)",   "+0.009 (0.77)",   "0.010 → 0.170", "Collapse",  "High",
+  "D",            "sbp ~ wt71 + sex + age",    "+0.169 (1e-7)",    "+0.123 (~7e-7)",  "0.018 → 0.150", "Attenuation (effect survives)", "High"
+) |>
+  kable(caption = "All four examples are real, individual-level, and use only basic variables.")
+```
+
+## Recommendation
+
+The reviewer is correct that NHEFS is a better *vehicle* for the lesson than the UN data — patient-level health data, large sample, easy load via `causaldata::nhefs_complete`. But **`dbp ~ ht + sex` is the safest example, not the strongest one.** The slope-collapse is statistically clean, but the clinical question is uninteresting and the absolute R² is tiny.
+
+For a 12-week health-sciences course I would teach:
+
+1. **Headline confounding example: Candidate C** (`wt71 ~ smokeintensity + sex`).
+   - Counterintuitive bivariate finding.
+   - Strong, clean adjustment.
+   - Mechanism (men smoke more *and* are heavier) is something students will remember.
+2. **Reinforcement / sign-flip variant: Candidate B** (`sbp ~ ht + sex`).
+   - Same dataset, dramatic suppression for the second pass.
+3. **Foreshadowing real adjustment: Candidate D** (`sbp ~ wt71 + sex + age`).
+   - Real effects don't always die after adjustment. Important to show.
+4. **Save A** (`dbp ~ ht + sex`) as a homework exercise where students reproduce a known result, rather than as the headline class example.
+
+If the goal is just to *replace the UN dataset with something patient-level*, then NHEFS-complete is a great call — but lead with smoking & weight, not height & BP.
+
+## Side note: NHEFS for the rest of the curriculum
+
+Worth flagging that this dataset will earn its keep beyond this single lesson. The `qsmk` (quit-smoking) flag and `wt82_71` (weight change 1971→1982) variables are the canonical examples in Hernán & Robins's *Causal Inference*, which means the same dataset students meet in week 6 (multiple regression / confounding) can come back in week 9 (logistic regression) without any re-introduction. That's a real curriculum-level argument for committing to it.

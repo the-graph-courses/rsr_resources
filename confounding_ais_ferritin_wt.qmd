@@ -1,0 +1,228 @@
+---
+title: "Confounding: plasma ferritin vs body weight (AIS)"
+subtitle: "`DAAG::ais` — when sex explains a strong bivariate association"
+author: "Research Statistics with R — Health Sciences"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    theme: cosmo
+    fig-cap-location: top
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(DAAG)
+library(dplyr)
+library(ggplot2)
+library(broom)
+library(patchwork)
+
+theme_set(
+  theme_minimal(base_size = 13) +
+    theme(
+      plot.title    = element_text(face = "bold"),
+      plot.subtitle = element_text(colour = "grey35", size = rel(0.92)),
+      legend.position = "top"
+    )
+)
+```
+
+## Question
+
+The **Australian Institute of Sport (AIS)** dataset contains blood and body-composition measures on athletes. Consider:
+
+> Does **body weight** (`wt`, kg) predict **plasma ferritin** (`ferr`, iron-storage protein; ng dl⁻¹ in the `DAAG` codebook)?
+
+In the **pooled** sample, higher weight strongly predicts higher ferritin. That pattern largely **vanishes** after adding **sex**: men are heavier on average and have higher ferritin on average, so the pooled slope mixes **between-sex** differences with **within-sex** trends. This is a straightforward **confounding** story — same direction bivariate and within-sex (no sign flip), but the naive effect is **inflated** and becomes negligible once `sex` is controlled.
+
+::: {.callout-note}
+## Want a **sign reversal** instead?
+
+**`pcBfat ~ height`** in the same **`DAAG::ais`** data is a textbook **Simpson’s paradox**: pooled slope **negative**, **`+ sex`** flips it **positive**. See **`confounding_ais_bodyfat_height.qmd`**.  
+This ferritin example stays on **attenuation** (strong pooled slope → **nonsignificant** after `+ sex`, same direction).
+:::
+
+```{r}
+#| label: load
+data(ais, package = "DAAG")
+d <- ais |>
+  filter(!is.na(ferr), !is.na(wt), !is.na(sex)) |>
+  mutate(
+    sex = factor(sex, levels = c("f", "m"), labels = c("Female", "Male"))
+  )
+```
+
+::: {.callout-note}
+## Data
+
+`data(ais, package = "DAAG")`.  
+*AIS* has **202** athletes (here *N* = **`r nrow(d)`** complete on `ferr`, `wt`, `sex`). See `?ais` for variable definitions (`rcc`, `wcc`, `hc`, `hg`, `ferr`, `bmi`, `ssf`, `pcBfat`, `lbm`, `ht`, `wt`, `sport`, …).
+
+**Reference:** Maindonald & Braun, *Data Analysis and Graphics Using R* (`DAAG`).
+:::
+
+## Descriptive pattern
+
+Men have higher mean **weight** and higher mean **ferritin** than women. Both conditions for **confounding** are visible: sex is associated with the predictor (`wt`) and with the outcome (`ferr`).
+
+```{r}
+#| label: summarise
+d |>
+  group_by(sex) |>
+  summarise(
+    n = n(),
+    mean_wt_kg = mean(wt),
+    sd_wt = sd(wt),
+    mean_ferr = mean(ferr),
+    sd_ferr = sd(ferr)
+  ) |>
+  knitr::kable(digits = 2, caption = "Body weight and plasma ferritin by sex (AIS)")
+```
+
+## Regression: bivariate vs adjusted
+
+```{r}
+#| label: models
+mod_bi  <- lm(ferr ~ wt, data = d)
+mod_adj <- lm(ferr ~ wt + sex, data = d)
+
+bind_rows(
+  tidy(mod_bi)  |> mutate(model = "Bivariate:  ferr ~"),
+  tidy(mod_adj) |> mutate(model = "Adjusted:     ferr ~")
+) |>
+  filter(term %in% c("(Intercept)", "wt", "sexMale")) |>
+  transmute(model, term, estimate, std.error, statistic, p.value) |>
+  knitr::kable(digits = 3, caption = "Focus on the slope for `wt` (kg → ferritin)")
+```
+
+After **adjusting for sex**, the slope on `wt` is **small** and **not** statistically distinguishable from zero, while the **sex** term captures much of the between-group difference in ferritin.
+
+```{r}
+#| label: within-sex
+#| tbl-cap: "Separate OLS fits within each sex (exploratory)."
+bind_rows(
+  tidy(lm(ferr ~ wt, data = filter(d, sex == "Female"))) |>
+    mutate(sex = "Female"),
+  tidy(lm(ferr ~ wt, data = filter(d, sex == "Male"))) |>
+    mutate(sex = "Male")
+) |>
+  filter(term == "wt") |>
+  select(sex, estimate, std.error, statistic, p.value) |>
+  knitr::kable(digits = 3)
+```
+
+## Scatterplots: pooled vs stratified fits
+
+- **Left:** one OLS line for everyone — the **strong positive** pooled `ferr ~ wt` slope.
+- **Right:** points by sex; **solid** lines = OLS within each sex (**near-flat**); **dashed** = pooled line (same as left).
+
+```{r}
+#| label: fig-compare
+#| fig-height: 5
+#| fig-cap: "Left: naive pooled association. Right: within-sex slopes are shallow; dashed shows the misleading pooled line."
+xlab <- "Body weight (kg)"
+ylab <- "Plasma ferritin (ng/dL)"
+
+p_pooled <- ggplot(d, aes(wt, ferr)) +
+  geom_point(alpha = 0.35, colour = "grey35", size = 2.2) +
+  geom_smooth(method = "lm", se = FALSE, colour = "#6a040f", linewidth = 1) +
+  labs(
+    title = "Ignoring sex",
+    subtitle = "ferr ~ wt — pooled sample",
+    x = xlab, y = ylab
+  )
+
+pal <- c(Female = "#9b2226", Male = "#005f73")
+
+p_strat <- ggplot(d, aes(wt, ferr, colour = sex)) +
+  geom_point(alpha = 0.45, size = 2.2) +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, aes(colour = sex)) +
+  geom_smooth(
+    method = "lm", se = FALSE,
+    aes(group = 1), colour = "grey20",
+    linetype = "dashed", linewidth = 0.75, inherit.aes = TRUE
+  ) +
+  scale_colour_manual(values = pal, name = NULL) +
+  labs(
+    title = "By sex",
+    subtitle = "Solid = within-sex OLS; dashed = pooled line",
+    x = xlab, y = ylab
+  )
+
+p_pooled + p_strat + plot_layout(widths = c(1, 1))
+```
+
+```{r}
+#| label: fig-one-panel
+#| fig-height: 4.8
+#| fig-cap: "Slide-friendly: shallow within-sex fits vs steep pooled (dashed) line."
+ggplot(d, aes(wt, ferr, colour = sex)) +
+  geom_point(alpha = 0.45, size = 2.5) +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, aes(colour = sex)) +
+  geom_smooth(
+    method = "lm", se = FALSE,
+    aes(group = 1), colour = "grey25",
+    linetype = "dashed", linewidth = 0.9, inherit.aes = TRUE
+  ) +
+  scale_colour_manual(values = pal, name = "Sex") +
+  labs(
+    title = "Plasma ferritin vs body weight (AIS)",
+    subtitle = "Dashed = fit ignoring sex; coloured = within-sex fits",
+    x = xlab, y = ylab
+  )
+```
+
+## Adjusted model: parallel slopes
+
+`lm(ferr ~ wt + sex)` uses **one slope for `wt`** and **different intercepts** by sex.
+
+```{r}
+#| label: fig-adjusted-model
+#| fig-height: 4.8
+#| fig-cap: "Predictions from `lm(ferr ~ wt + sex)`: parallel lines (shallow slope for weight once sex is held constant)."
+wt_seq <- seq(min(d$wt), max(d$wt), length.out = 80)
+d_pred <- expand.grid(wt = wt_seq, sex = levels(d$sex), stringsAsFactors = FALSE)
+d_pred$sex <- factor(d_pred$sex, levels = levels(d$sex))
+d_pred$fit <- predict(mod_adj, newdata = d_pred)
+
+ggplot(d, aes(wt, ferr, colour = sex)) +
+  geom_point(alpha = 0.35, size = 2.2) +
+  geom_line(data = d_pred, aes(y = fit, colour = sex), linewidth = 1) +
+  scale_colour_manual(values = pal, name = "Sex") +
+  labs(
+    title = "Adjusted model (parallel slopes)",
+    subtitle = "Lines = predictions from lm(ferr ~ wt + sex)",
+    x = xlab, y = ylab
+  )
+```
+
+## Other AIS pairs (same lesson, screened on `ais`)
+
+These also show **strong pooled associations** driven largely by **sex**, with **much weaker** slopes after `+ sex` — useful for exercises or alternate examples (see `?ais` for units):
+
+| Outcome `Y` | Predictor `X` | Pooled story (brief) |
+|-------------|----------------|----------------------|
+| `hg` (hemoglobin) | `ssf` (sum skinfolds) | “Leaner blood” vs adiposity — largely sex-composition |
+| `hg` | `pcBfat` | Same idea with % body fat |
+| `ferr` | `lbm` (lean body mass) | More lean mass ↔ more iron stores; men drive both |
+| `lbm` | `hc` (hematocrit) | Strong pooled link, weakens with sex |
+
+**Counterexample for class:** **`wt ~ ht`** stays strongly positive after `+ sex` — a reminder that **not every** predictor is badly confounded by sex.
+
+## Take-home
+
+1. **`lm(ferr ~ wt)`** can show a strong positive slope even when **`lm(ferr ~ wt + sex)`** does not support a within-sex weight effect on ferritin — because **sex** shifts both the *distribution* of `wt` and mean `ferr`.
+2. Stratified plots (solid within-sex lines vs dashed pooled line) make **composition** visible.
+3. These are **highly selected athletes**; use for **methods**, not population iron policy.
+
+::: {.callout-important}
+## Install
+
+If needed: `install.packages("DAAG")` and `install.packages("patchwork")`.
+:::

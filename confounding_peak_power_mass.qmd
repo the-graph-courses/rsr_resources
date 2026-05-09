@@ -1,0 +1,178 @@
+---
+title: "Confounding: body mass vs relative peak power"
+subtitle: "Peak power in athletes (`06_peak_power_bone`) — `relative_peak_power ~ body_mass_kg + sex`"
+author: "Research Statistics with R — Health Sciences"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    theme: cosmo
+    fig-cap-location: top
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(broom)
+library(patchwork)
+
+theme_set(
+  theme_minimal(base_size = 13) +
+    theme(
+      plot.title    = element_text(face = "bold"),
+      plot.subtitle = element_text(colour = "grey35", size = rel(0.92)),
+      legend.position = "top"
+    )
+)
+```
+
+## Question
+
+This sample comes from a study on **vertical jump-derived peak power** and **tibial bone strength** (Denys & Yingling, MSSE 2022; Dryad). **`relative_peak_power`** is peak power expressed relative to body size (higher = more “explosive” power for your mass).
+
+Does **body mass** predict **relative** peak power? In the pooled sample the answer can look like “yes,” but **men and women differ in both mass and how power is expressed relative to mass**. A simple **`Y ~ mass`** slope can partly reflect **sex** rather than a pure mass effect.
+
+::: {.callout-note}
+## Data
+`datasets_staging/cleaned/06_peak_power_bone.csv`. Variables: `relative_peak_power`, `body_mass_kg`, `sex` (female / male).
+:::
+
+```{r}
+#| label: load
+d <- read_csv("datasets_staging/cleaned/06_peak_power_bone.csv", show_col_types = FALSE) |>
+  mutate(sex = factor(sex, levels = c("female", "male"))) |>
+  filter(!is.na(relative_peak_power), !is.na(body_mass_kg), !is.na(sex))
+```
+
+## Descriptives by sex
+
+```{r}
+#| label: summarise
+d |>
+  group_by(sex) |>
+  summarise(
+    n = n(),
+    mean_kg = mean(body_mass_kg),
+    sd_kg = sd(body_mass_kg),
+    mean_rel_pp = mean(relative_peak_power),
+    sd_rel_pp = sd(relative_peak_power)
+  ) |>
+  knitr::kable(digits = 2, caption = "Body mass and relative peak power by sex")
+```
+
+## Regression: bivariate vs adjusted
+
+```{r}
+#| label: models
+mod_bi  <- lm(relative_peak_power ~ body_mass_kg, data = d)
+mod_adj <- lm(relative_peak_power ~ body_mass_kg + sex, data = d)
+
+bind_rows(
+  tidy(mod_bi)  |> mutate(model = "Bivariate:  rel_peak_power ~"),
+  tidy(mod_adj) |> mutate(model = "Adjusted:     rel_peak_power ~")
+) |>
+  filter(term %in% c("(Intercept)", "body_mass_kg", "sexmale")) |>
+  transmute(model, term, estimate, std.error, statistic, p.value) |>
+  knitr::kable(digits = 3, caption = "Focus on the slope for `body_mass_kg`")
+```
+
+The **bivariate** slope on mass is clearly positive and significant. After **`+ sex`**, the slope is **much smaller** and **only marginally significant** at conventional levels — the mass effect in the pooled model was **substantially diluted** once sex is controlled. (Physiologically, relative power and mass need not follow a single pooled straight line across sexes; this lesson stresses **confounding / composition**, not a final causal claim.)
+
+## Scatterplots: pooled vs stratified fits
+
+```{r}
+#| label: fig-compare
+#| fig-height: 5
+#| fig-cap: "Left: one OLS line for everyone. Right: within-sex lines (solid) vs pooled line (dashed)."
+xlab <- "Body mass (kg)"
+ylab <- "Relative peak power"
+
+p_pooled <- ggplot(d, aes(body_mass_kg, relative_peak_power)) +
+  geom_point(alpha = 0.35, colour = "grey35", size = 2) +
+  geom_smooth(method = "lm", se = FALSE, colour = "#4a148c", linewidth = 1) +
+  labs(
+    title = "Ignoring sex",
+    subtitle = "relative_peak_power ~ body_mass_kg",
+    x = xlab, y = ylab
+  )
+
+pal <- c(female = "#9b2226", male = "#005f73")
+
+p_strat <- ggplot(d, aes(body_mass_kg, relative_peak_power, colour = sex)) +
+  geom_point(alpha = 0.4, size = 2) +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, aes(colour = sex)) +
+  geom_smooth(
+    method = "lm", se = FALSE,
+    aes(group = 1), colour = "grey20",
+    linetype = "dashed", linewidth = 0.75, inherit.aes = TRUE
+  ) +
+  scale_colour_manual(values = pal, name = NULL) +
+  labs(
+    title = "By sex",
+    subtitle = "Solid = within-sex OLS; dashed = pooled line",
+    x = xlab, y = ylab
+  )
+
+p_pooled + p_strat + plot_layout(widths = c(1, 1))
+```
+
+```{r}
+#| label: fig-one-panel
+#| fig-height: 4.8
+#| fig-cap: "Slide-friendly: dashed = naive pooled slope; solid = sex-specific slopes."
+ggplot(d, aes(body_mass_kg, relative_peak_power, colour = sex)) +
+  geom_point(alpha = 0.4, size = 2.2) +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, aes(colour = sex)) +
+  geom_smooth(
+    method = "lm", se = FALSE,
+    aes(group = 1), colour = "grey25",
+    linetype = "dashed", linewidth = 0.9, inherit.aes = TRUE
+  ) +
+  scale_colour_manual(values = pal, name = "Sex") +
+  labs(
+    title = "Relative peak power vs body mass",
+    subtitle = "Same participants — different stories with and without sex in the model",
+    x = xlab, y = ylab
+  )
+```
+
+## Compare to the multiple-regression line
+
+The **adjusted** model assumes **one slope** for `body_mass_kg` and **parallel lines** across sex (different intercepts). You can overlay those **fitted** lines to connect the plots to `summary(mod_adj)`:
+
+```{r}
+#| label: fig-adjusted-model
+#| fig-height: 4.8
+#| fig-cap: "Predictions from `lm(relative_peak_power ~ body_mass_kg + sex)`: parallel lines (shared slope for mass)."
+mass_seq <- seq(min(d$body_mass_kg), max(d$body_mass_kg), length.out = 80)
+d_pred <- expand.grid(
+  body_mass_kg = mass_seq,
+  sex = levels(d$sex),
+  stringsAsFactors = FALSE
+)
+d_pred$sex <- factor(d_pred$sex, levels = levels(d$sex))
+d_pred$fit <- predict(mod_adj, newdata = d_pred)
+
+ggplot(d, aes(body_mass_kg, relative_peak_power, colour = sex)) +
+  geom_point(alpha = 0.35, size = 2) +
+  geom_line(data = d_pred, aes(y = fit, colour = sex), linewidth = 1) +
+  scale_colour_manual(values = pal, name = "Sex") +
+  labs(
+    title = "Adjusted model (parallel slopes)",
+    subtitle = "Lines = predictions from lm(relative_peak_power ~ body_mass_kg + sex)",
+    x = xlab, y = ylab
+  )
+```
+
+## Take-home
+
+1. **`relative_peak_power ~ body_mass_kg`** can show a **strong positive** pooled slope.
+2. **`relative_peak_power ~ body_mass_kg + sex`** pulls the mass coefficient **toward zero** — much of the pooled association was **entangled with male–female differences**.
+3. **Body mass is the “size” variable here** (there is no height column in this file). The **logic is the same** as height vs a performance measure: **sex** tracks both **size** and **outcome**, so it is an obvious candidate confounder in teaching examples.

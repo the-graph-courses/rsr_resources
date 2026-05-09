@@ -1,0 +1,208 @@
+---
+title: "Simpson's paradox: percent body fat vs height (AIS)"
+subtitle: "`DAAG::ais` — pooled slope can reverse after adjusting for sex"
+author: "Research Statistics with R — Health Sciences"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    theme: cosmo
+    fig-cap-location: top
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(DAAG)
+library(dplyr)
+library(ggplot2)
+library(broom)
+library(patchwork)
+
+theme_set(
+  theme_minimal(base_size = 13) +
+    theme(
+      plot.title    = element_text(face = "bold"),
+      plot.subtitle = element_text(colour = "grey35", size = rel(0.92)),
+      legend.position = "top"
+    )
+)
+```
+
+## Question
+
+In **`DAAG::ais`**, **elite athletes**:
+
+> Does **height** (`ht`, cm) predict **percent body fat** (`pcBfat`)?
+
+**Pooled** OLS often yields a **negative** slope: taller people in the combined sample tend to **lower** % body fat. That clashes with what you see **within each sex**: among women (and more weakly among men), taller athletes tend to carry **more** % fat along the spectrum of the cohort. Men are taller on average but much leaner on average, so pooling creates a classic **sign reversal** once you fit **`pcBfat ~ ht + sex`**.
+
+::: {.callout-note}
+## Companion example (attenuation, not flip)
+
+For **no sign reversal**—a strong pooled slope that **shrinks toward zero** after `+ sex`—use **`confounding_ais_ferritin_wt.qmd`** (`ferr ~ wt`). Same dataset, different geometry.
+:::
+
+```{r}
+#| label: load
+data(ais, package = "DAAG")
+d <- ais |>
+  filter(!is.na(pcBfat), !is.na(ht), !is.na(sex)) |>
+  mutate(
+    sex = factor(sex, levels = c("f", "m"), labels = c("Female", "Male"))
+  )
+```
+
+::: {.callout-note}
+## Data
+
+`data(ais, package = "DAAG")`. Complete cases: *N* = **`r nrow(d)`**. See `?ais` for units (**`ht`** is cm).
+
+**Reference:** Maindonald & Braun, *Data Analysis and Graphics Using R* (`DAAG`).
+:::
+
+## Descriptive pattern
+
+```{r}
+#| label: summarise
+d |>
+  group_by(sex) |>
+  summarise(
+    n = n(),
+    mean_ht_cm = mean(ht),
+    sd_ht = sd(ht),
+    mean_pcBfat = mean(pcBfat),
+    sd_pcBfat = sd(pcBfat)
+  ) |>
+  knitr::kable(digits = 2, caption = "Height and % body fat by sex (AIS)")
+```
+
+Men are **taller** and **leaner** (% fat) on average—sex lines up with both `ht` and `pcBfat` in opposite directions across groups, which is exactly the setup for a **marginal** association that disagrees with **within-sex** trends.
+
+## Regression: bivariate vs adjusted
+
+```{r}
+#| label: models
+mod_bi  <- lm(pcBfat ~ ht, data = d)
+mod_adj <- lm(pcBfat ~ ht + sex, data = d)
+
+bind_rows(
+  tidy(mod_bi)  |> mutate(model = "Bivariate:  pcBfat ~"),
+  tidy(mod_adj) |> mutate(model = "Adjusted:     pcBfat ~")
+) |>
+  filter(term %in% c("(Intercept)", "ht", "sexMale")) |>
+  transmute(model, term, estimate, std.error, statistic, p.value) |>
+  knitr::kable(digits = 4, caption = "Focus on the slope for `ht` (cm → % body fat)")
+```
+
+After `+ sex`, the slope on height is **positive** and substantial: holding sex fixed, taller athletes tend to higher % fat. The **pooled** line was **negative** because it absorbed the sex composition.
+
+```{r}
+#| label: within-sex
+#| tbl-cap: "Separate OLS within each sex (exploratory)."
+bind_rows(
+  tidy(lm(pcBfat ~ ht, data = filter(d, sex == "Female"))) |>
+    mutate(sex = "Female"),
+  tidy(lm(pcBfat ~ ht, data = filter(d, sex == "Male"))) |>
+    mutate(sex = "Male")
+) |>
+  filter(term == "ht") |>
+  select(sex, estimate, std.error, statistic, p.value) |>
+  knitr::kable(digits = 4)
+```
+
+## Scatterplots: pooled vs stratified
+
+```{r}
+#| label: fig-compare
+#| fig-height: 5
+#| fig-cap: "Left: pooled line slopes down. Right: within-sex lines slope up; dashed = misleading pooled fit."
+xlab <- "Height (cm)"
+ylab <- "Percent body fat (%)"
+
+p_pooled <- ggplot(d, aes(ht, pcBfat)) +
+  geom_point(alpha = 0.35, colour = "grey35", size = 2.2) +
+  geom_smooth(method = "lm", se = FALSE, colour = "#6a040f", linewidth = 1) +
+  labs(
+    title = "Ignoring sex",
+    subtitle = "pcBfat ~ ht — pooled (negative slope)",
+    x = xlab, y = ylab
+  )
+
+pal <- c(Female = "#9b2226", Male = "#005f73")
+
+p_strat <- ggplot(d, aes(ht, pcBfat, colour = sex)) +
+  geom_point(alpha = 0.45, size = 2.2) +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, aes(colour = sex)) +
+  geom_smooth(
+    method = "lm", se = FALSE,
+    aes(group = 1), colour = "grey20",
+    linetype = "dashed", linewidth = 0.75, inherit.aes = TRUE
+  ) +
+  scale_colour_manual(values = pal, name = NULL) +
+  labs(
+    title = "By sex",
+    subtitle = "Solid = within-sex OLS; dashed = pooled line",
+    x = xlab, y = ylab
+  )
+
+p_pooled + p_strat + plot_layout(widths = c(1, 1))
+```
+
+```{r}
+#| label: fig-one-panel
+#| fig-height: 4.8
+#| fig-cap: "Slide-friendly: upward slopes within sex vs downward dashed pooled line."
+ggplot(d, aes(ht, pcBfat, colour = sex)) +
+  geom_point(alpha = 0.45, size = 2.5) +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, aes(colour = sex)) +
+  geom_smooth(
+    method = "lm", se = FALSE,
+    aes(group = 1), colour = "grey25",
+    linetype = "dashed", linewidth = 0.9, inherit.aes = TRUE
+  ) +
+  scale_colour_manual(values = pal, name = "Sex") +
+  labs(
+    title = "Percent body fat vs height (AIS)",
+    subtitle = "Dashed = pooled; coloured = within-sex fits",
+    x = xlab, y = ylab
+  )
+```
+
+## Adjusted model: parallel slopes
+
+```{r}
+#| label: fig-adjusted-model
+#| fig-height: 4.8
+#| fig-cap: "Predictions from lm(pcBfat ~ ht + sex): positive common slope for height, intercept shift by sex."
+ht_seq <- seq(min(d$ht), max(d$ht), length.out = 80)
+d_pred <- expand.grid(ht = ht_seq, sex = levels(d$sex), stringsAsFactors = FALSE)
+d_pred$sex <- factor(d_pred$sex, levels = levels(d$sex))
+d_pred$fit <- predict(mod_adj, newdata = d_pred)
+
+ggplot(d, aes(ht, pcBfat, colour = sex)) +
+  geom_point(alpha = 0.35, size = 2.2) +
+  geom_line(data = d_pred, aes(y = fit, colour = sex), linewidth = 1) +
+  scale_colour_manual(values = pal, name = "Sex") +
+  labs(
+    title = "Adjusted model (parallel slopes)",
+    subtitle = "Lines = predictions from lm(pcBfat ~ ht + sex)",
+    x = xlab, y = ylab
+  )
+```
+
+## Take-home
+
+1. **Sign flips** in real data mean the **pooled** association is a **bad summary** when a binary like **sex** shifts both `X` and `Y`.
+2. **`lm(Y ~ X + sex)`** estimates the slope of `X` **at fixed sex**—here it recovers a **positive** height effect that was **hidden** in the marginal scatter.
+3. Athletes are a **selected** sample; this is for **methods** and visual intuition.
+
+::: {.callout-important}
+## Install
+
+If needed: `install.packages("DAAG")` and `install.packages("patchwork")`.
+:::

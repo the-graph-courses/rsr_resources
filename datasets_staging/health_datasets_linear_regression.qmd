@@ -1,12 +1,12 @@
 # Open-access health datasets for OLS linear regression practice
 
-Curated teaching datasets for ordinary least squares. All 25 datasets are downloaded (or pulled from permissive R packages), column-renamed to tidy `snake_case`, saved as CSVs, and given a quick-view thumbnail.
+Curated teaching datasets for ordinary least squares. **27** resources are downloaded (or pulled from permissive R packages): **25** numbered cleaning pipelines with tidy `snake_case` CSVs **plus** the OpenIntro NHANES adult-500 extract (original column names) **and** AIS athletes exported from `DAAG`. Each gets a quick-view thumbnail.
 
 All processing lives in [datasets_staging/scripts/prepare_datasets.R](scripts/prepare_datasets.R). Raw source files are in [datasets_staging/raw/](raw/), cleaned CSVs in [datasets_staging/cleaned/](cleaned/), and thumbnails in [datasets_staging/thumbnails/](thumbnails/).
 
 ## Summary tables
 
-The 25 datasets fall into two natural groups. **Study datasets** are the raw data from a specific published research paper — the numbers you find in the resource correspond directly to the numbers analysed in that paper. **Teaching datasets** were curated, sampled, or aggregated specifically for a textbook or teaching package; they come from real public sources (NHANES, ACS, NCHS, UN, NLSY) but the rows/columns you see were selected for pedagogical convenience, not to reproduce a specific paper.
+The datasets fall into two natural groups. **Study datasets** are the raw data from a specific published research paper — the numbers you find in the resource correspond directly to the numbers analysed in that paper. **Teaching datasets** were curated, sampled, or aggregated specifically for a textbook or teaching package; they come from real public sources (NHANES, ACS, NCHS, UN, NLSY) but the rows/columns you see were selected for pedagogical convenience, not to reproduce a specific paper.
 
 ### A. Datasets from published research studies
 
@@ -31,6 +31,7 @@ The 25 datasets fall into two natural groups. **Study datasets** are the raw dat
 | 17 | Depression & anxiety in older adults (Shenzhen) | 5331 × 24 | `phq9_depression_score` \~ `uls_loneliness_score` | <img src="thumbnails/17_depression_anxiety.png" width="180"/> | `read.csv("cleaned/17_depression_anxiety.csv")` | [17_depression_anxiety.csv](cleaned/17_depression_anxiety.csv) | CC0 1.0 (Dryad) |
 | 18 | PREVEND cognitive function & aging (NL cohort) | 500 × 31 | `rfft` \~ `age_yrs` | <img src="thumbnails/18_prevend.png" width="180"/> | `data(prevend.samp, package = "oibiostat")` | [18_prevend.csv](cleaned/18_prevend.csv) | No explicit licence (oibiostat) |
 | 19 | FAMuSS — ACTN3 genotype & arm-strength gain | 595 × 9 | `ndrm_change_pct` \~ `age_yrs` | <img src="thumbnails/19_famuss.png" width="180"/> | `data(famuss, package = "oibiostat")` | [19_famuss.csv](cleaned/19_famuss.csv) | No explicit licence (oibiostat) |
+| 26 | AIS athletes — Australian Institute of Sport (`DAAG`) | 202 × 13 | `ferr` \~ `wt` | <img src="thumbnails/26_ais.png" width="180"/> | `data(ais, package = "DAAG")` | [26_ais.csv](cleaned/26_ais.csv) | GPL-2 (DAAG) |
 | 25 | Boston housing — NOx air pollution (Harrison & Rubinfeld) | 506 × 13 | `nox_ppm_x10m` \~ `distance_to_employment` | <img src="thumbnails/25_boston.png" width="180"/> | `data(Boston, package = "ISLR2")` | [25_boston.csv](cleaned/25_boston.csv) | GPL-2 (ISLR2) |
 
 ### B. Teaching-oriented datasets (curated / sampled for pedagogy)
@@ -42,6 +43,7 @@ The 25 datasets fall into two natural groups. **Study datasets** are the raw dat
 | 22 | UN member states 2024 — global health (moderndive) | 193 × 13 | `life_expectancy_yrs` \~ `hdi` | <img src="thumbnails/22_un_member_states_2024.png" width="180"/> | `data(un_member_states_2024, package = "moderndive")` | [22_un_member_states_2024.csv](cleaned/22_un_member_states_2024.csv) | MIT (moderndive) |
 | 23 | NHANES adult sample 2009–12 (oibiostat) | 135 × 31 | `systolic_bp` \~ `age_yrs` | <img src="thumbnails/23_nhanes_adult.png" width="180"/> | `data(nhanes.samp.adult, package = "oibiostat")` | [23_nhanes_adult.csv](cleaned/23_nhanes_adult.csv) | NHANES public domain; oibiostat sample has no explicit licence |
 | 24 | US county-level socio-economic data (usdata) | 3142 × 15 | `unemployment_rate` \~ `poverty_rate` | <img src="thumbnails/24_county.png" width="180"/> | `data(county, package = "usdata")` | [24_county.csv](cleaned/24_county.csv) | GPL-3 (usdata); Census/ACS public domain |
+| 27 | NHANES adult 500 — labs & demographics (OpenIntro) | 500 × 76 | `Testosterone` \~ `Weight` | <img src="thumbnails/openintro_nhanes_samp_adult_500.png" width="180"/> | `read_csv("cleaned/openintro_nhanes_samp_adult_500.csv")` | [openintro_nhanes_samp_adult_500.csv](cleaned/openintro_nhanes_samp_adult_500.csv) | CC-BY-SA 4.0 (openintro); NHANES public domain |
 
 ## Load-everything snippet
 
@@ -73,11 +75,13 @@ data(un_member_states_2024, package = "moderndive"); un_member_states    <- un_m
 data(nhanes.samp.adult,    package = "oibiostat");  nhanes_adult         <- nhanes.samp.adult
 data(county,               package = "usdata");     county_df            <- county
 data(Boston,               package = "ISLR2");      boston_df            <- Boston
+ais_athletes        <- read_csv("cleaned/26_ais.csv")
+nhanes_adult_500    <- read_csv("cleaned/openintro_nhanes_samp_adult_500.csv")
 ```
 
 ## Dataset details
 
-Each section below lists the cleaned columns, primary paper/source, and the outcome + predictor used in the thumbnail. Column names in all cleaned CSVs use `snake_case`. Categorical variables are stored as factors with readable labels (e.g. `sex = male / female`) whenever the original coding was numeric.
+Each section below lists the cleaned columns, primary paper/source, and the outcome + predictor used in the thumbnail. **Most** numbered CSVs (`01`–`25`) use `snake_case`. **`26_ais.csv`** mirrors **`DAAG::ais`** (short column names as in the package). **`openintro_nhanes_samp_adult_500.csv`** keeps **original** OpenIntro / NHANES-style names (`Weight`, `Gender`, …). Categorical variables are stored as factors with readable labels whenever the original coding was numeric.
 
 ------------------------------------------------------------------------
 
@@ -440,6 +444,34 @@ Each section below lists the cleaned columns, primary paper/source, and the outc
 -   **Columns:** `per_capita_crime_rate, large_lot_residential_pct, non_retail_business_pct, near_charles_river, nox_ppm_x10m, avg_rooms_per_dwelling, pct_built_before_1940, distance_to_employment, highway_access_idx, property_tax_per_10k, pupil_teacher_ratio, lower_status_pct, median_home_value_usd_1k`
 -   **Notes:** borderline public-health — included for the **environmental-health framing**. `nox_ppm_x10m` (nitric-oxide concentration, ppm × 10⁷) is a cardiopulmonary-relevant air-pollution exposure. Teaching example: `nox_ppm_x10m ~ distance_to_employment + highway_access_idx + non_retail_business_pct`. The classic ISL example using `medv` (median home value) as outcome is also available, if you want to frame it as a disadvantage/SDoH proxy instead of as pure economics.
 
+------------------------------------------------------------------------
+
+### 26 — AIS athletes — Australian Institute of Sport (via `DAAG`)
+
+<img src="thumbnails/26_ais.png" width="360"/>
+
+-   **N × p:** 202 × 13 (elite Australian athletes across sports)
+-   **Study / source:** Telford & Cunningham, *Australian Sports Commission* cohort; bundled as `DAAG::ais`. See `?DAAG::ais`.
+-   **License:** GPL-2 (via **DAAG**)
+-   **Load:** `data(ais, package = "DAAG")`
+-   **Cleaned CSV:** [26_ais.csv](cleaned/26_ais.csv) *(mirror of the package data frame; short column names match `DAAG`)*
+-   **Columns:** `rcc, wcc, hc, hg, ferr, bmi, ssf, pcBfat, lbm, ht, wt, sex, sport`
+-   **Notes:** classic **confounding** demos — e.g. `lm(ferr ~ wt)` vs `lm(ferr ~ wt + sex)`, or `% body fat ~ height` with vs without sex. `sex` is `f` / `m`; `sport` is a factor of discipline.
+
+------------------------------------------------------------------------
+
+### 27 — NHANES adult 500 sample (OpenIntro `nhanes.samp.adult.500`)
+
+<img src="thumbnails/openintro_nhanes_samp_adult_500.png" width="360"/>
+
+-   **N × p:** 500 × 76 (random sample of US adults; NHANES-style variable names)
+-   **Source:** [OpenIntro Data: `nhanes.samp.adult.500`](https://www.openintro.org/data/index.php?data=nhanes.samp.adult.500) — same structure as `openintro::nhanes.samp` but **500** rows and many laboratory/clinical fields (e.g. `Testosterone`, `BMI`, `Weight`).
+-   **License:** CC-BY-SA 4.0 (OpenIntro redistribution); underlying NHANES is US-government public domain.
+-   **Load:** `read_csv("cleaned/openintro_nhanes_samp_adult_500.csv")` *(column names are **original OpenIntro / NHANES-style** \(`Id`, `Gender`, `Weight`, …\), not the `snake_case` used in `23_nhanes_adult.csv`.)*
+-   **Cleaned CSV:** [openintro_nhanes_samp_adult_500.csv](cleaned/openintro_nhanes_samp_adult_500.csv)
+-   **Columns (76):** identifiers and survey fields plus `Age`, `Height`, `Weight`, `BMI`, vitals, lipids, `Testosterone`, self-reported health, sleep, activity, substance use, etc. — see `read.csv(..., nrows = 1)` for the full header.
+-   **Notes:** larger than `oibiostat`'s 135-row adult NHANES extract; strong teaching example for **sex as confounder** with continuous labs (`lm(Testosterone ~ Weight + sex)` vs pooled `Weight` slope). Filter to complete cases for specific outcomes.
+
 ## License check for the "can we ship it in a package?" question
 
 | \# | Redistribute in an R data package? |
@@ -469,14 +501,16 @@ Each section below lists the cleaned columns, primary paper/source, and the outc
 | 23 | ⚠️ The `oibiostat` sample has no explicit licence (see row 18), but the **underlying NHANES data is US-government public domain** — just re-sample from the `NHANES` CRAN package or the CDC directly. |
 | 24 | ✅ `usdata` is GPL-3; underlying US Census/ACS is public domain. |
 | 25 | ✅ Already in `ISLR2` (GPL-2). |
+| 26 | ✅ Already in `DAAG` (GPL-2). |
+| 27 | ⚠️ Same **CC-BY-SA 4.0** share-alike note as row 21 (OpenIntro); underlying NHANES is public domain — you can also rebuild the extract from CDC files. |
 
-**Short version for a public, non-commercial, teaching-oriented package on GitHub:** all 25 are usable. For a more general-purpose package (CRAN-compatible, any licence), you'd want to:
+**Short version for a public, non-commercial, teaching-oriented package on GitHub:** all 27 are usable. For a more general-purpose package (CRAN-compatible, any licence), you'd want to:
 
 - **Drop or link-only** rows 1, 3, 5 (non-commercial / no licence).
 - **Suggest rather than re-bundle** rows 18, 19, 20 (no explicit data licence — let users load them from the upstream package).
 - **Re-sample from upstream public data** for row 23 (load via the `NHANES` CRAN package) and optionally row 21 (re-sample the public-domain NCHS file).
-- **Mind the share-alike** on row 21 (forces copyleft downstream).
-- Everything else is genuinely "bundle and go": rows 2, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 22, 24, 25.
+- **Mind the share-alike** on rows 21 and **27** (forces copyleft downstream).
+- Everything else is genuinely "bundle and go": rows 2, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 22, 24, 25, 26.
 
 ## Next step: turn this into a tiny R data package
 

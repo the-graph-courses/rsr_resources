@@ -1,99 +1,48 @@
-# Load packages
-if(!require(pacman)) install.packages("pacman")
-pacman::p_load(tidyverse, openintro)
+library(tidyverse)
+library(haven)
+library(broom)
 
+base <- "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/"
 
-# scatter plot of weight vs weeks
+demo <- read_xpt(paste0(base, "DEMO_J.xpt")) %>%
+  select(SEQN, sex = RIAGENDR, age = RIDAGEYR)
 
-preemies <- openintro::births14  %>% 
-#filter(premie == "premie")  %>% 
-mutate(weight_kg = weight * 0.45359) 
-#%>%
-#slice_tail(n = 20)
+diet <- read_xpt(paste0(base, "DR1TOT_J.xpt")) %>%
+  select(SEQN, kcal = DR1TKCAL, recall_status = DR1DRSTZ, wtdrd1 = WTDRD1)
 
-model <- lm(weight ~ weeks + gained, data = preemies)
-summary(model)
+dxa <- read_xpt(paste0(base, "DXX_J.xpt")) %>%
+  select(SEQN, body_fat_pct = DXDTOPF, dxa_status = DXAEXSTS)
 
-ggplot(preemies, aes(x = weeks, y = weight)) +
-  geom_point() +
-  geom_smooth(method = "lm") +
-  theme_minimal()
+dat <- demo %>%
+  inner_join(diet, by = "SEQN") %>%
+  inner_join(dxa, by = "SEQN") %>%
+  mutate(
+    sex = factor(sex, levels = c(1, 2), labels = c("Male", "Female"))
+  ) %>%
+  filter(
+    age >= 20,
+    age <= 59,
+    recall_status == 1,
+    dxa_status == 1,
+    !is.na(kcal),
+    !is.na(body_fat_pct)
+  )
 
-performance::check_model(model)
+# Pooled bivariate relationship
+m0 <- lm(body_fat_pct ~ kcal, data = dat)
 
-# iris length vs iris width and check model
+# Add sex as confounder
+m1 <- lm(body_fat_pct ~ kcal + sex, data = dat)
 
-iris_data <- iris %>%
-  mutate(obs_id = row_number())
+# Allow sex-specific slopes
+m2 <- lm(body_fat_pct ~ kcal * sex, data = dat)
 
-model <- lm(Sepal.Length ~ Sepal.Width, data = iris_data)
-summary(model)
-performance::check_model(model)
+tidy(m0)
+tidy(m1)
+tidy(m2)
 
-slice_head(n = 5)
-
-
-slice_tail(n = 8)
-ggplot(aes(x = weeks, y = weight)) +
-  geom_point() +
-  geom_smooth(method = "lm") +
-  theme_minimal()
-
-# summary of the data
-summary(openintro::births14)
-
-# correlation between weight and weeks
-cor(openintro::births14$weight, openintro::births14$weeks)
-
-# regression of weight on weeks
-
-?openintro::births14
-
-
-set.seed(3)
-data_for_regression <- babies |>
-  filter(gestation < 259) |>
-  slice_sample(n = 9)   %>% 
-  select(gestation, bwt)
-
-# plot the data
-ggplot(data_for_regression, aes(x = gestation, y = bwt)) +
-  geom_point() +
-  geom_smooth(method = "lm") +
-  theme_minimal()
-
-fit <- lm(bwt ~ gestation, data = data_for_regression)
-summary(fit)
-check_model(fit)
-
-
-pacman::p_load(tidyverse, openintro)
-# Prep data
-preemie_data <- openintro::births14 %>%
-  filter(premie == "premie") %>%
-  mutate(weight_kg = weight * 0.453592) %>%
-  slice_tail(n = 8)  %>% 
-  arrange(weeks, weight_kg) %>%
-  select(weeks, weight_kg)
-
-  preemie_data
-
-preemie_data
-# Fit model
-model <- lm(weight_kg ~ weeks, data = preemie_data)
-
-# View results
-summary(model)
-
-
-norm_good <- data.frame(
-  x = c(155, 157, 159, 160, 162, 163, 165, 166, 167, 168, 170, 171, 172, 173, 174, 175, 177, 178, 180, 182, 184, 186, 188, 190, 158, 164, 169, 176, 181, 185),
-  y = c(3.66, 3.49, 3.76, 3.52, 3.92, 3.8, 4.11, 3.83, 4.04, 3.89, 4.25, 4.1, 4.38, 4.15, 4.37, 4.16, 4.56, 4.41, 4.66, 4.49, 4.82, 4.7, 5.07, 4.85, 3.68, 3.73, 4.24, 4.3, 4.67, 4.71)
-)
-
-
-
-model <- lm(y ~ x, data = norm_good)
-summary(model)
-performance::check_model(model)
-
+# Sex-specific bivariate slopes
+dat %>%
+  group_by(sex) %>%
+  do(tidy(lm(body_fat_pct ~ kcal, data = .))) %>%
+  filter(term == "kcal")

@@ -82,11 +82,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="open-access-health-datasets-for-ols-linear-regression-practice" class="level1">
 <h1>Open-access health datasets for OLS linear regression practice</h1>
-<p>Curated teaching datasets for ordinary least squares. All 25 datasets are downloaded (or pulled from permissive R packages), column-renamed to tidy <code>snake_case</code>, saved as CSVs, and given a quick-view thumbnail.</p>
+<p>Curated teaching datasets for ordinary least squares. <strong>27</strong> resources are downloaded (or pulled from permissive R packages): <strong>25</strong> numbered cleaning pipelines with tidy <code>snake_case</code> CSVs <strong>plus</strong> the OpenIntro NHANES adult-500 extract (original column names) <strong>and</strong> AIS athletes exported from <code>DAAG</code>. Each gets a quick-view thumbnail.</p>
 <p>All processing lives in <a href="scripts/prepare_datasets.R">datasets_staging/scripts/prepare_datasets.R</a>. Raw source files are in <a href="raw/">datasets_staging/raw/</a>, cleaned CSVs in <a href="cleaned/">datasets_staging/cleaned/</a>, and thumbnails in <a href="thumbnails/">datasets_staging/thumbnails/</a>.</p>
 <section id="summary-tables" class="level2">
 <h2 class="anchored" data-anchor-id="summary-tables">Summary tables</h2>
-<p>The 25 datasets fall into two natural groups. <strong>Study datasets</strong> are the raw data from a specific published research paper — the numbers you find in the resource correspond directly to the numbers analysed in that paper. <strong>Teaching datasets</strong> were curated, sampled, or aggregated specifically for a textbook or teaching package; they come from real public sources (NHANES, ACS, NCHS, UN, NLSY) but the rows/columns you see were selected for pedagogical convenience, not to reproduce a specific paper.</p>
+<p>The datasets fall into two natural groups. <strong>Study datasets</strong> are the raw data from a specific published research paper — the numbers you find in the resource correspond directly to the numbers analysed in that paper. <strong>Teaching datasets</strong> were curated, sampled, or aggregated specifically for a textbook or teaching package; they come from real public sources (NHANES, ACS, NCHS, UN, NLSY) but the rows/columns you see were selected for pedagogical convenience, not to reproduce a specific paper.</p>
 <section id="a.-datasets-from-published-research-studies" class="level3">
 <h3 class="anchored" data-anchor-id="a.-datasets-from-published-research-studies">A. Datasets from published research studies</h3>
 <table class="caption-top table">
@@ -294,6 +294,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>No explicit licence (oibiostat)</td>
 </tr>
 <tr class="even">
+<td>26</td>
+<td>AIS athletes — Australian Institute of Sport (<code>DAAG</code>)</td>
+<td>202 × 13</td>
+<td><code>ferr</code> ~ <code>wt</code></td>
+<td><img src="thumbnails/26_ais.png" width="180"></td>
+<td><code>data(ais, package = "DAAG")</code></td>
+<td><a href="cleaned/26_ais.csv">26_ais.csv</a></td>
+<td>GPL-2 (DAAG)</td>
+</tr>
+<tr class="odd">
 <td>25</td>
 <td>Boston housing — NOx air pollution (Harrison &amp; Rubinfeld)</td>
 <td>506 × 13</td>
@@ -372,6 +382,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><a href="cleaned/24_county.csv">24_county.csv</a></td>
 <td>GPL-3 (usdata); Census/ACS public domain</td>
 </tr>
+<tr class="even">
+<td>27</td>
+<td>NHANES adult 500 — labs &amp; demographics (OpenIntro)</td>
+<td>500 × 76</td>
+<td><code>Testosterone</code> ~ <code>Weight</code></td>
+<td><img src="thumbnails/openintro_nhanes_samp_adult_500.png" width="180"></td>
+<td><code>read_csv("cleaned/openintro_nhanes_samp_adult_500.csv")</code></td>
+<td><a href="cleaned/openintro_nhanes_samp_adult_500.csv">openintro_nhanes_samp_adult_500.csv</a></td>
+<td>CC-BY-SA 4.0 (openintro); NHANES public domain</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -404,11 +424,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(un_member_states_2024, <span class="at">package =</span> <span class="st">"moderndive"</span>); un_member_states    <span class="ot">&lt;-</span> un_member_states_2024</span>
 <span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(nhanes.samp.adult,    <span class="at">package =</span> <span class="st">"oibiostat"</span>);  nhanes_adult         <span class="ot">&lt;-</span> nhanes.samp.adult</span>
 <span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(county,               <span class="at">package =</span> <span class="st">"usdata"</span>);     county_df            <span class="ot">&lt;-</span> county</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(Boston,               <span class="at">package =</span> <span class="st">"ISLR2"</span>);      boston_df            <span class="ot">&lt;-</span> Boston</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(Boston,               <span class="at">package =</span> <span class="st">"ISLR2"</span>);      boston_df            <span class="ot">&lt;-</span> Boston</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>ais_athletes        <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/26_ais.csv"</span>)</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>nhanes_adult_500    <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/openintro_nhanes_samp_adult_500.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="dataset-details" class="level2">
 <h2 class="anchored" data-anchor-id="dataset-details">Dataset details</h2>
-<p>Each section below lists the cleaned columns, primary paper/source, and the outcome + predictor used in the thumbnail. Column names in all cleaned CSVs use <code>snake_case</code>. Categorical variables are stored as factors with readable labels (e.g.&nbsp;<code>sex = male / female</code>) whenever the original coding was numeric.</p>
+<p>Each section below lists the cleaned columns, primary paper/source, and the outcome + predictor used in the thumbnail. <strong>Most</strong> numbered CSVs (<code>01</code>–<code>25</code>) use <code>snake_case</code>. <strong><code>26_ais.csv</code></strong> mirrors <strong><code>DAAG::ais</code></strong> (short column names as in the package). <strong><code>openintro_nhanes_samp_adult_500.csv</code></strong> keeps <strong>original</strong> OpenIntro / NHANES-style names (<code>Weight</code>, <code>Gender</code>, …). Categorical variables are stored as factors with readable labels whenever the original coding was numeric.</p>
 <hr>
 <section id="body-fat-252-men-johnsonpenrose-jse-1996" class="level3">
 <h3 class="anchored" data-anchor-id="body-fat-252-men-johnsonpenrose-jse-1996">1 — Body fat, 252 men (Johnson/Penrose, JSE 1996)</h3>
@@ -769,6 +791,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Columns:</strong> <code>per_capita_crime_rate, large_lot_residential_pct, non_retail_business_pct, near_charles_river, nox_ppm_x10m, avg_rooms_per_dwelling, pct_built_before_1940, distance_to_employment, highway_access_idx, property_tax_per_10k, pupil_teacher_ratio, lower_status_pct, median_home_value_usd_1k</code></li>
 <li><strong>Notes:</strong> borderline public-health — included for the <strong>environmental-health framing</strong>. <code>nox_ppm_x10m</code> (nitric-oxide concentration, ppm × 10⁷) is a cardiopulmonary-relevant air-pollution exposure. Teaching example: <code>nox_ppm_x10m ~ distance_to_employment + highway_access_idx + non_retail_business_pct</code>. The classic ISL example using <code>medv</code> (median home value) as outcome is also available, if you want to frame it as a disadvantage/SDoH proxy instead of as pure economics.</li>
 </ul>
+<hr>
+</section>
+<section id="ais-athletes-australian-institute-of-sport-via-daag" class="level3">
+<h3 class="anchored" data-anchor-id="ais-athletes-australian-institute-of-sport-via-daag">26 — AIS athletes — Australian Institute of Sport (via <code>DAAG</code>)</h3>
+<p><img src="thumbnails/26_ais.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 202 × 13 (elite Australian athletes across sports)</li>
+<li><strong>Study / source:</strong> Telford &amp; Cunningham, <em>Australian Sports Commission</em> cohort; bundled as <code>DAAG::ais</code>. See <code>?DAAG::ais</code>.</li>
+<li><strong>License:</strong> GPL-2 (via <strong>DAAG</strong>)</li>
+<li><strong>Load:</strong> <code>data(ais, package = "DAAG")</code></li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/26_ais.csv">26_ais.csv</a> <em>(mirror of the package data frame; short column names match <code>DAAG</code>)</em></li>
+<li><strong>Columns:</strong> <code>rcc, wcc, hc, hg, ferr, bmi, ssf, pcBfat, lbm, ht, wt, sex, sport</code></li>
+<li><strong>Notes:</strong> classic <strong>confounding</strong> demos — e.g.&nbsp;<code>lm(ferr ~ wt)</code> vs <code>lm(ferr ~ wt + sex)</code>, or <code>% body fat ~ height</code> with vs without sex. <code>sex</code> is <code>f</code> / <code>m</code>; <code>sport</code> is a factor of discipline.</li>
+</ul>
+<hr>
+</section>
+<section id="nhanes-adult-500-sample-openintro-nhanes.samp.adult.500" class="level3">
+<h3 class="anchored" data-anchor-id="nhanes-adult-500-sample-openintro-nhanes.samp.adult.500">27 — NHANES adult 500 sample (OpenIntro <code>nhanes.samp.adult.500</code>)</h3>
+<p><img src="thumbnails/openintro_nhanes_samp_adult_500.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 500 × 76 (random sample of US adults; NHANES-style variable names)</li>
+<li><strong>Source:</strong> <a href="https://www.openintro.org/data/index.php?data=nhanes.samp.adult.500">OpenIntro Data: <code>nhanes.samp.adult.500</code></a> — same structure as <code>openintro::nhanes.samp</code> but <strong>500</strong> rows and many laboratory/clinical fields (e.g.&nbsp;<code>Testosterone</code>, <code>BMI</code>, <code>Weight</code>).</li>
+<li><strong>License:</strong> CC-BY-SA 4.0 (OpenIntro redistribution); underlying NHANES is US-government public domain.</li>
+<li><strong>Load:</strong> <code>read_csv("cleaned/openintro_nhanes_samp_adult_500.csv")</code> <em>(column names are <strong>original OpenIntro / NHANES-style</strong> (<code>Id</code>, <code>Gender</code>, <code>Weight</code>, …), not the <code>snake_case</code> used in <code>23_nhanes_adult.csv</code>.)</em></li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/openintro_nhanes_samp_adult_500.csv">openintro_nhanes_samp_adult_500.csv</a></li>
+<li><strong>Columns (76):</strong> identifiers and survey fields plus <code>Age</code>, <code>Height</code>, <code>Weight</code>, <code>BMI</code>, vitals, lipids, <code>Testosterone</code>, self-reported health, sleep, activity, substance use, etc. — see <code>read.csv(..., nrows = 1)</code> for the full header.</li>
+<li><strong>Notes:</strong> larger than <code>oibiostat</code>’s 135-row adult NHANES extract; strong teaching example for <strong>sex as confounder</strong> with continuous labs (<code>lm(Testosterone ~ Weight + sex)</code> vs pooled <code>Weight</code> slope). Filter to complete cases for specific outcomes.</li>
+</ul>
 </section>
 </section>
 <section id="license-check-for-the-can-we-ship-it-in-a-package-question" class="level2">
@@ -885,15 +935,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>25</td>
 <td>✅ Already in <code>ISLR2</code> (GPL-2).</td>
 </tr>
+<tr class="even">
+<td>26</td>
+<td>✅ Already in <code>DAAG</code> (GPL-2).</td>
+</tr>
+<tr class="odd">
+<td>27</td>
+<td>⚠️ Same <strong>CC-BY-SA 4.0</strong> share-alike note as row 21 (OpenIntro); underlying NHANES is public domain — you can also rebuild the extract from CDC files.</td>
+</tr>
 </tbody>
 </table>
-<p><strong>Short version for a public, non-commercial, teaching-oriented package on GitHub:</strong> all 25 are usable. For a more general-purpose package (CRAN-compatible, any licence), you’d want to:</p>
+<p><strong>Short version for a public, non-commercial, teaching-oriented package on GitHub:</strong> all 27 are usable. For a more general-purpose package (CRAN-compatible, any licence), you’d want to:</p>
 <ul>
 <li><strong>Drop or link-only</strong> rows 1, 3, 5 (non-commercial / no licence).</li>
 <li><strong>Suggest rather than re-bundle</strong> rows 18, 19, 20 (no explicit data licence — let users load them from the upstream package).</li>
 <li><strong>Re-sample from upstream public data</strong> for row 23 (load via the <code>NHANES</code> CRAN package) and optionally row 21 (re-sample the public-domain NCHS file).</li>
-<li><strong>Mind the share-alike</strong> on row 21 (forces copyleft downstream).</li>
-<li>Everything else is genuinely “bundle and go”: rows 2, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 22, 24, 25.</li>
+<li><strong>Mind the share-alike</strong> on rows 21 and <strong>27</strong> (forces copyleft downstream).</li>
+<li>Everything else is genuinely “bundle and go”: rows 2, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 22, 24, 25, 26.</li>
 </ul>
 </section>
 <section id="next-step-turn-this-into-a-tiny-r-data-package" class="level2">

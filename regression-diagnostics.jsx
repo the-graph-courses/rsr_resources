@@ -144,7 +144,7 @@ const SUNSHINE=[
       links:[{title:"DataScience+: First steps with non-linear regression in R",short:"DataScience+",url:"https://datascienceplus.com/first-steps-with-non-linear-regression-in-r/"},{title:"stats::nls reference (rdrr)",short:"nls()",url:"https://rdrr.io/r/stats/nls.html"}]}
   ],
   examples:{good:"lin_good",borderline:"lin_border",bad:"lin_bad"}},
-{key:"homogeneity",letter:"H",label:"Homogeneity of Variance",labelParen:"(Homoscedasticity)",type:"diagnostic",diagKey:"homogeneity",color:"#2F855A",colorSoft:"#D4EDDF",summary:"Does the spread of residuals stay constant?",
+{key:"homogeneity",letter:"H",label:"Homogeneity of Variance",labelParen:"(Homoscedasticity, equal variance)",type:"diagnostic",diagKey:"homogeneity",color:"#2F855A",colorSoft:"#D4EDDF",summary:"Does the spread of residuals stay constant?",
   readingPlotNames:["Scale–location plot","\u221A|standardized residuals| vs fitted"],
   explanation:"The spread of prediction errors should stay roughly constant across the range of the predictor. If the residuals fan out or shrink (heteroscedasticity), the standard errors are wrong, so confidence intervals and p-values cannot be trusted.",
   plotGuide:"**X-axis: fitted values.** The model's predicted y for each observation.\n**Y-axis: \u221A|standardized residuals|.** Error magnitude on a z-score-like scale, with the square root compressing the tail so your eye can judge whether the smooth line is flat.\nA flat line means constant spread. An upward slope means variance is growing with the fitted value.",
