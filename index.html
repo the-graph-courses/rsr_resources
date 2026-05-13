@@ -141,11 +141,8 @@
     flex: 1 1 auto;
   }
 
-  .sidebar-extra {
-    flex-shrink: 0;
-    margin-top: auto;
-    padding: 16px 10px 12px;
-    border-top: 1px solid var(--border);
+  .nav-section + .nav-section {
+    margin-top: 14px;
   }
 
   .nav-label {
@@ -367,40 +364,52 @@
 
     <div class="sidebar-body">
     <div class="sidebar-nav">
-      <div class="nav-label">Resources</div>
+      <div class="nav-section">
+        <div class="nav-label">Explorers</div>
 
-      <a class="nav-item" data-id="mean-sd-explorer" data-src="explorers/mean-sd-explorer.html" onclick="load(this)">
-        <div class="nav-name">Mean &amp; SD Explorer</div>
-        <div class="nav-desc">Click to add points and see the mean and standard deviation update live.</div>
-      </a>
+        <a class="nav-item" data-id="mean-sd-explorer" data-src="explorers/mean-sd-explorer.html" onclick="load(this)">
+          <div class="nav-name">Mean &amp; SD Explorer</div>
+          <div class="nav-desc">Click to add points and see the mean and standard deviation update live.</div>
+        </a>
 
-      <a class="nav-item" data-id="height-explorer" data-src="explorers/height-explorer.html" onclick="load(this)">
-        <div class="nav-name">Height Mean &amp; SD Explorer</div>
-        <div class="nav-desc">Add stick-figure people and see mean height and SD update with horizontal bands.</div>
-      </a>
+        <a class="nav-item" data-id="height-explorer" data-src="explorers/height-explorer.html" onclick="load(this)">
+          <div class="nav-name">Height Mean &amp; SD Explorer</div>
+          <div class="nav-desc">Add stick-figure people and see mean height and SD update with horizontal bands.</div>
+        </a>
 
-      <a class="nav-item" data-id="least-squares-explorer" data-src="explorers/least-squares-explorer.html" onclick="load(this)">
-        <div class="nav-name">Least Squares Explorer</div>
-        <div class="nav-desc">Drag sliders to fit a regression line and minimize the sum of squared residuals.</div>
-      </a>
+        <a class="nav-item" data-id="least-squares-explorer" data-src="explorers/least-squares-explorer.html" onclick="load(this)">
+          <div class="nav-name">Least Squares Explorer</div>
+          <div class="nav-desc">Drag sliders to fit a regression line and minimize the sum of squared residuals.</div>
+        </a>
 
-      <a class="nav-item" data-id="slope-standard-error" data-src="explorers/slope-standard-error.html" onclick="load(this)">
-        <div class="nav-name">Slope Standard Error</div>
-        <div class="nav-desc">Explore what affects the precision of the slope estimate through simulation.</div>
-      </a>
+        <a class="nav-item" data-id="slope-standard-error" data-src="explorers/slope-standard-error.html" onclick="load(this)">
+          <div class="nav-name">Slope Standard Error</div>
+          <div class="nav-desc">Explore what affects the precision of the slope estimate through simulation.</div>
+        </a>
 
-      <a class="nav-item" data-id="regression-diagnostics" data-src="explorers/regression-diagnostics.html" onclick="load(this)">
-        <div class="nav-name">Regression Assumptions Explorer</div>
-        <div class="nav-desc">Explore SUNSHINE assumptions with interactive diagnostics, examples, and practice questions.</div>
-      </a>
-    </div>
+        <a class="nav-item" data-id="regression-diagnostics" data-src="explorers/regression-diagnostics.html" onclick="load(this)">
+          <div class="nav-name">Regression Assumptions Explorer</div>
+          <div class="nav-desc">Explore SUNSHINE assumptions with interactive diagnostics, examples, and practice questions.</div>
+        </a>
+      </div>
 
-    <div class="sidebar-extra">
-      <div class="nav-label">Teaching reference</div>
-      <a class="nav-item" data-id="health-datasets-linear-regression" data-src="datasets_staging/health_datasets_linear_regression.html" onclick="load(this)">
-        <div class="nav-name">Health datasets for OLS practice</div>
-        <div class="nav-desc">Curated open-access health datasets with documentation for linear regression exercises.</div>
-      </a>
+      <div class="nav-section">
+        <div class="nav-label">Cheat sheets</div>
+
+        <a class="nav-item" data-id="intro-to-simple-linear-regression-slr" data-src="active_cheat_sheets/intro_to_simple_linear_regression_slr.html" onclick="load(this)">
+          <div class="nav-name">Intro to Simple Linear Regression (SLR)</div>
+          <div class="nav-desc">Fill-in-the-blank reference covering the SLR equation, residuals, least squares, and reading R&apos;s output.</div>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Teaching reference</div>
+
+        <a class="nav-item" data-id="health-datasets-linear-regression" data-src="datasets_staging/health_datasets_linear_regression.html" onclick="load(this)">
+          <div class="nav-name">Health datasets for OLS practice</div>
+          <div class="nav-desc">Curated open-access health datasets with documentation for linear regression exercises.</div>
+        </a>
+      </div>
     </div>
     </div>
 
