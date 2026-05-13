@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(quarto render:*)",
+      "Bash(Rscript -e 'library\\(oibiostat\\); data\\(prevend.samp\\); cat\\(\"OK:\", nrow\\(prevend.samp\\), \"rows\\\\n\"\\)')"
+    ]
+  }
+}

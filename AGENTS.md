@@ -1,13 +1,10 @@
-# Notes for AI Assistants
+---
+description: 
+alwaysApply: true
+---
 
-## Regression Diagnostics Build
+Avoid em dashes in your prose
 
-- `regression-diagnostics.jsx` is the source of truth for the React explorer.
-- `explorers/regression-diagnostics.bundle.js` is generated. Do not edit it by hand.
-- After editing `regression-diagnostics.jsx`, run `npm run build`.
-- `explorers/regression-diagnostics.html` loads the generated bundle directly. Do not reintroduce runtime Babel, `fetch`, or `new Function` loading.
-- Use `npm run watch` while actively editing the React explorer.
+Avoid messing with git unless I ask you to 
 
-## Static Explorers
-
-The other explorers under `explorers/` are self-contained static HTML/JS resources and do not use this build step. Root-level `*-explorer.html` / `regression-diagnostics.html` / `slope-standard-error.html` files are thin wrappers (same short URLs) that iframe the implementations in `explorers/`.
+Avoid editing my custom rules and agents files unless I ask you to.
