@@ -413,6 +413,10 @@
             gap: 0.4mm 2.5mm;
             align-items: baseline;
         }
+        .vocab-grid.wide {
+            grid-template-columns: auto 1fr auto 1fr;
+            gap: 0.4mm 2.8mm;
+        }
         .vocab-term {
             font-family: Consolas, Menlo, monospace;
             font-weight: 900;
@@ -471,6 +475,7 @@
             .page, .toolbar { width: calc(100vw - 16px); }
             .page { padding: 16px; min-height: auto; transform: none !important; }
             .row, .eq-grid, .factor-cards, .sig-mini, .formula-grid { grid-template-columns: 1fr !important; }
+            .vocab-grid.wide { grid-template-columns: auto 1fr !important; }
             .formula-panel { border-right: 0; border-bottom: 1px solid #cfdcde; padding-right: 0; padding-bottom: 2mm; min-height: 0; }
             .toolbar { flex-direction: column; align-items: stretch; }
             .toolbar-intro .descr { max-width: none; }
@@ -485,8 +490,8 @@
         </div>
         <div class="toolbar-actions">
             <div class="zoom-group" role="group" aria-label="Zoom controls">
-                <button type="button" id="zoomOut" aria-label="Zoom out">A−</button>
-                <button type="button" id="zoomIn" aria-label="Zoom in">A+</button>
+                <button type="button" id="zoomOut" aria-label="Zoom out">Zoom -</button>
+                <button type="button" id="zoomIn" aria-label="Zoom in">Zoom +</button>
                 <span class="zoom-label" id="zoomLabel">100%</span>
             </div>
             <button type="button" id="toggleHints">Hide hints</button>
@@ -512,46 +517,127 @@
             <div class="box-body">
                 <div class="row split-62-38">
                     <div class="stack">
-                        <p>In simple linear regression, the sample slope <span class="b"><input class="fill code" data-answer="b1"><span class="opts"><button type="button" class="opt" data-value="b1">b₁</button><button type="button" class="opt" data-value="beta1">β₁</button><button type="button" class="opt" data-value="b0">b₀</button></span></span> is our estimate of the unknown population slope <span class="b"><input class="fill code" data-answer="beta1"><span class="opts"><button type="button" class="opt" data-value="b1">b₁</button><button type="button" class="opt" data-value="beta1">β₁</button></span></span>.</p>
+                        <p>In simple linear regression, the sample slope <span class="b"><input class="fill code" data-answer="b1"><span class="opts"><button type="button" class="opt" data-value="b1">b₁</button><button type="button" class="opt" data-value="beta1">β₁</button></span></span> is our estimate of the unknown population slope <span class="b"><input class="fill code" data-answer="beta1"><span class="opts"><button type="button" class="opt" data-value="b1">b₁</button><button type="button" class="opt" data-value="beta1">β₁</button></span></span>.</p>
                         <p>Because of sampling variability, different random samples would give <span class="b"><input class="fill" data-answer="different"><span class="opts"><button type="button" class="opt" data-value="identical">identical</button><button type="button" class="opt" data-value="different">different</button></span></span> fitted slopes. The standard error, SE(<span class="b"><input class="fill code" data-answer="b1"><span class="opts"><button type="button" class="opt" data-value="y">y</button><button type="button" class="opt" data-value="x">x</button><button type="button" class="opt" data-value="b1">b₁</button></span></span>), measures the typical <span class="b"><input class="fill" data-answer="spread"><span class="opts"><button type="button" class="opt" data-value="sign">sign</button><button type="button" class="opt" data-value="spread">spread</button><button type="button" class="opt" data-value="average">average</button></span></span> of those sample slopes.</p>
+                        <p>In real studies, we usually observe one <span class="b"><input class="fill" data-answer="sample"><span class="opts"><button type="button" class="opt" data-value="population">population</button><button type="button" class="opt" data-value="sample">sample</button></span></span>, not the whole <span class="b"><input class="fill" data-answer="population"><span class="opts"><button type="button" class="opt" data-value="sample">sample</button><button type="button" class="opt" data-value="population">population</button></span></span>. So SE(b₁) estimates how much b₁ would vary, using residual scatter, sample size, and x-spread.</p>
                         <p>A confidence <span class="b"><input class="fill" data-answer="interval"><span class="opts"><button type="button" class="opt" data-value="interval">interval</button><button type="button" class="opt" data-value="point">point</button></span></span> combines the slope estimate, its SE, and a <span class="b"><input class="fill code" data-answer="t*"><span class="opts"><button type="button" class="opt" data-value="SSE">SSE</button><button type="button" class="opt" data-value="t*">t*</button><button type="button" class="opt" data-value="residual">residual</button></span></span> multiplier to give a plausible <span class="b"><input class="fill" data-answer="range"><span class="opts"><button type="button" class="opt" data-value="range">range</button><button type="button" class="opt" data-value="point">point</button></span></span> for the true slope.</p>
                     </div>
                     <div class="visual" aria-label="Different samples produce different fitted slopes">
-                        <svg viewBox="0 0 220 110" role="img">
-                            <rect width="220" height="110" rx="4" fill="#fff" />
+                        <svg viewBox="0 0 220 118" role="img">
+                            <rect width="220" height="118" rx="4" fill="#fff" />
+                            <!-- Legend -->
+                            <g font-size="6.2" font-weight="800">
+                                <line x1="34" y1="12" x2="48" y2="12" stroke="#8ed4ec" stroke-width="2" />
+                                <circle cx="29" cy="12" r="2.3" fill="#bfe8f7" stroke="#78c9e5" stroke-width="0.7" />
+                                <text x="53" y="14" fill="#2f5f98">population / samples</text>
+                                <line x1="136" y1="12" x2="150" y2="12" stroke="#b83b5e" stroke-width="2.6" />
+                                <circle cx="131" cy="12" r="2.5" fill="#b83b5e" stroke="#8f2948" stroke-width="0.7" />
+                                <text x="155" y="14" fill="#b83b5e">one sample</text>
+                            </g>
                             <!-- Light gridlines -->
                             <g stroke="#eef3f4" stroke-width="0.8">
-                                <line x1="22" y1="20" x2="210" y2="20" />
-                                <line x1="22" y1="45" x2="210" y2="45" />
-                                <line x1="22" y1="70" x2="210" y2="70" />
-                                <line x1="22" y1="95" x2="210" y2="95" />
+                                <line x1="22" y1="28" x2="210" y2="28" />
+                                <line x1="22" y1="52" x2="210" y2="52" />
+                                <line x1="22" y1="76" x2="210" y2="76" />
+                                <line x1="22" y1="100" x2="210" y2="100" />
                             </g>
                             <!-- Axes -->
-                            <line x1="22" y1="20" x2="22" y2="95" stroke="#5d6d72" stroke-width="0.9" />
-                            <line x1="22" y1="95" x2="210" y2="95" stroke="#5d6d72" stroke-width="0.9" />
-                            <text x="116" y="106" text-anchor="middle" font-size="6.5" font-weight="700" fill="#5d6d72">x</text>
-                            <text x="14" y="60" text-anchor="middle" font-size="6.5" font-weight="700" fill="#5d6d72" transform="rotate(-90 14 60)">y</text>
-                            <!-- Faint scatter points -->
-                            <g fill="#c8d4d6" stroke="#9aabae" stroke-width="0.5">
-                                <circle cx="38" cy="80" r="2.2" />
-                                <circle cx="55" cy="74" r="2.2" />
-                                <circle cx="74" cy="62" r="2.2" />
-                                <circle cx="92" cy="68" r="2.2" />
-                                <circle cx="110" cy="55" r="2.2" />
-                                <circle cx="130" cy="60" r="2.2" />
-                                <circle cx="150" cy="42" r="2.2" />
-                                <circle cx="170" cy="48" r="2.2" />
-                                <circle cx="188" cy="36" r="2.2" />
+                            <line x1="22" y1="28" x2="22" y2="100" stroke="#5d6d72" stroke-width="0.9" />
+                            <line x1="22" y1="100" x2="210" y2="100" stroke="#5d6d72" stroke-width="0.9" />
+                            <text x="116" y="112" text-anchor="middle" font-size="6.5" font-weight="700" fill="#5d6d72">x</text>
+                            <text x="14" y="64" text-anchor="middle" font-size="6.5" font-weight="700" fill="#5d6d72" transform="rotate(-90 14 64)">y</text>
+                            <!-- Light blue population cloud (high-variance scatter) -->
+                            <g fill="#bfe8f7" stroke="#78c9e5" stroke-width="0.35" opacity="0.72">
+                                <circle cx="25" cy="91" r="1.4" />
+                                <circle cx="28" cy="73" r="1.6" />
+                                <circle cx="31" cy="86" r="1.5" />
+                                <circle cx="34" cy="95" r="1.7" />
+                                <circle cx="37" cy="78" r="1.4" />
+                                <circle cx="39" cy="65" r="1.6" />
+                                <circle cx="42" cy="89" r="1.5" />
+                                <circle cx="45" cy="70" r="1.7" />
+                                <circle cx="47" cy="82" r="1.4" />
+                                <circle cx="50" cy="60" r="1.6" />
+                                <circle cx="53" cy="79" r="1.5" />
+                                <circle cx="56" cy="91" r="1.7" />
+                                <circle cx="58" cy="64" r="1.4" />
+                                <circle cx="61" cy="76" r="1.6" />
+                                <circle cx="63" cy="55" r="1.5" />
+                                <circle cx="66" cy="84" r="1.7" />
+                                <circle cx="68" cy="58" r="1.4" />
+                                <circle cx="70" cy="77" r="1.6" />
+                                <circle cx="72" cy="64" r="1.5" />
+                                <circle cx="75" cy="83" r="1.7" />
+                                <circle cx="78" cy="55" r="1.4" />
+                                <circle cx="81" cy="71" r="1.6" />
+                                <circle cx="83" cy="81" r="1.5" />
+                                <circle cx="85" cy="50" r="1.7" />
+                                <circle cx="87" cy="60" r="1.4" />
+                                <circle cx="89" cy="73" r="1.6" />
+                                <circle cx="92" cy="53" r="1.5" />
+                                <circle cx="94" cy="68" r="1.7" />
+                                <circle cx="97" cy="79" r="1.4" />
+                                <circle cx="99" cy="56" r="1.6" />
+                                <circle cx="102" cy="71" r="1.5" />
+                                <circle cx="105" cy="46" r="1.7" />
+                                <circle cx="108" cy="64" r="1.4" />
+                                <circle cx="110" cy="75" r="1.6" />
+                                <circle cx="113" cy="45" r="1.5" />
+                                <circle cx="116" cy="60" r="1.7" />
+                                <circle cx="118" cy="71" r="1.4" />
+                                <circle cx="121" cy="48" r="1.6" />
+                                <circle cx="124" cy="62" r="1.5" />
+                                <circle cx="127" cy="70" r="1.7" />
+                                <circle cx="129" cy="43" r="1.4" />
+                                <circle cx="132" cy="56" r="1.6" />
+                                <circle cx="135" cy="65" r="1.5" />
+                                <circle cx="137" cy="42" r="1.7" />
+                                <circle cx="140" cy="60" r="1.4" />
+                                <circle cx="143" cy="38" r="1.6" />
+                                <circle cx="145" cy="56" r="1.5" />
+                                <circle cx="148" cy="65" r="1.7" />
+                                <circle cx="151" cy="38" r="1.4" />
+                                <circle cx="154" cy="51" r="1.6" />
+                                <circle cx="157" cy="60" r="1.5" />
+                                <circle cx="160" cy="36" r="1.7" />
+                                <circle cx="163" cy="54" r="1.4" />
+                                <circle cx="166" cy="42" r="1.6" />
+                                <circle cx="169" cy="58" r="1.5" />
+                                <circle cx="171" cy="36" r="1.7" />
+                                <circle cx="174" cy="50" r="1.4" />
+                                <circle cx="177" cy="56" r="1.6" />
+                                <circle cx="180" cy="33" r="1.5" />
+                                <circle cx="183" cy="47" r="1.7" />
+                                <circle cx="186" cy="41" r="1.4" />
+                                <circle cx="189" cy="53" r="1.6" />
+                                <circle cx="192" cy="30" r="1.5" />
+                                <circle cx="195" cy="44" r="1.7" />
+                                <circle cx="198" cy="36" r="1.4" />
+                                <circle cx="201" cy="51" r="1.6" />
+                                <circle cx="204" cy="32" r="1.5" />
+                                <circle cx="207" cy="45" r="1.7" />
                             </g>
-                            <!-- Other sample slopes: thin, dashed -->
-                            <line x1="28" y1="78" x2="200" y2="40" stroke="#b83b5e" stroke-width="0.9" stroke-dasharray="3,2" opacity="0.85" />
-                            <line x1="28" y1="74" x2="200" y2="44" stroke="#1f8aa8" stroke-width="0.9" stroke-dasharray="3,2" opacity="0.85" />
-                            <line x1="28" y1="66" x2="200" y2="52" stroke="#2f5f98" stroke-width="0.9" stroke-dasharray="3,2" opacity="0.85" />
-                            <line x1="28" y1="86" x2="200" y2="32" stroke="#a07e00" stroke-width="0.9" stroke-dasharray="3,2" opacity="0.8" />
-                            <!-- Our sample line: thick, continuous -->
-                            <line x1="28" y1="76" x2="200" y2="42" stroke="#0d7377" stroke-width="2.6" />
+                            <!-- Light blue lines from possible samples -->
+                            <g stroke="#8ed4ec" stroke-width="1.7" opacity="0.75">
+                                <line x1="28" y1="88" x2="202" y2="36" />
+                                <line x1="28" y1="82" x2="202" y2="44" />
+                                <line x1="28" y1="76" x2="202" y2="50" />
+                                <line x1="28" y1="91" x2="202" y2="31" />
+                                <line x1="28" y1="72" x2="202" y2="56" />
+                            </g>
+                            <!-- One observed sample: rose points and fitted line -->
+                            <g fill="#b83b5e" stroke="#8f2948" stroke-width="0.65">
+                                <circle cx="43" cy="78" r="2.8" />
+                                <circle cx="67" cy="79" r="2.8" />
+                                <circle cx="91" cy="61" r="2.8" />
+                                <circle cx="116" cy="62" r="2.8" />
+                                <circle cx="149" cy="51" r="2.8" />
+                                <circle cx="176" cy="36" r="2.8" />
+                                <circle cx="203" cy="39" r="2.8" />
+                            </g>
+                            <line x1="32" y1="84" x2="206" y2="34" stroke="#b83b5e" stroke-width="3" />
                         </svg>
-                        <div class="visual-caption">Different random samples produce different fitted slopes. SE(b₁) quantifies that spread.</div>
+                        <div class="visual-caption"><b>Sampling variability.</b> Blue: population scatter and fitted lines from other possible samples. Rose: one observed sample and its regression line.</div>
                     </div>
                 </div>
             </div>
@@ -573,12 +659,12 @@
                                     </span>
                                 </span>
                             </div>
-                            <div class="note" style="margin-top:0.6mm;">Here <b>s</b> is the residual <span class="b"><input class="fill" data-answer="standard"><span class="opts"><button type="button" class="opt" data-value="squared">squared</button><button type="button" class="opt" data-value="standard">standard</button></span></span> error (RSE), and &Sigma;(x<sub>i</sub> &minus; x&#772;)<sup>2</sup> &mdash; often called <span class="b"><input class="fill code" data-answer="Sxx"><span class="opts"><button type="button" class="opt" data-value="SSE">SSE</button><button type="button" class="opt" data-value="Sxx">Sxx</button><button type="button" class="opt" data-value="SST">SST</button></span></span> &mdash; measures the <span class="b"><input class="fill" data-answer="spread"><span class="opts"><button type="button" class="opt" data-value="mean">mean</button><button type="button" class="opt" data-value="spread">spread</button></span></span> of x values.</div>
+                            <div class="note" style="margin-top:0.6mm;">Here <b>s</b> is the residual <span class="b"><input class="fill" data-answer="standard"><span class="opts"><button type="button" class="opt" data-value="squared">squared</button><button type="button" class="opt" data-value="standard">standard</button></span></span> error (RSE), and &Sigma;(x<sub>i</sub> &minus; x&#772;)<sup>2</sup> (often called <span class="b"><input class="fill code" data-answer="Sxx"><span class="opts"><button type="button" class="opt" data-value="SSE">SSE</button><button type="button" class="opt" data-value="Sxx">Sxx</button><button type="button" class="opt" data-value="SST">SST</button></span></span>) measures the <span class="b"><input class="fill" data-answer="spread"><span class="opts"><button type="button" class="opt" data-value="mean">mean</button><button type="button" class="opt" data-value="spread">spread</button></span></span> of x values.</div>
                         </div>
                     </div>
                     <div class="stack" style="gap:0.85mm;">
-                        <p>A large SE means the slope estimate would <span class="b"><input class="fill" data-answer="vary"><span class="opts"><button type="button" class="opt" data-value="shrink">shrink</button><button type="button" class="opt" data-value="vary">vary</button></span></span> a lot from sample to sample; a small SE means the slope estimate would vary <span class="b"><input class="fill" data-answer="little"><span class="opts"><button type="button" class="opt" data-value="wildly">wildly</button><button type="button" class="opt" data-value="little">little</button></span></span> from sample to sample.</p>
-                        <p>SE(b₁) acts like a standard deviation for the slope, so we plug it into the usual <span class="b"><input class="fill" data-answer="estimate"><span class="opts"><button type="button" class="opt" data-value="estimate">estimate</button><button type="button" class="opt" data-value="multiplier">multiplier</button></span></span> &plusmn; t* &times; SE formula to get a confidence <span class="b"><input class="fill" data-answer="interval"><span class="opts"><button type="button" class="opt" data-value="interval">interval</button><button type="button" class="opt" data-value="point">point</button></span></span> for &beta;<sub>1</sub>.</p>
+                        <p>A large SE means the slope estimate would <span class="b"><input class="fill" data-answer="vary"><span class="opts"><button type="button" class="opt" data-value="shrink">shrink</button><button type="button" class="opt" data-value="vary">vary</button></span></span> a lot from sample to sample; a small SE means the slope estimate would vary <span class="b"><input class="fill" data-answer="little"><span class="opts"><button type="button" class="opt" data-value="a lot">a lot</button><button type="button" class="opt" data-value="little">little</button></span></span> from sample to sample.</p>
+                        <p>SE(b₁) gets larger when residual scatter is high, sample size is small, or x values are tightly clustered.</p>
                         <div class="factor-cards">
                             <div class="factor-card">
                                 <span class="factor-icon" aria-hidden="true">
@@ -591,7 +677,7 @@
                                 <span class="factor-icon" aria-hidden="true">
                                     <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2 20c0-3 3-5 6-5s6 2 6 5"/><path d="M10 20c0-3 3-5 6-5s6 2 6 5"/></svg>
                                 </span>
-                                <div class="row-line"><span class="b"><input class="fill" data-answer="Larger"><span class="opts"><button type="button" class="opt" data-value="Smaller">Smaller</button><button type="button" class="opt" data-value="Larger">Larger</button></span></span>&nbsp;sample size&nbsp;n</div>
+                                <div class="row-line"><span class="b"><input class="fill" data-answer="Larger"><span class="opts"><button type="button" class="opt" data-value="Smaller">Smaller</button><button type="button" class="opt" data-value="Larger">Larger</button></span></span>&nbsp;sample size&nbsp;</div>
                                 <div class="effect">&rarr; smaller SE</div>
                             </div>
                             <div class="factor-card">
@@ -612,66 +698,54 @@
             <div class="box tag-ci">
                 <div class="box-tag">Building the 95% CI</div>
                 <div class="box-body">
-                    <p>A 95% CI for the slope is <span class="b"><input class="fill code" data-answer="b1"><span class="opts"><button type="button" class="opt" data-value="b1">b₁</button><button type="button" class="opt" data-value="beta1">β₁</button><button type="button" class="opt" data-value="t*">t*</button></span></span> &plusmn; <span class="b"><input class="fill code" data-answer="t*"><span class="opts"><button type="button" class="opt" data-value="SE(b1)">SE(b₁)</button><button type="button" class="opt" data-value="t*">t*</button></span></span> &times; <span class="b"><input class="fill code" data-answer="SE(b1)"><span class="opts"><button type="button" class="opt" data-value="R2">R²</button><button type="button" class="opt" data-value="x">x&#772;</button><button type="button" class="opt" data-value="SE(b1)">SE(b₁)</button></span></span>.</p>
-                    <p>With small samples, the slope estimate follows a <span class="b"><input class="fill code" data-answer="t"><span class="opts"><button type="button" class="opt" data-value="F">F</button><button type="button" class="opt" data-value="t">t</button><button type="button" class="opt" data-value="z">z</button></span></span>-distribution, so we use a t* critical value rather than <span class="b"><input class="fill code" data-answer="1.96"><span class="opts"><button type="button" class="opt" data-value="2.58">2.58</button><button type="button" class="opt" data-value="1.96">1.96</button></span></span>.</p>
-                    <p>In practice, R does all of this for you &mdash; <code style="font-family:Consolas,Menlo,monospace; background:#f4f6f8; padding:0 3px; border-radius:3px;">summary(model)</code> reports b₁ and SE(b₁), and <code style="font-family:Consolas,Menlo,monospace; background:#f4f6f8; padding:0 3px; border-radius:3px;">confint(model)</code> gives the CI.</p>
-                    <div class="star-hl">
-                        <span class="star">&#9733;</span>
-                        <div class="star-content">
-                            <span>If you need t* yourself: with n = 8, df = 6, t* &asymp; 2.45 for a 95% CI.</span>
-                            <span style="font-family:Consolas,Menlo,monospace; font-size:7.5pt; color:var(--se-blue-dark);">qt(0.975, df = 6)  &rArr;  2.4469</span>
-                        </div>
-                    </div>
+                    <p>A 95% CI for the slope is <span class="b"><input class="fill code" data-answer="b1"><span class="opts"><button type="button" class="opt" data-value="b1">b₁</button><button type="button" class="opt" data-value="beta1">β₁</button><button type="button" class="opt" data-value="SSE">SSE</button></span></span> &plusmn; <span class="b"><input class="fill code" data-answer="t*"><span class="opts"><button type="button" class="opt" data-value="t*">t*</button><button type="button" class="opt" data-value="z">z</button><button type="button" class="opt" data-value="x">x&#772;</button></span></span> &times; <span class="b"><input class="fill code" data-answer="SE(b1)"><span class="opts"><button type="button" class="opt" data-value="SE(b1)">SE(b₁)</button><button type="button" class="opt" data-value="R2">R²</button><button type="button" class="opt" data-value="s">s</button></span></span>.</p>
+                    <p>For small regression samples, t* comes from a t-distribution with df = n &minus; <span class="b"><input class="fill code" data-answer="2"><span class="opts"><button type="button" class="opt" data-value="1">1</button><button type="button" class="opt" data-value="2">2</button><button type="button" class="opt" data-value="n">n</button></span></span>. For large samples, t* &asymp; 1.96.</p>
+                    <p>In practice, R does all of this for you: <code style="font-family:Consolas,Menlo,monospace; background:#f4f6f8; padding:0 3px; border-radius:3px;"><span class="b"><input class="fill code" data-answer="summary"><span class="opts"><button type="button" class="opt" data-value="summary">summary</button><button type="button" class="opt" data-value="str">str</button><button type="button" class="opt" data-value="mean">mean</button></span></span>(model)</code> reports b₁ and SE(b₁), and <code style="font-family:Consolas,Menlo,monospace; background:#f4f6f8; padding:0 3px; border-radius:3px;"><span class="b"><input class="fill code" data-answer="confint"><span class="opts"><button type="button" class="opt" data-value="confint">confint</button><button type="button" class="opt" data-value="predict">predict</button><button type="button" class="opt" data-value="anova">anova</button></span></span>(model)</code> gives the CI directly.</p>
                 </div>
             </div>
             <div class="box body-ci-soft">
                 <div class="box-tag" style="background:var(--ci-blue); color:#fff;">From SE to confidence interval</div>
                 <div class="box-body" style="gap:0.5mm;">
                     <div class="visual" style="border:none; background:transparent; padding:0;">
-                        <svg viewBox="0 0 300 100" role="img" aria-label="Number line showing slope, plus or minus 1 SE, and 95% CI">
+                        <svg viewBox="0 0 300 100" role="img" aria-label="Number line showing a 95% confidence interval for the slope">
                             <!-- 95% CI bar (rose) -->
-                            <line x1="50.3" y1="22" x2="230.9" y2="22" stroke="#b83b5e" stroke-width="2" />
-                            <line x1="50.3" y1="18" x2="50.3" y2="26" stroke="#b83b5e" stroke-width="2" />
-                            <line x1="230.9" y1="18" x2="230.9" y2="26" stroke="#b83b5e" stroke-width="2" />
-                            <text x="140.6" y="14" text-anchor="middle" font-size="7.5" font-weight="900" fill="#b83b5e">95% CI (&plusmn; 2.45 SE)</text>
-                            <!-- ±1 SE bar (blue) -->
-                            <line x1="103.75" y1="38" x2="177.5" y2="38" stroke="#2f5f98" stroke-width="2" />
-                            <line x1="103.75" y1="34" x2="103.75" y2="42" stroke="#2f5f98" stroke-width="2" />
-                            <line x1="177.5" y1="34" x2="177.5" y2="42" stroke="#2f5f98" stroke-width="2" />
-                            <text x="140.6" y="32" text-anchor="middle" font-size="7.5" font-weight="900" fill="#2f5f98">&plusmn; 1 SE</text>
-                            <!-- Only the three key values labeled -->
-                            <g font-size="6.8" font-weight="800">
-                                <text x="50.3" y="58" text-anchor="middle" fill="#b83b5e">0.097</text>
-                                <text x="140.6" y="58" text-anchor="middle" fill="#182326">b₁ = 0.386</text>
-                                <text x="230.9" y="58" text-anchor="middle" fill="#b83b5e">0.675</text>
+                            <line x1="72" y1="26" x2="228" y2="26" stroke="#b83b5e" stroke-width="2.4" />
+                            <line x1="72" y1="21" x2="72" y2="31" stroke="#b83b5e" stroke-width="2.4" />
+                            <line x1="228" y1="21" x2="228" y2="31" stroke="#b83b5e" stroke-width="2.4" />
+                            <text x="150" y="17" text-anchor="middle" font-size="7.5" font-weight="900" fill="#b83b5e">95% CI: 5 &plusmn; 2 &times; 1.5</text>
+                            <!-- Endpoint and center labels -->
+                            <g font-size="7" font-weight="800">
+                                <text x="72" y="44" text-anchor="middle" fill="#b83b5e">2</text>
+                                <text x="150" y="44" text-anchor="middle" fill="#182326">b₁ = 5</text>
+                                <text x="228" y="44" text-anchor="middle" fill="#b83b5e">8</text>
                             </g>
                             <!-- Endpoint dots -->
-                            <circle cx="50.3" cy="67" r="2.1" fill="#b83b5e" />
-                            <circle cx="103.75" cy="67" r="1.6" fill="#2f5f98" />
-                            <circle cx="140.6" cy="67" r="2.4" fill="#182326" />
-                            <circle cx="177.5" cy="67" r="1.6" fill="#2f5f98" />
-                            <circle cx="230.9" cy="67" r="2.1" fill="#b83b5e" />
+                            <circle cx="72" cy="60" r="2.4" fill="#b83b5e" />
+                            <circle cx="150" cy="60" r="2.8" fill="#182326" />
+                            <circle cx="228" cy="60" r="2.4" fill="#b83b5e" />
                             <!-- Number line -->
-                            <line x1="20" y1="67" x2="280" y2="67" stroke="#5d6d72" stroke-width="0.9" />
+                            <line x1="20" y1="60" x2="280" y2="60" stroke="#5d6d72" stroke-width="0.9" />
                             <g stroke="#5d6d72" stroke-width="0.9">
-                                <line x1="20" y1="65" x2="20" y2="70" />
-                                <line x1="82.5" y1="65" x2="82.5" y2="70" />
-                                <line x1="145" y1="65" x2="145" y2="70" />
-                                <line x1="207.5" y1="65" x2="207.5" y2="70" />
-                                <line x1="270" y1="65" x2="270" y2="70" />
+                                <line x1="20" y1="58" x2="20" y2="63" />
+                                <line x1="72" y1="58" x2="72" y2="63" />
+                                <line x1="124" y1="58" x2="124" y2="63" />
+                                <line x1="176" y1="58" x2="176" y2="63" />
+                                <line x1="228" y1="58" x2="228" y2="63" />
+                                <line x1="280" y1="58" x2="280" y2="63" />
                             </g>
-                            <g font-size="6.5" font-weight="700" fill="#5d6d72">
-                                <text x="20" y="79" text-anchor="middle">0.0</text>
-                                <text x="82.5" y="79" text-anchor="middle">0.2</text>
-                                <text x="145" y="79" text-anchor="middle">0.4</text>
-                                <text x="207.5" y="79" text-anchor="middle">0.6</text>
-                                <text x="270" y="79" text-anchor="middle">0.8</text>
+                            <g font-size="6.8" font-weight="700" fill="#5d6d72">
+                                <text x="20" y="73" text-anchor="middle">0</text>
+                                <text x="72" y="73" text-anchor="middle">2</text>
+                                <text x="124" y="73" text-anchor="middle">4</text>
+                                <text x="176" y="73" text-anchor="middle">6</text>
+                                <text x="228" y="73" text-anchor="middle">8</text>
+                                <text x="280" y="73" text-anchor="middle">10</text>
                             </g>
-                            <text x="150" y="93" text-anchor="middle" font-size="7" font-weight="800" fill="#5d6d72">slope</text>
+                            <text x="150" y="87" text-anchor="middle" font-size="7" font-weight="800" fill="#5d6d72">slope</text>
                         </svg>
                     </div>
-                    <p class="note" style="text-align:center; margin-top:0.2mm;">Example: b₁ = 0.386 and SE = 0.118 &rarr; 0.386 &plusmn; 2.45 &times; 0.118 &asymp; (0.097, 0.675).</p>
-                    <p>The CI is centered on the <span class="b"><input class="fill" data-answer="sample"><span class="opts"><button type="button" class="opt" data-value="residual">residual</button><button type="button" class="opt" data-value="sample">sample</button><button type="button" class="opt" data-value="population">population</button></span></span> slope, b₁, but it is meant to capture the true <span class="b"><input class="fill" data-answer="population"><span class="opts"><button type="button" class="opt" data-value="population">population</button><button type="button" class="opt" data-value="sample">sample</button></span></span> slope, &beta;<sub>1</sub>. Across many repeated studies, about <span class="b"><input class="fill code" data-answer="95"><span class="opts"><button type="button" class="opt" data-value="68">68</button><button type="button" class="opt" data-value="50">50</button><button type="button" class="opt" data-value="95">95</button></span></span>% of such intervals would capture &beta;<sub>1</sub>.</p>
+                    <div class="worked" style="font-size:8pt; line-height:1.7;">Suppose t* = 2, b₁ = 5, and SE(b₁) = 1.5.<br>95% CI = 5 &plusmn; 2 &times; 1.5 = 5 &plusmn; <span class="b"><input class="fill code" data-answer="3"><span class="opts"><button type="button" class="opt" data-value="3">3</button><button type="button" class="opt" data-value="2">2</button><button type="button" class="opt" data-value="1.5">1.5</button></span></span> = (<span class="b"><input class="fill code" data-answer="2"><span class="opts"><button type="button" class="opt" data-value="2">2</button><button type="button" class="opt" data-value="3">3</button><button type="button" class="opt" data-value="1">1</button></span></span>, <span class="b"><input class="fill code" data-answer="8"><span class="opts"><button type="button" class="opt" data-value="8">8</button><button type="button" class="opt" data-value="7">7</button><button type="button" class="opt" data-value="9">9</button></span></span>).</div>
+                    <p>Interpretation: our best estimate of &beta;<sub>1</sub> is <span class="b"><input class="fill code" data-answer="5"><span class="opts"><button type="button" class="opt" data-value="5">5</button><button type="button" class="opt" data-value="2">2</button><button type="button" class="opt" data-value="8">8</button></span></span>, but allowing for <span class="b"><input class="fill" data-answer="sampling"><span class="opts"><button type="button" class="opt" data-value="sampling">sampling</button><button type="button" class="opt" data-value="measurement">measurement</button><button type="button" class="opt" data-value="prediction">prediction</button></span></span> error, β<sub>1</sub> could plausibly be anywhere from 2 to 8. Because (2, 8) lies entirely <span class="b"><input class="fill" data-answer="above"><span class="opts"><button type="button" class="opt" data-value="above">above</button><button type="button" class="opt" data-value="below">below</button><button type="button" class="opt" data-value="around">around</button></span></span> zero, we can rule out β<sub>1</sub> = 0.</p>
                 </div>
             </div>
         </div>
@@ -736,14 +810,14 @@
                     <div class="r-code"><span class="cm">## summary(model)$coefficients</span>
               Estimate Std. Error t value Pr(&gt;|t|)
 (Intercept) -10.7788     4.0605   -2.65    0.0378
-weeks         <span class="hl">0.3863</span>     <span class="hl">0.1184</span>    3.26    0.0172
+weeks         0.3863     0.1184    3.26    0.0172
 
 <span class="cm">## confint(model)</span>
                 2.5 %    97.5 %
 (Intercept) -20.7145   -0.8431
-weeks         <span class="hl">0.0965</span>    <span class="hl">0.6761</span></div>
-                    <p>The estimated slope on <code style="font-family:Consolas,Menlo,monospace;">weeks</code> is <span class="b"><input class="fill code" data-answer="0.386" data-alt="0.3863"><span class="opts"><button type="button" class="opt" data-value="0.118">0.118</button><button type="button" class="opt" data-value="2.45">2.45</button><button type="button" class="opt" data-value="0.386">0.386</button></span></span>, with standard error <span class="b"><input class="fill code" data-answer="0.118" data-alt="0.1184"><span class="opts"><button type="button" class="opt" data-value="0.386">0.386</button><button type="button" class="opt" data-value="0.118">0.118</button></span></span>.</p>
-                    <p>The 95% CI runs from <span class="b"><input class="fill code" data-answer="0.097" data-alt="0.0965"><span class="opts"><button type="button" class="opt" data-value="0.675">0.675</button><button type="button" class="opt" data-value="0.097">0.097</button></span></span> to <span class="b"><input class="fill code" data-answer="0.676" data-alt="0.675|0.6761"><span class="opts"><button type="button" class="opt" data-value="0.097">0.097</button><button type="button" class="opt" data-value="0.676">0.676</button><button type="button" class="opt" data-value="2.45">2.45</button></span></span>. Because zero is <span class="b"><input class="fill" data-answer="outside"><span class="opts"><button type="button" class="opt" data-value="outside">outside</button><button type="button" class="opt" data-value="inside">inside</button></span></span> this interval, the slope is statistically significant.</p>
+weeks         0.0965    0.6761</div>
+                    <p>In the R output above, the estimated slope on <code style="font-family:Consolas,Menlo,monospace;">weeks</code> is <span class="b"><input class="fill code" data-answer="0.386" data-alt="0.3863"><span class="opts"><button type="button" class="opt" data-value="0.118">0.118</button><button type="button" class="opt" data-value="0.676">0.676</button><button type="button" class="opt" data-value="0.386">0.386</button></span></span>, with standard error <span class="b"><input class="fill code" data-answer="0.118" data-alt="0.1184"><span class="opts"><button type="button" class="opt" data-value="0.386">0.386</button><button type="button" class="opt" data-value="0.118">0.118</button></span></span>.</p>
+                    <p>The 95% CI runs from <span class="b"><input class="fill code" data-answer="0.097" data-alt="0.0965"><span class="opts"><button type="button" class="opt" data-value="0.675">0.675</button><button type="button" class="opt" data-value="0.097">0.097</button></span></span> to <span class="b"><input class="fill code" data-answer="0.676" data-alt="0.675|0.6761"><span class="opts"><button type="button" class="opt" data-value="0.097">0.097</button><button type="button" class="opt" data-value="0.676">0.676</button><button type="button" class="opt" data-value="0.118">0.118</button></span></span>. Because zero is <span class="b"><input class="fill" data-answer="outside"><span class="opts"><button type="button" class="opt" data-value="outside">outside</button><button type="button" class="opt" data-value="inside">inside</button></span></span> this interval, the slope is statistically significant.</p>
                 </div>
             </div>
         </div>
@@ -752,27 +826,26 @@ weeks         <span class="hl">0.0965</span>    <span class="hl">0.6761</span></
         <div class="box tag-gold">
             <div class="box-tag">Vocabulary, notation, and distinctions</div>
             <div class="box-body">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5mm; margin-top:0.2mm;">
-                    <div class="vocab-grid">
-                        <span class="vocab-term teal">b<sub>1</sub></span>
-                        <span><span class="b"><input class="fill" data-answer="Sample"><span class="opts"><button type="button" class="opt" data-value="Population">Population</button><button type="button" class="opt" data-value="Sample">Sample</button></span></span> slope estimate (computed from data).</span>
-                        <span class="vocab-term teal">&beta;<sub>1</sub></span>
-                        <span>True population slope; the fixed value we are trying to <span class="b"><input class="fill" data-answer="estimate"><span class="opts"><button type="button" class="opt" data-value="observe">observe</button><button type="button" class="opt" data-value="compute">compute</button><button type="button" class="opt" data-value="estimate">estimate</button></span></span>.</span>
-                        <span class="vocab-term se-blue">SE(b<sub>1</sub>)</span>
-                        <span>Standard error of the slope; the typical sample-to-sample <span class="b"><input class="fill" data-answer="wobble"><span class="opts"><button type="button" class="opt" data-value="bias">bias</button><button type="button" class="opt" data-value="wobble">wobble</button></span></span>.</span>
-                        <span class="vocab-term se-blue">t*</span>
-                        <span><span class="b"><input class="fill" data-answer="Critical"><span class="opts"><button type="button" class="opt" data-value="Mean">Mean</button><button type="button" class="opt" data-value="Critical">Critical</button></span></span> value for the chosen confidence level (from the t-distribution).</span>
-                    </div>
-                    <div class="vocab-grid">
-                        <span class="vocab-term">Sxx</span>
-                        <span>&Sigma;(x<sub>i</sub> &minus; x&#772;)<sup>2</sup>, a measure of the <span class="b"><input class="fill" data-answer="spread"><span class="opts"><button type="button" class="opt" data-value="spread">spread</button><button type="button" class="opt" data-value="mean">mean</button></span></span> of the x values.</span>
-                        <span class="vocab-term ci-blue">CI</span>
-                        <span>Confidence interval for the slope: b<sub>1</sub> &plusmn; <span class="b"><input class="fill code" data-answer="t*"><span class="opts"><button type="button" class="opt" data-value="t*">t*</button><button type="button" class="opt" data-value="z">z</button></span></span> &times; SE(b<sub>1</sub>).</span>
-                        <span class="vocab-term">s</span>
-                        <span>Residual <span class="b"><input class="fill" data-answer="standard"><span class="opts"><button type="button" class="opt" data-value="squared">squared</button><button type="button" class="opt" data-value="standard">standard</button></span></span> error; the typical vertical scatter around the line.</span>
-                        <span class="vocab-term">SE(b<sub>0</sub>)</span>
-                        <span>Uncertainty in the <span class="b"><input class="fill" data-answer="intercept"><span class="opts"><button type="button" class="opt" data-value="slope">slope</button><button type="button" class="opt" data-value="residual">residual</button><button type="button" class="opt" data-value="intercept">intercept</button></span></span>; usually less scientifically central than SE(b<sub>1</sub>).</span>
-                    </div>
+                <div class="vocab-grid wide" style="margin-top:0.2mm;">
+                    <span class="vocab-term teal">b<sub>1</sub></span>
+                    <span><span class="b"><input class="fill" data-answer="Sample"><span class="opts"><button type="button" class="opt" data-value="Population">Population</button><button type="button" class="opt" data-value="Sample">Sample</button></span></span> slope estimate (computed from data).</span>
+                    <span class="vocab-term teal">&beta;<sub>1</sub></span>
+                    <span>True <span class="b"><input class="fill" data-answer="population"><span class="opts"><button type="button" class="opt" data-value="sample">sample</button><button type="button" class="opt" data-value="population">population</button></span></span> slope; the fixed value we are trying to estimate.</span>
+
+                    <span class="vocab-term">s</span>
+                    <span>Residual <span class="b"><input class="fill" data-answer="standard"><span class="opts"><button type="button" class="opt" data-value="squared">squared</button><button type="button" class="opt" data-value="standard">standard</button></span></span> error; typical vertical scatter around the line.</span>
+                    <span class="vocab-term">Sxx</span>
+                    <span>&Sigma;(x<sub>i</sub> &minus; x&#772;)<sup>2</sup>, a measure of the <span class="b"><input class="fill" data-answer="spread"><span class="opts"><button type="button" class="opt" data-value="spread">spread</button><button type="button" class="opt" data-value="mean">mean</button></span></span> of the x values.</span>
+
+                    <span class="vocab-term">n</span>
+                    <span>Sample <span class="b"><input class="fill" data-answer="size"><span class="opts"><button type="button" class="opt" data-value="mean">mean</button><button type="button" class="opt" data-value="size">size</button></span></span>; larger n usually makes SE(b<sub>1</sub>) smaller.</span>
+                    <span class="vocab-term se-blue">SE(b<sub>1</sub>)</span>
+                    <span>Standard error of the <span class="b"><input class="fill" data-answer="slope"><span class="opts"><button type="button" class="opt" data-value="slope">slope</button><button type="button" class="opt" data-value="intercept">intercept</button></span></span>; typical sample-to-sample spread in b<sub>1</sub>.</span>
+
+                    <span class="vocab-term se-blue">t*</span>
+                    <span><span class="b"><input class="fill" data-answer="Critical"><span class="opts"><button type="button" class="opt" data-value="Mean">Mean</button><button type="button" class="opt" data-value="Critical">Critical</button></span></span> value for the chosen confidence level.</span>
+                    <span class="vocab-term ci-blue">CI</span>
+                    <span>Confidence interval for the slope: b<sub>1</sub> &plusmn; <span class="b"><input class="fill code" data-answer="t*"><span class="opts"><button type="button" class="opt" data-value="t*">t*</button><button type="button" class="opt" data-value="z">z</button></span></span> &times; SE(b<sub>1</sub>).</span>
                 </div>
             </div>
         </div>
@@ -785,7 +858,7 @@ weeks         <span class="hl">0.0965</span>    <span class="hl">0.6761</span></
         const sheet = document.getElementById("sheet"),
               pageWrap = document.getElementById("pageWrap"),
               blanks = Array.from(document.querySelectorAll(".b")),
-              storageKey = "se-and-ci-for-slope-cheatsheet-v2";
+              storageKey = "se-and-ci-for-slope-cheatsheet-v3";
 
         // Randomize option order each load
         blanks.forEach(blank => {
