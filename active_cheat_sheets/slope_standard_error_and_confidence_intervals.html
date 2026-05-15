@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standard Error and Confidence Intervals for the Slope</title>
+    <style>
+        :root {
+            --teal: #0d7377;
+            --teal-dark: #0a5d61;
+            --gold: #f0c808;
+            --rose: #b83b5e;
+            --green: #2c8a4a;
+            --ink: #182326;
+            --muted: #5d6d72;
+            --paper: #f4f6f8;
+            --border: #e1e5e8;
+            --soft: #eef6f6;
+            --cream: #fff9df;
+            --se-blue: #2f5f98;
+            --se-blue-dark: #224674;
+            --se-blue-soft: #eef3f9;
+            --ci-blue: #1f8aa8;
+            --ci-blue-dark: #146f88;
+            --ci-blue-soft: #eaf4f7;
+            --white: #ffffff;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: #dfe8ea;
+            color: var(--ink);
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8.55pt;
+            line-height: 1.22;
+        }
+        .toolbar {
+            width: 210mm;
+            max-width: calc(100vw - 24px);
+            margin: 18px auto 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 16px;
+        }
+        .toolbar-intro { flex: 1; min-width: 0; font-size: 9pt; line-height: 1.35; }
+        .toolbar-intro .title { font-weight: 800; color: var(--teal); font-size: 11pt; margin-bottom: 2px; }
+        .toolbar-intro .descr { color: #3a4a4f; max-width: 132mm; }
+        .toolbar-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+        button {
+            border: 1px solid #9bb4b7;
+            background: var(--white);
+            color: var(--ink);
+            border-radius: 6px;
+            padding: 7px 11px;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        button.primary { background: var(--teal); color: white; border-color: var(--teal); }
+        .print-button { display: inline-flex; align-items: center; gap: 5px; }
+        .print-button svg { width: 13px; height: 13px; display: block; }
+        .zoom-group {
+            display: inline-flex;
+            align-items: stretch;
+            border: 1px solid #9bb4b7;
+            border-radius: 6px;
+            overflow: hidden;
+            background: var(--white);
+        }
+        .zoom-group button {
+            border: 0;
+            border-radius: 0;
+            padding: 6px 10px;
+            background: transparent;
+            font-weight: 800;
+        }
+        .zoom-group button + button { border-left: 1px solid #cdd9dc; }
+        .zoom-group .zoom-label {
+            display: inline-flex;
+            align-items: center;
+            padding: 0 9px;
+            border-left: 1px solid #cdd9dc;
+            font-weight: 800;
+            font-size: 9pt;
+            color: var(--muted);
+            min-width: 44px;
+            justify-content: center;
+        }
+        .page-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto 18px;
+            background: var(--white);
+            padding: 4mm 8mm 2.5mm;
+            box-shadow: 0 8px 30px rgba(24, 35, 38, 0.18);
+            display: flex;
+            flex-direction: column;
+            gap: 0.9mm;
+            transform-origin: top center;
+        }
+        header { border-bottom: 1.2mm solid var(--gold); padding-bottom: 0.7mm; }
+        h1 {
+            margin: 0;
+            color: var(--teal);
+            font-size: 19pt;
+            line-height: 0.98;
+            letter-spacing: -0.02em;
+        }
+        .subtitle { margin-top: 0.7mm; color: var(--muted); font-weight: 700; font-size: 8.8pt; }
+        .box {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .box-tag {
+            background: var(--teal);
+            color: white;
+            font-size: 7.2pt;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 0.85mm 2.5mm;
+        }
+        .box-body {
+            padding: 1.4mm 2.4mm 1.4mm;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85mm;
+        }
+        .box-body p { margin: 0; }
+        .box-body .tight { line-height: 1.18; }
+        .box.tag-gold .box-tag { background: var(--gold); color: var(--ink); }
+        .box.tag-rose .box-tag { background: var(--rose); color: #fff; }
+        .box.tag-se .box-tag { background: var(--se-blue); color: #fff; }
+        .box.tag-ci .box-tag { background: var(--ci-blue); color: #fff; }
+        .box.body-cream .box-body { background: var(--cream); }
+        .box.body-soft .box-body { background: linear-gradient(#fff, #fbfdfd); }
+        .box.body-se-soft .box-body { background: var(--se-blue-soft); }
+        .box.body-ci-soft .box-body { background: var(--ci-blue-soft); }
+        .row {
+            display: grid;
+            gap: 2mm;
+            align-items: stretch;
+        }
+        .row.cols-2 { grid-template-columns: 1fr 1fr; }
+        .row.split-58-42 { grid-template-columns: 58fr 42fr; }
+        .row.split-62-38 { grid-template-columns: 62fr 38fr; }
+        .row.split-36-64 { grid-template-columns: 36fr 64fr; }
+        .row.split-42-58 { grid-template-columns: 42fr 58fr; }
+        .row.split-46-54 { grid-template-columns: 46fr 54fr; }
+        .row.split-54-46 { grid-template-columns: 54fr 46fr; }
+        .row.split-44-56 { grid-template-columns: 44fr 56fr; }
+        .mathline {
+            font-family: Consolas, Menlo, monospace;
+            font-weight: 800;
+            font-size: 10pt;
+            white-space: nowrap;
+        }
+        .big-eq {
+            font-size: 14pt;
+            font-weight: 900;
+            white-space: nowrap;
+            letter-spacing: -0.02em;
+            display: inline-flex;
+            align-items: center;
+        }
+        .formula-grid { display: grid; grid-template-columns: 35fr 65fr; gap: 3mm; align-items: center; }
+        .formula-panel {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 24mm;
+            border-right: 1px solid #cfdcde;
+            padding-right: 2mm;
+        }
+        .formula-panel .big-eq { font-size: 15.5pt; }
+        .frac {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 13pt;
+            line-height: 1;
+            margin: 0 1mm;
+        }
+        .frac .num { padding: 0 1mm 0.5mm; border-bottom: 1.6px solid var(--ink); }
+        .frac .den { padding-top: 0.5mm; }
+        .sqrt {
+            display: inline-flex;
+            align-items: stretch;
+            font-size: 13pt;
+            line-height: 1;
+        }
+        .sqrt .root {
+            font-size: 14pt;
+            padding-right: 0.5mm;
+        }
+        .sqrt .body {
+            border-top: 1.6px solid var(--ink);
+            padding: 0.6mm 1mm 0;
+        }
+        .eq-grid { display: grid; grid-template-columns: auto 1fr; gap: 3mm; align-items: center; }
+        .stack { display: grid; gap: 0.7mm; }
+        .note { color: var(--muted); font-size: 8pt; line-height: 1.18; }
+        .se-blue { color: var(--se-blue); }
+        .ci-blue { color: var(--ci-blue); }
+        .rose { color: var(--rose); }
+        .teal { color: var(--teal); }
+        .gold { color: #a07e00; }
+        .visual {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1mm 1.2mm 1mm;
+            background: linear-gradient(#fff, #fbfdfd);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5mm;
+            min-width: 0;
+        }
+        .visual svg { display: block; width: 100%; height: auto; }
+        .visual-caption {
+            font-size: 7.6pt;
+            color: var(--ink);
+            text-align: center;
+            line-height: 1.25;
+        }
+        .r-code {
+            border: 1px solid #2a3a3d;
+            border-radius: 5px;
+            padding: 1mm 2.1mm;
+            background: #1f2a2d;
+            color: #e6f1f2;
+            font-family: Consolas, Menlo, monospace;
+            font-size: 6.8pt;
+            line-height: 1.35;
+            white-space: pre;
+            overflow: hidden;
+        }
+        .r-code .cm { color: #8aa3a8; font-style: italic; }
+        .r-code .hl {
+            background: rgba(240, 200, 8, 0.22);
+            padding: 0 2px;
+            border-radius: 3px;
+        }
+        .worked {
+            font-family: Consolas, Menlo, monospace;
+            font-size: 8.5pt;
+            background: #fbfdfd;
+            border: 1px dashed #cfdcde;
+            border-radius: 5px;
+            padding: 1mm 2.1mm;
+            line-height: 2.0;
+        }
+        .hints-hidden .worked { line-height: 1.55; }
+        .b {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: baseline;
+            text-align: center;
+        }
+        .fill {
+            border: 0;
+            border-bottom: 1.55px solid var(--teal);
+            border-radius: 0;
+            padding: 0 0.8mm 0.25mm;
+            color: var(--ink);
+            background: transparent;
+            font: inherit;
+            font-weight: 900;
+            text-align: center;
+            min-width: 5.5mm;
+        }
+        .fill.code { font-family: Consolas, Menlo, monospace; }
+        .fill.align-left { text-align: left; }
+        .fill:focus { outline: none; border-bottom-color: var(--teal-dark); border-bottom-width: 2px; }
+        .opts {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8mm;
+            margin-top: 0.4mm;
+            line-height: 1.05;
+            white-space: nowrap;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .opt {
+            background: var(--soft);
+            border: 1px solid #c2d6d8;
+            color: var(--ink);
+            font-family: inherit;
+            font-size: 6.2pt;
+            font-weight: 800;
+            padding: 0.2mm 1.55mm 0.35mm;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.08s;
+        }
+        .opt:hover {
+            background: var(--cream);
+            border-color: var(--gold);
+            transform: translateY(-0.4px);
+        }
+        .opt:active { transform: translateY(0.2px); }
+        .opt.wrong-pick {
+            color: var(--rose);
+            background: #ffe6ec;
+            border-color: var(--rose);
+            text-decoration: line-through;
+            animation: shake 0.45s;
+        }
+        .b.solved .opts { display: none; }
+        .hints-hidden .opts { display: none; }
+        .fill.wrong-pick {
+            border-bottom-color: var(--rose) !important;
+            color: var(--rose);
+            animation: shake 0.45s;
+        }
+        .fill.correct-flash { animation: correctFlash 0.75s ease-out; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) }
+            20%, 60% { transform: translateX(-2px) }
+            40%, 80% { transform: translateX(2px) }
+        }
+        @keyframes correctFlash {
+            0% { background-color: rgba(44, 138, 74, 0); border-bottom-color: var(--teal) }
+            20% { background-color: rgba(44, 138, 74, 0.30); border-bottom-color: var(--green) }
+            60% { background-color: rgba(44, 138, 74, 0.18); border-bottom-color: var(--green) }
+            100% { background-color: rgba(44, 138, 74, 0); border-bottom-color: var(--teal) }
+        }
+        .factor-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.2mm;
+            margin-top: 0.3mm;
+        }
+        .factor-card {
+            border: 1px solid #cdd9dc;
+            border-radius: 5px;
+            padding: 0.9mm 1mm 0.9mm;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35mm;
+            min-width: 0;
+            text-align: center;
+        }
+        .factor-icon {
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--se-blue-soft);
+            color: var(--se-blue);
+        }
+        .factor-icon svg { width: 13px; height: 13px; }
+        .factor-card .row-line {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 1mm;
+            font-weight: 800;
+            font-size: 8.2pt;
+            justify-content: center;
+        }
+        .factor-card .effect {
+            font-size: 7.7pt;
+            color: var(--muted);
+            font-weight: 700;
+            line-height: 1.15;
+        }
+        .star-hl {
+            background: var(--se-blue-soft);
+            border: 1px solid #c2d2e3;
+            border-radius: 5px;
+            padding: 1mm 2.1mm;
+            display: flex;
+            align-items: center;
+            gap: 1.6mm;
+            color: var(--ink);
+            font-weight: 700;
+        }
+        .star-hl .star {
+            color: var(--gold);
+            font-size: 11pt;
+            line-height: 1;
+        }
+        .star-hl .star-content { display: flex; flex-direction: column; gap: 0.4mm; }
+        .star-hl code {
+            font-family: Consolas, Menlo, monospace;
+            background: #fff;
+            border: 1px solid #d4dde4;
+            border-radius: 3px;
+            padding: 0 3px;
+            font-size: 7.5pt;
+            color: var(--se-blue-dark);
+        }
+        .vocab-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.4mm 2.5mm;
+            align-items: baseline;
+        }
+        .vocab-term {
+            font-family: Consolas, Menlo, monospace;
+            font-weight: 900;
+            font-size: 8.5pt;
+            white-space: nowrap;
+        }
+        .sig-mini {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2mm;
+            margin-top: 0.4mm;
+        }
+        .sig-mini .lbl {
+            font-size: 7.6pt;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 0.4mm;
+        }
+        .sig-mini .lbl.ok { color: var(--green); }
+        .sig-mini .lbl.no { color: var(--rose); }
+        footer {
+            border-top: 1px solid #cfdcde;
+            padding-top: 1mm;
+            display: flex;
+            justify-content: center;
+            color: var(--muted);
+            font-size: 8.2pt;
+            font-weight: 800;
+            margin-top: auto;
+        }
+        footer a { color: var(--teal); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        @page { size: A4; margin: 0; }
+        @media print {
+            body { background: white; }
+            .toolbar { display: none; }
+            .page {
+                width: 210mm;
+                height: 297mm;
+                max-height: 297mm;
+                margin: 0;
+                box-shadow: none;
+                overflow: hidden;
+                transform: none !important;
+            }
+            button { display: none; }
+            .fill, .r-code, .worked, .box, .box-tag, .visual, .se-blue, .ci-blue, .rose, .teal, .gold, .factor-card, .factor-icon, .star-hl, .sig-mini .lbl {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .opts { display: none !important; }
+            .worked { line-height: 1.55 !important; }
+            .fill.wrong-pick { color: var(--ink); border-bottom-color: var(--teal) !important; }
+        }
+        @media screen and (max-width:820px) {
+            .page, .toolbar { width: calc(100vw - 16px); }
+            .page { padding: 16px; min-height: auto; transform: none !important; }
+            .row, .eq-grid, .factor-cards, .sig-mini, .formula-grid { grid-template-columns: 1fr !important; }
+            .formula-panel { border-right: 0; border-bottom: 1px solid #cfdcde; padding-right: 0; padding-bottom: 2mm; min-height: 0; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .toolbar-intro .descr { max-width: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="toolbar-intro">
+            <div class="title">GRAPH Courses cheat sheet</div>
+            <div class="descr">Type or select your answer from the options. When finished, click Print / Save on the right.</div>
+        </div>
+        <div class="toolbar-actions">
+            <div class="zoom-group" role="group" aria-label="Zoom controls">
+                <button type="button" id="zoomOut" aria-label="Zoom out">A−</button>
+                <button type="button" id="zoomIn" aria-label="Zoom in">A+</button>
+                <span class="zoom-label" id="zoomLabel">100%</span>
+            </div>
+            <button type="button" id="toggleHints">Hide hints</button>
+            <button type="button" id="clearAnswers">Clear</button>
+            <button type="button" class="primary print-button" onclick="window.print()" aria-label="Print or save cheat sheet">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path fill="currentColor" d="M7 3h10v5H7V3Zm10 14h2a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h2v4h10v-4Zm-8 2v-6h6v6H9Zm9-7.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" />
+                </svg>
+                Print / Save
+            </button>
+        </div>
+    </div>
+    <div class="page-wrap" id="pageWrap">
+    <section class="page" id="sheet">
+        <header>
+            <h1>Standard Error and Confidence Intervals for the Slope</h1>
+            <div class="subtitle">Measuring slope uncertainty and building a plausible range for the true slope</div>
+        </header>
+
+        <!-- ROW 1: SAMPLE SLOPE VS POPULATION SLOPE -->
+        <div class="box">
+            <div class="box-tag">Sample slope vs. population slope</div>
+            <div class="box-body">
+                <div class="row split-62-38">
+                    <div class="stack">
+                        <p>In simple linear regression, the sample slope <span class="b"><input class="fill code" data-answer="b1"><span class="opts"><button type="button" class="opt" data-value="b1">b₁</button><button type="button" class="opt" data-value="beta1">β₁</button><button type="button" class="opt" data-value="b0">b₀</button></span></span> is our estimate of the unknown population slope <span class="b"><input class="fill code" data-answer="beta1"><span class="opts"><button type="button" class="opt" data-value="b1">b₁</button><button type="button" class="opt" data-value="beta1">β₁</button></span></span>.</p>
+                        <p>Because of sampling variability, different random samples would give <span class="b"><input class="fill" data-answer="different"><span class="opts"><button type="button" class="opt" data-value="identical">identical</button><button type="button" class="opt" data-value="different">different</button></span></span> fitted slopes. The standard error, SE(<span class="b"><input class="fill code" data-answer="b1"><span class="opts"><button type="button" class="opt" data-value="y">y</button><button type="button" class="opt" data-value="x">x</button><button type="button" class="opt" data-value="b1">b₁</button></span></span>), measures the typical <span class="b"><input class="fill" data-answer="spread"><span class="opts"><button type="button" class="opt" data-value="sign">sign</button><button type="button" class="opt" data-value="spread">spread</button><button type="button" class="opt" data-value="average">average</button></span></span> of those sample slopes.</p>
+                        <p>A confidence <span class="b"><input class="fill" data-answer="interval"><span class="opts"><button type="button" class="opt" data-value="interval">interval</button><button type="button" class="opt" data-value="point">point</button></span></span> combines the slope estimate, its SE, and a <span class="b"><input class="fill code" data-answer="t*"><span class="opts"><button type="button" class="opt" data-value="SSE">SSE</button><button type="button" class="opt" data-value="t*">t*</button><button type="button" class="opt" data-value="residual">residual</button></span></span> multiplier to give a plausible <span class="b"><input class="fill" data-answer="range"><span class="opts"><button type="button" class="opt" data-value="range">range</button><button type="button" class="opt" data-value="point">point</button></span></span> for the true slope.</p>
+                    </div>
+                    <div class="visual" aria-label="Different samples produce different fitted slopes">
+                        <svg viewBox="0 0 220 110" role="img">
+                            <rect width="220" height="110" rx="4" fill="#fff" />
+                            <!-- Light gridlines -->
+                            <g stroke="#eef3f4" stroke-width="0.8">
+                                <line x1="22" y1="20" x2="210" y2="20" />
+                                <line x1="22" y1="45" x2="210" y2="45" />
+                                <line x1="22" y1="70" x2="210" y2="70" />
+                                <line x1="22" y1="95" x2="210" y2="95" />
+                            </g>
+                            <!-- Axes -->
+                            <line x1="22" y1="20" x2="22" y2="95" stroke="#5d6d72" stroke-width="0.9" />
+                            <line x1="22" y1="95" x2="210" y2="95" stroke="#5d6d72" stroke-width="0.9" />
+                            <text x="116" y="106" text-anchor="middle" font-size="6.5" font-weight="700" fill="#5d6d72">x</text>
+                            <text x="14" y="60" text-anchor="middle" font-size="6.5" font-weight="700" fill="#5d6d72" transform="rotate(-90 14 60)">y</text>
+                            <!-- Faint scatter points -->
+                            <g fill="#c8d4d6" stroke="#9aabae" stroke-width="0.5">
+                                <circle cx="38" cy="80" r="2.2" />
+                                <circle cx="55" cy="74" r="2.2" />
+                                <circle cx="74" cy="62" r="2.2" />
+                                <circle cx="92" cy="68" r="2.2" />
+                                <circle cx="110" cy="55" r="2.2" />
+                                <circle cx="130" cy="60" r="2.2" />
+                                <circle cx="150" cy="42" r="2.2" />
+                                <circle cx="170" cy="48" r="2.2" />
+                                <circle cx="188" cy="36" r="2.2" />
+                            </g>
+                            <!-- Other sample slopes: thin, dashed -->
+                            <line x1="28" y1="78" x2="200" y2="40" stroke="#b83b5e" stroke-width="0.9" stroke-dasharray="3,2" opacity="0.85" />
+                            <line x1="28" y1="74" x2="200" y2="44" stroke="#1f8aa8" stroke-width="0.9" stroke-dasharray="3,2" opacity="0.85" />
+                            <line x1="28" y1="66" x2="200" y2="52" stroke="#2f5f98" stroke-width="0.9" stroke-dasharray="3,2" opacity="0.85" />
+                            <line x1="28" y1="86" x2="200" y2="32" stroke="#a07e00" stroke-width="0.9" stroke-dasharray="3,2" opacity="0.8" />
+                            <!-- Our sample line: thick, continuous -->
+                            <line x1="28" y1="76" x2="200" y2="42" stroke="#0d7377" stroke-width="2.6" />
+                        </svg>
+                        <div class="visual-caption">Different random samples produce different fitted slopes. SE(b₁) quantifies that spread.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROW 2: STANDARD ERROR OF THE SLOPE -->
+        <div class="box tag-se">
+            <div class="box-tag">Standard error of the slope</div>
+            <div class="box-body body-soft">
+                <div class="formula-grid">
+                    <div class="formula-panel">
+                        <div style="text-align:center;">
+                            <div class="big-eq" style="justify-content:center;">
+                                <span class="se-blue">SE(b<sub>1</sub>)</span> &nbsp;=&nbsp;
+                                <span class="frac">
+                                    <span class="num">s</span>
+                                    <span class="den">
+                                        <span class="sqrt"><span class="root">&radic;</span><span class="body">&Sigma; (x<sub>i</sub> &minus; x&#772;)<sup>2</sup></span></span>
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="note" style="margin-top:0.6mm;">Here <b>s</b> is the residual <span class="b"><input class="fill" data-answer="standard"><span class="opts"><button type="button" class="opt" data-value="squared">squared</button><button type="button" class="opt" data-value="standard">standard</button></span></span> error (RSE), and &Sigma;(x<sub>i</sub> &minus; x&#772;)<sup>2</sup> &mdash; often called <span class="b"><input class="fill code" data-answer="Sxx"><span class="opts"><button type="button" class="opt" data-value="SSE">SSE</button><button type="button" class="opt" data-value="Sxx">Sxx</button><button type="button" class="opt" data-value="SST">SST</button></span></span> &mdash; measures the <span class="b"><input class="fill" data-answer="spread"><span class="opts"><button type="button" class="opt" data-value="mean">mean</button><button type="button" class="opt" data-value="spread">spread</button></span></span> of x values.</div>
+                        </div>
+                    </div>
+                    <div class="stack" style="gap:0.85mm;">
+                        <p>A large SE means the slope estimate would <span class="b"><input class="fill" data-answer="vary"><span class="opts"><button type="button" class="opt" data-value="shrink">shrink</button><button type="button" class="opt" data-value="vary">vary</button></span></span> a lot from sample to sample; a small SE means the slope estimate would vary <span class="b"><input class="fill" data-answer="little"><span class="opts"><button type="button" class="opt" data-value="wildly">wildly</button><button type="button" class="opt" data-value="little">little</button></span></span> from sample to sample.</p>
+                        <p>SE(b₁) acts like a standard deviation for the slope, so we plug it into the usual <span class="b"><input class="fill" data-answer="estimate"><span class="opts"><button type="button" class="opt" data-value="estimate">estimate</button><button type="button" class="opt" data-value="multiplier">multiplier</button></span></span> &plusmn; t* &times; SE formula to get a confidence <span class="b"><input class="fill" data-answer="interval"><span class="opts"><button type="button" class="opt" data-value="interval">interval</button><button type="button" class="opt" data-value="point">point</button></span></span> for &beta;<sub>1</sub>.</p>
+                        <div class="factor-cards">
+                            <div class="factor-card">
+                                <span class="factor-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="7" r="1.2"/><circle cx="14" cy="5" r="1.2"/><circle cx="18" cy="11" r="1.2"/><circle cx="9" cy="13" r="1.2"/><circle cx="17" cy="17" r="1.2"/><circle cx="7" cy="18" r="1.2"/><circle cx="13" cy="19" r="1.2"/></svg>
+                                </span>
+                                <div class="row-line"><span class="b"><input class="fill" data-answer="More"><span class="opts"><button type="button" class="opt" data-value="Less">Less</button><button type="button" class="opt" data-value="More">More</button></span></span>&nbsp;residual scatter</div>
+                                <div class="effect">&rarr; larger SE</div>
+                            </div>
+                            <div class="factor-card">
+                                <span class="factor-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2 20c0-3 3-5 6-5s6 2 6 5"/><path d="M10 20c0-3 3-5 6-5s6 2 6 5"/></svg>
+                                </span>
+                                <div class="row-line"><span class="b"><input class="fill" data-answer="Larger"><span class="opts"><button type="button" class="opt" data-value="Smaller">Smaller</button><button type="button" class="opt" data-value="Larger">Larger</button></span></span>&nbsp;sample size&nbsp;n</div>
+                                <div class="effect">&rarr; smaller SE</div>
+                            </div>
+                            <div class="factor-card">
+                                <span class="factor-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><polyline points="7,8 3,12 7,16"/><polyline points="17,8 21,12 17,16"/></svg>
+                                </span>
+                                <div class="row-line"><span class="b"><input class="fill" data-answer="More"><span class="opts"><button type="button" class="opt" data-value="More">More</button><button type="button" class="opt" data-value="Less">Less</button></span></span>&nbsp;x-spread (Sxx)</div>
+                                <div class="effect">&rarr; smaller SE</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROW 3: BUILDING THE 95% CI + NUMBER LINE VIZ -->
+        <div class="row split-44-56">
+            <div class="box tag-ci">
+                <div class="box-tag">Building the 95% CI</div>
+                <div class="box-body">
+                    <p>A 95% CI for the slope is <span class="b"><input class="fill code" data-answer="b1"><span class="opts"><button type="button" class="opt" data-value="b1">b₁</button><button type="button" class="opt" data-value="beta1">β₁</button><button type="button" class="opt" data-value="t*">t*</button></span></span> &plusmn; <span class="b"><input class="fill code" data-answer="t*"><span class="opts"><button type="button" class="opt" data-value="SE(b1)">SE(b₁)</button><button type="button" class="opt" data-value="t*">t*</button></span></span> &times; <span class="b"><input class="fill code" data-answer="SE(b1)"><span class="opts"><button type="button" class="opt" data-value="R2">R²</button><button type="button" class="opt" data-value="x">x&#772;</button><button type="button" class="opt" data-value="SE(b1)">SE(b₁)</button></span></span>.</p>
+                    <p>With small samples, the slope estimate follows a <span class="b"><input class="fill code" data-answer="t"><span class="opts"><button type="button" class="opt" data-value="F">F</button><button type="button" class="opt" data-value="t">t</button><button type="button" class="opt" data-value="z">z</button></span></span>-distribution, so we use a t* critical value rather than <span class="b"><input class="fill code" data-answer="1.96"><span class="opts"><button type="button" class="opt" data-value="2.58">2.58</button><button type="button" class="opt" data-value="1.96">1.96</button></span></span>.</p>
+                    <p>In practice, R does all of this for you &mdash; <code style="font-family:Consolas,Menlo,monospace; background:#f4f6f8; padding:0 3px; border-radius:3px;">summary(model)</code> reports b₁ and SE(b₁), and <code style="font-family:Consolas,Menlo,monospace; background:#f4f6f8; padding:0 3px; border-radius:3px;">confint(model)</code> gives the CI.</p>
+                    <div class="star-hl">
+                        <span class="star">&#9733;</span>
+                        <div class="star-content">
+                            <span>If you need t* yourself: with n = 8, df = 6, t* &asymp; 2.45 for a 95% CI.</span>
+                            <span style="font-family:Consolas,Menlo,monospace; font-size:7.5pt; color:var(--se-blue-dark);">qt(0.975, df = 6)  &rArr;  2.4469</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="box body-ci-soft">
+                <div class="box-tag" style="background:var(--ci-blue); color:#fff;">From SE to confidence interval</div>
+                <div class="box-body" style="gap:0.5mm;">
+                    <div class="visual" style="border:none; background:transparent; padding:0;">
+                        <svg viewBox="0 0 300 100" role="img" aria-label="Number line showing slope, plus or minus 1 SE, and 95% CI">
+                            <!-- 95% CI bar (rose) -->
+                            <line x1="50.3" y1="22" x2="230.9" y2="22" stroke="#b83b5e" stroke-width="2" />
+                            <line x1="50.3" y1="18" x2="50.3" y2="26" stroke="#b83b5e" stroke-width="2" />
+                            <line x1="230.9" y1="18" x2="230.9" y2="26" stroke="#b83b5e" stroke-width="2" />
+                            <text x="140.6" y="14" text-anchor="middle" font-size="7.5" font-weight="900" fill="#b83b5e">95% CI (&plusmn; 2.45 SE)</text>
+                            <!-- ±1 SE bar (blue) -->
+                            <line x1="103.75" y1="38" x2="177.5" y2="38" stroke="#2f5f98" stroke-width="2" />
+                            <line x1="103.75" y1="34" x2="103.75" y2="42" stroke="#2f5f98" stroke-width="2" />
+                            <line x1="177.5" y1="34" x2="177.5" y2="42" stroke="#2f5f98" stroke-width="2" />
+                            <text x="140.6" y="32" text-anchor="middle" font-size="7.5" font-weight="900" fill="#2f5f98">&plusmn; 1 SE</text>
+                            <!-- Only the three key values labeled -->
+                            <g font-size="6.8" font-weight="800">
+                                <text x="50.3" y="58" text-anchor="middle" fill="#b83b5e">0.097</text>
+                                <text x="140.6" y="58" text-anchor="middle" fill="#182326">b₁ = 0.386</text>
+                                <text x="230.9" y="58" text-anchor="middle" fill="#b83b5e">0.675</text>
+                            </g>
+                            <!-- Endpoint dots -->
+                            <circle cx="50.3" cy="67" r="2.1" fill="#b83b5e" />
+                            <circle cx="103.75" cy="67" r="1.6" fill="#2f5f98" />
+                            <circle cx="140.6" cy="67" r="2.4" fill="#182326" />
+                            <circle cx="177.5" cy="67" r="1.6" fill="#2f5f98" />
+                            <circle cx="230.9" cy="67" r="2.1" fill="#b83b5e" />
+                            <!-- Number line -->
+                            <line x1="20" y1="67" x2="280" y2="67" stroke="#5d6d72" stroke-width="0.9" />
+                            <g stroke="#5d6d72" stroke-width="0.9">
+                                <line x1="20" y1="65" x2="20" y2="70" />
+                                <line x1="82.5" y1="65" x2="82.5" y2="70" />
+                                <line x1="145" y1="65" x2="145" y2="70" />
+                                <line x1="207.5" y1="65" x2="207.5" y2="70" />
+                                <line x1="270" y1="65" x2="270" y2="70" />
+                            </g>
+                            <g font-size="6.5" font-weight="700" fill="#5d6d72">
+                                <text x="20" y="79" text-anchor="middle">0.0</text>
+                                <text x="82.5" y="79" text-anchor="middle">0.2</text>
+                                <text x="145" y="79" text-anchor="middle">0.4</text>
+                                <text x="207.5" y="79" text-anchor="middle">0.6</text>
+                                <text x="270" y="79" text-anchor="middle">0.8</text>
+                            </g>
+                            <text x="150" y="93" text-anchor="middle" font-size="7" font-weight="800" fill="#5d6d72">slope</text>
+                        </svg>
+                    </div>
+                    <p class="note" style="text-align:center; margin-top:0.2mm;">Example: b₁ = 0.386 and SE = 0.118 &rarr; 0.386 &plusmn; 2.45 &times; 0.118 &asymp; (0.097, 0.675).</p>
+                    <p>The CI is centered on the <span class="b"><input class="fill" data-answer="sample"><span class="opts"><button type="button" class="opt" data-value="residual">residual</button><button type="button" class="opt" data-value="sample">sample</button><button type="button" class="opt" data-value="population">population</button></span></span> slope, b₁, but it is meant to capture the true <span class="b"><input class="fill" data-answer="population"><span class="opts"><button type="button" class="opt" data-value="population">population</button><button type="button" class="opt" data-value="sample">sample</button></span></span> slope, &beta;<sub>1</sub>. Across many repeated studies, about <span class="b"><input class="fill code" data-answer="95"><span class="opts"><button type="button" class="opt" data-value="68">68</button><button type="button" class="opt" data-value="50">50</button><button type="button" class="opt" data-value="95">95</button></span></span>% of such intervals would capture &beta;<sub>1</sub>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROW 4: SIGNIFICANCE + R OUTPUT -->
+        <div class="row split-46-54">
+            <div class="box tag-rose">
+                <div class="box-tag">Significance and the zero-slope test</div>
+                <div class="box-body">
+                    <p>If zero lies <span class="b"><input class="fill" data-answer="outside"><span class="opts"><button type="button" class="opt" data-value="inside">inside</button><button type="button" class="opt" data-value="outside">outside</button></span></span> the 95% CI, the slope is statistically significant.</p>
+                    <p>If zero lies <span class="b"><input class="fill" data-answer="inside"><span class="opts"><button type="button" class="opt" data-value="above">above</button><button type="button" class="opt" data-value="inside">inside</button><button type="button" class="opt" data-value="outside">outside</button></span></span> the CI, we cannot rule out the possibility of no linear relationship.</p>
+                    <p>An interval like (&minus;0.45, &minus;0.20) is <span class="b"><input class="fill" data-answer="significant"><span class="opts"><button type="button" class="opt" data-value="significant">significant</button><button type="button" class="opt" data-value="not significant">not significant</button></span></span> because the whole interval is below zero. An interval like (&minus;0.55, 0.10) is <span class="b"><input class="fill" data-answer="not significant"><span class="opts"><button type="button" class="opt" data-value="not significant">not significant</button><button type="button" class="opt" data-value="significant">significant</button></span></span> because it contains zero.</p>
+                    <div class="sig-mini">
+                        <div>
+                            <div class="lbl ok">Significant: entirely below zero</div>
+                            <svg viewBox="0 0 200 36" aria-hidden="true">
+                                <line x1="10" y1="22" x2="190" y2="22" stroke="#5d6d72" stroke-width="0.8" />
+                                <g stroke="#5d6d72" stroke-width="0.8">
+                                    <line x1="10" y1="20" x2="10" y2="25" />
+                                    <line x1="100" y1="20" x2="100" y2="25" />
+                                    <line x1="190" y1="20" x2="190" y2="25" />
+                                </g>
+                                <g font-size="6.4" font-weight="700" fill="#5d6d72">
+                                    <text x="10" y="33" text-anchor="middle">&minus;1</text>
+                                    <text x="100" y="33" text-anchor="middle">0</text>
+                                    <text x="190" y="33" text-anchor="middle">1</text>
+                                </g>
+                                <line x1="59.5" y1="14" x2="82" y2="14" stroke="#2c8a4a" stroke-width="2.2" />
+                                <circle cx="59.5" cy="14" r="1.8" fill="#2c8a4a" />
+                                <circle cx="82" cy="14" r="1.8" fill="#2c8a4a" />
+                                <text x="59.5" y="9" text-anchor="middle" font-size="5.8" font-weight="800" fill="#2c8a4a">&minus;0.45</text>
+                                <text x="82" y="9" text-anchor="middle" font-size="5.8" font-weight="800" fill="#2c8a4a">&minus;0.20</text>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="lbl no">Not significant: crosses zero</div>
+                            <svg viewBox="0 0 200 36" aria-hidden="true">
+                                <line x1="10" y1="22" x2="190" y2="22" stroke="#5d6d72" stroke-width="0.8" />
+                                <g stroke="#5d6d72" stroke-width="0.8">
+                                    <line x1="10" y1="20" x2="10" y2="25" />
+                                    <line x1="100" y1="20" x2="100" y2="25" />
+                                    <line x1="190" y1="20" x2="190" y2="25" />
+                                </g>
+                                <g font-size="6.4" font-weight="700" fill="#5d6d72">
+                                    <text x="10" y="33" text-anchor="middle">&minus;1</text>
+                                    <text x="100" y="33" text-anchor="middle">0</text>
+                                    <text x="190" y="33" text-anchor="middle">1</text>
+                                </g>
+                                <line x1="50.5" y1="14" x2="109" y2="14" stroke="#b83b5e" stroke-width="2.2" />
+                                <circle cx="50.5" cy="14" r="1.8" fill="#b83b5e" />
+                                <circle cx="109" cy="14" r="1.8" fill="#b83b5e" />
+                                <text x="50.5" y="9" text-anchor="middle" font-size="5.8" font-weight="800" fill="#b83b5e">&minus;0.55</text>
+                                <text x="109" y="9" text-anchor="middle" font-size="5.8" font-weight="800" fill="#b83b5e">0.10</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="box">
+                <div class="box-tag">Reading R output</div>
+                <div class="box-body">
+                    <div class="r-code"><span class="cm">## summary(model)$coefficients</span>
+              Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept) -10.7788     4.0605   -2.65    0.0378
+weeks         <span class="hl">0.3863</span>     <span class="hl">0.1184</span>    3.26    0.0172
+
+<span class="cm">## confint(model)</span>
+                2.5 %    97.5 %
+(Intercept) -20.7145   -0.8431
+weeks         <span class="hl">0.0965</span>    <span class="hl">0.6761</span></div>
+                    <p>The estimated slope on <code style="font-family:Consolas,Menlo,monospace;">weeks</code> is <span class="b"><input class="fill code" data-answer="0.386" data-alt="0.3863"><span class="opts"><button type="button" class="opt" data-value="0.118">0.118</button><button type="button" class="opt" data-value="2.45">2.45</button><button type="button" class="opt" data-value="0.386">0.386</button></span></span>, with standard error <span class="b"><input class="fill code" data-answer="0.118" data-alt="0.1184"><span class="opts"><button type="button" class="opt" data-value="0.386">0.386</button><button type="button" class="opt" data-value="0.118">0.118</button></span></span>.</p>
+                    <p>The 95% CI runs from <span class="b"><input class="fill code" data-answer="0.097" data-alt="0.0965"><span class="opts"><button type="button" class="opt" data-value="0.675">0.675</button><button type="button" class="opt" data-value="0.097">0.097</button></span></span> to <span class="b"><input class="fill code" data-answer="0.676" data-alt="0.675|0.6761"><span class="opts"><button type="button" class="opt" data-value="0.097">0.097</button><button type="button" class="opt" data-value="0.676">0.676</button><button type="button" class="opt" data-value="2.45">2.45</button></span></span>. Because zero is <span class="b"><input class="fill" data-answer="outside"><span class="opts"><button type="button" class="opt" data-value="outside">outside</button><button type="button" class="opt" data-value="inside">inside</button></span></span> this interval, the slope is statistically significant.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROW 5: VOCAB -->
+        <div class="box tag-gold">
+            <div class="box-tag">Vocabulary, notation, and distinctions</div>
+            <div class="box-body">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5mm; margin-top:0.2mm;">
+                    <div class="vocab-grid">
+                        <span class="vocab-term teal">b<sub>1</sub></span>
+                        <span><span class="b"><input class="fill" data-answer="Sample"><span class="opts"><button type="button" class="opt" data-value="Population">Population</button><button type="button" class="opt" data-value="Sample">Sample</button></span></span> slope estimate (computed from data).</span>
+                        <span class="vocab-term teal">&beta;<sub>1</sub></span>
+                        <span>True population slope; the fixed value we are trying to <span class="b"><input class="fill" data-answer="estimate"><span class="opts"><button type="button" class="opt" data-value="observe">observe</button><button type="button" class="opt" data-value="compute">compute</button><button type="button" class="opt" data-value="estimate">estimate</button></span></span>.</span>
+                        <span class="vocab-term se-blue">SE(b<sub>1</sub>)</span>
+                        <span>Standard error of the slope; the typical sample-to-sample <span class="b"><input class="fill" data-answer="wobble"><span class="opts"><button type="button" class="opt" data-value="bias">bias</button><button type="button" class="opt" data-value="wobble">wobble</button></span></span>.</span>
+                        <span class="vocab-term se-blue">t*</span>
+                        <span><span class="b"><input class="fill" data-answer="Critical"><span class="opts"><button type="button" class="opt" data-value="Mean">Mean</button><button type="button" class="opt" data-value="Critical">Critical</button></span></span> value for the chosen confidence level (from the t-distribution).</span>
+                    </div>
+                    <div class="vocab-grid">
+                        <span class="vocab-term">Sxx</span>
+                        <span>&Sigma;(x<sub>i</sub> &minus; x&#772;)<sup>2</sup>, a measure of the <span class="b"><input class="fill" data-answer="spread"><span class="opts"><button type="button" class="opt" data-value="spread">spread</button><button type="button" class="opt" data-value="mean">mean</button></span></span> of the x values.</span>
+                        <span class="vocab-term ci-blue">CI</span>
+                        <span>Confidence interval for the slope: b<sub>1</sub> &plusmn; <span class="b"><input class="fill code" data-answer="t*"><span class="opts"><button type="button" class="opt" data-value="t*">t*</button><button type="button" class="opt" data-value="z">z</button></span></span> &times; SE(b<sub>1</sub>).</span>
+                        <span class="vocab-term">s</span>
+                        <span>Residual <span class="b"><input class="fill" data-answer="standard"><span class="opts"><button type="button" class="opt" data-value="squared">squared</button><button type="button" class="opt" data-value="standard">standard</button></span></span> error; the typical vertical scatter around the line.</span>
+                        <span class="vocab-term">SE(b<sub>0</sub>)</span>
+                        <span>Uncertainty in the <span class="b"><input class="fill" data-answer="intercept"><span class="opts"><button type="button" class="opt" data-value="slope">slope</button><button type="button" class="opt" data-value="residual">residual</button><button type="button" class="opt" data-value="intercept">intercept</button></span></span>; usually less scientifically central than SE(b<sub>1</sub>).</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer><a href="https://thegraphcourses.org" target="_blank" rel="noopener">thegraphcourses.org</a></footer>
+    </section>
+    </div>
+
+    <script>
+        const sheet = document.getElementById("sheet"),
+              pageWrap = document.getElementById("pageWrap"),
+              blanks = Array.from(document.querySelectorAll(".b")),
+              storageKey = "se-and-ci-for-slope-cheatsheet-v2";
+
+        // Randomize option order each load
+        blanks.forEach(blank => {
+            const opts = blank.querySelector(".opts");
+            if (!opts) return;
+            const buttons = Array.from(opts.querySelectorAll(".opt"));
+            for (let i = buttons.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [buttons[i], buttons[j]] = [buttons[j], buttons[i]];
+            }
+            buttons.forEach(btn => opts.appendChild(btn));
+        });
+
+        // Size each input field based on its longest valid answer
+        blanks.forEach(b => {
+            const i = b.querySelector(".fill");
+            const answers = [i.dataset.answer || "", ...(i.dataset.alt ? i.dataset.alt.split("|") : [])];
+            const longest = answers.reduce((m, v) => Math.max(m, v.length), 0);
+            i.style.width = `${Math.max(longest + 3, 5)}ch`;
+        });
+
+        const norm = s => String(s)
+              .replace(/[−–]/g, "-")
+              .replace(/₀/g, "0").replace(/₁/g, "1").replace(/₂/g, "2").replace(/₃/g, "3").replace(/₄/g, "4")
+              .replace(/β/g, "beta")
+              .replace(/x̄/g, "xbar").replace(/x̄/g, "xbar")
+              .replace(/\s+/g, " ")
+              .trim()
+              .toLowerCase();
+        const answersFor = input => [input.dataset.answer || "", ...(input.dataset.alt ? input.dataset.alt.split("|") : [])].map(norm);
+        const match = (value, input) => answersFor(input).includes(norm(value));
+
+        function flashCorrect(i) {
+            i.classList.remove("correct-flash");
+            void i.offsetWidth;
+            i.classList.add("correct-flash");
+            setTimeout(() => i.classList.remove("correct-flash"), 800);
+        }
+        function flashWrong(i) {
+            i.classList.remove("wrong-pick");
+            void i.offsetWidth;
+            i.classList.add("wrong-pick");
+        }
+        function save() {
+            localStorage.setItem(storageKey, JSON.stringify(blanks.map(b => b.querySelector(".fill").value)));
+        }
+        function restore() {
+            try {
+                const d = JSON.parse(localStorage.getItem(storageKey) || "[]");
+                blanks.forEach((b, i) => {
+                    const inp = b.querySelector(".fill");
+                    if (d[i]) {
+                        inp.value = d[i];
+                        if (match(d[i], inp)) b.classList.add("solved");
+                        else inp.classList.add("wrong-pick");
+                    }
+                });
+            } catch { localStorage.removeItem(storageKey); }
+        }
+        blanks.forEach(blank => {
+            const inp = blank.querySelector(".fill"),
+                  opts = Array.from(blank.querySelectorAll(".opt"));
+            inp.addEventListener("input", () => {
+                const was = blank.classList.contains("solved");
+                inp.classList.remove("wrong-pick");
+                opts.forEach(o => o.classList.remove("wrong-pick"));
+                const ok = inp.value !== "" && match(inp.value, inp);
+                if (ok && !was) { blank.classList.add("solved"); flashCorrect(inp); }
+                else if (!ok && was) { blank.classList.remove("solved"); }
+                save();
+            });
+            inp.addEventListener("blur", () => {
+                const v = inp.value.trim();
+                if (v && !match(v, inp)) flashWrong(inp);
+            });
+            opts.forEach(opt => opt.addEventListener("click", () => {
+                inp.value = opt.textContent;
+                opts.forEach(o => o.classList.remove("wrong-pick"));
+                inp.classList.remove("wrong-pick");
+                void inp.offsetWidth;
+                if (match(opt.dataset.value, inp)) {
+                    blank.classList.add("solved");
+                    flashCorrect(inp);
+                } else {
+                    blank.classList.remove("solved");
+                    opt.classList.add("wrong-pick");
+                    inp.classList.add("wrong-pick");
+                }
+                save();
+            }));
+        });
+        restore();
+
+        document.getElementById("toggleHints").addEventListener("click", e => {
+            sheet.classList.toggle("hints-hidden");
+            e.currentTarget.textContent = sheet.classList.contains("hints-hidden") ? "Show hints" : "Hide hints";
+        });
+        document.getElementById("clearAnswers").addEventListener("click", () => {
+            blanks.forEach(b => {
+                const i = b.querySelector(".fill");
+                i.value = "";
+                i.classList.remove("wrong-pick", "correct-flash");
+                b.classList.remove("solved");
+                b.querySelectorAll(".opt.wrong-pick").forEach(o => o.classList.remove("wrong-pick"));
+            });
+            save();
+        });
+
+        // Zoom controls
+        const zoomLevels = [0.75, 0.85, 1.0, 1.15, 1.3, 1.5];
+        const zoomKey = "se-and-ci-cheatsheet-zoom";
+        let zoomIdx = parseInt(localStorage.getItem(zoomKey) || "2", 10);
+        if (isNaN(zoomIdx) || zoomIdx < 0 || zoomIdx >= zoomLevels.length) zoomIdx = 2;
+        const zoomLabel = document.getElementById("zoomLabel");
+        function applyZoom() {
+            const z = zoomLevels[zoomIdx];
+            sheet.style.transform = z === 1 ? "" : `scale(${z})`;
+            // reserve enough vertical space so the (scaled) sheet doesn't overlap the page below
+            const baseH = 297; // mm
+            pageWrap.style.minHeight = z === 1 ? "" : `${baseH * z + 20}mm`;
+            zoomLabel.textContent = Math.round(z * 100) + "%";
+            localStorage.setItem(zoomKey, String(zoomIdx));
+        }
+        document.getElementById("zoomOut").addEventListener("click", () => {
+            if (zoomIdx > 0) { zoomIdx--; applyZoom(); }
+        });
+        document.getElementById("zoomIn").addEventListener("click", () => {
+            if (zoomIdx < zoomLevels.length - 1) { zoomIdx++; applyZoom(); }
+        });
+        applyZoom();
+    </script>
+</body>
+</html>

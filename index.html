@@ -20,7 +20,7 @@
     --bg: #fafaf9;
     --white: #ffffff;
     --border: #e7e5e4;
-    --sidebar-w: 280px;
+    --sidebar-w: 236px;
     --collapse-btn-size: 26px;
   }
 
@@ -107,7 +107,7 @@
   }
 
   .sidebar-header {
-    padding: 24px 22px 20px;
+    padding: 18px 16px 14px;
     border-bottom: 1px solid var(--border);
   }
 
@@ -121,7 +121,7 @@
   }
 
   .sidebar-title {
-    font-size: 17px;
+    font-size: 15px;
     font-weight: 800;
     color: var(--text);
     line-height: 1.25;
@@ -137,12 +137,12 @@
   }
 
   .sidebar-nav {
-    padding: 12px 10px;
+    padding: 8px 8px;
     flex: 1 1 auto;
   }
 
   .nav-section + .nav-section {
-    margin-top: 14px;
+    margin-top: 10px;
   }
 
   .nav-label {
@@ -151,12 +151,12 @@
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--text-light);
-    padding: 8px 12px 6px;
+    padding: 6px 10px 4px;
   }
 
   .nav-item {
     display: block;
-    padding: 10px 12px;
+    padding: 7px 10px;
     border-radius: 8px;
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
@@ -180,13 +180,13 @@
   }
 
   .nav-name {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     line-height: 1.3;
   }
 
   .nav-desc {
-    font-size: 11px;
+    font-size: 10px;
     line-height: 1.35;
     color: var(--text-light);
     margin-top: 1px;
@@ -194,7 +194,7 @@
   }
 
   .sidebar-footer {
-    padding: 14px 22px;
+    padding: 10px 16px;
     border-top: 1px solid var(--border);
     font-size: 11px;
     color: var(--text-light);
@@ -404,6 +404,11 @@
         <a class="nav-item" data-id="least-squares-and-residual-standard-error" data-src="active_cheat_sheets/least_squares_and_residual_standard_error.html" onclick="load(this)">
           <div class="nav-name">Least Squares &amp; Residual Standard Error</div>
           <div class="nav-desc">Fill-in-the-blank reference on how regression fits the line, SSE, RSS, and the typical miss size (RSE).</div>
+        </a>
+
+        <a class="nav-item" data-id="slope-standard-error-and-confidence-intervals" data-src="active_cheat_sheets/slope_standard_error_and_confidence_intervals.html" onclick="load(this)">
+          <div class="nav-name">Standard Error and Confidence Intervals for the Slope</div>
+          <div class="nav-desc">Fill-in-the-blank reference on slope uncertainty, CIs for the true slope, and whether zero lies inside the interval.</div>
         </a>
       </div>
 
