@@ -7,6 +7,7 @@
   <style>
     :root {
       --teal: #0d7377; --teal-dark: #0a5d61; --gold: #f0c808;
+      --teal-soft: #eff7f7; --gold-soft: #fff9df; --rose-soft: #fdeef1; --blue-soft: #e7eef7;
       --ink: #182326; --muted: #5d6d72; --line: #cfdcde; --soft: #eef6f6;
       --cream: #fff9df; --rose: #b83b5e; --blue: #2f5f98; --green: #2c8a4a; --paper: #ffffff;
     }
@@ -18,13 +19,18 @@
     .toolbar-intro .title { font-weight:800; color:var(--teal); font-size:11pt; margin-bottom:2px; }
     .toolbar-intro .descr { color:#3a4a4f; max-width:130mm; }
     .toolbar-intro .descr b { color:var(--teal); }
-    .toolbar-actions { display:flex; gap:8px; align-items:center; flex-shrink:0; }
+    .toolbar-actions { display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
     button { border:1px solid #9bb4b7; background:var(--paper); color:var(--ink); border-radius:6px; padding:7px 11px; font:inherit; font-weight:700; cursor:pointer; }
     button.primary { background:var(--teal); color:white; border-color:var(--teal); }
     .print-button { display:inline-flex; align-items:center; gap:5px; }
     .print-button svg { width:13px; height:13px; display:block; }
+    .zoom-group { display:inline-flex; align-items:stretch; border:1px solid #9bb4b7; border-radius:6px; overflow:hidden; background:var(--paper); }
+    .zoom-group button { border:0; border-radius:0; padding:6px 10px; background:transparent; font-weight:800; }
+    .zoom-group button + button { border-left:1px solid #cdd9dc; }
+    .zoom-group .zoom-label { display:inline-flex; align-items:center; justify-content:center; min-width:44px; padding:0 9px; border-left:1px solid #cdd9dc; color:var(--muted); font-size:9pt; font-weight:800; }
 
-    .page { width:210mm; min-height:297mm; margin:0 auto 18px; background:var(--paper); padding:5mm 9mm 3mm; box-shadow:0 8px 30px rgba(24,35,38,0.18); display:flex; flex-direction:column; gap:1.2mm; }
+    .page-wrap { display:flex; flex-direction:column; align-items:center; }
+    .page { width:210mm; min-height:297mm; margin:0 auto 18px; background:var(--paper); padding:5mm 9mm 3mm; box-shadow:0 8px 30px rgba(24,35,38,0.18); display:flex; flex-direction:column; gap:1.2mm; transform-origin:top center; }
     header { border-bottom:1.5mm solid var(--gold); padding-bottom:1.2mm; }
     h1 { margin:0; color:var(--teal); font-size:22pt; line-height:0.98; }
     .subtitle { margin-top:1.4mm; color:var(--muted); font-weight:700; font-size:9.5pt; }
@@ -33,9 +39,9 @@
     .group-label::before, .group-label::after { content:""; flex:1; border-top:1px solid var(--line); height:0; }
     .group-label span { white-space:nowrap; }
 
-    .box { border:1px solid var(--line); border-radius:6px; overflow:hidden; background:white; display:flex; flex-direction:column; }
+    .box { border:1px solid var(--line); border-radius:6px; overflow:visible; background:white; display:flex; flex-direction:column; min-width:0; }
     .box-tag { background:var(--teal); color:white; font-size:7.8pt; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; padding:1.3mm 2.8mm; }
-    .box-body { padding:1.7mm 2.6mm 1.9mm; flex:1; display:flex; flex-direction:column; gap:1.1mm; }
+    .box-body { padding:1.7mm 2.6mm 1.9mm; flex:1; display:flex; flex-direction:column; gap:1.1mm; background:var(--teal-soft); min-width:0; overflow:visible; border-radius:0 0 5px 5px; }
     .box-body p { margin:0; }
     .box-body p.prelude { font-weight:700; }
     .box-body ul { margin:0; padding-left:4mm; display:flex; flex-direction:column; gap:0.7mm; }
@@ -43,9 +49,12 @@
     .formula { font-family:Consolas,Menlo,monospace; padding-left:2mm; }
 
     .box.tag-rose .box-tag { background:var(--rose); }
+    .box.tag-rose .box-body { background:var(--rose-soft); }
     .box.tag-blue .box-tag { background:var(--blue); }
+    .box.tag-blue .box-body { background:var(--blue-soft); }
     .box.tag-gold .box-tag { background:var(--gold); color:var(--ink); }
-    .box.body-cream .box-body { background:var(--cream); }
+    .box.tag-gold .box-body, .box.body-cream .box-body { background:var(--gold-soft); }
+    .box.body-cream .box-tag { background:var(--gold); color:var(--ink); }
 
     .row { display:grid; gap:3mm; }
     .row.cols-2 { grid-template-columns:1fr 1fr; }
@@ -75,20 +84,14 @@
     .r-code .hl-int { background:rgba(47,95,152,0.55); padding:0 2px; border-radius:3px; }
     .r-code .hl-slope { background:rgba(184,59,94,0.55); padding:0 2px; border-radius:3px; }
 
-    .b { display:inline-flex; flex-direction:column; align-items:center; vertical-align:baseline; text-align:center; }
-    .fill { border:0; border-bottom:1.6px solid var(--teal); border-radius:0; padding:0 1mm 0.4mm; color:var(--ink); background:transparent; font:inherit; font-weight:800; text-align:center; min-width:6mm; }
+    .b { display:inline-flex; flex-direction:column; align-items:center; vertical-align:baseline; line-height:1; margin:0 0.2mm; text-align:center; max-width:100%; min-width:0; }
+    .fill { border:0; border-bottom:1.4px solid var(--teal); border-radius:0; padding:0 0.3mm 0.5px; color:var(--ink); background:transparent; font:inherit; font-weight:800; line-height:1; text-align:center; min-width:2mm; max-width:100%; transition:width 0.18s ease-out; }
     .fill.code { font-family:Consolas,Menlo,monospace; }
     .fill.align-left { text-align:left; }
-    .fill:focus { outline:none; border-bottom-color:var(--teal-dark); border-bottom-width:2px; }
-
-    .opts { display:inline-flex; align-items:center; gap:1mm; margin-top:0.7mm; line-height:1.1; white-space:nowrap; }
-    .opt { background:var(--soft); border:1px solid #c2d6d8; color:var(--ink); font-family:inherit; font-size:6.6pt; font-weight:700; padding:0.3mm 1.8mm 0.5mm; border-radius:999px; cursor:pointer; transition:background 0.12s,border-color 0.12s,color 0.12s,transform 0.08s; }
-    .opt:hover { background:var(--cream); border-color:var(--gold); transform:translateY(-0.4px); }
-    .opt:active { transform:translateY(0.2px); }
-    .opt.wrong-pick { color:var(--rose); background:#ffe6ec; border-color:var(--rose); text-decoration:line-through; animation:shake 0.45s; }
-
-    .b.solved .opts { display:none; }
-    .hints-hidden .opts { display:none; }
+    .fill:focus { outline:none; border-bottom-color:var(--teal-dark); border-bottom-width:1.8px; }
+    .hint { font-size:4.7pt; color:#98a3a7; font-weight:700; font-family:inherit; line-height:1.05; margin-top:0.35mm; letter-spacing:0.02em; white-space:normal; overflow-wrap:anywhere; max-width:34mm; text-align:center; }
+    .b.solved .hint { display:none; }
+    .hints-hidden .hint { display:none; }
 
     .fill.wrong-pick { border-bottom-color:var(--rose) !important; color:var(--rose); animation:shake 0.45s; }
     .fill.correct-flash { animation:correctFlash 0.75s ease-out; }
@@ -104,16 +107,17 @@
     @media print {
       body { background:white; }
       .toolbar { display:none; }
-      .page { width:210mm; min-height:297mm; margin:0; box-shadow:none; break-after:page; }
+      .page { width:210mm; min-height:297mm; margin:0; box-shadow:none; break-after:page; transform:none !important; }
       button { display:none; }
-      .fill,.r-code,.worked,.box,.box-tag,.visual,.equation-formula .b0,.equation-formula .b1,.legend-key.b0,.legend-key.b1 { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
-      .opts { display:none !important; }
+      .fill,.r-code,.worked,.box,.box-tag,.box-body,.visual,.equation-formula .b0,.equation-formula .b1,.legend-key.b0,.legend-key.b1 { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+      .hint { display:none !important; }
       .worked { line-height:1.7 !important; }
+      .fill { transition:none; }
       .fill.wrong-pick { color:var(--ink); border-bottom-color:var(--teal) !important; }
     }
     @media screen and (max-width:820px) {
       .page,.toolbar { width:calc(100vw - 16px); }
-      .page { padding:16px; min-height:auto; }
+      .page { padding:16px; min-height:auto; transform:none !important; }
       .row,.equation-layout { grid-template-columns:1fr !important; }
       .toolbar { flex-direction:column; align-items:stretch; }
       .toolbar-intro .descr { max-width:none; }
@@ -124,16 +128,21 @@
   <div class="toolbar">
     <div class="toolbar-intro">
       <div class="title">GRAPH Courses cheat sheet</div>
-      <div class="descr">Type or select your answer from the options. When finished, click Print / Save on the right.</div>
+      <div class="descr">Type your answers into the blanks. Hint options appear in small grey text below each blank. When finished, click Print / Save on the right.</div>
     </div>
     <div class="toolbar-actions">
+      <div class="zoom-group" role="group" aria-label="Zoom controls">
+        <button type="button" id="zoomOut" aria-label="Zoom out">Zoom -</button>
+        <button type="button" id="zoomIn" aria-label="Zoom in">Zoom +</button>
+        <span class="zoom-label" id="zoomLabel">100%</span>
+      </div>
       <button type="button" id="toggleHints">Hide hints</button>
       <button type="button" id="clearAnswers">Clear</button>
       <button type="button" class="primary print-button" onclick="window.print()" aria-label="Print or save cheat sheet">
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
           <path fill="currentColor" d="M7 3h10v5H7V3Zm10 14h2a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h2v4h10v-4Zm-8 2v-6h6v6H9Zm9-7.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/>
         </svg>
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
           <path fill="currentColor" d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
         </svg>
         Print / Save
@@ -141,6 +150,7 @@
     </div>
   </div>
 
+  <div class="page-wrap" id="pageWrap">
   <section class="page" id="sheet">
     <header>
       <h1>Intro to Simple Linear Regression (SLR)</h1>
@@ -150,14 +160,14 @@
     <div class="box">
       <div class="box-tag">Big idea</div>
       <div class="box-body">
-        <p>Linear regression draws a single
-          <span class="b"><input class="fill" data-answer="straight"><span class="opts"><button type="button" class="opt" data-value="straight">straight</button><button type="button" class="opt" data-value="curved">curved</button><button type="button" class="opt" data-value="dashed">dashed</button></span></span>
-          line through a cloud of points to summarize the relationship between two
-          <span class="b"><input class="fill" data-answer="numeric"><span class="opts"><button type="button" class="opt" data-value="numeric">numeric</button><button type="button" class="opt" data-value="categorical">categorical</button><button type="button" class="opt" data-value="binary">binary</button></span></span>
-          variables. We use it to
-          <span class="b"><input class="fill" data-answer="quantify"><span class="opts"><button type="button" class="opt" data-value="quantify">quantify</button><button type="button" class="opt" data-value="ignore">ignore</button><button type="button" class="opt" data-value="hide">hide</button></span></span>
-          a relationship and
-          <span class="b"><input class="fill" data-answer="predict"><span class="opts"><button type="button" class="opt" data-value="predict">predict</button><button type="button" class="opt" data-value="invent">invent</button><button type="button" class="opt" data-value="forget">forget</button></span></span>
+        <p><b>Linear regression</b> draws a single
+          <span class="b"><input class="fill" data-answer="straight"><span class="hint">straight / curved / dashed</span></span>
+          line through a cloud of points to summarize the <b>relationship</b> between two
+          <span class="b"><input class="fill" data-answer="numeric"><span class="hint">numeric / categorical / binary</span></span>
+          variables. We use it to <b>describe</b> and
+          <span class="b"><input class="fill" data-answer="quantify"><span class="hint">quantify / ignore / hide</span></span>
+          a relationship, then
+          <span class="b"><input class="fill" data-answer="predict"><span class="hint">predict / invent / forget</span></span>
           new values of Y.</p>
       </div>
     </div>
@@ -168,9 +178,9 @@
         <div class="equation-layout">
           <div class="equation-formula">&#375; = <span class="b0">b<sub>0</sub></span> + <span class="b1">b<sub>1</sub></span> &middot; x</div>
           <div class="legend">
-            <div class="legend-row"><span class="legend-key">&#375;</span><span>the predicted value of Y at a given x</span></div>
-            <div class="legend-row"><span class="legend-key b0">b<sub>0</sub></span><span>the <span class="b"><input class="fill" data-answer="intercept"><span class="opts"><button type="button" class="opt" data-value="intercept">intercept</button><button type="button" class="opt" data-value="slope">slope</button><button type="button" class="opt" data-value="midpoint">midpoint</button></span></span>: predicted &#375; when x = <span class="b"><input class="fill" data-answer="0"><span class="opts"><button type="button" class="opt" data-value="0">0</button><button type="button" class="opt" data-value="1">1</button><button type="button" class="opt" data-value="mean">mean</button></span></span></span></div>
-            <div class="legend-row"><span class="legend-key b1">b<sub>1</sub></span><span>the <span class="b"><input class="fill" data-answer="slope"><span class="opts"><button type="button" class="opt" data-value="slope">slope</button><button type="button" class="opt" data-value="intercept">intercept</button><button type="button" class="opt" data-value="midpoint">midpoint</button></span></span>: change in &#375; per <span class="b"><input class="fill" data-answer="1"><span class="opts"><button type="button" class="opt" data-value="1">1</button><button type="button" class="opt" data-value="10">10</button><button type="button" class="opt" data-value="100">100</button></span></span>-unit increase in x</span></div>
+            <div class="legend-row"><span class="legend-key">&#375;</span><span>the <b>predicted value of Y</b> at a given x</span></div>
+            <div class="legend-row"><span class="legend-key b0">b<sub>0</sub></span><span>the <span class="b"><input class="fill" data-answer="intercept"><span class="hint">intercept / slope / midpoint</span></span>: predicted &#375; when <b>x =</b> <span class="b"><input class="fill" data-answer="0"><span class="hint">0 / 1 / mean</span></span></span></div>
+            <div class="legend-row"><span class="legend-key b1">b<sub>1</sub></span><span>the <span class="b"><input class="fill" data-answer="slope"><span class="hint">slope / intercept / midpoint</span></span>: <b>change in &#375;</b> per <span class="b"><input class="fill" data-answer="1"><span class="hint">1 / 10 / 100</span></span>-unit increase in x</span></div>
           </div>
         </div>
       </div>
@@ -179,23 +189,23 @@
     <div class="group-label"><span>Anatomy of the line</span></div>
     <div class="row cols-2">
       <div class="box tag-rose"><div class="box-tag">Slope (b<sub>1</sub>)</div><div class="box-body">
-        <p>The slope (b<sub>1</sub>) equals the <span class="b"><input class="fill" data-answer="steepness"><span class="opts"><button type="button" class="opt" data-value="steepness">steepness</button><button type="button" class="opt" data-value="color">color</button><button type="button" class="opt" data-value="curvature">curvature</button></span></span> of the line.</p>
-        <p>It gives how much &#375; changes per 1-unit increase in x, namely <span class="b"><input class="fill code" data-answer="b1"><span class="opts"><button type="button" class="opt" data-value="b1">b&#8321;</button><button type="button" class="opt" data-value="b0">b&#8320;</button><button type="button" class="opt" data-value="x">x</button></span></span> units.</p>
-        <p>It tilts the line <span class="b"><input class="fill" data-answer="up"><span class="opts"><button type="button" class="opt" data-value="up">up</button><button type="button" class="opt" data-value="down">down</button><button type="button" class="opt" data-value="sideways">sideways</button></span></span> for positive values, and <span class="b"><input class="fill" data-answer="down"><span class="opts"><button type="button" class="opt" data-value="up">up</button><button type="button" class="opt" data-value="down">down</button><button type="button" class="opt" data-value="sideways">sideways</button></span></span> for negative values.</p>
+        <p>The <b>slope</b> (b<sub>1</sub>) equals the <span class="b"><input class="fill" data-answer="steepness"><span class="hint">steepness / color / curvature</span></span> of the line.</p>
+        <p>It gives how much &#375; changes <b>per 1-unit increase in x</b>, namely <span class="b"><input class="fill code" data-answer="b1"><span class="hint">b&#8321; / b&#8320; / x</span></span> units.</p>
+        <p>It tilts the line <span class="b"><input class="fill" data-answer="up"><span class="hint">up / down / sideways</span></span> for <b>positive</b> values, and <span class="b"><input class="fill" data-answer="down"><span class="hint">up / down / sideways</span></span> for <b>negative</b> values.</p>
       </div></div>
       <div class="box tag-blue"><div class="box-tag">Intercept (b<sub>0</sub>)</div><div class="box-body">
-        <p>The intercept (b<sub>0</sub>) equals the predicted value of Y at x = <span class="b"><input class="fill" data-answer="0"><span class="opts"><button type="button" class="opt" data-value="0">0</button><button type="button" class="opt" data-value="1">1</button><button type="button" class="opt" data-value="mean">mean</button></span></span>.</p>
-        <p>It marks where the line crosses the <span class="b"><input class="fill" data-answer="Y-axis"><span class="opts"><button type="button" class="opt" data-value="Y-axis">Y-axis</button><button type="button" class="opt" data-value="X-axis">X-axis</button><button type="button" class="opt" data-value="origin">origin</button></span></span>.</p>
-        <p>It is only meaningful as a prediction when x = 0 falls <span class="b"><input class="fill" data-answer="inside"><span class="opts"><button type="button" class="opt" data-value="inside">inside</button><button type="button" class="opt" data-value="outside">outside</button><button type="button" class="opt" data-value="above">above</button></span></span> the observed data range.</p>
+        <p>The <b>intercept</b> (b<sub>0</sub>) equals the <b>predicted value of Y</b> at x = <span class="b"><input class="fill" data-answer="0"><span class="hint">0 / 1 / mean</span></span>.</p>
+        <p>It marks where the line crosses the <span class="b"><input class="fill" data-answer="Y-axis" data-alt="Y axis"><span class="hint">Y-axis / X-axis / origin</span></span>.</p>
+        <p>It is only meaningful as a prediction when <b>x = 0</b> falls <span class="b"><input class="fill" data-answer="inside"><span class="hint">inside / outside / above</span></span> the observed data range.</p>
       </div></div>
     </div>
 
     <div class="group-label"><span>How the best-fit line is chosen</span></div>
     <div class="row split-2-3">
       <div class="box"><div class="box-tag">Residual &amp; least squares</div><div class="box-body">
-        <p>A <b>residual</b> is the vertical gap from a point to the line:</p>
-        <p class="formula">residual = <span class="b"><input class="fill" data-answer="actual"><span class="opts"><button type="button" class="opt" data-value="actual">actual</button><button type="button" class="opt" data-value="slope">slope</button><button type="button" class="opt" data-value="zero">zero</button></span></span> &minus; <span class="b"><input class="fill" data-answer="predicted"><span class="opts"><button type="button" class="opt" data-value="predicted">predicted</button><button type="button" class="opt" data-value="average">average</button><button type="button" class="opt" data-value="doubled">doubled</button></span></span></p>
-        <p>To pick the best-fit line, we want residuals to be small. Simply summing raw residuals does not work because positives and negatives <span class="b"><input class="fill" data-answer="cancel"><span class="opts"><button type="button" class="opt" data-value="cancel">cancel</button><button type="button" class="opt" data-value="double">double</button><button type="button" class="opt" data-value="multiply">multiply</button></span></span> to zero, so we <span class="b"><input class="fill" data-answer="square"><span class="opts"><button type="button" class="opt" data-value="square">square</button><button type="button" class="opt" data-value="cube">cube</button><button type="button" class="opt" data-value="invert">invert</button></span></span> each one first. The best-fit line minimizes the sum of <span class="b"><input class="fill" data-answer="squared"><span class="opts"><button type="button" class="opt" data-value="squared">squared</button><button type="button" class="opt" data-value="raw">raw</button><button type="button" class="opt" data-value="absolute">absolute</button></span></span> residuals, a rule called <span class="b"><input class="fill align-left" data-answer="least squares"><span class="opts"><button type="button" class="opt" data-value="least squares">least squares</button><button type="button" class="opt" data-value="minimum slope">minimum slope</button><button type="button" class="opt" data-value="zero residuals">zero residuals</button></span></span>.</p>
+        <p>A <b>residual</b> is the <b>vertical gap</b> from a point to the line:</p>
+        <p class="formula">residual = <span class="b"><input class="fill" data-answer="actual"><span class="hint">actual / slope / zero</span></span> &minus; <span class="b"><input class="fill" data-answer="predicted"><span class="hint">predicted / average / doubled</span></span></p>
+        <p>To pick the <b>best-fit line</b>, we want residuals to be small. Simply summing <b>raw residuals</b> does not work because positives and negatives <span class="b"><input class="fill" data-answer="cancel"><span class="hint">cancel / double / multiply</span></span> to zero, so we <span class="b"><input class="fill" data-answer="square"><span class="hint">square / cube / invert</span></span> each one first. The best-fit line minimizes the sum of <span class="b"><input class="fill" data-answer="squared"><span class="hint">squared / raw / absolute</span></span> residuals, a rule called <span class="b"><input class="fill align-left" data-answer="least squares" data-alt="least-squares"><span class="hint">least squares / minimum slope / zero residuals</span></span>.</p>
       </div></div>
 
       <div class="visual" aria-label="Labeled anatomy of a regression line">
@@ -234,7 +244,7 @@
           <text x="223" y="107" font-size="9" font-weight="900" fill="#b83b5e">residual</text>
           <text x="223" y="124" font-size="8" font-weight="800" fill="#0d7377">predicted = 3.8</text>
         </svg>
-        <div class="visual-caption">For the highlighted point, residual = 5.5 &minus; 3.8 = <span class="b"><input class="fill code" data-answer="1.7"><span class="opts"><button type="button" class="opt" data-value="1.7">1.7</button><button type="button" class="opt" data-value="-1.7">-1.7</button><button type="button" class="opt" data-value="9.3">9.3</button></span></span></div>
+        <div class="visual-caption">For the highlighted point, residual = 5.5 &minus; 3.8 = <span class="b"><input class="fill code" data-answer="1.7"><span class="hint">1.7 / -1.7 / 9.3</span></span></div>
       </div>
     </div>
 
@@ -247,48 +257,172 @@ model &lt;- <span class="fn">lm</span>(y ~ x, data = df)
               Estimate
 <span class="hl-int">(Intercept)</span>      2.00
 <span class="hl-slope">x</span>                3.00</div>
-        <p>The intercept lives in the row labeled <span class="b"><input class="fill code" data-answer="(Intercept)"><span class="opts"><button type="button" class="opt" data-value="(Intercept)">(Intercept)</button><button type="button" class="opt" data-value="(Slope)">(Slope)</button><button type="button" class="opt" data-value="(Constant)">(Constant)</button></span></span>, and the slope lives in the row named after the <span class="b"><input class="fill" data-answer="predictor"><span class="opts"><button type="button" class="opt" data-value="predictor">predictor</button><button type="button" class="opt" data-value="response">response</button><button type="button" class="opt" data-value="constant">constant</button></span></span>. Both values come from the <span class="b"><input class="fill" data-answer="Estimate"><span class="opts"><button type="button" class="opt" data-value="Estimate">Estimate</button><button type="button" class="opt" data-value="Std.Error">Std.Error</button><button type="button" class="opt" data-value="Pr(>|t|)">Pr(&gt;|t|)</button></span></span> column. So here b&#8320; = <span class="b"><input class="fill code" data-answer="2"><span class="opts"><button type="button" class="opt" data-value="2">2</button><button type="button" class="opt" data-value="3">3</button><button type="button" class="opt" data-value="5">5</button></span></span> and b&#8321; = <span class="b"><input class="fill code" data-answer="3"><span class="opts"><button type="button" class="opt" data-value="2">2</button><button type="button" class="opt" data-value="3">3</button><button type="button" class="opt" data-value="5">5</button></span></span>.</p>
+        <p>The <b>intercept</b> lives in the row labeled <span class="b"><input class="fill code" data-answer="(Intercept)"><span class="hint">(Intercept) / (Slope) / (Constant)</span></span>, and the <b>slope</b> lives in the row named after the <span class="b"><input class="fill" data-answer="predictor"><span class="hint">predictor / response / constant</span></span>. Both values come from the <span class="b"><input class="fill" data-answer="Estimate"><span class="hint">Estimate / Std. Error / Pr(&gt;|t|)</span></span> column. So here b&#8320; = <span class="b"><input class="fill code" data-answer="2"><span class="hint">2 / 3 / 5</span></span> and b&#8321; = <span class="b"><input class="fill code" data-answer="3"><span class="hint">2 / 3 / 5</span></span>.</p>
       </div></div>
 
       <div class="box"><div class="box-tag">Make a prediction</div><div class="box-body">
-        <p>Once b&#8320; and b&#8321; have been estimated, predicting &#375; for a new x is just substitution into the equation.</p>
+        <p>Once b&#8320; and b&#8321; have been estimated, predicting &#375; for a new x is just <b>substitution into the equation</b>.</p>
         <p>Using the estimates from the R output, predict &#375; when x = 5:</p>
-        <div class="worked">&#375; = <span class="b"><input class="fill code" data-answer="2"><span class="opts"><button type="button" class="opt" data-value="2">2</button><button type="button" class="opt" data-value="3">3</button><button type="button" class="opt" data-value="5">5</button></span></span> + <span class="b"><input class="fill code" data-answer="3"><span class="opts"><button type="button" class="opt" data-value="2">2</button><button type="button" class="opt" data-value="3">3</button><button type="button" class="opt" data-value="5">5</button></span></span> &middot; <span class="b"><input class="fill code" data-answer="5"><span class="opts"><button type="button" class="opt" data-value="2">2</button><button type="button" class="opt" data-value="3">3</button><button type="button" class="opt" data-value="5">5</button></span></span> = <span class="b"><input class="fill code" data-answer="17"><span class="opts"><button type="button" class="opt" data-value="13">13</button><button type="button" class="opt" data-value="17">17</button><button type="button" class="opt" data-value="22">22</button></span></span></div>
+        <div class="worked">&#375; = <span class="b"><input class="fill code" data-answer="2"><span class="hint">2 / 3 / 5</span></span> + <span class="b"><input class="fill code" data-answer="3"><span class="hint">2 / 3 / 5</span></span> &middot; <span class="b"><input class="fill code" data-answer="5"><span class="hint">2 / 3 / 5</span></span> = <span class="b"><input class="fill code" data-answer="17"><span class="hint">13 / 17 / 22</span></span></div>
       </div></div>
     </div>
 
     <div class="group-label"><span>Watch out for</span></div>
     <div class="row cols-3">
       <div class="box tag-gold"><div class="box-tag">Extrapolation</div><div class="box-body">
-        <p>The model only describes the <span class="b"><input class="fill" data-answer="range"><span class="opts"><button type="button" class="opt" data-value="range">range</button><button type="button" class="opt" data-value="slope">slope</button><button type="button" class="opt" data-value="midpoint">midpoint</button></span></span> of data you observed. Predictions for x values outside that range, or Y values you have never seen, often produce nonsense.</p>
+        <p>The model only describes the <span class="b"><input class="fill" data-answer="range"><span class="hint">range / slope / midpoint</span></span> of data you observed. <b>Predictions outside that range</b>, or Y values you have never seen, often produce nonsense.</p>
       </div></div>
       <div class="box tag-gold"><div class="box-tag">Association &ne; causation</div><div class="box-body">
-        <p>A non-zero slope shows <span class="b"><input class="fill" data-answer="association"><span class="opts"><button type="button" class="opt" data-value="association">association</button><button type="button" class="opt" data-value="proof">proof</button><button type="button" class="opt" data-value="nothing">nothing</button></span></span>, not necessarily a <span class="b"><input class="fill" data-answer="causal"><span class="opts"><button type="button" class="opt" data-value="causal">causal</button><button type="button" class="opt" data-value="imaginary">imaginary</button><button type="button" class="opt" data-value="weak">weak</button></span></span> relationship.</p>
+        <p>A <b>non-zero slope</b> shows <span class="b"><input class="fill" data-answer="association"><span class="hint">association / proof / nothing</span></span>, not necessarily a <span class="b"><input class="fill" data-answer="causal"><span class="hint">causal / imaginary / weak</span></span> relationship.</p>
       </div></div>
       <div class="box tag-gold"><div class="box-tag">Non-linearity</div><div class="box-body">
-        <p>If the true pattern is <span class="b"><input class="fill" data-answer="curved"><span class="opts"><button type="button" class="opt" data-value="curved">curved</button><button type="button" class="opt" data-value="straight">straight</button><button type="button" class="opt" data-value="flat">flat</button></span></span>, a line fits <span class="b"><input class="fill" data-answer="poorly"><span class="opts"><button type="button" class="opt" data-value="poorly">poorly</button><button type="button" class="opt" data-value="perfectly">perfectly</button><button type="button" class="opt" data-value="instantly">instantly</button></span></span>. Always plot the data first.</p>
+        <p>If the <b>true pattern</b> is <span class="b"><input class="fill" data-answer="curved"><span class="hint">curved / straight / flat</span></span>, a line fits <span class="b"><input class="fill" data-answer="poorly"><span class="hint">poorly / perfectly / instantly</span></span>. <b>Always plot the data first.</b></p>
       </div></div>
     </div>
 
     <footer><a href="https://thegraphcourses.org" target="_blank" rel="noopener">thegraphcourses.org</a></footer>
   </section>
+  </div>
 
   <script>
-    const sheet=document.getElementById("sheet"),blanks=Array.from(document.querySelectorAll(".b")),storageKey="slr-cheatsheet-v1";
-    blanks.forEach(b=>{const i=b.querySelector(".fill");i.style.width=`${Math.max((i.dataset.answer||"").length+3,5)}ch`;});
-    const norm=s=>s.replace(/\s+/g," ").trim(),match=(a,b)=>norm(a)===norm(b);
-    function flashCorrect(i){i.classList.remove("correct-flash");void i.offsetWidth;i.classList.add("correct-flash");setTimeout(()=>i.classList.remove("correct-flash"),800);}
-    function flashWrong(i){i.classList.remove("wrong-pick");void i.offsetWidth;i.classList.add("wrong-pick");}
-    function save(){localStorage.setItem(storageKey,JSON.stringify(blanks.map(b=>b.querySelector(".fill").value)));}
-    function restore(){try{const d=JSON.parse(localStorage.getItem(storageKey)||"[]");blanks.forEach((b,i)=>{const inp=b.querySelector(".fill");if(d[i]){inp.value=d[i];if(match(d[i],inp.dataset.answer))b.classList.add("solved");else inp.classList.add("wrong-pick");}});}catch{localStorage.removeItem(storageKey);}}
-    blanks.forEach(blank=>{const inp=blank.querySelector(".fill"),opts=Array.from(blank.querySelectorAll(".opt"));
-      inp.addEventListener("input",()=>{const was=blank.classList.contains("solved");inp.classList.remove("wrong-pick");opts.forEach(o=>o.classList.remove("wrong-pick"));const ok=inp.value!==""&&match(inp.value,inp.dataset.answer);if(ok&&!was){blank.classList.add("solved");flashCorrect(inp);}else if(!ok&&was)blank.classList.remove("solved");save();});
-      inp.addEventListener("blur",()=>{const v=inp.value.trim();if(v&&!match(v,inp.dataset.answer))flashWrong(inp);});
-      opts.forEach(opt=>opt.addEventListener("click",()=>{inp.value=opt.dataset.value;opts.forEach(o=>o.classList.remove("wrong-pick"));inp.classList.remove("wrong-pick");void inp.offsetWidth;if(match(opt.dataset.value,inp.dataset.answer)){blank.classList.add("solved");flashCorrect(inp);}else{blank.classList.remove("solved");opt.classList.add("wrong-pick");inp.classList.add("wrong-pick");}save();}));
+    const sheet = document.getElementById("sheet"),
+          pageWrap = document.getElementById("pageWrap"),
+          blanks = Array.from(document.querySelectorAll(".b")),
+          storageKey = "slr-cheatsheet-v2";
+
+    blanks.forEach(b => {
+      const hint = b.querySelector(".hint");
+      if (!hint) return;
+      const opts = hint.textContent.split(/\s*\/\s*/).filter(s => s.length > 0);
+      if (opts.length < 2) return;
+      for (let i = opts.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [opts[i], opts[j]] = [opts[j], opts[i]];
+      }
+      hint.textContent = opts.join(" / ");
+    });
+
+    const measureCanvas = document.createElement("canvas");
+    const measureCtx = measureCanvas.getContext("2d");
+    function getFontShorthand(el) {
+      const s = getComputedStyle(el);
+      return `${s.fontStyle || "normal"} ${s.fontWeight || "400"} ${s.fontSize} ${s.fontFamily}`;
+    }
+    function measureTextWidth(text, inp) {
+      measureCtx.font = getFontShorthand(inp);
+      return measureCtx.measureText(text).width;
+    }
+    function getDefaultWidth(inp) {
+      const answers = [inp.dataset.answer || "", ...(inp.dataset.alt ? inp.dataset.alt.split("|") : [])];
+      let maxW = 0;
+      answers.forEach(ans => {
+        const w = measureTextWidth(ans, inp);
+        if (w > maxW) maxW = w;
+      });
+      return Math.max(maxW + 12, 22);
+    }
+    function getSolvedWidth(inp) {
+      const w = measureTextWidth(inp.value, inp);
+      return Math.max(w + 6, 12);
+    }
+    function applyWidth(inp, solved) {
+      const w = solved ? getSolvedWidth(inp) : getDefaultWidth(inp);
+      inp.style.width = `${w}px`;
+    }
+
+    blanks.forEach(b => applyWidth(b.querySelector(".fill"), false));
+
+    const norm = s => String(s)
+      .replace(/[−–]/g, "-")
+      .replace(/₀/g, "0").replace(/₁/g, "1").replace(/₂/g, "2").replace(/₃/g, "3").replace(/₄/g, "4")
+      .replace(/β/g, "beta")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+    const answersFor = input => [input.dataset.answer || "", ...(input.dataset.alt ? input.dataset.alt.split("|") : [])].map(norm);
+    const match = (value, input) => answersFor(input).includes(norm(value));
+
+    function flashCorrect(i) { i.classList.remove("correct-flash"); void i.offsetWidth; i.classList.add("correct-flash"); setTimeout(() => i.classList.remove("correct-flash"), 800); }
+    function flashWrong(i) { i.classList.remove("wrong-pick"); void i.offsetWidth; i.classList.add("wrong-pick"); }
+    function save() { localStorage.setItem(storageKey, JSON.stringify(blanks.map(b => b.querySelector(".fill").value))); }
+    function restore() {
+      try {
+        const d = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        blanks.forEach((b, i) => {
+          const inp = b.querySelector(".fill");
+          if (d[i]) {
+            inp.value = d[i];
+            if (match(d[i], inp)) {
+              b.classList.add("solved");
+              applyWidth(inp, true);
+            } else {
+              inp.classList.add("wrong-pick");
+            }
+          }
+        });
+      } catch { localStorage.removeItem(storageKey); }
+    }
+
+    blanks.forEach(blank => {
+      const inp = blank.querySelector(".fill");
+      inp.addEventListener("input", () => {
+        const was = blank.classList.contains("solved");
+        inp.classList.remove("wrong-pick");
+        const ok = inp.value !== "" && match(inp.value, inp);
+        if (ok && !was) {
+          blank.classList.add("solved");
+          applyWidth(inp, true);
+          flashCorrect(inp);
+        } else if (ok && was) {
+          applyWidth(inp, true);
+        } else if (!ok && was) {
+          blank.classList.remove("solved");
+          applyWidth(inp, false);
+        }
+        save();
+      });
+      inp.addEventListener("blur", () => {
+        const v = inp.value.trim();
+        if (v && !match(v, inp)) flashWrong(inp);
+      });
     });
     restore();
-    document.getElementById("toggleHints").addEventListener("click",e=>{sheet.classList.toggle("hints-hidden");e.currentTarget.textContent=sheet.classList.contains("hints-hidden")?"Show hints":"Hide hints";});
-    document.getElementById("clearAnswers").addEventListener("click",()=>{blanks.forEach(b=>{const i=b.querySelector(".fill");i.value="";i.classList.remove("wrong-pick","correct-flash");b.classList.remove("solved");b.querySelectorAll(".opt.wrong-pick").forEach(o=>o.classList.remove("wrong-pick"));});save();});
+
+    document.getElementById("toggleHints").addEventListener("click", e => {
+      sheet.classList.toggle("hints-hidden");
+      e.currentTarget.textContent = sheet.classList.contains("hints-hidden") ? "Show hints" : "Hide hints";
+    });
+    document.getElementById("clearAnswers").addEventListener("click", () => {
+      blanks.forEach(b => {
+        const i = b.querySelector(".fill");
+        i.value = "";
+        i.classList.remove("wrong-pick", "correct-flash");
+        b.classList.remove("solved");
+        applyWidth(i, false);
+      });
+      save();
+    });
+
+    const zoomLevels = [0.1, 0.25, 0.5, 0.75, 0.85, 1.0, 1.15, 1.3, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
+    const zoomKey = "slr-cheatsheet-zoom-v1";
+    const defaultZoomIdx = zoomLevels.indexOf(1.0);
+    let zoomIdx = parseInt(localStorage.getItem(zoomKey) || String(defaultZoomIdx), 10);
+    if (isNaN(zoomIdx) || zoomIdx < 0 || zoomIdx >= zoomLevels.length) zoomIdx = defaultZoomIdx;
+    const zoomLabel = document.getElementById("zoomLabel");
+    function applyZoom() {
+      const z = zoomLevels[zoomIdx];
+      sheet.style.transform = z === 1 ? "" : `scale(${z})`;
+      pageWrap.style.minHeight = z === 1 ? "" : `${297 * z + 20}mm`;
+      zoomLabel.textContent = Math.round(z * 100) + "%";
+      localStorage.setItem(zoomKey, String(zoomIdx));
+    }
+    document.getElementById("zoomOut").addEventListener("click", () => {
+      if (zoomIdx > 0) { zoomIdx--; applyZoom(); }
+    });
+    document.getElementById("zoomIn").addEventListener("click", () => {
+      if (zoomIdx < zoomLevels.length - 1) { zoomIdx++; applyZoom(); }
+    });
+    applyZoom();
   </script>
 </body>
 </html>

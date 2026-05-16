@@ -3,16 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Slope t statistic and p-value</title>
+    <title>Interpreting the Slope: t-Values and p-Values</title>
     <style>
         :root {
             --teal: #0d7377;
             --teal-dark: #0a5d61;
+            --teal-soft: #eff7f7;
             --gold: #f0c808;
+            --gold-soft: #fff9df;
+            --rose: #b83b5e;
+            --rose-soft: #fdeef1;
+            --green: #2c8a4a;
             --ink: #182326;
             --muted: #5d6d72;
             --border: #e1e5e8;
             --white: #ffffff;
+            --est-rose: #c25a6e;
+            --est-rose-soft: #fce8ec;
+            --se-blue: #5f8bb8;
+            --se-blue-soft: #e7eef7;
+            --ci-navy: #324f7e;
+            --ci-navy-soft: #eef1f7;
+            --t-green: #5a9168;
+            --t-green-soft: #f0f6f1;
+            --p-gold: #b09148;
+            --p-gold-soft: #fbf6e7;
+            --violet: #6e4d9e;
+            --violet-soft: #f5f0fa;
         }
         * { box-sizing: border-box; }
         body {
@@ -20,8 +37,8 @@
             background: #dfe8ea;
             color: var(--ink);
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 8.55pt;
-            line-height: 1.22;
+            font-size: 8.4pt;
+            line-height: 1.3;
         }
         .toolbar {
             width: 210mm;
@@ -31,8 +48,9 @@
             justify-content: space-between;
             align-items: flex-end;
             gap: 16px;
+            line-height: 1.35;
         }
-        .toolbar-intro { flex: 1; min-width: 0; font-size: 9pt; line-height: 1.35; }
+        .toolbar-intro { flex: 1; min-width: 0; font-size: 9pt; }
         .toolbar-intro .title { font-weight: 800; color: var(--teal); font-size: 11pt; margin-bottom: 2px; }
         .toolbar-intro .descr { color: #3a4a4f; max-width: 132mm; }
         .toolbar-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
@@ -44,6 +62,7 @@
             padding: 7px 11px;
             font: inherit;
             font-weight: 700;
+            line-height: 1.2;
             cursor: pointer;
         }
         button.primary { background: var(--teal); color: white; border-color: var(--teal); }
@@ -57,13 +76,7 @@
             overflow: hidden;
             background: var(--white);
         }
-        .zoom-group button {
-            border: 0;
-            border-radius: 0;
-            padding: 6px 10px;
-            background: transparent;
-            font-weight: 800;
-        }
+        .zoom-group button { border: 0; border-radius: 0; padding: 6px 10px; background: transparent; font-weight: 800; }
         .zoom-group button + button { border-left: 1px solid #cdd9dc; }
         .zoom-group .zoom-label {
             display: inline-flex;
@@ -76,77 +89,439 @@
             min-width: 44px;
             justify-content: center;
         }
-        .page-wrap {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        .page-wrap { display: flex; flex-direction: column; align-items: center; }
         .page {
             width: 210mm;
             min-height: 297mm;
             margin: 0 auto 18px;
             background: var(--white);
-            padding: 4mm 8mm 2.5mm;
+            padding: 3mm 7mm 2mm;
             box-shadow: 0 8px 30px rgba(24, 35, 38, 0.18);
             display: flex;
             flex-direction: column;
-            gap: 0.9mm;
+            gap: 1.2mm;
             transform-origin: top center;
         }
-        header { border-bottom: 1.2mm solid var(--gold); padding-bottom: 0.7mm; }
-        h1 {
-            margin: 0;
-            color: var(--teal);
-            font-size: 19pt;
-            line-height: 0.98;
-            letter-spacing: -0.02em;
+        .page > header,
+        .page > .box,
+        .page > .row,
+        .page > footer {
+            flex-shrink: 0;
         }
-        .subtitle { margin-top: 0.7mm; color: var(--muted); font-weight: 700; font-size: 8.8pt; }
+        header { border-bottom: 1.2mm solid var(--gold); padding-bottom: 0.4mm; line-height: 1.1; }
+        h1 { margin: 0; color: var(--teal); font-size: 18pt; line-height: 0.98; letter-spacing: -0.02em; }
+        .subtitle { margin-top: 0.5mm; color: var(--muted); font-weight: 700; font-size: 8.4pt; line-height: 1.2; }
         .box {
             border: 1px solid var(--border);
             border-radius: 6px;
-            overflow: hidden;
+            overflow: visible;
             background: white;
             display: flex;
             flex-direction: column;
             min-width: 0;
         }
+        .box,
+        .box-body,
+        .row > *,
+        .metric-card,
+        .report-card,
+        .verdict-row,
+        .vocab-grid,
+        .vocab-grid > *,
+        .star-table,
+        .star-table td,
+        .fig {
+            min-width: 0;
+        }
         .box-tag {
             background: var(--teal);
             color: white;
-            font-size: 7.2pt;
+            font-size: 7pt;
             font-weight: 900;
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            padding: 0.85mm 2.5mm;
+            padding: 0.85mm 2.5mm 0.6mm;
+            line-height: 1.2;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            flex-wrap: wrap;
+            min-width: 0;
+            border-radius: 5px 5px 0 0;
         }
-        .box-body { padding: 1.4mm 2.4mm 1.4mm; flex: 1; }
-        .box-body p { margin: 0; color: var(--ink); }
-        .placeholder-note { color: var(--muted); font-size: 8.4pt; line-height: 1.35; margin-top: 1.2mm !important; }
-        footer {
-            border-top: 1px solid var(--border);
-            padding-top: 2mm;
+        .box-tag .mode-hint {
+            font-weight: 600;
+            text-transform: none;
+            letter-spacing: 0;
+            opacity: 0.78;
+            font-size: 6.4pt;
+        }
+        .box-body {
+            padding: 1.1mm 2.2mm 1.3mm;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5mm;
+            background: var(--teal-soft);
+            min-width: 0;
+            overflow: visible;
+            border-radius: 0 0 5px 5px;
+        }
+        .box-body p { margin: 0; }
+        .box-body p,
+        .v-text,
+        .v-explanation,
+        .mc-desc,
+        .rc-quote,
+        .rc-shows,
+        .v-def {
+            overflow-wrap: break-word;
+        }
+        .box.tag-gold .box-tag { background: var(--gold); color: var(--ink); }
+        .box.tag-gold .box-body { background: var(--gold-soft); }
+        .box.tag-violet .box-tag { background: var(--violet); color: #fff; }
+        .box.tag-violet .box-body { background: var(--violet-soft); }
+        .box.tag-t-green .box-tag { background: var(--t-green); color: #fff; }
+        .box.tag-t-green .box-body { background: var(--t-green-soft); }
+        .box.tag-p-gold .box-tag { background: var(--p-gold); color: #fff; }
+        .box.tag-p-gold .box-body { background: var(--p-gold-soft); }
+        .box.tag-ci-navy .box-tag { background: var(--ci-navy); color: #fff; }
+        .box.tag-ci-navy .box-body { background: var(--ci-navy-soft); }
+        .box.tag-rose .box-tag { background: var(--rose); color: #fff; }
+        .box.tag-rose .box-body { background: var(--rose-soft); }
+        .row { display: grid; gap: 2mm; align-items: stretch; }
+        .row.cols-2 { grid-template-columns: 1fr 1fr; }
+        .row.split-40-60 { grid-template-columns: 40fr 60fr; }
+        .row.split-54-46 { grid-template-columns: 54fr 46fr; }
+        .big-eq { font-size: 14pt; font-weight: 900; white-space: nowrap; letter-spacing: -0.02em; display: inline-flex; align-items: center; line-height: 1; }
+        .frac { display: inline-flex; flex-direction: column; align-items: center; font-size: 13pt; line-height: 1; margin: 0 1mm; }
+        .frac .num { padding: 0 1mm 0.5mm; border-bottom: 1.6px solid var(--ink); }
+        .frac .den { padding-top: 0.5mm; }
+        .frac .num.code, .frac .den.code { font-family: Consolas, Menlo, monospace; }
+        .est-rose { color: var(--est-rose); }
+        .se-blue { color: var(--se-blue); }
+        .t-green { color: var(--t-green); }
+        .ci-navy { color: var(--ci-navy); }
+        .p-gold { color: #8a7137; }
+        .violet { color: var(--violet); }
+        .rose { color: var(--rose); }
+        .green { color: var(--green); }
+        .r-code {
+            border: 1px solid #2a3a3d;
+            border-radius: 5px;
+            padding: 0.7mm 2mm;
+            background: #1f2a2d;
+            color: #e6f1f2;
+            font-family: Consolas, Menlo, monospace;
+            font-size: 6.6pt;
+            line-height: 1.35;
+            white-space: pre-wrap;
+            overflow: visible;
+            overflow-wrap: anywhere;
+        }
+        .r-code .cm { color: #8aa3a8; font-style: italic; }
+        .r-code .hl-rose { color: #ff9bb0; font-weight: 700; }
+        .r-code .hl-blue { color: #9ec5ed; font-weight: 700; }
+        .r-code .hl-green { color: #a8d6ad; font-weight: 700; }
+        .r-code .hl-gold { color: #f5d987; font-weight: 700; }
+
+        /* Type-only blanks */
+        .b {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: baseline;
+            line-height: 1;
+            margin: 0 0.2mm;
+            text-align: center;
+            max-width: 100%;
+            min-width: 0;
+        }
+        .fill {
+            border: 0;
+            border-bottom: 1.4px solid var(--teal);
+            border-radius: 0;
+            padding: 0 0.3mm 0.5px;
+            color: var(--ink);
+            background: transparent;
+            font-family: inherit;
+            font-size: inherit;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            min-width: 2mm;
+            max-width: 100%;
+            transition: width 0.18s ease-out;
+        }
+        .fill.code { font-family: Consolas, Menlo, monospace; }
+        .fill:focus { outline: none; border-bottom-color: var(--teal-dark); border-bottom-width: 1.8px; }
+        .hint {
+            font-size: 4.7pt;
+            color: #98a3a7;
+            font-weight: 700;
+            font-family: inherit;
+            line-height: 1.05;
+            margin-top: 0.35mm;
+            letter-spacing: 0.02em;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            max-width: 34mm;
+            text-align: center;
+        }
+        .b.solved .hint { display: none; }
+        .hints-hidden .hint { display: none; }
+        .fill.wrong-pick { border-bottom-color: var(--rose) !important; color: var(--rose); animation: shake 0.45s; }
+        .fill.correct-flash { animation: correctFlash 0.75s ease-out; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) }
+            20%, 60% { transform: translateX(-2px) }
+            40%, 80% { transform: translateX(2px) }
+        }
+        @keyframes correctFlash {
+            0% { background-color: rgba(44, 138, 74, 0); border-bottom-color: var(--teal) }
+            20% { background-color: rgba(44, 138, 74, 0.30); border-bottom-color: var(--green) }
+            60% { background-color: rgba(44, 138, 74, 0.18); border-bottom-color: var(--green) }
+            100% { background-color: rgba(44, 138, 74, 0); border-bottom-color: var(--teal) }
+        }
+
+        /* t-statistic decomposition */
+        .tstat-grid { display: grid; grid-template-columns: auto 1fr; gap: 4mm; align-items: center; margin: 0.4mm 0 0.2mm; }
+        .tstat-decomp { font-size: 7.7pt; color: var(--muted); border-left: 2px solid var(--border); padding-left: 2.5mm; }
+        .tstat-decomp b { color: var(--ink); }
+
+        /* Figure with HTML labels positioned over SVG */
+        .fig { position: relative; border: 1px solid var(--border); border-radius: 5px; padding: 0.4mm 1mm 0.6mm; background: #fff; overflow: visible; }
+        .fig svg { display: block; width: 100%; height: auto; }
+        .fig-lbl {
+            position: absolute;
+            z-index: 2;
             display: flex;
             justify-content: center;
-            color: var(--muted);
-            font-size: 8.5pt;
-            font-weight: 700;
-            margin-top: auto;
+            pointer-events: auto;
+            max-width: 100%;
         }
+        .fig-lbl .b { line-height: 1; }
+        .fig-lbl .fill {
+            background: rgba(255, 251, 230, 0.95);
+            border-radius: 2px;
+            font-size: 6.6pt;
+            font-weight: 700;
+            padding: 0 1mm 0.5px;
+            min-width: 14mm;
+            max-width: 100%;
+        }
+        .fig-lbl .hint {
+            font-size: 4pt;
+            margin-top: 0.3mm;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0 1mm;
+            border-radius: 2px;
+        }
+        .fig-lbl-top { left: 50%; top: 3%; width: 54%; transform: translateX(-50%); }
+        .fig-lbl-pval { left: auto; right: 2%; top: 60%; width: 30%; transform: none; }
+        .fig-lbl-tobs { left: auto; right: 6%; top: 24%; width: 34%; transform: none; }
+        .fig-caption { font-size: 7pt; color: var(--ink); text-align: center; line-height: 1.2; padding: 0.2mm 0 0; }
+
+        /* Callout used inside violet box */
+        .callout { border-radius: 5px; padding: 0.8mm 2mm; font-weight: 700; font-size: 7.9pt; margin-top: 0.2mm; }
+        .callout.green { background: #e7f3eb; border-left: 3px solid var(--green); color: #1d5a31; }
+
+        /* Verdict rows for "is each statement correct or a misconception?" */
+        .verdict-row {
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 0.9mm 1.6mm;
+            background: #fff;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.4mm 2mm;
+            align-items: center;
+        }
+        .verdict-row + .verdict-row { margin-top: 0.7mm; }
+        .v-text {
+            font-size: 7.7pt;
+            font-family: Georgia, serif;
+            font-style: italic;
+            color: var(--ink);
+            line-height: 1.32;
+        }
+        .verdict-btns { display: flex; gap: 1mm; }
+        .v-btn {
+            font-size: 6.3pt;
+            font-weight: 800;
+            padding: 0.5mm 1.8mm;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: white;
+            cursor: pointer;
+            white-space: nowrap;
+            line-height: 1.15;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+        .v-btn.yes { color: var(--green); border-color: #cfe2d6; }
+        .v-btn.no { color: var(--rose); border-color: #ecc4cc; }
+        .v-btn:hover:not(:disabled) { background: #f4f7f5; }
+        .v-btn.picked.correct,
+        .v-btn.was-correct {
+            background: #d4ecd9;
+            border-color: var(--green);
+            color: #1e6a30;
+        }
+        .v-btn.picked.incorrect {
+            background: #f7d4dd;
+            border-color: var(--rose);
+            color: #8c2e48;
+            animation: shake 0.45s;
+        }
+        .v-btn:disabled { cursor: default; }
+        .v-explanation {
+            display: none;
+            grid-column: 1 / -1;
+            font-size: 7.1pt;
+            color: var(--muted);
+            border-top: 1px dashed #d6dee0;
+            padding-top: 0.6mm;
+            margin-top: 0.4mm;
+            line-height: 1.4;
+        }
+        .verdict-row.revealed .v-explanation { display: block; }
+
+        /* Star codes table */
+        .star-table { width: 100%; border-collapse: collapse; font-size: 7.7pt; table-layout: fixed; }
+        .star-table td { padding: 0.35mm 1.5mm; border-bottom: 1px solid #d6dee0; vertical-align: middle; overflow-wrap: anywhere; }
+        .star-table tr:last-child td { border-bottom: 0; padding-bottom: 0.3mm; }
+        .star-table .star-code { font-family: Consolas, Menlo, monospace; font-weight: 900; font-size: 8.5pt; white-space: nowrap; width: 11mm; color: var(--p-gold); }
+        .star-table .star-thresh { font-family: Consolas, Menlo, monospace; font-weight: 700; font-size: 7.5pt; white-space: normal; width: 25mm; color: var(--muted); }
+
+        /* Metric summary cards */
+        .metric-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.2mm; margin-top: 0.3mm; }
+        .metric-card { border-radius: 5px; padding: 0.6mm 1.2mm 0.9mm; text-align: center; display: flex; flex-direction: column; gap: 0.1mm; border: 1px solid var(--border); line-height: 1.5; }
+        .metric-card.est { background: var(--est-rose-soft); border-color: #e9c2cc; }
+        .metric-card.se { background: var(--se-blue-soft); border-color: #c7d4e6; }
+        .metric-card.ci { background: var(--ci-navy-soft); border-color: #c5cadc; }
+        .metric-card.t { background: var(--t-green-soft); border-color: #c2d7c8; }
+        .metric-card.p { background: var(--p-gold-soft); border-color: #e1d2a9; }
+        .metric-card .mc-tag { font-size: 5.6pt; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.3mm 1.2mm; border-radius: 3px; align-self: center; color: #fff; margin-bottom: 0.2mm; line-height: 1.1; }
+        .metric-card.est .mc-tag { background: var(--est-rose); }
+        .metric-card.se .mc-tag { background: var(--se-blue); }
+        .metric-card.ci .mc-tag { background: var(--ci-navy); }
+        .metric-card.t .mc-tag { background: var(--t-green); }
+        .metric-card.p .mc-tag { background: var(--p-gold); }
+        .metric-card .mc-value { font-family: Consolas, Menlo, monospace; font-weight: 900; font-size: 8.6pt; line-height: 1.45; }
+        .metric-card.est .mc-value { color: var(--est-rose); }
+        .metric-card.se .mc-value { color: var(--se-blue); }
+        .metric-card.ci .mc-value { color: var(--ci-navy); }
+        .metric-card.t .mc-value { color: var(--t-green); }
+        .metric-card.p .mc-value { color: #8a7137; }
+        .metric-card .mc-desc { font-size: 6.5pt; color: var(--ink); line-height: 1.55; margin-top: 0.1mm; }
+        .metric-card .mc-desc .fill { font-size: 6.5pt; padding: 0 0.3mm 0.4px; min-width: 2mm; }
+        .metric-card .mc-desc .hint { font-size: 3.5pt; }
+        .metric-card .mc-value .fill { font-size: 8.6pt; padding: 0 0.4mm 0.4px; }
+        .metric-card .mc-value .hint { font-size: 3.5pt; }
+
+        /* Reporting cards */
+        .report-card { border: 1px solid var(--border); border-radius: 5px; padding: 0.9mm 2mm 1mm; font-size: 7.8pt; background: #fff; line-height: 1.4; }
+        .report-card .rc-tag { font-size: 6.1pt; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; display: inline-block; padding: 0.3mm 1.5mm; border-radius: 3px; margin-bottom: 0.4mm; color: #fff; line-height: 1.1; }
+        .report-card.preferred { border-left: 3px solid var(--ci-navy); background: #fafbfd; }
+        .report-card.preferred .rc-tag { background: var(--ci-navy); }
+        .report-card.alt { border-left: 3px solid var(--p-gold); background: #fcfaf3; }
+        .report-card.alt .rc-tag { background: var(--p-gold); }
+        .report-card .rc-quote { font-family: Georgia, serif; font-style: italic; font-size: 7.9pt; line-height: 1.3; margin: 0.3mm 0 0.5mm; color: var(--ink); }
+        .report-card .rc-shows { font-size: 7.3pt; color: var(--muted); line-height: 1.5; }
+
+        /* Vocabulary */
+        .vocab-grid { display: grid; grid-template-columns: auto 1fr; gap: 0.6mm 3mm; align-items: center; }
+        .vocab-grid .v-term {
+            font-family: Consolas, Menlo, monospace;
+            font-weight: 900;
+            font-size: 10pt;
+            white-space: nowrap;
+            text-align: center;
+            padding: 0.4mm 2.5mm;
+            border-radius: 4px;
+            min-width: 18mm;
+            line-height: 1.2;
+        }
+        .vocab-grid .v-term.est { background: var(--est-rose-soft); color: var(--est-rose); border: 1px solid #e9c2cc; }
+        .vocab-grid .v-term.se { background: var(--se-blue-soft); color: var(--se-blue); border: 1px solid #c7d4e6; }
+        .vocab-grid .v-term.tt { background: var(--t-green-soft); color: var(--t-green); border: 1px solid #c2d7c8; }
+        .vocab-grid .v-term.pp { background: var(--p-gold-soft); color: #8a7137; border: 1px solid #e1d2a9; }
+        .vocab-grid .v-term.h0 { background: var(--violet-soft); color: var(--violet); border: 1px solid #d4c7e6; }
+        .vocab-grid .v-def { font-size: 7.9pt; }
+        footer { border-top: 1px solid #cfdcde; padding-top: 0.6mm; display: flex; justify-content: center; color: var(--muted); font-size: 8pt; font-weight: 800; margin-top: auto; line-height: 1.2; }
         footer a { color: var(--teal); text-decoration: none; }
         footer a:hover { text-decoration: underline; }
         @page { size: A4; margin: 0; }
         @media print {
-            body { background: white; }
+            body { background: white; font-size: 8.4pt; line-height: 1.2; }
             .toolbar { display: none; }
-            .page { width: 210mm; min-height: 297mm; margin: 0; box-shadow: none; break-after: page; }
+            .page { width: 210mm; height: 297mm; max-height: 297mm; margin: 0; padding: 2.5mm 6mm 1.5mm; gap: 0.85mm; box-shadow: none; overflow: hidden; transform: none !important; }
+            header { border-bottom-width: 1mm; padding-bottom: 0.35mm; }
+            h1 { font-size: 17.5pt; }
+            .subtitle { font-size: 8.2pt; margin-top: 0.35mm; line-height: 1.15; }
+            .box-tag { font-size: 6.8pt; padding: 0.7mm 2.2mm 0.45mm; line-height: 1.15; }
+            .box-body { padding: 0.9mm 1.9mm 1mm; gap: 0.35mm; }
+            .row { gap: 1.7mm; }
+            .tstat-grid { gap: 3mm; margin: 0.2mm 0 0.1mm; }
+            .tstat-decomp { font-size: 7.5pt; padding-left: 2mm; line-height: 1.22; }
+            .fig { padding: 0.3mm 0.8mm 0.5mm; }
+            .callout { padding: 0.65mm 1.7mm; }
+            .verdict-row { padding: 0.65mm 1.3mm; gap: 0.25mm 1.4mm; }
+            .verdict-row + .verdict-row { margin-top: 0.45mm; }
+            .v-text { font-size: 7.5pt; line-height: 1.24; }
+            .r-code { font-size: 6.3pt; line-height: 1.18; padding: 0.55mm 1.7mm; }
+            .metric-cards { gap: 0.9mm; margin-top: 0.2mm; }
+            .metric-card { padding: 0.45mm 0.9mm 0.65mm; line-height: 1.32; }
+            .metric-card .mc-tag { font-size: 5.3pt; padding: 0.25mm 1mm; margin-bottom: 0.1mm; }
+            .metric-card .mc-value { font-size: 8.3pt; line-height: 1.28; }
+            .metric-card .mc-value .fill { font-size: 8.3pt; }
+            .metric-card .mc-desc { font-size: 6.2pt; line-height: 1.3; }
+            .metric-card .mc-desc .fill { font-size: 6.2pt; }
+            .report-card { padding: 0.7mm 1.6mm 0.75mm; font-size: 7.5pt; line-height: 1.28; }
+            .report-card .rc-tag { font-size: 5.8pt; margin-bottom: 0.25mm; padding: 0.25mm 1.2mm; }
+            .report-card .rc-quote { font-size: 7.6pt; line-height: 1.22; margin: 0.2mm 0 0.35mm; }
+            .report-card .rc-shows { font-size: 7pt; line-height: 1.28; }
+            .vocab-grid { gap: 0.45mm 2.5mm; }
+            .vocab-grid .v-term { font-size: 9.5pt; padding: 0.3mm 2.1mm; min-width: 17mm; }
+            .vocab-grid .v-def { font-size: 7.6pt; line-height: 1.2; }
+            footer { font-size: 7.6pt; padding-top: 0.4mm; }
             button { display: none; }
+            .fill, .r-code, .box, .box-tag, .box-body, .fig, .teal, .rose, .green, .violet,
+            .t-green, .p-gold, .ci-navy, .est-rose, .se-blue,
+            .star-table, .metric-card, .metric-card .mc-tag, .report-card, .report-card .rc-tag, .callout,
+            .vocab-grid .v-term, .verdict-row, .v-btn {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .hint { display: none !important; }
+            .fill { transition: none; }
+            .fill.wrong-pick { color: var(--ink); border-bottom-color: var(--teal) !important; }
+            .verdict-btns { display: none; }
+            .verdict-row .v-explanation { display: none !important; }
+            .verdict-row::after {
+                content: "Correct";
+                font-size: 6.1pt;
+                font-weight: 800;
+                padding: 0.45mm 1.5mm;
+                border-radius: 999px;
+                background: #d4ecd9;
+                border: 1px solid var(--green);
+                color: #1e6a30;
+            }
+            .verdict-row[data-correct="no"]::after {
+                content: "Misconception";
+                background: #f7d4dd;
+                border-color: var(--rose);
+                color: #8c2e48;
+            }
         }
-        @media screen and (max-width: 820px) {
+        @media screen and (max-width:820px) {
             .page, .toolbar { width: calc(100vw - 16px); }
-            .page { padding: 16px; min-height: auto; }
+            .page { padding: 16px; min-height: auto; transform: none !important; }
+            .row, .tstat-grid, .metric-cards { grid-template-columns: 1fr !important; }
             .toolbar { flex-direction: column; align-items: stretch; }
             .toolbar-intro .descr { max-width: none; }
+            .vocab-grid, .verdict-row { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -154,7 +529,7 @@
     <div class="toolbar">
         <div class="toolbar-intro">
             <div class="title">GRAPH Courses cheat sheet</div>
-            <div class="descr">Placeholder. Fill-in-the-blank content for this topic will be added in a later update.</div>
+            <div class="descr">Type your answers into the blanks. Hint options appear in small grey text below each blank. When finished, click Print / Save on the right.</div>
         </div>
         <div class="toolbar-actions">
             <div class="zoom-group" role="group" aria-label="Zoom controls">
@@ -173,35 +548,434 @@
         </div>
     </div>
     <div class="page-wrap" id="pageWrap">
-        <section class="page" id="sheet">
-            <header>
-                <h1>Slope <i>t</i> statistic and <i>p</i>-value</h1>
-                <div class="subtitle">Testing whether the true slope differs from a null value (often zero)</div>
-            </header>
-            <div class="box">
-                <div class="box-tag">Placeholder</div>
+    <section class="page" id="sheet">
+        <header>
+            <h1>Interpreting the Slope: t-Values and p-Values</h1>
+            <div class="subtitle">How regression tests whether the slope is real or just noise, using the t-statistic, the null hypothesis, and the p-value</div>
+        </header>
+
+        <div class="box tag-t-green">
+            <div class="box-tag"><span>The t-Statistic: A Signal-to-Noise Ratio</span></div>
+            <div class="box-body">
+                <p>The <b>t-statistic</b> asks: how big is the slope compared to the <span class="b"><input class="fill" data-answer="uncertainty"><span class="hint">uncertainty / mean / median</span></span> around it? It acts as a <span class="b"><input class="fill" data-answer="signal"><span class="hint">signal / noise / power</span></span>-to-<span class="b"><input class="fill" data-answer="noise"><span class="hint">noise / signal / bias</span></span> ratio.</p>
+                <div class="tstat-grid">
+                    <div class="big-eq" style="font-size:15pt;">
+                        t&nbsp;=&nbsp;<span class="frac" style="font-size:13.5pt;"><span class="num code" style="color:var(--est-rose);">b<sub>1</sub></span><span class="den code" style="color:var(--se-blue);">SE</span></span>
+                    </div>
+                    <div class="tstat-decomp">
+                        <b style="color:var(--est-rose);">Signal:</b> estimated slope (<span style="color:var(--est-rose); font-family:Consolas,Menlo,monospace; font-weight:800;">b<sub>1</sub></span>); how far the fit is from <span class="b"><input class="fill" data-answer="zero"><span class="hint">zero / one / mean</span></span><br>
+                        <b style="color:var(--se-blue);">Noise:</b> standard error (<span style="color:var(--se-blue); font-family:Consolas,Menlo,monospace; font-weight:800;">SE</span>); typical sample-to-sample <span class="b"><input class="fill" data-answer="variability" data-alt="spread"><span class="hint">variability / bias / shape</span></span><br>
+                        <b style="color:var(--t-green);">Ratio:</b> how many <span class="b"><input class="fill" data-answer="SEs" data-alt="SE|standard errors"><span class="hint">SEs / units / percents</span></span> the slope sits from zero
+                    </div>
+                </div>
+                <p>When the slope is <b>far from zero relative to its uncertainty</b>, the absolute value of t is <span class="b"><input class="fill" data-answer="large"><span class="hint">large / small / negative</span></span>, and this counts as <span class="b"><input class="fill" data-answer="strong"><span class="hint">strong / weak / moderate</span></span> evidence of a <b>true linear association</b>. Worked example: if b<sub>1</sub> = 0.45 and SE = 0.15, then t = 0.45 / 0.15 = <span class="b"><input class="fill code" data-answer="3" data-alt="3.0|3.00"><span class="hint">3 / 0.3 / 0.67</span></span>, meaning the slope sits <span class="b"><input class="fill code" data-answer="3" data-alt="3.0|three"><span class="hint">3 / 6 / 0.15</span></span> standard errors from zero.</p>
+            </div>
+        </div>
+
+        <div class="row split-40-60">
+            <div class="box tag-violet">
+                <div class="box-tag"><span>The null world</span></div>
                 <div class="box-body">
-                    <p>This cheat sheet will summarize the slope <i>t</i> statistic, degrees of freedom, two-sided <i>p</i>-values, and how they connect to confidence intervals and practical significance.</p>
-                    <p class="placeholder-note">Planned topics: H<sub>0</sub> and H<sub>1</sub> for the slope, the ratio (b<sub>1</sub> &minus; &beta;<sub>1,0</sub>) / SE(b<sub>1</sub>), the <i>t</i> distribution with <i>n</i> &minus; 2 degrees of freedom, interpreting Pr(&gt;|t|), and cautions about statistical vs. practical importance.</p>
+                    <p>The <b>null hypothesis</b> H<sub>0</sub> says the true slope is <span class="b"><input class="fill" data-answer="zero"><span class="hint">zero / large / unknown</span></span>, meaning x has <span class="b"><input class="fill" data-answer="no"><span class="hint">no / a strong / a negative</span></span> <b>linear effect</b> on y in the population.</p>
+                    <p>Even when the true slope is zero, random samples still produce slightly positive or negative slopes just from <span class="b"><input class="fill" data-answer="chance"><span class="hint">chance / causation / design</span></span>. The bell-shaped spread of these <b>null-world t-values</b> is called the <span class="b"><input class="fill" data-answer="null"><span class="hint">null / alternative / sample</span></span> distribution.</p>
+                    <div class="callout green">A big |t| would be <span class="b"><input class="fill" data-answer="surprising" data-alt="unusual|unlikely"><span class="hint">surprising / expected / typical</span></span> in the null world, so it counts as evidence <span class="b"><input class="fill" data-answer="against"><span class="hint">against / for / about</span></span> H<sub>0</sub>.</div>
                 </div>
             </div>
-            <footer><a href="https://thegraphcourses.org" target="_blank" rel="noopener">thegraphcourses.org</a></footer>
-        </section>
+            <div class="box tag-p-gold">
+                <div class="box-tag"><span>From t to p: label the null distribution</span></div>
+                <div class="box-body" style="gap:0.2mm;">
+                    <div class="fig">
+                        <svg viewBox="0 0 320 130" role="img" aria-label="Null t-distribution with shaded tails representing the p-value">
+                            <path d="M 25 105 C 75 105, 110 28, 160 28 C 210 28, 245 105, 295 105 Z" fill="#fff7d6"/>
+                            <path d="M 247 86 C 260 98, 275 102, 295 105 L 247 105 Z" fill="var(--p-gold)" opacity="0.85"/>
+                            <path d="M 73 86 C 60 98, 45 102, 25 105 L 73 105 Z" fill="var(--p-gold)" opacity="0.85"/>
+                            <path d="M 25 105 C 75 105, 110 28, 160 28 C 210 28, 245 105, 295 105" fill="none" stroke="#9a8240" stroke-width="1.4"/>
+                            <line x1="15" y1="105" x2="305" y2="105" stroke="#5d6d72" stroke-width="0.9"/>
+                            <line x1="160" y1="103" x2="160" y2="108" stroke="#5d6d72" stroke-width="0.9"/>
+                            <text x="160" y="116" text-anchor="middle" font-size="6.4" font-weight="800" fill="#5d6d72">0</text>
+                            <line x1="247" y1="50" x2="247" y2="105" stroke="var(--rose)" stroke-width="1.6" stroke-dasharray="3,2"/>
+                            <circle cx="247" cy="105" r="3" fill="#fff" stroke="var(--rose)" stroke-width="1.6"/>
+                            <line x1="73" y1="50" x2="73" y2="105" stroke="var(--rose)" stroke-width="1.1" stroke-dasharray="2.5,2" opacity="0.55"/>
+                            <circle cx="73" cy="105" r="2.4" fill="#fff" stroke="var(--rose)" stroke-width="1.1" opacity="0.6"/>
+                            <path d="M 160 28 L 160 18" fill="none" stroke="#5d6d72" stroke-width="0.7"/>
+                            <path d="M 270 100 L 283 84" fill="none" stroke="#5d6d72" stroke-width="0.7"/>
+                            <path d="M 247 50 L 262 36" fill="none" stroke="#5d6d72" stroke-width="0.7"/>
+                        </svg>
+                        <div class="fig-lbl fig-lbl-top">
+                            <span class="b">
+                                <input class="fill" data-answer="Null distribution" data-alt="null distribution|null">
+                                <span class="hint">Null distribution / Sample / Population</span>
+                            </span>
+                        </div>
+                        <div class="fig-lbl fig-lbl-pval">
+                            <span class="b">
+                                <input class="fill" data-answer="p-value" data-alt="p value|pvalue|p">
+                                <span class="hint">p-value / CI</span>
+                            </span>
+                        </div>
+                        <div class="fig-lbl fig-lbl-tobs">
+                            <span class="b">
+                                <input class="fill" data-answer="Observed t" data-alt="observed t|observed|t">
+                                <span class="hint">Observed t / Mean t</span>
+                            </span>
+                        </div>
+                        <div class="fig-caption">Label the curve, the shaded tail area, and the red marker at our observed t.</div>
+                    </div>
+                    <p>The two shaded tails together give the <span class="b"><input class="fill" data-answer="two-sided" data-alt="two sided|twosided"><span class="hint">two-sided / one-sided / zero-sided</span></span> p-value. Software converts t to p using df = n &minus; <span class="b"><input class="fill code" data-answer="2"><span class="hint">1 / 2 / n</span></span> for simple regression.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row split-54-46">
+            <div class="box tag-p-gold">
+                <div class="box-tag"><span>Interpreting the p-value</span><span class="mode-hint">is each statement correct or a misconception?</span></div>
+                <div class="box-body">
+                    <div class="verdict-row" data-correct="yes">
+                        <div class="v-text">"p is the probability of seeing data this extreme if H<sub>0</sub> were true."</div>
+                        <div class="verdict-btns">
+                            <button class="v-btn yes" data-pick="yes">&#10003; Correct</button>
+                            <button class="v-btn no" data-pick="no">&#10007; Misconception</button>
+                        </div>
+                        <div class="v-explanation">Right. p is <b>P(data | H<sub>0</sub>)</b>, not <b>P(H<sub>0</sub> | data)</b>.</div>
+                    </div>
+                    <div class="verdict-row" data-correct="no">
+                        <div class="v-text">"A very small p-value proves that the effect is large and important."</div>
+                        <div class="verdict-btns">
+                            <button class="v-btn yes" data-pick="yes">&#10003; Correct</button>
+                            <button class="v-btn no" data-pick="no">&#10007; Misconception</button>
+                        </div>
+                        <div class="v-explanation">Misconception. Small p only says the slope is <b>unlikely to be zero</b>. Even tiny effects reach p &lt; 0.001 in a big sample. <b>Always look at the effect size too.</b></div>
+                    </div>
+                    <div class="verdict-row" data-correct="no">
+                        <div class="v-text">"p &gt; 0.05 means there is no effect."</div>
+                        <div class="verdict-btns">
+                            <button class="v-btn yes" data-pick="yes">&#10003; Correct</button>
+                            <button class="v-btn no" data-pick="no">&#10007; Misconception</button>
+                        </div>
+                        <div class="v-explanation">Misconception. The data are just <b>inconclusive</b>. A bigger sample might detect a real effect.</div>
+                    </div>
+                    <div class="verdict-row" data-correct="no">
+                        <div class="v-text">"p is the probability that the null hypothesis is true."</div>
+                        <div class="verdict-btns">
+                            <button class="v-btn yes" data-pick="yes">&#10003; Correct</button>
+                            <button class="v-btn no" data-pick="no">&#10007; Misconception</button>
+                        </div>
+                        <div class="v-explanation">Misconception. p <b>assumes H<sub>0</sub> is true</b>, then asks how surprising the data are. It says nothing about P(H<sub>0</sub>).</div>
+                    </div>
+                </div>
+            </div>
+            <div class="box tag-p-gold">
+                <div class="box-tag"><span>Significance star codes</span></div>
+                <div class="box-body">
+                    <p>R prints star symbols next to p-values to flag standard thresholds. More stars indicate <span class="b"><input class="fill" data-answer="stronger"><span class="hint">stronger / weaker / equal</span></span> evidence against H<sub>0</sub>.</p>
+                    <table class="star-table">
+                        <tr>
+                            <td class="star-code">***</td>
+                            <td class="star-thresh">p &lt; <span class="b"><input class="fill code" data-answer="0.001"><span class="hint">0.001 / 0.01 / 0.05</span></span></td>
+                            <td><span class="b"><input class="fill" data-answer="Very strong" data-alt="very strong"><span class="hint">Very strong / Moderate / Weak</span></span> evidence</td>
+                        </tr>
+                        <tr>
+                            <td class="star-code">**</td>
+                            <td class="star-thresh">p &lt; <span class="b"><input class="fill code" data-answer="0.01"><span class="hint">0.01 / 0.05 / 0.10</span></span></td>
+                            <td><b>Strong</b> evidence</td>
+                        </tr>
+                        <tr>
+                            <td class="star-code">*</td>
+                            <td class="star-thresh">p &lt; <span class="b"><input class="fill code" data-answer="0.05"><span class="hint">0.05 / 0.001 / 0.10</span></span></td>
+                            <td><span class="b"><input class="fill" data-answer="Moderate" data-alt="moderate"><span class="hint">Moderate / Strong / Weak</span></span> evidence</td>
+                        </tr>
+                        <tr>
+                            <td class="star-code">.</td>
+                            <td class="star-thresh">p &lt; <span class="b"><input class="fill code" data-answer="0.10" data-alt="0.1"><span class="hint">0.10 / 0.05 / 0.50</span></span></td>
+                            <td><b>Weak</b> / suggestive</td>
+                        </tr>
+                        <tr>
+                            <td class="star-code" style="color:var(--muted);">(none)</td>
+                            <td class="star-thresh">p &ge; 0.10</td>
+                            <td><span class="b"><input class="fill" data-answer="Not significant" data-alt="not significant|insignificant"><span class="hint">Not significant / Highly sig. / Borderline</span></span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="box">
+            <div class="box-tag"><span>Reading significance from R output</span></div>
+            <div class="box-body">
+                <div class="r-code"><span class="cm">## summary(model)$coefficients</span>
+            <span class="hl-rose">Estimate</span>  <span class="hl-blue">Std. Error</span>  <span class="hl-green">t value</span>  <span class="hl-gold">Pr(&gt;|t|)</span>
+(Intercept) -10.7788     4.0605     -2.655    0.0378 *
+weeks         <span class="hl-rose">0.3863</span>     <span class="hl-blue">0.1184</span>      <span class="hl-green">3.262</span>    <span class="hl-gold">0.0172</span> *
+<span class="cm">## confint(model)</span>
+              <span class="hl-blue">2.5 %</span>    <span class="hl-blue">97.5 %</span>
+(Intercept) -20.7145   -0.8431
+weeks         <span class="hl-blue">0.0965</span>    <span class="hl-blue">0.6761</span></div>
+                <div class="metric-cards">
+                    <div class="metric-card est">
+                        <span class="mc-tag">Estimate</span>
+                        <span class="mc-value">b<sub>1</sub> = <span class="b"><input class="fill code" data-answer="0.386" data-alt="0.3863"><span class="hint">0.386 / 3.262 / 0.097</span></span></span>
+                        <div class="mc-desc">Best-fit <span class="b"><input class="fill" data-answer="slope"><span class="hint">slope / line / mean</span></span>; y changes by this per unit of x.</div>
+                    </div>
+                    <div class="metric-card se">
+                        <span class="mc-tag">Std. Error</span>
+                        <span class="mc-value">SE = <span class="b"><input class="fill code" data-answer="0.118" data-alt="0.1184"><span class="hint">0.118 / 0.386 / 3.262</span></span></span>
+                        <div class="mc-desc">Slope <span class="b"><input class="fill" data-answer="uncertainty"><span class="hint">uncertainty / bias / value</span></span>; high SE means less precise.</div>
+                    </div>
+                    <div class="metric-card ci">
+                        <span class="mc-tag">Conf. Int.</span>
+                        <span class="mc-value">CI = (0.097, <span class="b"><input class="fill code" data-answer="0.676" data-alt="0.6761"><span class="hint">0.676 / 0.118 / 1.000</span></span>)</span>
+                        <div class="mc-desc"><span class="b"><input class="fill" data-answer="Plausible" data-alt="plausible"><span class="hint">Plausible / Exact / Unknown</span></span> range for the true slope.</div>
+                    </div>
+                    <div class="metric-card t">
+                        <span class="mc-tag">t-value</span>
+                        <span class="mc-value">t = <span class="b"><input class="fill code" data-answer="3.26" data-alt="3.262"><span class="hint">3.26 / 0.118 / 0.0172</span></span></span>
+                        <div class="mc-desc">= 0.386 / 0.118; slope sits this many SEs from <span class="b"><input class="fill" data-answer="zero"><span class="hint">zero / mean / one</span></span>.</div>
+                    </div>
+                    <div class="metric-card p">
+                        <span class="mc-tag">p-value</span>
+                        <span class="mc-value">p = <span class="b"><input class="fill code" data-answer="0.017" data-alt="0.0172"><span class="hint">0.017 / 0.118 / 3.262</span></span></span>
+                        <div class="mc-desc">Chance of |t| this extreme if H<sub>0</sub> were <span class="b"><input class="fill" data-answer="true"><span class="hint">true / false / random</span></span>.</div>
+                    </div>
+                </div>
+                <p style="margin-top:0.2mm;">For the predictor <code style="font-family:Consolas,Menlo,monospace;">weeks</code>, the signal-to-noise ratio is <span class="b"><input class="fill code" data-answer="3.262" data-alt="3.26"><span class="hint">3.262 / 0.3863 / 0.1184</span></span>, and the probability of seeing this result if there were no real relationship is <span class="b"><input class="fill code" data-answer="0.0172" data-alt="0.017"><span class="hint">0.0172 / 0.0378 / 0.1184</span></span>. Because this p-value is <span class="b"><input class="fill" data-answer="less" data-alt="smaller|below"><span class="hint">less / greater / equal</span></span> than <b>&alpha; = 0.05</b>, we consider the slope statistically <span class="b"><input class="fill" data-answer="significant"><span class="hint">significant / uncertain / large</span></span>, meaning that we <span class="b"><input class="fill" data-answer="reject"><span class="hint">reject / accept / amend</span></span> H<sub>0</sub> and conclude there is a <b>real linear relationship</b> between gestational weeks and birth weight.</p>
+            </div>
+        </div>
+
+        <div class="box tag-ci-navy">
+            <div class="box-tag"><span>CI and p-value: two ways of reporting the same test</span></div>
+            <div class="box-body">
+                <p>The 95% CI and the p-value at &alpha; = 0.05 always give the <span class="b"><input class="fill" data-answer="same"><span class="hint">same / opposite / partial</span></span> <b>significance verdict</b>: the CI <span class="b"><input class="fill" data-answer="excludes" data-alt="omits"><span class="hint">excludes / includes / contains</span></span> zero exactly when p falls below 0.05. They report the same test, but they show <b>different things</b> to the reader.</p>
+                <div class="row cols-2" style="gap:1.6mm; margin-top:0.2mm;">
+                    <div class="report-card preferred">
+                        <span class="rc-tag">Option A: estimate + CI (preferred)</span>
+                        <div class="rc-quote">"Birth weight increased by 0.39 kg per gestational week (95% CI: 0.10, 0.68)."</div>
+                        <div class="rc-shows">
+                            &#9989; <b>Effect size</b> (0.39 kg per week)<br>
+                            &#9989; <b>Significance</b> (zero outside the CI)<br>
+                            &#9989; <b>Precision</b> of the estimate (width of the interval)
+                        </div>
+                    </div>
+                    <div class="report-card alt">
+                        <span class="rc-tag">Option B: estimate + p-value</span>
+                        <div class="rc-quote">"Birth weight increased by 0.39 kg per gestational week (p = 0.017)."</div>
+                        <div class="rc-shows">
+                            &#9989; <b>Effect size</b> (0.39 kg per week)<br>
+                            &#9989; <b>Significance</b> (p &lt; 0.05)<br>
+                            &#10060; Does not show <b>precision</b>; reader cannot see how wide the plausible range is.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="box tag-gold">
+            <div class="box-tag"><span>Vocabulary: complete the definitions</span></div>
+            <div class="box-body">
+                <div class="vocab-grid">
+                    <span class="v-term est">b<sub>1</sub></span>
+                    <span class="v-def">The <span class="b"><input class="fill" data-answer="sample"><span class="hint">sample / population / random</span></span> slope estimated from data; our best guess of the true <span class="b"><input class="fill" data-answer="linear"><span class="hint">linear / quadratic / random</span></span> effect of x on y.</span>
+                    <span class="v-term se">SE(b<sub>1</sub>)</span>
+                    <span class="v-def">The typical sample-to-sample <span class="b"><input class="fill" data-answer="variability" data-alt="spread"><span class="hint">variability / mean / range</span></span> of the slope estimate; tells us how <span class="b"><input class="fill" data-answer="precise"><span class="hint">precise / accurate / biased</span></span> our estimate is.</span>
+                    <span class="v-term tt">t</span>
+                    <span class="v-def">The <span class="b"><input class="fill" data-answer="signal"><span class="hint">signal / noise / power</span></span>-to-noise ratio for the slope: how many <span class="b"><input class="fill" data-answer="SEs" data-alt="SE|standard errors"><span class="hint">SEs / units / years</span></span> the estimate sits from zero.</span>
+                    <span class="v-term pp">p</span>
+                    <span class="v-def">The probability of seeing a test <span class="b"><input class="fill" data-answer="statistic"><span class="hint">statistic / hypothesis / sample</span></span> at least as <span class="b"><input class="fill" data-answer="extreme"><span class="hint">extreme / common / typical</span></span> as ours, if H<sub>0</sub> were true.</span>
+                    <span class="v-term h0">H<sub>0</sub></span>
+                    <span class="v-def">The "no relationship" assumption that the true <span class="b"><input class="fill" data-answer="population"><span class="hint">population / sample / linear</span></span> slope equals <span class="b"><input class="fill code" data-answer="0" data-alt="zero"><span class="hint">0 / 1 / b1</span></span>.</span>
+                </div>
+            </div>
+        </div>
+
+        <footer><a href="https://thegraphcourses.org" target="_blank" rel="noopener">thegraphcourses.org</a></footer>
+    </section>
     </div>
     <script>
-        const sheet = document.getElementById("sheet");
-        const pageWrap = document.getElementById("pageWrap");
+        const sheet = document.getElementById("sheet"),
+              pageWrap = document.getElementById("pageWrap"),
+              blanks = Array.from(document.querySelectorAll(".b")),
+              storageKey = "t-and-p-values-cheatsheet-v6";
+
+        blanks.forEach(b => {
+            const hint = b.querySelector(".hint");
+            if (!hint) return;
+            const opts = hint.textContent.split(/\s*\/\s*/).filter(s => s.length > 0);
+            if (opts.length < 2) return;
+            for (let i = opts.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [opts[i], opts[j]] = [opts[j], opts[i]];
+            }
+            hint.textContent = opts.join(" / ");
+        });
+
+        const measureCanvas = document.createElement("canvas");
+        const measureCtx = measureCanvas.getContext("2d");
+        function getFontShorthand(el) {
+            const s = getComputedStyle(el);
+            return `${s.fontStyle || "normal"} ${s.fontWeight || "400"} ${s.fontSize} ${s.fontFamily}`;
+        }
+        function measureTextWidth(text, inp) {
+            measureCtx.font = getFontShorthand(inp);
+            return measureCtx.measureText(text).width;
+        }
+        function getDefaultWidth(inp) {
+            const answers = [inp.dataset.answer || "", ...(inp.dataset.alt ? inp.dataset.alt.split("|") : [])];
+            let maxW = 0;
+            answers.forEach(ans => {
+                const w = measureTextWidth(ans, inp);
+                if (w > maxW) maxW = w;
+            });
+            return Math.max(maxW + 12, 22);
+        }
+        function getSolvedWidth(inp) {
+            const w = measureTextWidth(inp.value, inp);
+            return Math.max(w + 6, 12);
+        }
+        function applyWidth(inp, solved) {
+            const w = solved ? getSolvedWidth(inp) : getDefaultWidth(inp);
+            inp.style.width = `${w}px`;
+        }
+
+        blanks.forEach(b => {
+            const inp = b.querySelector(".fill");
+            applyWidth(inp, false);
+        });
+
+        const norm = s => String(s)
+              .replace(/[−–]/g, "-")
+              .replace(/₀/g, "0").replace(/₁/g, "1").replace(/₂/g, "2").replace(/₃/g, "3").replace(/₄/g, "4")
+              .replace(/β/g, "beta")
+              .replace(/\s+/g, " ")
+              .trim()
+              .toLowerCase();
+        const answersFor = input => [input.dataset.answer || "", ...(input.dataset.alt ? input.dataset.alt.split("|") : [])].map(norm);
+        const match = (value, input) => answersFor(input).includes(norm(value));
+
+        function flashCorrect(i) {
+            i.classList.remove("correct-flash");
+            void i.offsetWidth;
+            i.classList.add("correct-flash");
+            setTimeout(() => i.classList.remove("correct-flash"), 800);
+        }
+        function flashWrong(i) {
+            i.classList.remove("wrong-pick");
+            void i.offsetWidth;
+            i.classList.add("wrong-pick");
+        }
+        function save() {
+            localStorage.setItem(storageKey, JSON.stringify(blanks.map(b => b.querySelector(".fill").value)));
+        }
+        function restore() {
+            try {
+                const d = JSON.parse(localStorage.getItem(storageKey) || "[]");
+                blanks.forEach((b, i) => {
+                    const inp = b.querySelector(".fill");
+                    if (d[i]) {
+                        inp.value = d[i];
+                        if (match(d[i], inp)) {
+                            b.classList.add("solved");
+                            applyWidth(inp, true);
+                        } else {
+                            inp.classList.add("wrong-pick");
+                        }
+                    }
+                });
+            } catch { localStorage.removeItem(storageKey); }
+        }
+
+        blanks.forEach(blank => {
+            const inp = blank.querySelector(".fill");
+            inp.addEventListener("input", () => {
+                const was = blank.classList.contains("solved");
+                inp.classList.remove("wrong-pick");
+                const ok = inp.value !== "" && match(inp.value, inp);
+                if (ok && !was) {
+                    blank.classList.add("solved");
+                    applyWidth(inp, true);
+                    flashCorrect(inp);
+                } else if (ok && was) {
+                    applyWidth(inp, true);
+                } else if (!ok && was) {
+                    blank.classList.remove("solved");
+                    applyWidth(inp, false);
+                }
+                save();
+            });
+            inp.addEventListener("blur", () => {
+                const v = inp.value.trim();
+                if (v && !match(v, inp)) flashWrong(inp);
+            });
+        });
+        restore();
+
+        const verdictRows = Array.from(document.querySelectorAll(".verdict-row"));
+        const verdictKey = "verdict-rows-v6";
+        function applyVerdictPick(row, pick) {
+            if (row.classList.contains("revealed")) return;
+            const correct = row.dataset.correct;
+            const btn = row.querySelector(`.v-btn[data-pick="${pick}"]`);
+            if (!btn) return;
+            const isRight = pick === correct;
+            btn.classList.add("picked", isRight ? "correct" : "incorrect");
+            if (!isRight) {
+                const correctBtn = row.querySelector(`.v-btn[data-pick="${correct}"]`);
+                if (correctBtn) correctBtn.classList.add("was-correct");
+            }
+            row.classList.add("revealed");
+            row.querySelectorAll(".v-btn").forEach(b => b.disabled = true);
+        }
+        function saveVerdicts() {
+            const state = verdictRows.map(row => {
+                const picked = row.querySelector(".v-btn.picked");
+                return picked ? picked.dataset.pick : null;
+            });
+            localStorage.setItem(verdictKey, JSON.stringify(state));
+        }
+        function restoreVerdicts() {
+            try {
+                const state = JSON.parse(localStorage.getItem(verdictKey) || "[]");
+                verdictRows.forEach((row, i) => {
+                    if (state[i]) applyVerdictPick(row, state[i]);
+                });
+            } catch { localStorage.removeItem(verdictKey); }
+        }
+        verdictRows.forEach(row => {
+            row.querySelectorAll(".v-btn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    applyVerdictPick(row, btn.dataset.pick);
+                    saveVerdicts();
+                });
+            });
+        });
+        restoreVerdicts();
 
         document.getElementById("toggleHints").addEventListener("click", e => {
             sheet.classList.toggle("hints-hidden");
             e.currentTarget.textContent = sheet.classList.contains("hints-hidden") ? "Show hints" : "Hide hints";
         });
-        document.getElementById("clearAnswers").addEventListener("click", () => {});
+        document.getElementById("clearAnswers").addEventListener("click", () => {
+            blanks.forEach(b => {
+                const i = b.querySelector(".fill");
+                i.value = "";
+                i.classList.remove("wrong-pick", "correct-flash");
+                b.classList.remove("solved");
+                applyWidth(i, false);
+            });
+            verdictRows.forEach(row => {
+                row.classList.remove("revealed");
+                row.querySelectorAll(".v-btn").forEach(b => {
+                    b.classList.remove("picked", "correct", "incorrect", "was-correct");
+                    b.disabled = false;
+                });
+            });
+            save();
+            saveVerdicts();
+        });
 
-        const zoomLevels = [0.75, 0.85, 1.0, 1.15, 1.3, 1.5];
-        const zoomKey = "slope-t-pvalue-cheatsheet-zoom";
-        let zoomIdx = parseInt(localStorage.getItem(zoomKey) || "2", 10);
-        if (isNaN(zoomIdx) || zoomIdx < 0 || zoomIdx >= zoomLevels.length) zoomIdx = 2;
+        const zoomLevels = [0.1, 0.25, 0.5, 0.75, 0.85, 1.0, 1.15, 1.3, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
+        const zoomKey = "t-and-p-cheatsheet-zoom-v7";
+        const defaultZoomIdx = zoomLevels.indexOf(1.0);
+        let zoomIdx = parseInt(localStorage.getItem(zoomKey) || String(defaultZoomIdx), 10);
+        if (isNaN(zoomIdx) || zoomIdx < 0 || zoomIdx >= zoomLevels.length) zoomIdx = defaultZoomIdx;
         const zoomLabel = document.getElementById("zoomLabel");
         function applyZoom() {
             const z = zoomLevels[zoomIdx];

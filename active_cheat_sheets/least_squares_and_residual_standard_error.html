@@ -8,8 +8,11 @@
         :root {
             --teal: #0d7377;
             --teal-dark: #0a5d61;
+            --teal-soft: #eff7f7;
             --gold: #f0c808;
+            --gold-soft: #fff9df;
             --rose: #b83b5e;
+            --rose-soft: #fdeef1;
             --green: #2c8a4a;
             --ink: #182326;
             --muted: #5d6d72;
@@ -18,6 +21,7 @@
             --soft: #eef6f6;
             --cream: #fff9df;
             --blue: #2f5f98;
+            --blue-soft: #e7eef7;
             --white: #ffffff;
         }
         * {
@@ -61,6 +65,8 @@
             gap: 8px;
             align-items: center;
             flex-shrink: 0;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
         button {
             border: 1px solid #9bb4b7;
@@ -87,6 +93,40 @@
             height: 13px;
             display: block;
         }
+        .zoom-group {
+            display: inline-flex;
+            align-items: stretch;
+            border: 1px solid #9bb4b7;
+            border-radius: 6px;
+            overflow: hidden;
+            background: var(--white);
+        }
+        .zoom-group button {
+            border: 0;
+            border-radius: 0;
+            padding: 6px 10px;
+            background: transparent;
+            font-weight: 800;
+        }
+        .zoom-group button + button {
+            border-left: 1px solid #cdd9dc;
+        }
+        .zoom-group .zoom-label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 44px;
+            padding: 0 9px;
+            border-left: 1px solid #cdd9dc;
+            color: var(--muted);
+            font-size: 9pt;
+            font-weight: 800;
+        }
+        .page-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
         .page {
             width: 210mm;
             min-height: 297mm;
@@ -97,6 +137,7 @@
             display: flex;
             flex-direction: column;
             gap: 0.85mm;
+            transform-origin: top center;
         }
         header {
             border-bottom: 1.2mm solid var(--gold);
@@ -139,7 +180,7 @@
         .box {
             border: 1px solid var(--border);
             border-radius: 6px;
-            overflow: hidden;
+            overflow: visible;
             background: white;
             display: flex;
             flex-direction: column;
@@ -160,6 +201,10 @@
             display: flex;
             flex-direction: column;
             gap: 0.7mm;
+            background: var(--teal-soft);
+            min-width: 0;
+            overflow: visible;
+            border-radius: 0 0 5px 5px;
         }
         .box-body p {
             margin: 0;
@@ -171,19 +216,32 @@
             background: var(--gold);
             color: var(--ink);
         }
+        .box.tag-gold .box-body {
+            background: var(--gold-soft);
+        }
         .box.tag-rose .box-tag {
             background: var(--rose);
             color: #fff;
+        }
+        .box.tag-rose .box-body {
+            background: var(--rose-soft);
         }
         .box.tag-blue .box-tag {
             background: var(--blue);
             color: #fff;
         }
+        .box.tag-blue .box-body {
+            background: var(--blue-soft);
+        }
+        .box.body-cream .box-tag {
+            background: var(--gold);
+            color: var(--ink);
+        }
         .box.body-cream .box-body {
-            background: var(--cream);
+            background: var(--gold-soft);
         }
         .box.body-soft .box-body {
-            background: linear-gradient(#fff, #fbfdfd);
+            background: var(--teal-soft);
         }
         .row {
             display: grid;
@@ -300,19 +358,26 @@
             flex-direction: column;
             align-items: center;
             vertical-align: baseline;
+            line-height: 1;
+            margin: 0 0.2mm;
             text-align: center;
+            max-width: 100%;
+            min-width: 0;
         }
         .fill {
             border: 0;
-            border-bottom: 1.55px solid var(--teal);
+            border-bottom: 1.4px solid var(--teal);
             border-radius: 0;
-            padding: 0 0.8mm 0.25mm;
+            padding: 0 0.3mm 0.5px;
             color: var(--ink);
             background: transparent;
             font: inherit;
             font-weight: 900;
+            line-height: 1;
             text-align: center;
-            min-width: 5.5mm;
+            min-width: 2mm;
+            max-width: 100%;
+            transition: width 0.18s ease-out;
         }
         .fill.code {
             font-family: Consolas, Menlo, monospace;
@@ -323,47 +388,25 @@
         .fill:focus {
             outline: none;
             border-bottom-color: var(--teal-dark);
-            border-bottom-width: 2px;
+            border-bottom-width: 1.8px;
         }
-        .opts {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.8mm;
-            margin-top: 0.4mm;
-            line-height: 1.05;
-            white-space: nowrap;
-        }
-        .opt {
-            background: var(--soft);
-            border: 1px solid #c2d6d8;
-            color: var(--ink);
+        .hint {
+            font-size: 4.7pt;
+            color: #98a3a7;
+            font-weight: 700;
             font-family: inherit;
-            font-size: 6.2pt;
-            font-weight: 800;
-            padding: 0.2mm 1.55mm 0.35mm;
-            border-radius: 999px;
-            cursor: pointer;
-            transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.08s;
+            line-height: 1.05;
+            margin-top: 0.35mm;
+            letter-spacing: 0.02em;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            max-width: 34mm;
+            text-align: center;
         }
-        .opt:hover {
-            background: var(--cream);
-            border-color: var(--gold);
-            transform: translateY(-0.4px);
-        }
-        .opt:active {
-            transform: translateY(0.2px);
-        }
-        .opt.wrong-pick {
-            color: var(--rose);
-            background: #ffe6ec;
-            border-color: var(--rose);
-            text-decoration: line-through;
-            animation: shake 0.45s;
-        }
-        .b.solved .opts {
+        .b.solved .hint {
             display: none;
         }
-        .hints-hidden .opts {
+        .hints-hidden .hint {
             display: none;
         }
         .fill.wrong-pick {
@@ -448,19 +491,23 @@
                 margin: 0;
                 box-shadow: none;
                 overflow: hidden;
+                transform: none !important;
             }
             button {
                 display: none;
             }
-            .fill, .r-code, .worked, .box, .box-tag, .visual, .blue, .rose, .teal, .gold {
+            .fill, .r-code, .worked, .box, .box-tag, .box-body, .visual, .blue, .rose, .teal, .gold {
                 print-color-adjust: exact;
                 -webkit-print-color-adjust: exact;
             }
-            .opts {
+            .hint {
                 display: none !important;
             }
             .worked {
                 line-height: 1.55 !important;
+            }
+            .fill {
+                transition: none;
             }
             .fill.wrong-pick {
                 color: var(--ink);
@@ -474,6 +521,7 @@
             .page {
                 padding: 16px;
                 min-height: auto;
+                transform: none !important;
             }
             .row, .eq-grid {
                 grid-template-columns: 1fr !important;
@@ -492,22 +540,28 @@
     <div class="toolbar">
         <div class="toolbar-intro">
             <div class="title">GRAPH Courses cheat sheet</div>
-            <div class="descr">Type or select your answer from the options. When finished, click Print / Save on the right.</div>
+            <div class="descr">Type your answers into the blanks. Hint options appear in small grey text below each blank. When finished, click Print / Save on the right.</div>
         </div>
         <div class="toolbar-actions">
+            <div class="zoom-group" role="group" aria-label="Zoom controls">
+                <button type="button" id="zoomOut" aria-label="Zoom out">Zoom -</button>
+                <button type="button" id="zoomIn" aria-label="Zoom in">Zoom +</button>
+                <span class="zoom-label" id="zoomLabel">100%</span>
+            </div>
             <button type="button" id="toggleHints">Hide hints</button>
             <button type="button" id="clearAnswers">Clear</button>
             <button type="button" class="primary print-button" onclick="window.print()" aria-label="Print or save cheat sheet">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="currentColor" d="M7 3h10v5H7V3Zm10 14h2a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h2v4h10v-4Zm-8 2v-6h6v6H9Zm9-7.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" />
                 </svg>
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="currentColor" d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
                 </svg>
                 Print / Save
             </button>
         </div>
     </div>
+    <div class="page-wrap" id="pageWrap">
     <section class="page" id="sheet">
         <header>
             <h1>Least Squares and Residual Standard Error</h1>
@@ -516,7 +570,7 @@
         <div class="box">
             <div class="box-tag">Big idea</div>
             <div class="box-body">
-                <p>In simple linear regression, least squares fits a linear <span class="b"><input class="fill" data-answer="model"><span class="opts"><button type="button" class="opt" data-value="model">model</button><button type="button" class="opt" data-value="table">table</button><button type="button" class="opt" data-value="curve">curve</button></span></span> to data by choosing the <span class="b"><input class="fill" data-answer="slope"><span class="opts"><button type="button" class="opt" data-value="slope">slope</button><button type="button" class="opt" data-value="color">color</button><button type="button" class="opt" data-value="axis">axis</button></span></span> and <span class="b"><input class="fill" data-answer="intercept"><span class="opts"><button type="button" class="opt" data-value="intercept">intercept</button><button type="button" class="opt" data-value="median">median</button><button type="button" class="opt" data-value="unit">unit</button></span></span> that make the total <span class="b"><input class="fill" data-answer="squared"><span class="opts"><button type="button" class="opt" data-value="squared">squared</button><button type="button" class="opt" data-value="absolute">absolute</button><button type="button" class="opt" data-value="linear">linear</button></span></span> prediction error as <span class="b"><input class="fill" data-answer="small"><span class="opts"><button type="button" class="opt" data-value="small">small</button><button type="button" class="opt" data-value="large">large</button><button type="button" class="opt" data-value="random">random</button></span></span> as possible.</p>
+                <p>In simple linear regression, <b>least squares</b> fits a linear <span class="b"><input class="fill" data-answer="model"><span class="hint">model / table / curve</span></span> to data by choosing the <span class="b"><input class="fill" data-answer="slope"><span class="hint">slope / color / axis</span></span> and <span class="b"><input class="fill" data-answer="intercept"><span class="hint">intercept / median / unit</span></span> that make the total <span class="b"><input class="fill" data-answer="squared"><span class="hint">squared / absolute / linear</span></span> <b>prediction error</b> as <span class="b"><input class="fill" data-answer="small"><span class="hint">small / large / random</span></span> as possible.</p>
             </div>
         </div>
         <div class="box body-cream">
@@ -525,8 +579,8 @@
                 <div class="eq-grid">
                     <div class="big-eq"><span class="teal">SSE</span> = &Sigma;(y<sub>i</sub> &minus; &#375;<sub>i</sub>)<sup>2</sup></div>
                     <div class="stack">
-                        <p>A residual (also called <b>e</b>) is <span class="b"><input class="fill" data-answer="actual"><span class="opts"><button type="button" class="opt" data-value="actual">actual</button><button type="button" class="opt" data-value="average">average</button><button type="button" class="opt" data-value="slope">slope</button></span></span> y value minus <span class="b"><input class="fill" data-answer="predicted"><span class="opts"><button type="button" class="opt" data-value="predicted">predicted</button><button type="button" class="opt" data-value="doubled">doubled</button><button type="button" class="opt" data-value="zero">zero</button></span></span> y value, written <span class="mathline">e<sub>i</sub> = y<sub>i</sub> &minus; &#375;<sub>i</sub></span>.</p>
-                        <p>We <span class="b"><input class="fill" data-answer="square"><span class="opts"><button type="button" class="opt" data-value="square">square</button><button type="button" class="opt" data-value="ignore">ignore</button><button type="button" class="opt" data-value="flip">flip</button></span></span> residuals so positive and negative misses do not cancel, then add them to get <span class="b"><input class="fill code" data-answer="SSE"><span class="opts"><button type="button" class="opt" data-value="SSE">SSE</button><button type="button" class="opt" data-value="RSE">RSE</button><button type="button" class="opt" data-value="df">df</button></span></span>.</p>
+                        <p>A <b>residual</b> (also called <b>e</b>) is <span class="b"><input class="fill" data-answer="actual"><span class="hint">actual / average / slope</span></span> y value minus <span class="b"><input class="fill" data-answer="predicted"><span class="hint">predicted / doubled / zero</span></span> y value, written <span class="mathline">e<sub>i</sub> = y<sub>i</sub> &minus; &#375;<sub>i</sub></span>.</p>
+                        <p>We <span class="b"><input class="fill" data-answer="square"><span class="hint">square / ignore / flip</span></span> residuals so <b>positive and negative misses</b> do not cancel, then add them to get <span class="b"><input class="fill code" data-answer="SSE"><span class="hint">SSE / RSE / df</span></span>.</p>
                     </div>
                 </div>
             </div>
@@ -536,8 +590,8 @@
             <div class="box tag-blue">
                 <div class="box-tag">What least squares does</div>
                 <div class="box-body">
-                    <p>In the scatterplot shown, the teal line is the fitted model. A better-fitting line makes the red residual segments shorter, so the <span class="teal"><b>Sum of squared residuals</b> or Sum of Squared Errors (SSE)</span> goes <span class="b"><input class="fill" data-answer="down"><span class="opts"><button type="button" class="opt" data-value="down">down</button><button type="button" class="opt" data-value="up">up</button><button type="button" class="opt" data-value="missing">missing</button></span></span>.</p>
-                    <p>The "least-squares line" is the line whose SSE is the <span class="b"><input class="fill" data-answer="smallest"><span class="opts"><button type="button" class="opt" data-value="smallest">smallest</button><button type="button" class="opt" data-value="largest">largest</button><button type="button" class="opt" data-value="average">average</button></span></span> achievable across all possible straight lines through the data.</p>
+                    <p>In the scatterplot shown, the teal line is the <b>fitted model</b>. A better-fitting line makes the red residual segments shorter, so the <span class="teal"><b>Sum of squared residuals</b> or Sum of Squared Errors (SSE)</span> goes <span class="b"><input class="fill" data-answer="down"><span class="hint">down / up / missing</span></span>.</p>
+                    <p>The <b>least-squares line</b> is the line whose SSE is the <span class="b"><input class="fill" data-answer="smallest"><span class="hint">smallest / largest / average</span></span> achievable across all possible straight lines through the data.</p>
                 </div>
             </div>
             <div class="visual" aria-label="Regression line with residuals and squared residual areas">
@@ -581,7 +635,7 @@
                     <line x1="234" y1="56" x2="251" y2="68" stroke="#b83b5e" stroke-width="0.8" />
                     <text x="425" y="50" font-size="8" font-weight="700" fill="#0d7377">best fit</text>
                 </svg>
-                <div class="visual-caption">Each red segment is one residual, e. The red square's area is e<sup>2</sup>. The sum of all such squared areas is <span class="b"><input class="fill code" data-answer="SSE"><span class="opts"><button type="button" class="opt" data-value="SSE">SSE</button><button type="button" class="opt" data-value="RSE">RSE</button><button type="button" class="opt" data-value="R&sup2;">R&sup2;</button></span></span>.</div>
+                <div class="visual-caption">Each red segment is one <b>residual</b>, e. The red square's area is <b>e<sup>2</sup></b>. The sum of all such squared areas is <span class="b"><input class="fill code" data-answer="SSE"><span class="hint">SSE / RSE / R&sup2;</span></span>.</div>
             </div>
         </div>
         <div class="group-label"><span>Reading residuals</span></div>
@@ -590,21 +644,21 @@
                 <div class="box-tag">Residual summary in R</div>
                 <div class="box-body">
                     <div class="r-code"><span class="cm"># top of summary(model)</span><br />Residuals:<br />Min        1Q     Median       3Q      Max<br />-0.52   -0.48      -0.07     0.34     0.71</div>
-                    <p>A healthy residual distribution looks roughly symmetric about zero:</p>
+                    <p>A healthy residual distribution looks roughly <b>symmetric about zero</b>:</p>
                     <div class="sym-checks">
-                        <div class="sym-check">Median &asymp; <span class="b"><input class="fill code" data-answer="0"><span class="opts"><button type="button" class="opt" data-value="0">0</button><button type="button" class="opt" data-value="1">1</button><button type="button" class="opt" data-value="RSE">RSE</button></span></span> <span class="sym-arrow">&rarr;</span> residuals balanced around the line</div>
-                        <div class="sym-check">|Q1| &asymp; |<span class="b"><input class="fill code" data-answer="Q3"><span class="opts"><button type="button" class="opt" data-value="Q3">Q3</button><button type="button" class="opt" data-value="Q1">Q1</button><button type="button" class="opt" data-value="RSE">RSE</button></span></span>|</div>
-                        <div class="sym-check">|Min| &asymp; |<span class="b"><input class="fill code" data-answer="Max"><span class="opts"><button type="button" class="opt" data-value="Max">Max</button><button type="button" class="opt" data-value="Min">Min</button><button type="button" class="opt" data-value="Median">Median</button></span></span>|</div>
+                        <div class="sym-check">Median &asymp; <span class="b"><input class="fill code" data-answer="0"><span class="hint">0 / 1 / RSE</span></span> <span class="sym-arrow">&rarr;</span> residuals balanced around the line</div>
+                        <div class="sym-check">|Q1| &asymp; |<span class="b"><input class="fill code" data-answer="Q3"><span class="hint">Q3 / Q1 / RSE</span></span>|</div>
+                        <div class="sym-check">|Min| &asymp; |<span class="b"><input class="fill code" data-answer="Max"><span class="hint">Max / Min / Median</span></span>|</div>
                     </div>
-                    <p>Strong asymmetry hints that a straight line is the wrong <span class="b"><input class="fill" data-answer="model"><span class="opts"><button type="button" class="opt" data-value="model">model</button><button type="button" class="opt" data-value="axis">axis</button><button type="button" class="opt" data-value="unit">unit</button></span></span> (the true relationship may not be linear).</p>
+                    <p><b>Strong asymmetry</b> hints that a straight line is the wrong <span class="b"><input class="fill" data-answer="model"><span class="hint">model / axis / unit</span></span> (the true relationship may not be linear).</p>
                 </div>
             </div>
             <div class="box tag-rose">
                 <div class="box-tag">Residual sign and size</div>
                 <div class="box-body">
-                    <p>A point above the fitted line has a <span class="b"><input class="fill" data-answer="positive"><span class="opts"><button type="button" class="opt" data-value="positive">positive</button><button type="button" class="opt" data-value="negative">negative</button><button type="button" class="opt" data-value="zero">zero</button></span></span> residual. A point below the line has a <span class="b"><input class="fill" data-answer="negative"><span class="opts"><button type="button" class="opt" data-value="negative">negative</button><button type="button" class="opt" data-value="positive">positive</button><button type="button" class="opt" data-value="squared">squared</button></span></span> residual.</p>
-                    <p>For baby #4, actual weight is 3.06 kg and predicted weight is 2.36 kg:</p>
-                    <div class="worked">e = <span class="b"><input class="fill code" data-answer="3.06"><span class="opts"><button type="button" class="opt" data-value="3.06">3.06</button><button type="button" class="opt" data-value="2.36">2.36</button><button type="button" class="opt" data-value="0.49">0.49</button></span></span> &minus; <span class="b"><input class="fill code" data-answer="2.36"><span class="opts"><button type="button" class="opt" data-value="3.06">3.06</button><button type="button" class="opt" data-value="2.36">2.36</button><button type="button" class="opt" data-value="0.49">0.49</button></span></span> = <span class="b"><input class="fill code" data-answer="0.70"><span class="opts"><button type="button" class="opt" data-value="0.70">0.70</button><button type="button" class="opt" data-value="-0.70">-0.70</button><button type="button" class="opt" data-value="5.42">5.42</button></span></span></div>
+                    <p>A point <b>above</b> the fitted line has a <span class="b"><input class="fill" data-answer="positive"><span class="hint">positive / negative / zero</span></span> residual. A point <b>below</b> the line has a <span class="b"><input class="fill" data-answer="negative"><span class="hint">negative / positive / squared</span></span> residual.</p>
+                    <p>For baby #4, <b>actual weight</b> is 3.06 kg and <b>predicted weight</b> is 2.36 kg:</p>
+                    <div class="worked">e = <span class="b"><input class="fill code" data-answer="3.06"><span class="hint">3.06 / 2.36 / 0.49</span></span> &minus; <span class="b"><input class="fill code" data-answer="2.36"><span class="hint">3.06 / 2.36 / 0.49</span></span> = <span class="b"><input class="fill code" data-answer="0.70" data-alt="0.7|.70"><span class="hint">0.70 / -0.70 / 5.42</span></span></div>
                 </div>
             </div>
         </div>
@@ -614,16 +668,16 @@
                 <div class="box-tag">Interpreting R's RSE output</div>
                 <div class="box-body">
                     <div class="r-code">Residual standard error: <span class="hl">0.549</span> on <span class="hl">6</span> degrees of freedom</div>
-                    <p>R's output for the RSE above means the predicted weights are typically off by about <span class="b"><input class="fill code" data-answer="0.549"><span class="opts"><button type="button" class="opt" data-value="0.549">0.549</button><button type="button" class="opt" data-value="6">6</button><button type="button" class="opt" data-value="8">8</button></span></span> <span class="b"><input class="fill" data-answer="kg"><span class="opts"><button type="button" class="opt" data-value="kg">kg</button><button type="button" class="opt" data-value="weeks">weeks</button><button type="button" class="opt" data-value="slopes">slopes</button></span></span>.</p>
-                    <p>With 8 babies, the 6 degrees of freedom come from <span class="mathline">8 &minus; <span class="b"><input class="fill code" data-answer="2"><span class="opts"><button type="button" class="opt" data-value="2">2</button><button type="button" class="opt" data-value="6">6</button><button type="button" class="opt" data-value="8">8</button></span></span></span>. Higher RSE usually means a <span class="b"><input class="fill" data-answer="worse"><span class="opts"><button type="button" class="opt" data-value="worse">worse</button><button type="button" class="opt" data-value="perfect">perfect</button><button type="button" class="opt" data-value="causal">causal</button></span></span> fit.</p>
+                    <p>R's output for the RSE above means the predicted weights are <b>typically off by about</b> <span class="b"><input class="fill code" data-answer="0.549"><span class="hint">0.549 / 6 / 8</span></span> <span class="b"><input class="fill" data-answer="kg"><span class="hint">kg / weeks / slopes</span></span>.</p>
+                    <p>With 8 babies, the 6 <b>degrees of freedom</b> come from <span class="mathline">8 &minus; <span class="b"><input class="fill code" data-answer="2"><span class="hint">2 / 6 / 8</span></span></span>. Higher RSE usually means a <span class="b"><input class="fill" data-answer="worse"><span class="hint">worse / perfect / causal</span></span> fit.</p>
                 </div>
             </div>
             <div class="box body-soft">
                 <div class="box-tag">RSE formula & interpretation</div>
                 <div class="box-body">
-                    <p>Residual standard error is the <span class="b"><input class="fill" data-answer="typical"><span class="opts"><button type="button" class="opt" data-value="typical">typical</button><button type="button" class="opt" data-value="largest">largest</button><button type="button" class="opt" data-value="smallest">smallest</button></span></span> size of a residual.</p>
+                    <p><b>Residual standard error</b> is the <span class="b"><input class="fill" data-answer="typical"><span class="hint">typical / largest / smallest</span></span> size of a residual.</p>
                     <div class="big-eq"><span class="teal">RSE</span> = <span style="font-size:14pt">&radic;</span><span style="border-top:2px solid #182326; padding:0 1mm">SSE / df</span></div>
-                    <p>For simple linear regression, <span class="mathline">df = n &minus; <span class="b"><input class="fill code" data-answer="2"><span class="opts"><button type="button" class="opt" data-value="2">2</button><button type="button" class="opt" data-value="1">1</button><button type="button" class="opt" data-value="n">n</button></span></span></span>. This is because fitting the line "spends" <span class="b"><input class="fill code" data-answer="2"><span class="opts"><button type="button" class="opt" data-value="2">2</button><button type="button" class="opt" data-value="1">1</button><button type="button" class="opt" data-value="n">n</button></span></span> numbers from the data: the slope and the <span class="b"><input class="fill" data-answer="intercept"><span class="opts"><button type="button" class="opt" data-value="intercept">intercept</button><button type="button" class="opt" data-value="median">median</button><button type="button" class="opt" data-value="maximum">maximum</button></span></span>.</p>
+                    <p>For simple linear regression, <span class="mathline">df = n &minus; <span class="b"><input class="fill code" data-answer="2"><span class="hint">2 / 1 / n</span></span></span>. This is because fitting the line "spends" <span class="b"><input class="fill code" data-answer="2"><span class="hint">2 / 1 / n</span></span> numbers from the data: the <b>slope</b> and the <span class="b"><input class="fill" data-answer="intercept"><span class="hint">intercept / median / maximum</span></span>.</p>
                 </div>
             </div>
         </div>
@@ -631,16 +685,16 @@
         <div class="box tag-gold">
             <div class="box-tag">A note on naming</div>
             <div class="box-body">
-                <p>This topic introduces many new terms and symbols, and some have multiple names. Below is a summary of some key terms:</p>
+                <p>This topic introduces many new <b>terms and symbols</b>, and some have multiple names. Below is a summary of some key terms:</p>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5mm; margin-top:0.4mm;">
                     <div>
                         <div class="vocab-grid">
                             <span class="vocab-term rose">e<sub>i</sub></span>
                             <span>Residual for the i<sup>th</sup> observation. Also written <b>r<sub>i</sub></b>.</span>
                             <span class="vocab-term teal">SSE</span>
-                            <span>Sum of Squared <span class="b"><input class="fill" data-answer="Errors"><span class="opts"><button type="button" class="opt" data-value="Errors">Errors</button><button type="button" class="opt" data-value="Effects">Effects</button><button type="button" class="opt" data-value="Estimates">Estimates</button></span></span>. Also called RSS (Residual Sum of Squares).</span>
+                            <span><b>Sum of Squared</b> <span class="b"><input class="fill" data-answer="Errors"><span class="hint">Errors / Effects / Estimates</span></span>. Also called RSS (Residual Sum of Squares).</span>
                             <span class="vocab-term blue">RSE</span>
-                            <span>Residual Standard Error. Sometimes labeled as just <b>s</b>. The "typical miss" in Y-units.</span>
+                            <span><b>Residual Standard Error</b>. Sometimes labeled as just <b>s</b>. The <b>typical miss</b> in Y-units.</span>
                         </div>
                     </div>
                     <div>
@@ -648,7 +702,7 @@
                             <span class="vocab-term">&#375;<sub>i</sub></span>
                             <span>Predicted (fitted) value for observation i.</span>
                             <span class="vocab-term">b<sub>0</sub>, b<sub>1</sub></span>
-                            <span>Estimated intercept and <span class="b"><input class="fill" data-answer="slope"><span class="opts"><button type="button" class="opt" data-value="slope">slope</button><button type="button" class="opt" data-value="residual">residual</button><button type="button" class="opt" data-value="error">error</button></span></span>. Also written &beta;&#770;<sub>0</sub>, &beta;&#770;<sub>1</sub>.</span>
+                            <span>Estimated intercept and <span class="b"><input class="fill" data-answer="slope"><span class="hint">slope / residual / error</span></span>. Also written &beta;&#770;<sub>0</sub>, &beta;&#770;<sub>1</sub>.</span>
                         </div>
                     </div>
                 </div>
@@ -656,23 +710,146 @@
         </div>
         <footer><a href="https://thegraphcourses.org" target="_blank" rel="noopener">thegraphcourses.org</a></footer>
     </section>
+    </div>
     <script>
-        const sheet = document.getElementById("sheet"), blanks = Array.from(document.querySelectorAll(".b")), storageKey = "least-squares-rse-cheatsheet-v2";
-        blanks.forEach(b => { const i = b.querySelector(".fill"); i.style.width = `${Math.max((i.dataset.answer || "").length + 3, 5)}ch`; });
-        const norm = s => s.replace(/[−–]/g, "-").replace(/\s+/g, " ").trim().toLowerCase(), match = (a, b) => norm(a) === norm(b);
+        const sheet = document.getElementById("sheet"),
+              pageWrap = document.getElementById("pageWrap"),
+              blanks = Array.from(document.querySelectorAll(".b")),
+              storageKey = "least-squares-rse-cheatsheet-v3";
+
+        blanks.forEach(b => {
+            const hint = b.querySelector(".hint");
+            if (!hint) return;
+            const opts = hint.textContent.split(/\s*\/\s*/).filter(s => s.length > 0);
+            if (opts.length < 2) return;
+            for (let i = opts.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [opts[i], opts[j]] = [opts[j], opts[i]];
+            }
+            hint.textContent = opts.join(" / ");
+        });
+
+        const measureCanvas = document.createElement("canvas");
+        const measureCtx = measureCanvas.getContext("2d");
+        function getFontShorthand(el) {
+            const s = getComputedStyle(el);
+            return `${s.fontStyle || "normal"} ${s.fontWeight || "400"} ${s.fontSize} ${s.fontFamily}`;
+        }
+        function measureTextWidth(text, inp) {
+            measureCtx.font = getFontShorthand(inp);
+            return measureCtx.measureText(text).width;
+        }
+        function getDefaultWidth(inp) {
+            const answers = [inp.dataset.answer || "", ...(inp.dataset.alt ? inp.dataset.alt.split("|") : [])];
+            let maxW = 0;
+            answers.forEach(ans => {
+                const w = measureTextWidth(ans, inp);
+                if (w > maxW) maxW = w;
+            });
+            return Math.max(maxW + 12, 22);
+        }
+        function getSolvedWidth(inp) {
+            const w = measureTextWidth(inp.value, inp);
+            return Math.max(w + 6, 12);
+        }
+        function applyWidth(inp, solved) {
+            const w = solved ? getSolvedWidth(inp) : getDefaultWidth(inp);
+            inp.style.width = `${w}px`;
+        }
+
+        blanks.forEach(b => applyWidth(b.querySelector(".fill"), false));
+
+        const norm = s => String(s)
+            .replace(/[−–]/g, "-")
+            .replace(/₀/g, "0").replace(/₁/g, "1").replace(/₂/g, "2").replace(/₃/g, "3").replace(/₄/g, "4")
+            .replace(/β/g, "beta")
+            .replace(/\s+/g, " ")
+            .trim()
+            .toLowerCase();
+        const answersFor = input => [input.dataset.answer || "", ...(input.dataset.alt ? input.dataset.alt.split("|") : [])].map(norm);
+        const match = (value, input) => answersFor(input).includes(norm(value));
+
         function flashCorrect(i) { i.classList.remove("correct-flash"); void i.offsetWidth; i.classList.add("correct-flash"); setTimeout(() => i.classList.remove("correct-flash"), 800); }
         function flashWrong(i) { i.classList.remove("wrong-pick"); void i.offsetWidth; i.classList.add("wrong-pick"); }
         function save() { localStorage.setItem(storageKey, JSON.stringify(blanks.map(b => b.querySelector(".fill").value))); }
-        function restore() { try { const d = JSON.parse(localStorage.getItem(storageKey) || "[]"); blanks.forEach((b, i) => { const inp = b.querySelector(".fill"); if (d[i]) { inp.value = d[i]; if (match(d[i], inp.dataset.answer)) b.classList.add("solved"); else inp.classList.add("wrong-pick"); } }); } catch { localStorage.removeItem(storageKey); } }
+        function restore() {
+            try {
+                const d = JSON.parse(localStorage.getItem(storageKey) || "[]");
+                blanks.forEach((b, i) => {
+                    const inp = b.querySelector(".fill");
+                    if (d[i]) {
+                        inp.value = d[i];
+                        if (match(d[i], inp)) {
+                            b.classList.add("solved");
+                            applyWidth(inp, true);
+                        } else {
+                            inp.classList.add("wrong-pick");
+                        }
+                    }
+                });
+            } catch { localStorage.removeItem(storageKey); }
+        }
+
         blanks.forEach(blank => {
-            const inp = blank.querySelector(".fill"), opts = Array.from(blank.querySelectorAll(".opt"));
-            inp.addEventListener("input", () => { const was = blank.classList.contains("solved"); inp.classList.remove("wrong-pick"); opts.forEach(o => o.classList.remove("wrong-pick")); const ok = inp.value !== "" && match(inp.value, inp.dataset.answer); if (ok && !was) { blank.classList.add("solved"); flashCorrect(inp); } else if (!ok && was) { blank.classList.remove("solved"); } save(); });
-            inp.addEventListener("blur", () => { const v = inp.value.trim(); if (v && !match(v, inp.dataset.answer)) flashWrong(inp); });
-            opts.forEach(opt => opt.addEventListener("click", () => { inp.value = opt.dataset.value; opts.forEach(o => o.classList.remove("wrong-pick")); inp.classList.remove("wrong-pick"); void inp.offsetWidth; if (match(opt.dataset.value, inp.dataset.answer)) { blank.classList.add("solved"); flashCorrect(inp); } else { blank.classList.remove("solved"); opt.classList.add("wrong-pick"); inp.classList.add("wrong-pick"); } save(); }));
+            const inp = blank.querySelector(".fill");
+            inp.addEventListener("input", () => {
+                const was = blank.classList.contains("solved");
+                inp.classList.remove("wrong-pick");
+                const ok = inp.value !== "" && match(inp.value, inp);
+                if (ok && !was) {
+                    blank.classList.add("solved");
+                    applyWidth(inp, true);
+                    flashCorrect(inp);
+                } else if (ok && was) {
+                    applyWidth(inp, true);
+                } else if (!ok && was) {
+                    blank.classList.remove("solved");
+                    applyWidth(inp, false);
+                }
+                save();
+            });
+            inp.addEventListener("blur", () => {
+                const v = inp.value.trim();
+                if (v && !match(v, inp)) flashWrong(inp);
+            });
         });
         restore();
-        document.getElementById("toggleHints").addEventListener("click", e => { sheet.classList.toggle("hints-hidden"); e.currentTarget.textContent = sheet.classList.contains("hints-hidden") ? "Show hints" : "Hide hints"; });
-        document.getElementById("clearAnswers").addEventListener("click", () => { blanks.forEach(b => { const i = b.querySelector(".fill"); i.value = ""; i.classList.remove("wrong-pick", "correct-flash"); b.classList.remove("solved"); b.querySelectorAll(".opt.wrong-pick").forEach(o => o.classList.remove("wrong-pick")); }); save(); });
+
+        document.getElementById("toggleHints").addEventListener("click", e => {
+            sheet.classList.toggle("hints-hidden");
+            e.currentTarget.textContent = sheet.classList.contains("hints-hidden") ? "Show hints" : "Hide hints";
+        });
+        document.getElementById("clearAnswers").addEventListener("click", () => {
+            blanks.forEach(b => {
+                const i = b.querySelector(".fill");
+                i.value = "";
+                i.classList.remove("wrong-pick", "correct-flash");
+                b.classList.remove("solved");
+                applyWidth(i, false);
+            });
+            save();
+        });
+
+        const zoomLevels = [0.1, 0.25, 0.5, 0.75, 0.85, 1.0, 1.15, 1.3, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
+        const zoomKey = "least-squares-rse-cheatsheet-zoom-v1";
+        const defaultZoomIdx = zoomLevels.indexOf(1.0);
+        let zoomIdx = parseInt(localStorage.getItem(zoomKey) || String(defaultZoomIdx), 10);
+        if (isNaN(zoomIdx) || zoomIdx < 0 || zoomIdx >= zoomLevels.length) zoomIdx = defaultZoomIdx;
+        const zoomLabel = document.getElementById("zoomLabel");
+        function applyZoom() {
+            const z = zoomLevels[zoomIdx];
+            sheet.style.transform = z === 1 ? "" : `scale(${z})`;
+            pageWrap.style.minHeight = z === 1 ? "" : `${297 * z + 20}mm`;
+            zoomLabel.textContent = Math.round(z * 100) + "%";
+            localStorage.setItem(zoomKey, String(zoomIdx));
+        }
+        document.getElementById("zoomOut").addEventListener("click", () => {
+            if (zoomIdx > 0) { zoomIdx--; applyZoom(); }
+        });
+        document.getElementById("zoomIn").addEventListener("click", () => {
+            if (zoomIdx < zoomLevels.length - 1) { zoomIdx++; applyZoom(); }
+        });
+        applyZoom();
     </script>
 </body>
 </html>

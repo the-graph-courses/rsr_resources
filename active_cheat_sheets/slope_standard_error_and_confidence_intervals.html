@@ -8,22 +8,22 @@
         :root {
             --teal: #0d7377;
             --teal-dark: #0a5d61;
+            --teal-soft: #eff7f7;
             --gold: #f0c808;
+            --gold-soft: #fff9df;
             --rose: #b83b5e;
+            --rose-soft: #fdeef1;
             --green: #2c8a4a;
             --ink: #182326;
             --muted: #5d6d72;
-            --paper: #f4f6f8;
             --border: #e1e5e8;
-            --soft: #eef6f6;
-            --cream: #fff9df;
+            --white: #ffffff;
             --se-blue: #2f5f98;
             --se-blue-dark: #224674;
             --se-blue-soft: #eef3f9;
             --ci-blue: #1f8aa8;
             --ci-blue-dark: #146f88;
             --ci-blue-soft: #eaf4f7;
-            --white: #ffffff;
         }
         * { box-sizing: border-box; }
         body {
@@ -32,7 +32,7 @@
             color: var(--ink);
             font-family: Arial, Helvetica, sans-serif;
             font-size: 8.55pt;
-            line-height: 1.22;
+            line-height: 1.3;
         }
         .toolbar {
             width: 210mm;
@@ -55,6 +55,7 @@
             padding: 7px 11px;
             font: inherit;
             font-weight: 700;
+            line-height: 1.2;
             cursor: pointer;
         }
         button.primary { background: var(--teal); color: white; border-color: var(--teal); }
@@ -101,8 +102,14 @@
             box-shadow: 0 8px 30px rgba(24, 35, 38, 0.18);
             display: flex;
             flex-direction: column;
-            gap: 0.9mm;
+            gap: 1.1mm;
             transform-origin: top center;
+        }
+        .page > header,
+        .page > .box,
+        .page > .row,
+        .page > footer {
+            flex-shrink: 0;
         }
         header { border-bottom: 1.2mm solid var(--gold); padding-bottom: 0.7mm; }
         h1 {
@@ -116,7 +123,7 @@
         .box {
             border: 1px solid var(--border);
             border-radius: 6px;
-            overflow: hidden;
+            overflow: visible;
             background: white;
             display: flex;
             flex-direction: column;
@@ -129,7 +136,9 @@
             font-weight: 900;
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            padding: 0.85mm 2.5mm;
+            padding: 0.85mm 2.5mm 0.6mm;
+            line-height: 1.2;
+            border-radius: 5px 5px 0 0;
         }
         .box-body {
             padding: 1.4mm 2.4mm 1.4mm;
@@ -137,17 +146,26 @@
             display: flex;
             flex-direction: column;
             gap: 0.85mm;
+            background: var(--teal-soft);
+            min-width: 0;
+            overflow: visible;
+            border-radius: 0 0 5px 5px;
         }
         .box-body p { margin: 0; }
+        .box-body p,
+        .vocab-grid span,
+        .visual-caption {
+            overflow-wrap: break-word;
+        }
         .box-body .tight { line-height: 1.18; }
         .box.tag-gold .box-tag { background: var(--gold); color: var(--ink); }
+        .box.tag-gold .box-body { background: var(--gold-soft); }
         .box.tag-rose .box-tag { background: var(--rose); color: #fff; }
+        .box.tag-rose .box-body { background: var(--rose-soft); }
         .box.tag-se .box-tag { background: var(--se-blue); color: #fff; }
+        .box.tag-se .box-body { background: var(--se-blue-soft); }
         .box.tag-ci .box-tag { background: var(--ci-blue); color: #fff; }
-        .box.body-cream .box-body { background: var(--cream); }
-        .box.body-soft .box-body { background: linear-gradient(#fff, #fbfdfd); }
-        .box.body-se-soft .box-body { background: var(--se-blue-soft); }
-        .box.body-ci-soft .box-body { background: var(--ci-blue-soft); }
+        .box.tag-ci .box-body { background: var(--ci-blue-soft); }
         .row {
             display: grid;
             gap: 2mm;
@@ -211,7 +229,7 @@
         }
         .eq-grid { display: grid; grid-template-columns: auto 1fr; gap: 3mm; align-items: center; }
         .stack { display: grid; gap: 0.7mm; }
-        .note { color: var(--muted); font-size: 8pt; line-height: 1.18; }
+        .note { color: var(--muted); font-size: 8pt; line-height: 1.25; }
         .se-blue { color: var(--se-blue); }
         .ci-blue { color: var(--ci-blue); }
         .rose { color: var(--rose); }
@@ -255,72 +273,60 @@
         .worked {
             font-family: Consolas, Menlo, monospace;
             font-size: 8.5pt;
-            background: #fbfdfd;
+            background: rgba(255, 255, 255, 0.65);
             border: 1px dashed #cfdcde;
             border-radius: 5px;
-            padding: 1mm 2.1mm;
-            line-height: 2.0;
+            padding: 1mm 2.1mm 1.4mm;
+            line-height: 2.2;
         }
         .hints-hidden .worked { line-height: 1.55; }
+
+        /* Type-only blanks */
         .b {
             display: inline-flex;
             flex-direction: column;
             align-items: center;
             vertical-align: baseline;
+            line-height: 1;
+            margin: 0 0.2mm;
             text-align: center;
+            max-width: 100%;
+            min-width: 0;
         }
         .fill {
             border: 0;
-            border-bottom: 1.55px solid var(--teal);
+            border-bottom: 1.5px solid var(--teal);
             border-radius: 0;
-            padding: 0 0.8mm 0.25mm;
+            padding: 0 0.4mm 0.5px;
             color: var(--ink);
             background: transparent;
-            font: inherit;
-            font-weight: 900;
+            font-family: inherit;
+            font-size: inherit;
+            font-weight: 800;
+            line-height: 1;
             text-align: center;
-            min-width: 5.5mm;
+            min-width: 2mm;
+            max-width: 100%;
+            transition: width 0.18s ease-out;
         }
         .fill.code { font-family: Consolas, Menlo, monospace; }
         .fill.align-left { text-align: left; }
         .fill:focus { outline: none; border-bottom-color: var(--teal-dark); border-bottom-width: 2px; }
-        .opts {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.8mm;
-            margin-top: 0.4mm;
-            line-height: 1.05;
-            white-space: nowrap;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .opt {
-            background: var(--soft);
-            border: 1px solid #c2d6d8;
-            color: var(--ink);
+        .hint {
+            font-size: 4.8pt;
+            color: #98a3a7;
+            font-weight: 700;
             font-family: inherit;
-            font-size: 6.2pt;
-            font-weight: 800;
-            padding: 0.2mm 1.55mm 0.35mm;
-            border-radius: 999px;
-            cursor: pointer;
-            transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.08s;
+            line-height: 1.05;
+            margin-top: 0.35mm;
+            letter-spacing: 0.02em;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            max-width: 34mm;
+            text-align: center;
         }
-        .opt:hover {
-            background: var(--cream);
-            border-color: var(--gold);
-            transform: translateY(-0.4px);
-        }
-        .opt:active { transform: translateY(0.2px); }
-        .opt.wrong-pick {
-            color: var(--rose);
-            background: #ffe6ec;
-            border-color: var(--rose);
-            text-decoration: line-through;
-            animation: shake 0.45s;
-        }
-        .b.solved .opts { display: none; }
-        .hints-hidden .opts { display: none; }
+        .b.solved .hint { display: none; }
+        .hints-hidden .hint { display: none; }
         .fill.wrong-pick {
             border-bottom-color: var(--rose) !important;
             color: var(--rose);
@@ -352,10 +358,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.35mm;
+            gap: 0.9mm;
             min-width: 0;
             text-align: center;
         }
+        .hints-hidden .factor-card { gap: 0.35mm; }
         .factor-icon {
             width: 18px;
             height: 18px;
@@ -380,32 +387,6 @@
             color: var(--muted);
             font-weight: 700;
             line-height: 1.15;
-        }
-        .star-hl {
-            background: var(--se-blue-soft);
-            border: 1px solid #c2d2e3;
-            border-radius: 5px;
-            padding: 1mm 2.1mm;
-            display: flex;
-            align-items: center;
-            gap: 1.6mm;
-            color: var(--ink);
-            font-weight: 700;
-        }
-        .star-hl .star {
-            color: var(--gold);
-            font-size: 11pt;
-            line-height: 1;
-        }
-        .star-hl .star-content { display: flex; flex-direction: column; gap: 0.4mm; }
-        .star-hl code {
-            font-family: Consolas, Menlo, monospace;
-            background: #fff;
-            border: 1px solid #d4dde4;
-            border-radius: 3px;
-            padding: 0 3px;
-            font-size: 7.5pt;
-            color: var(--se-blue-dark);
         }
         .vocab-grid {
             display: grid;
@@ -452,7 +433,6 @@
         @page { size: A4; margin: 0; }
         @media print {
             body { background: white; }
-            .toolbar { display: none; }
             .page {
                 width: 210mm;
                 height: 297mm;
@@ -462,13 +442,15 @@
                 overflow: hidden;
                 transform: none !important;
             }
+            .toolbar { display: none; }
             button { display: none; }
-            .fill, .r-code, .worked, .box, .box-tag, .visual, .se-blue, .ci-blue, .rose, .teal, .gold, .factor-card, .factor-icon, .star-hl, .sig-mini .lbl {
+            .fill, .r-code, .worked, .box, .box-tag, .box-body, .visual, .se-blue, .ci-blue, .rose, .teal, .gold, .factor-card, .factor-icon, .sig-mini .lbl, .vocab-term {
                 print-color-adjust: exact;
                 -webkit-print-color-adjust: exact;
             }
-            .opts { display: none !important; }
+            .hint { display: none !important; }
             .worked { line-height: 1.55 !important; }
+            .fill { transition: none; }
             .fill.wrong-pick { color: var(--ink); border-bottom-color: var(--teal) !important; }
         }
         @media screen and (max-width:820px) {
@@ -486,7 +468,7 @@
     <div class="toolbar">
         <div class="toolbar-intro">
             <div class="title">GRAPH Courses cheat sheet</div>
-            <div class="descr">Type or select your answer from the options. When finished, click Print / Save on the right.</div>
+            <div class="descr">Type your answers into the blanks. Hint options appear in small grey text below each blank. When finished, click Print / Save on the right.</div>
         </div>
         <div class="toolbar-actions">
             <div class="zoom-group" role="group" aria-label="Zoom controls">
@@ -513,14 +495,14 @@
 
         <!-- ROW 1: SAMPLE SLOPE VS POPULATION SLOPE -->
         <div class="box">
-            <div class="box-tag">Sample slope vs. population slope</div>
+            <div class="box-tag"><span>Sample slope vs. population slope</span></div>
             <div class="box-body">
                 <div class="row split-62-38">
                     <div class="stack">
-                        <p>In simple linear regression, the sample slope <span class="b"><input class="fill code" data-answer="b1"><span class="opts"><button type="button" class="opt" data-value="b1">b₁</button><button type="button" class="opt" data-value="beta1">β₁</button></span></span> is our estimate of the unknown population slope <span class="b"><input class="fill code" data-answer="beta1"><span class="opts"><button type="button" class="opt" data-value="b1">b₁</button><button type="button" class="opt" data-value="beta1">β₁</button></span></span>.</p>
-                        <p>Because of sampling variability, different random samples would give <span class="b"><input class="fill" data-answer="different"><span class="opts"><button type="button" class="opt" data-value="identical">identical</button><button type="button" class="opt" data-value="different">different</button></span></span> fitted slopes. The standard error, SE(<span class="b"><input class="fill code" data-answer="b1"><span class="opts"><button type="button" class="opt" data-value="y">y</button><button type="button" class="opt" data-value="x">x</button><button type="button" class="opt" data-value="b1">b₁</button></span></span>), measures the typical <span class="b"><input class="fill" data-answer="spread"><span class="opts"><button type="button" class="opt" data-value="sign">sign</button><button type="button" class="opt" data-value="spread">spread</button><button type="button" class="opt" data-value="average">average</button></span></span> of those sample slopes.</p>
-                        <p>In real studies, we usually observe one <span class="b"><input class="fill" data-answer="sample"><span class="opts"><button type="button" class="opt" data-value="population">population</button><button type="button" class="opt" data-value="sample">sample</button></span></span>, not the whole <span class="b"><input class="fill" data-answer="population"><span class="opts"><button type="button" class="opt" data-value="sample">sample</button><button type="button" class="opt" data-value="population">population</button></span></span>. So SE(b₁) estimates how much b₁ would vary, using residual scatter, sample size, and x-spread.</p>
-                        <p>A confidence <span class="b"><input class="fill" data-answer="interval"><span class="opts"><button type="button" class="opt" data-value="interval">interval</button><button type="button" class="opt" data-value="point">point</button></span></span> combines the slope estimate, its SE, and a <span class="b"><input class="fill code" data-answer="t*"><span class="opts"><button type="button" class="opt" data-value="SSE">SSE</button><button type="button" class="opt" data-value="t*">t*</button><button type="button" class="opt" data-value="residual">residual</button></span></span> multiplier to give a plausible <span class="b"><input class="fill" data-answer="range"><span class="opts"><button type="button" class="opt" data-value="range">range</button><button type="button" class="opt" data-value="point">point</button></span></span> for the true slope.</p>
+                        <p>In simple linear regression, the <b>sample slope</b> <span class="b"><input class="fill code" data-answer="b1"><span class="hint">b₁ / β₁ / SE</span></span> is our estimate of the unknown <b>population slope</b> <span class="b"><input class="fill code" data-answer="beta1"><span class="hint">β₁ / b₁ / RSE</span></span>.</p>
+                        <p>Because of <b>sampling variability</b>, different random samples would give <span class="b"><input class="fill" data-answer="different"><span class="hint">different / identical / unrelated</span></span> fitted slopes. The <b>standard error</b>, SE(<span class="b"><input class="fill code" data-answer="b1"><span class="hint">b₁ / y / x</span></span>), measures the <b>typical</b> <span class="b"><input class="fill" data-answer="spread"><span class="hint">spread / sign / average</span></span> of those sample slopes.</p>
+                        <p>In real studies, we usually observe <b>one</b> <span class="b"><input class="fill" data-answer="sample"><span class="hint">sample / population / cohort</span></span>, not the <b>whole</b> <span class="b"><input class="fill" data-answer="population"><span class="hint">population / sample / cohort</span></span>. So SE(b₁) estimates how much b₁ would vary, using residual scatter, sample size, and x-spread.</p>
+                        <p>A <b>confidence</b> <span class="b"><input class="fill" data-answer="interval"><span class="hint">interval / point / set</span></span> combines the slope estimate, its SE, and a <span class="b"><input class="fill code" data-answer="t*"><span class="hint">t* / SSE / residual</span></span> multiplier to give a plausible <span class="b"><input class="fill" data-answer="range"><span class="hint">range / point / value</span></span> for the <b>true slope</b>.</p>
                     </div>
                     <div class="visual" aria-label="Different samples produce different fitted slopes">
                         <svg viewBox="0 0 220 118" role="img">
@@ -645,8 +627,8 @@
 
         <!-- ROW 2: STANDARD ERROR OF THE SLOPE -->
         <div class="box tag-se">
-            <div class="box-tag">Standard error of the slope</div>
-            <div class="box-body body-soft">
+            <div class="box-tag"><span>Standard error of the slope</span></div>
+            <div class="box-body">
                 <div class="formula-grid">
                     <div class="formula-panel">
                         <div style="text-align:center;">
@@ -659,32 +641,32 @@
                                     </span>
                                 </span>
                             </div>
-                            <div class="note" style="margin-top:0.6mm;">Here <b>s</b> is the residual <span class="b"><input class="fill" data-answer="standard"><span class="opts"><button type="button" class="opt" data-value="squared">squared</button><button type="button" class="opt" data-value="standard">standard</button></span></span> error (RSE), and &Sigma;(x<sub>i</sub> &minus; x&#772;)<sup>2</sup> (often called <span class="b"><input class="fill code" data-answer="Sxx"><span class="opts"><button type="button" class="opt" data-value="SSE">SSE</button><button type="button" class="opt" data-value="Sxx">Sxx</button><button type="button" class="opt" data-value="SST">SST</button></span></span>) measures the <span class="b"><input class="fill" data-answer="spread"><span class="opts"><button type="button" class="opt" data-value="mean">mean</button><button type="button" class="opt" data-value="spread">spread</button></span></span> of x values.</div>
+                            <div class="note" style="margin-top:0.8mm;">Here <b>s</b> is the residual <span class="b"><input class="fill" data-answer="standard"><span class="hint">standard / squared / mean</span></span> error (<b>RSE</b>), and &Sigma;(x<sub>i</sub> &minus; x&#772;)<sup>2</sup> (often called <span class="b"><input class="fill code" data-answer="Sxx"><span class="hint">Sxx / SSE / SST</span></span>) measures the <span class="b"><input class="fill" data-answer="spread"><span class="hint">spread / mean / count</span></span> of x values.</div>
                         </div>
                     </div>
                     <div class="stack" style="gap:0.85mm;">
-                        <p>A large SE means the slope estimate would <span class="b"><input class="fill" data-answer="vary"><span class="opts"><button type="button" class="opt" data-value="shrink">shrink</button><button type="button" class="opt" data-value="vary">vary</button></span></span> a lot from sample to sample; a small SE means the slope estimate would vary <span class="b"><input class="fill" data-answer="little"><span class="opts"><button type="button" class="opt" data-value="a lot">a lot</button><button type="button" class="opt" data-value="little">little</button></span></span> from sample to sample.</p>
-                        <p>SE(b₁) gets larger when residual scatter is high, sample size is small, or x values are tightly clustered.</p>
+                        <p>A <b>large SE</b> means the slope estimate would <span class="b"><input class="fill" data-answer="vary"><span class="hint">vary / shrink / stabilize</span></span> a lot from sample to sample; a <b>small SE</b> means the slope estimate would vary <span class="b"><input class="fill" data-answer="little"><span class="hint">little / a lot / never</span></span> from sample to sample.</p>
+                        <p>SE(b₁) gets <b>larger</b> when residual scatter is high, sample size is small, or x values are tightly clustered.</p>
                         <div class="factor-cards">
                             <div class="factor-card">
                                 <span class="factor-icon" aria-hidden="true">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="7" r="1.2"/><circle cx="14" cy="5" r="1.2"/><circle cx="18" cy="11" r="1.2"/><circle cx="9" cy="13" r="1.2"/><circle cx="17" cy="17" r="1.2"/><circle cx="7" cy="18" r="1.2"/><circle cx="13" cy="19" r="1.2"/></svg>
                                 </span>
-                                <div class="row-line"><span class="b"><input class="fill" data-answer="More"><span class="opts"><button type="button" class="opt" data-value="Less">Less</button><button type="button" class="opt" data-value="More">More</button></span></span>&nbsp;residual scatter</div>
+                                <div class="row-line"><span class="b"><input class="fill" data-answer="More"><span class="hint">More / Less / Equal</span></span>&nbsp;<b>residual scatter</b></div>
                                 <div class="effect">&rarr; larger SE</div>
                             </div>
                             <div class="factor-card">
                                 <span class="factor-icon" aria-hidden="true">
                                     <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2 20c0-3 3-5 6-5s6 2 6 5"/><path d="M10 20c0-3 3-5 6-5s6 2 6 5"/></svg>
                                 </span>
-                                <div class="row-line"><span class="b"><input class="fill" data-answer="Larger"><span class="opts"><button type="button" class="opt" data-value="Smaller">Smaller</button><button type="button" class="opt" data-value="Larger">Larger</button></span></span>&nbsp;sample size&nbsp;</div>
+                                <div class="row-line"><span class="b"><input class="fill" data-answer="Larger"><span class="hint">Larger / Smaller / Equal</span></span>&nbsp;<b>sample size</b>&nbsp;</div>
                                 <div class="effect">&rarr; smaller SE</div>
                             </div>
                             <div class="factor-card">
                                 <span class="factor-icon" aria-hidden="true">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><polyline points="7,8 3,12 7,16"/><polyline points="17,8 21,12 17,16"/></svg>
                                 </span>
-                                <div class="row-line"><span class="b"><input class="fill" data-answer="More"><span class="opts"><button type="button" class="opt" data-value="More">More</button><button type="button" class="opt" data-value="Less">Less</button></span></span>&nbsp;x-spread (Sxx)</div>
+                                <div class="row-line"><span class="b"><input class="fill" data-answer="More"><span class="hint">More / Less / Equal</span></span>&nbsp;<b>x-spread (Sxx)</b></div>
                                 <div class="effect">&rarr; smaller SE</div>
                             </div>
                         </div>
@@ -696,15 +678,15 @@
         <!-- ROW 3: BUILDING THE 95% CI + NUMBER LINE VIZ -->
         <div class="row split-44-56">
             <div class="box tag-ci">
-                <div class="box-tag">Building the 95% CI</div>
+                <div class="box-tag"><span>Building the 95% CI</span></div>
                 <div class="box-body">
-                    <p>A 95% CI for the slope is <span class="b"><input class="fill code" data-answer="b1"><span class="opts"><button type="button" class="opt" data-value="b1">b₁</button><button type="button" class="opt" data-value="beta1">β₁</button><button type="button" class="opt" data-value="SSE">SSE</button></span></span> &plusmn; <span class="b"><input class="fill code" data-answer="t*"><span class="opts"><button type="button" class="opt" data-value="t*">t*</button><button type="button" class="opt" data-value="z">z</button><button type="button" class="opt" data-value="x">x&#772;</button></span></span> &times; <span class="b"><input class="fill code" data-answer="SE(b1)"><span class="opts"><button type="button" class="opt" data-value="SE(b1)">SE(b₁)</button><button type="button" class="opt" data-value="R2">R²</button><button type="button" class="opt" data-value="s">s</button></span></span>.</p>
-                    <p>For small regression samples, t* comes from a t-distribution with df = n &minus; <span class="b"><input class="fill code" data-answer="2"><span class="opts"><button type="button" class="opt" data-value="1">1</button><button type="button" class="opt" data-value="2">2</button><button type="button" class="opt" data-value="n">n</button></span></span>. For large samples, t* &asymp; 1.96.</p>
-                    <p>In practice, R does all of this for you: <code style="font-family:Consolas,Menlo,monospace; background:#f4f6f8; padding:0 3px; border-radius:3px;"><span class="b"><input class="fill code" data-answer="summary"><span class="opts"><button type="button" class="opt" data-value="summary">summary</button><button type="button" class="opt" data-value="str">str</button><button type="button" class="opt" data-value="mean">mean</button></span></span>(model)</code> reports b₁ and SE(b₁), and <code style="font-family:Consolas,Menlo,monospace; background:#f4f6f8; padding:0 3px; border-radius:3px;"><span class="b"><input class="fill code" data-answer="confint"><span class="opts"><button type="button" class="opt" data-value="confint">confint</button><button type="button" class="opt" data-value="predict">predict</button><button type="button" class="opt" data-value="anova">anova</button></span></span>(model)</code> gives the CI directly.</p>
+                    <p>A <b>95% CI</b> for the slope is <span class="b"><input class="fill code" data-answer="b1"><span class="hint">b₁ / β₁ / SSE</span></span> &plusmn; <span class="b"><input class="fill code" data-answer="t*"><span class="hint">t* / z / x&#772;</span></span> &times; <span class="b"><input class="fill code" data-answer="SE(b1)"><span class="hint">SE(b₁) / R² / s</span></span>.</p>
+                    <p>For small regression samples, t* comes from a <b>t-distribution</b> with df = n &minus; <span class="b"><input class="fill code" data-answer="2"><span class="hint">2 / 1 / n</span></span>. For large samples, t* &asymp; <b>1.96</b>.</p>
+                    <p>In practice, R does all of this for you: <code style="font-family:Consolas,Menlo,monospace; background:rgba(255,255,255,0.7); padding:0 3px; border-radius:3px;"><span class="b"><input class="fill code" data-answer="summary"><span class="hint">summary / str / mean</span></span>(model)</code> reports <b>b₁</b> and <b>SE(b₁)</b>, and <code style="font-family:Consolas,Menlo,monospace; background:rgba(255,255,255,0.7); padding:0 3px; border-radius:3px;"><span class="b"><input class="fill code" data-answer="confint"><span class="hint">confint / predict / anova</span></span>(model)</code> gives the <b>CI</b> directly.</p>
                 </div>
             </div>
-            <div class="box body-ci-soft">
-                <div class="box-tag" style="background:var(--ci-blue); color:#fff;">From SE to confidence interval</div>
+            <div class="box tag-ci">
+                <div class="box-tag"><span>From SE to confidence interval</span></div>
                 <div class="box-body" style="gap:0.5mm;">
                     <div class="visual" style="border:none; background:transparent; padding:0;">
                         <svg viewBox="0 0 300 100" role="img" aria-label="Number line showing a 95% confidence interval for the slope">
@@ -744,8 +726,8 @@
                             <text x="150" y="87" text-anchor="middle" font-size="7" font-weight="800" fill="#5d6d72">slope</text>
                         </svg>
                     </div>
-                    <div class="worked" style="font-size:8pt; line-height:1.7;">Suppose t* = 2, b₁ = 5, and SE(b₁) = 1.5.<br>95% CI = 5 &plusmn; 2 &times; 1.5 = 5 &plusmn; <span class="b"><input class="fill code" data-answer="3"><span class="opts"><button type="button" class="opt" data-value="3">3</button><button type="button" class="opt" data-value="2">2</button><button type="button" class="opt" data-value="1.5">1.5</button></span></span> = (<span class="b"><input class="fill code" data-answer="2"><span class="opts"><button type="button" class="opt" data-value="2">2</button><button type="button" class="opt" data-value="3">3</button><button type="button" class="opt" data-value="1">1</button></span></span>, <span class="b"><input class="fill code" data-answer="8"><span class="opts"><button type="button" class="opt" data-value="8">8</button><button type="button" class="opt" data-value="7">7</button><button type="button" class="opt" data-value="9">9</button></span></span>).</div>
-                    <p>Interpretation: our best estimate of &beta;<sub>1</sub> is <span class="b"><input class="fill code" data-answer="5"><span class="opts"><button type="button" class="opt" data-value="5">5</button><button type="button" class="opt" data-value="2">2</button><button type="button" class="opt" data-value="8">8</button></span></span>, but allowing for <span class="b"><input class="fill" data-answer="sampling"><span class="opts"><button type="button" class="opt" data-value="sampling">sampling</button><button type="button" class="opt" data-value="measurement">measurement</button><button type="button" class="opt" data-value="prediction">prediction</button></span></span> error, β<sub>1</sub> could plausibly be anywhere from 2 to 8. Because (2, 8) lies entirely <span class="b"><input class="fill" data-answer="above"><span class="opts"><button type="button" class="opt" data-value="above">above</button><button type="button" class="opt" data-value="below">below</button><button type="button" class="opt" data-value="around">around</button></span></span> zero, we can rule out β<sub>1</sub> = 0.</p>
+                    <div class="worked">Suppose t* = 2, b₁ = 5, and SE(b₁) = 1.5.<br>95% CI = 5 &plusmn; 2 &times; 1.5 = 5 &plusmn; <span class="b"><input class="fill code" data-answer="3"><span class="hint">3 / 2 / 1.5</span></span> = (<span class="b"><input class="fill code" data-answer="2"><span class="hint">2 / 3 / 1</span></span>, <span class="b"><input class="fill code" data-answer="8"><span class="hint">8 / 7 / 9</span></span>).</div>
+                    <p>Interpretation: our <b>best estimate</b> of &beta;<sub>1</sub> is <span class="b"><input class="fill code" data-answer="5"><span class="hint">5 / 2 / 8</span></span>, but allowing for <span class="b"><input class="fill" data-answer="sampling"><span class="hint">sampling / measurement / prediction</span></span> error, β<sub>1</sub> could plausibly be anywhere from 2 to 8. Because <b>(2, 8) lies entirely</b> <span class="b"><input class="fill" data-answer="above"><span class="hint">above / below / around</span></span> zero, we can <b>rule out β<sub>1</sub> = 0</b>.</p>
                 </div>
             </div>
         </div>
@@ -753,11 +735,11 @@
         <!-- ROW 4: SIGNIFICANCE + R OUTPUT -->
         <div class="row split-46-54">
             <div class="box tag-rose">
-                <div class="box-tag">Significance and the zero-slope test</div>
+                <div class="box-tag"><span>Significance and the zero-slope test</span></div>
                 <div class="box-body">
-                    <p>If zero lies <span class="b"><input class="fill" data-answer="outside"><span class="opts"><button type="button" class="opt" data-value="inside">inside</button><button type="button" class="opt" data-value="outside">outside</button></span></span> the 95% CI, the slope is statistically significant.</p>
-                    <p>If zero lies <span class="b"><input class="fill" data-answer="inside"><span class="opts"><button type="button" class="opt" data-value="above">above</button><button type="button" class="opt" data-value="inside">inside</button><button type="button" class="opt" data-value="outside">outside</button></span></span> the CI, we cannot rule out the possibility of no linear relationship.</p>
-                    <p>An interval like (&minus;0.45, &minus;0.20) is <span class="b"><input class="fill" data-answer="significant"><span class="opts"><button type="button" class="opt" data-value="significant">significant</button><button type="button" class="opt" data-value="not significant">not significant</button></span></span> because the whole interval is below zero. An interval like (&minus;0.55, 0.10) is <span class="b"><input class="fill" data-answer="not significant"><span class="opts"><button type="button" class="opt" data-value="not significant">not significant</button><button type="button" class="opt" data-value="significant">significant</button></span></span> because it contains zero.</p>
+                    <p>If zero lies <span class="b"><input class="fill" data-answer="outside"><span class="hint">outside / inside / on the edge of</span></span> the 95% CI, the slope is <b>statistically significant</b>.</p>
+                    <p>If zero lies <span class="b"><input class="fill" data-answer="inside"><span class="hint">inside / above / outside</span></span> the CI, we <b>cannot rule out</b> the possibility of <b>no linear relationship</b>.</p>
+                    <p>An interval like (&minus;0.45, &minus;0.20) is <span class="b"><input class="fill" data-answer="significant"><span class="hint">significant / not significant / inconclusive</span></span> because the <b>whole interval is below zero</b>. An interval like (&minus;0.55, 0.10) is <span class="b"><input class="fill" data-answer="not significant" data-alt="insignificant"><span class="hint">not significant / significant / borderline</span></span> because it <b>contains zero</b>.</p>
                     <div class="sig-mini">
                         <div>
                             <div class="lbl ok">Significant: entirely below zero</div>
@@ -805,7 +787,7 @@
                 </div>
             </div>
             <div class="box">
-                <div class="box-tag">Reading R output</div>
+                <div class="box-tag"><span>Reading R output</span></div>
                 <div class="box-body">
                     <div class="r-code"><span class="cm">## summary(model)$coefficients</span>
               Estimate Std. Error t value Pr(&gt;|t|)
@@ -816,36 +798,36 @@ weeks         0.3863     0.1184    3.26    0.0172
                 2.5 %    97.5 %
 (Intercept) -20.7145   -0.8431
 weeks         0.0965    0.6761</div>
-                    <p>In the R output above, the estimated slope on <code style="font-family:Consolas,Menlo,monospace;">weeks</code> is <span class="b"><input class="fill code" data-answer="0.386" data-alt="0.3863"><span class="opts"><button type="button" class="opt" data-value="0.118">0.118</button><button type="button" class="opt" data-value="0.676">0.676</button><button type="button" class="opt" data-value="0.386">0.386</button></span></span>, with standard error <span class="b"><input class="fill code" data-answer="0.118" data-alt="0.1184"><span class="opts"><button type="button" class="opt" data-value="0.386">0.386</button><button type="button" class="opt" data-value="0.118">0.118</button></span></span>.</p>
-                    <p>The 95% CI runs from <span class="b"><input class="fill code" data-answer="0.097" data-alt="0.0965"><span class="opts"><button type="button" class="opt" data-value="0.675">0.675</button><button type="button" class="opt" data-value="0.097">0.097</button></span></span> to <span class="b"><input class="fill code" data-answer="0.676" data-alt="0.675|0.6761"><span class="opts"><button type="button" class="opt" data-value="0.097">0.097</button><button type="button" class="opt" data-value="0.676">0.676</button><button type="button" class="opt" data-value="0.118">0.118</button></span></span>. Because zero is <span class="b"><input class="fill" data-answer="outside"><span class="opts"><button type="button" class="opt" data-value="outside">outside</button><button type="button" class="opt" data-value="inside">inside</button></span></span> this interval, the slope is statistically significant.</p>
+                    <p>In the R output above, the <b>estimated slope</b> on <code style="font-family:Consolas,Menlo,monospace;">weeks</code> is <span class="b"><input class="fill code" data-answer="0.386" data-alt="0.3863"><span class="hint">0.386 / 0.118 / 0.676</span></span>, with <b>standard error</b> <span class="b"><input class="fill code" data-answer="0.118" data-alt="0.1184"><span class="hint">0.118 / 0.386 / 0.676</span></span>.</p>
+                    <p>The <b>95% CI</b> runs from <span class="b"><input class="fill code" data-answer="0.097" data-alt="0.0965"><span class="hint">0.097 / 0.676 / 0.118</span></span> to <span class="b"><input class="fill code" data-answer="0.676" data-alt="0.675|0.6761"><span class="hint">0.676 / 0.097 / 0.118</span></span>. Because zero is <span class="b"><input class="fill" data-answer="outside"><span class="hint">outside / inside / on the boundary of</span></span> this interval, the slope is <b>statistically significant</b>.</p>
                 </div>
             </div>
         </div>
 
         <!-- ROW 5: VOCAB -->
         <div class="box tag-gold">
-            <div class="box-tag">Vocabulary, notation, and distinctions</div>
+            <div class="box-tag"><span>Vocabulary, notation, and distinctions</span></div>
             <div class="box-body">
                 <div class="vocab-grid wide" style="margin-top:0.2mm;">
                     <span class="vocab-term teal">b<sub>1</sub></span>
-                    <span><span class="b"><input class="fill" data-answer="Sample"><span class="opts"><button type="button" class="opt" data-value="Population">Population</button><button type="button" class="opt" data-value="Sample">Sample</button></span></span> slope estimate (computed from data).</span>
+                    <span><span class="b"><input class="fill" data-answer="Sample"><span class="hint">Sample / Population / Random</span></span> slope <b>estimate</b> (computed from data).</span>
                     <span class="vocab-term teal">&beta;<sub>1</sub></span>
-                    <span>True <span class="b"><input class="fill" data-answer="population"><span class="opts"><button type="button" class="opt" data-value="sample">sample</button><button type="button" class="opt" data-value="population">population</button></span></span> slope; the fixed value we are trying to estimate.</span>
+                    <span>True <span class="b"><input class="fill" data-answer="population"><span class="hint">population / sample / linear</span></span> slope; the <b>fixed value we are trying to estimate</b>.</span>
 
                     <span class="vocab-term">s</span>
-                    <span>Residual <span class="b"><input class="fill" data-answer="standard"><span class="opts"><button type="button" class="opt" data-value="squared">squared</button><button type="button" class="opt" data-value="standard">standard</button></span></span> error; typical vertical scatter around the line.</span>
+                    <span>Residual <span class="b"><input class="fill" data-answer="standard"><span class="hint">standard / squared / mean</span></span> error; <b>typical vertical scatter</b> around the line.</span>
                     <span class="vocab-term">Sxx</span>
-                    <span>&Sigma;(x<sub>i</sub> &minus; x&#772;)<sup>2</sup>, a measure of the <span class="b"><input class="fill" data-answer="spread"><span class="opts"><button type="button" class="opt" data-value="spread">spread</button><button type="button" class="opt" data-value="mean">mean</button></span></span> of the x values.</span>
+                    <span>&Sigma;(x<sub>i</sub> &minus; x&#772;)<sup>2</sup>, a measure of the <span class="b"><input class="fill" data-answer="spread"><span class="hint">spread / mean / median</span></span> of the x values.</span>
 
                     <span class="vocab-term">n</span>
-                    <span>Sample <span class="b"><input class="fill" data-answer="size"><span class="opts"><button type="button" class="opt" data-value="mean">mean</button><button type="button" class="opt" data-value="size">size</button></span></span>; larger n usually makes SE(b<sub>1</sub>) smaller.</span>
+                    <span>Sample <span class="b"><input class="fill" data-answer="size"><span class="hint">size / mean / range</span></span>; <b>larger n usually makes SE(b<sub>1</sub>) smaller</b>.</span>
                     <span class="vocab-term se-blue">SE(b<sub>1</sub>)</span>
-                    <span>Standard error of the <span class="b"><input class="fill" data-answer="slope"><span class="opts"><button type="button" class="opt" data-value="slope">slope</button><button type="button" class="opt" data-value="intercept">intercept</button></span></span>; typical sample-to-sample spread in b<sub>1</sub>.</span>
+                    <span><b>Standard error</b> of the <span class="b"><input class="fill" data-answer="slope"><span class="hint">slope / intercept / residual</span></span>; typical sample-to-sample spread in b<sub>1</sub>.</span>
 
                     <span class="vocab-term se-blue">t*</span>
-                    <span><span class="b"><input class="fill" data-answer="Critical"><span class="opts"><button type="button" class="opt" data-value="Mean">Mean</button><button type="button" class="opt" data-value="Critical">Critical</button></span></span> value for the chosen confidence level.</span>
+                    <span><span class="b"><input class="fill" data-answer="Critical"><span class="hint">Critical / Mean / Median</span></span> value for the chosen <b>confidence level</b>.</span>
                     <span class="vocab-term ci-blue">CI</span>
-                    <span>Confidence interval for the slope: b<sub>1</sub> &plusmn; <span class="b"><input class="fill code" data-answer="t*"><span class="opts"><button type="button" class="opt" data-value="t*">t*</button><button type="button" class="opt" data-value="z">z</button></span></span> &times; SE(b<sub>1</sub>).</span>
+                    <span><b>Confidence interval</b> for the slope: b<sub>1</sub> &plusmn; <span class="b"><input class="fill code" data-answer="t*"><span class="hint">t* / z / F</span></span> &times; SE(b<sub>1</sub>).</span>
                 </div>
             </div>
         </div>
@@ -858,26 +840,53 @@ weeks         0.0965    0.6761</div>
         const sheet = document.getElementById("sheet"),
               pageWrap = document.getElementById("pageWrap"),
               blanks = Array.from(document.querySelectorAll(".b")),
-              storageKey = "se-and-ci-for-slope-cheatsheet-v3";
+              storageKey = "se-and-ci-for-slope-cheatsheet-v4";
 
-        // Randomize option order each load
-        blanks.forEach(blank => {
-            const opts = blank.querySelector(".opts");
-            if (!opts) return;
-            const buttons = Array.from(opts.querySelectorAll(".opt"));
-            for (let i = buttons.length - 1; i > 0; i--) {
+        // Randomize hint option order each load
+        blanks.forEach(b => {
+            const hint = b.querySelector(".hint");
+            if (!hint) return;
+            const opts = hint.textContent.split(/\s*\/\s*/).filter(s => s.length > 0);
+            if (opts.length < 2) return;
+            for (let i = opts.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [buttons[i], buttons[j]] = [buttons[j], buttons[i]];
+                [opts[i], opts[j]] = [opts[j], opts[i]];
             }
-            buttons.forEach(btn => opts.appendChild(btn));
+            hint.textContent = opts.join(" / ");
         });
 
-        // Size each input field based on its longest valid answer
+        // Canvas-based width measurement so the blank matches its longest possible answer
+        const measureCanvas = document.createElement("canvas");
+        const measureCtx = measureCanvas.getContext("2d");
+        function getFontShorthand(el) {
+            const s = getComputedStyle(el);
+            return `${s.fontStyle || "normal"} ${s.fontWeight || "400"} ${s.fontSize} ${s.fontFamily}`;
+        }
+        function measureTextWidth(text, inp) {
+            measureCtx.font = getFontShorthand(inp);
+            return measureCtx.measureText(text).width;
+        }
+        function getDefaultWidth(inp) {
+            const answers = [inp.dataset.answer || "", ...(inp.dataset.alt ? inp.dataset.alt.split("|") : [])];
+            let maxW = 0;
+            answers.forEach(ans => {
+                const w = measureTextWidth(ans, inp);
+                if (w > maxW) maxW = w;
+            });
+            return Math.max(maxW + 12, 22);
+        }
+        function getSolvedWidth(inp) {
+            const w = measureTextWidth(inp.value, inp);
+            return Math.max(w + 6, 12);
+        }
+        function applyWidth(inp, solved) {
+            const w = solved ? getSolvedWidth(inp) : getDefaultWidth(inp);
+            inp.style.width = `${w}px`;
+        }
+
         blanks.forEach(b => {
-            const i = b.querySelector(".fill");
-            const answers = [i.dataset.answer || "", ...(i.dataset.alt ? i.dataset.alt.split("|") : [])];
-            const longest = answers.reduce((m, v) => Math.max(m, v.length), 0);
-            i.style.width = `${Math.max(longest + 3, 5)}ch`;
+            const inp = b.querySelector(".fill");
+            applyWidth(inp, false);
         });
 
         const norm = s => String(s)
@@ -912,43 +921,39 @@ weeks         0.0965    0.6761</div>
                     const inp = b.querySelector(".fill");
                     if (d[i]) {
                         inp.value = d[i];
-                        if (match(d[i], inp)) b.classList.add("solved");
-                        else inp.classList.add("wrong-pick");
+                        if (match(d[i], inp)) {
+                            b.classList.add("solved");
+                            applyWidth(inp, true);
+                        } else {
+                            inp.classList.add("wrong-pick");
+                        }
                     }
                 });
             } catch { localStorage.removeItem(storageKey); }
         }
+
         blanks.forEach(blank => {
-            const inp = blank.querySelector(".fill"),
-                  opts = Array.from(blank.querySelectorAll(".opt"));
+            const inp = blank.querySelector(".fill");
             inp.addEventListener("input", () => {
                 const was = blank.classList.contains("solved");
                 inp.classList.remove("wrong-pick");
-                opts.forEach(o => o.classList.remove("wrong-pick"));
                 const ok = inp.value !== "" && match(inp.value, inp);
-                if (ok && !was) { blank.classList.add("solved"); flashCorrect(inp); }
-                else if (!ok && was) { blank.classList.remove("solved"); }
+                if (ok && !was) {
+                    blank.classList.add("solved");
+                    applyWidth(inp, true);
+                    flashCorrect(inp);
+                } else if (ok && was) {
+                    applyWidth(inp, true);
+                } else if (!ok && was) {
+                    blank.classList.remove("solved");
+                    applyWidth(inp, false);
+                }
                 save();
             });
             inp.addEventListener("blur", () => {
                 const v = inp.value.trim();
                 if (v && !match(v, inp)) flashWrong(inp);
             });
-            opts.forEach(opt => opt.addEventListener("click", () => {
-                inp.value = opt.textContent;
-                opts.forEach(o => o.classList.remove("wrong-pick"));
-                inp.classList.remove("wrong-pick");
-                void inp.offsetWidth;
-                if (match(opt.dataset.value, inp)) {
-                    blank.classList.add("solved");
-                    flashCorrect(inp);
-                } else {
-                    blank.classList.remove("solved");
-                    opt.classList.add("wrong-pick");
-                    inp.classList.add("wrong-pick");
-                }
-                save();
-            }));
         });
         restore();
 
@@ -962,22 +967,22 @@ weeks         0.0965    0.6761</div>
                 i.value = "";
                 i.classList.remove("wrong-pick", "correct-flash");
                 b.classList.remove("solved");
-                b.querySelectorAll(".opt.wrong-pick").forEach(o => o.classList.remove("wrong-pick"));
+                applyWidth(i, false);
             });
             save();
         });
 
         // Zoom controls
-        const zoomLevels = [0.75, 0.85, 1.0, 1.15, 1.3, 1.5];
-        const zoomKey = "se-and-ci-cheatsheet-zoom";
-        let zoomIdx = parseInt(localStorage.getItem(zoomKey) || "2", 10);
-        if (isNaN(zoomIdx) || zoomIdx < 0 || zoomIdx >= zoomLevels.length) zoomIdx = 2;
+        const zoomLevels = [0.1, 0.25, 0.5, 0.75, 0.85, 1.0, 1.15, 1.3, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
+        const zoomKey = "se-and-ci-cheatsheet-zoom-v2";
+        const defaultZoomIdx = zoomLevels.indexOf(1.0);
+        let zoomIdx = parseInt(localStorage.getItem(zoomKey) || String(defaultZoomIdx), 10);
+        if (isNaN(zoomIdx) || zoomIdx < 0 || zoomIdx >= zoomLevels.length) zoomIdx = defaultZoomIdx;
         const zoomLabel = document.getElementById("zoomLabel");
         function applyZoom() {
             const z = zoomLevels[zoomIdx];
             sheet.style.transform = z === 1 ? "" : `scale(${z})`;
-            // reserve enough vertical space so the (scaled) sheet doesn't overlap the page below
-            const baseH = 297; // mm
+            const baseH = 297;
             pageWrap.style.minHeight = z === 1 ? "" : `${baseH * z + 20}mm`;
             zoomLabel.textContent = Math.round(z * 100) + "%";
             localStorage.setItem(zoomKey, String(zoomIdx));
