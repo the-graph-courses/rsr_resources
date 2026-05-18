@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Public Health Stats Regression Inference Quiz</title>
+<style>
+  :root {
+    --dark-teal: #00565e;
+    --light-teal: #5fbfbf;
+    --yellow: #f5c542;
+    --yellow-light: #fdf3d7;
+    --white: #ffffff;
+    --bg: #f4f7f7;
+    --text: #1a2a2a;
+    --border: #d0dede;
+    --green: #27ae60;
+    --green-bg: #e8f8ef;
+    --red: #e04040;
+    --red-bg: #fdecea;
+    --code-bg: #102426;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; padding: 1.5rem 1rem; }
+  .quiz-container { max-width: 740px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 1.5rem; border-bottom: 3px solid var(--yellow); padding-bottom: 1.2rem; }
+  header h1 { color: var(--dark-teal); font-size: 1.35rem; font-weight: 700; }
+  header p { color: #5a7a7a; font-size: 0.9rem; margin-top: 0.25rem; }
+
+  .progress-bar { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 0.6rem; flex-wrap: wrap; }
+  .dot {
+    width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 0.82rem; font-weight: 700; color: #6a8a8a; background: var(--white); border: 2.5px solid var(--border);
+    cursor: pointer; transition: all 0.15s; user-select: none;
+  }
+  .dot.current { background: var(--light-teal); border-color: var(--light-teal); color: var(--white); box-shadow: 0 0 0 3px rgba(95,191,191,0.3); }
+  .dot.answered { border-color: var(--light-teal); color: var(--light-teal); position: relative; }
+  .dot.answered::after { content: ''; position: absolute; top: 2px; right: 2px; width: 8px; height: 8px; border-radius: 50%; background: var(--light-teal); }
+  .dot.correct { background: var(--green); border-color: var(--green); color: var(--white); }
+  .dot.correct::after { display: none; }
+  .dot.incorrect { background: var(--red); border-color: var(--red); color: var(--white); }
+  .dot.incorrect::after { display: none; }
+
+  .legend { display: flex; justify-content: center; gap: 1.1rem; margin-bottom: 1.2rem; font-size: 0.78rem; color: #6a8a8a; flex-wrap: wrap; }
+  .legend span { display: flex; align-items: center; gap: 0.3rem; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+  .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .q-counter { font-size: 0.85rem; font-weight: 600; color: var(--dark-teal); }
+  .btn-summary { background: var(--dark-teal); color: var(--white); border: none; padding: 0.5rem 1.1rem; border-radius: 20px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .btn-summary:hover { background: #003d43; }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin-bottom: 1.8rem; }
+
+  .question-card { display: none; }
+  .question-card.active { display: block; }
+  .q-text { font-size: 1.05rem; font-weight: 500; color: var(--text); margin-bottom: 1.3rem; line-height: 1.5; }
+
+  .options { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.2rem; }
+  .options label {
+    display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1rem;
+    border: 2px solid var(--border); border-radius: 8px; cursor: pointer;
+    font-size: 0.95rem; transition: border-color 0.15s, background 0.15s;
+    background: var(--white);
+  }
+  .options label:hover { border-color: var(--light-teal); background: #eaf6f6; }
+  .options input[type="radio"] { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; border: 2px solid #b0c8c8; border-radius: 50%; flex-shrink: 0; transition: all 0.12s; position: relative; }
+  .options input[type="radio"]:checked { border-color: var(--dark-teal); background: var(--dark-teal); }
+  .options input[type="radio"]:checked::after { content: ''; position: absolute; top: 4px; left: 4px; width: 8px; height: 8px; background: var(--white); border-radius: 50%; }
+
+  .options label.correct { border-color: var(--green); background: var(--green-bg); }
+  .options label.correct input[type="radio"] { border-color: var(--green); background: var(--green); }
+  .options label.incorrect { border-color: var(--red); background: var(--red-bg); }
+  .options label.incorrect input[type="radio"] { border-color: var(--red); background: var(--red); }
+  .options label.reveal { border-color: var(--green); background: var(--green-bg); }
+  .options label.reveal input[type="radio"] { border-color: var(--green); background: var(--green); }
+  .options label.disabled { pointer-events: none; opacity: 0.55; }
+  .options label.correct.disabled, .options label.incorrect.disabled, .options label.reveal.disabled { opacity: 1; }
+
+  pre {
+    background: var(--code-bg);
+    color: #f8ffff;
+    border-radius: 9px;
+    padding: 0.9rem 1rem;
+    margin: -0.2rem 0 1.1rem;
+    overflow-x: auto;
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  .diagram {
+    background: var(--white);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 0.65rem;
+    margin: -0.3rem 0 1.1rem;
+    overflow-x: auto;
+  }
+  svg text { font-family: 'Segoe UI', system-ui, sans-serif; fill: var(--text); }
+
+  .dropdown-match { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.2rem; }
+  .match-row {
+    display: grid;
+    grid-template-columns: 1fr 220px;
+    gap: 0.8rem;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    background: var(--white);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+  }
+  .match-row.correct { border-color: var(--green); background: var(--green-bg); }
+  .match-row.incorrect { border-color: var(--red); background: var(--red-bg); }
+  .match-prompt { font-size: 0.94rem; }
+  .match-select {
+    width: 100%;
+    padding: 0.55rem 0.65rem;
+    border: 2px solid #b0c8c8;
+    border-radius: 8px;
+    background: var(--white);
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+  .match-select:disabled { opacity: 0.75; }
+
+  .feedback { display: none; margin-bottom: 1.2rem; border-radius: 8px; overflow: hidden; }
+  .feedback.show { display: block; }
+  .feedback-banner { padding: 0.6rem 1rem; font-weight: 700; font-size: 0.92rem; display: flex; align-items: center; gap: 0.5rem; }
+  .feedback-banner.is-correct { background: var(--green); color: var(--white); }
+  .feedback-banner.is-incorrect { background: var(--red); color: var(--white); }
+  .feedback-explanation { padding: 0.85rem 1rem; font-size: 0.9rem; line-height: 1.5; }
+  .feedback.is-correct .feedback-explanation { background: var(--green-bg); color: #1a3a24; }
+  .feedback.is-incorrect .feedback-explanation { background: var(--red-bg); color: #3a1a1a; }
+
+  .btn-row { display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; }
+  .btn {
+    border: none; padding: 0.6rem 1.4rem; border-radius: 20px; font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; transition: background 0.15s; display: inline-flex; align-items: center; gap: 0.4rem;
+  }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .btn-nav { background: var(--light-teal); color: var(--white); }
+  .btn-nav:hover:not(:disabled) { background: #4aadad; }
+  .btn-check { background: var(--dark-teal); color: var(--white); }
+  .btn-check:hover:not(:disabled) { background: #003d43; }
+  .btn-submit { background: var(--yellow); color: var(--dark-teal); font-weight: 700; font-size: 0.95rem; padding: 0.75rem 2rem; }
+  .btn-submit:hover { background: #e8b530; }
+
+  .submit-bar { display: none; text-align: center; margin-top: 1.5rem; padding: 1.2rem; background: var(--yellow-light); border: 2px solid var(--yellow); border-radius: 10px; }
+  .submit-bar.show { display: block; }
+  .submit-bar p { font-size: 0.9rem; color: var(--dark-teal); margin-bottom: 0.8rem; font-weight: 500; }
+
+  .summary-overlay { display: none; position: fixed; inset: 0; background: rgba(0,40,44,0.45); z-index: 100; justify-content: center; align-items: center; }
+  .summary-overlay.show { display: flex; }
+  .summary-box { background: var(--white); border-radius: 14px; padding: 2rem 2rem 1.6rem; max-width: 440px; width: 90%; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,0.18); }
+  .summary-box h2 { color: var(--dark-teal); margin-bottom: 0.3rem; font-size: 1.25rem; }
+  .summary-emoji { font-size: 2.8rem; margin: 0.5rem 0; }
+  .summary-box .score-text { font-size: 2.2rem; font-weight: 800; color: var(--dark-teal); margin: 0.3rem 0; }
+  .summary-box .score-sub { font-size: 0.95rem; color: #4a6a6a; margin-bottom: 1.2rem; line-height: 1.45; }
+  .summary-box .btn { margin: 0.3rem; }
+  .btn-close-sum { background: var(--light-teal); color: var(--white); }
+  .btn-reset { background: var(--dark-teal); color: var(--white); }
+
+  .completion-code { margin-top: 1rem; padding: 1rem; background: var(--yellow-light); border: 2px dashed var(--yellow); border-radius: 10px; }
+  .completion-code p { font-size: 0.85rem; color: var(--dark-teal); margin-bottom: 0.4rem; }
+  .completion-code .code { font-size: 1.6rem; font-weight: 800; color: var(--dark-teal); letter-spacing: 0.1em; font-family: 'Courier New', monospace; user-select: all; }
+
+  @media (max-width: 620px) {
+    .match-row { grid-template-columns: 1fr; }
+    .top-row { align-items: flex-start; gap: 0.75rem; }
+  }
+</style>
+</head>
+<body>
+<div class="quiz-container">
+
+<header>
+  <h1>Public Health Stats Regression Inference Quiz</h1>
+  <p>thegraphcourses.org</p>
+</header>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="legend">
+  <span><span class="legend-dot" style="background:var(--light-teal);"></span> Current</span>
+  <span><span class="legend-dot" style="background:var(--white); border: 2px solid var(--light-teal);"></span> Answered</span>
+  <span><span class="legend-dot" style="background:var(--green);"></span> Correct</span>
+  <span><span class="legend-dot" style="background:var(--red);"></span> Incorrect</span>
+</div>
+
+<div class="top-row">
+  <span class="q-counter" id="qCounter">Question 1 of 15</span>
+  <button class="btn-summary" id="summaryBtn" type="button">Quiz Summary</button>
+</div>
+
+<hr class="divider">
+
+<!--
+  HOW TO EDIT QUESTIONS
+  Each question is a <div class="question-card">.
+
+  For regular MCQs:
+  • Change the question text inside <p class="q-text">.
+  • Change option text inside the <span> tags.
+  • Set the correct answer with data-answer="a", "b", or "c".
+  • Edit the explanation inside the feedback-explanation div.
+
+  For the dropdown question:
+  • Each select has a data-answer value.
+  • The selected option value must match data-answer to count as correct.
+
+  COMPLETION_CODE:
+  • Search for COMPLETION_CODE in the script to change the code.
+  • Search for PASS_THRESHOLD to change the required score.
+
+  The JS handles numbering, progress dots, navigation, and scoring automatically.
+-->
+
+<div class="question-card" data-answer="b">
+  <p class="q-text">The least squares line is the line that:</p>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>Has a slope as close to zero as possible</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>Minimises the sum of squared residuals</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>Uses only the observations with the smallest residuals</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">Least squares chooses the line that minimises the sum of squared residuals. Residuals are the vertical gaps between observed and predicted y values.</div>
+  </div>
+</div>
+
+<div class="question-card" data-answer="c">
+  <p class="q-text">What does the standard error of the slope estimate?</p>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>The spread of x values inside one sample</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>The average vertical distance from the fitted line</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>The variation in slope estimates across repeated samples</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">The SE of the slope estimates how much the slope would vary if we repeatedly sampled from the same population and refit the model.</div>
+  </div>
+</div>
+
+<div class="question-card" data-answer="b">
+  <p class="q-text">The 95% CI for the beers slope is 0.013 to 0.023. What does this imply?</p>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>The association is not significant because the intercept is not shown</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>The association is significant and positive at α = 0.05</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>The association is significant and negative at α = 0.05</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">A 95% CI that excludes zero gives a significant two-sided slope test at the 5% level. Because this interval is fully above zero, the association is positive.</div>
+  </div>
+</div>
+
+<div class="question-card" data-answer="a">
+  <p class="q-text">What model is this R code fitting?</p>
+  <pre>model &lt;- lm(weight_kg ~ weeks, data = preemie_data)</pre>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>It predicts weight_kg from weeks</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>It predicts weeks from weight_kg</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>It filters preemie_data to keep only weight_kg and weeks</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">The formula y ~ x means model y as a function of x. Here, weight_kg is the outcome and weeks is the predictor.</div>
+  </div>
+</div>
+
+<div class="question-card" data-answer="c">
+  <p class="q-text">What are these two R commands mainly asking for?</p>
+  <pre>summary(model)
+confint(model)</pre>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>The raw data and the missing values</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>The fitted plot and the residual plot</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>The regression output and confidence intervals</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">summary(model) gives the coefficient table with estimates, standard errors, t values, and p-values. confint(model) gives confidence intervals for the coefficients.</div>
+  </div>
+</div>
+
+<div class="question-card" data-answer="b">
+  <p class="q-text">In this output, what is the t value for exercise_hours?</p>
+  <pre>Coefficients:
+               Estimate   Std. Error   t value   Pr(&gt;|t|)
+(Intercept)      70.00       3.00       23.33     &lt;0.001
+exercise_hours    0.80       0.20          ?       0.001</pre>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>0.25</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>4.00</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>1.00</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">The t value is estimate divided by standard error: 0.80 / 0.20 = 4.00.</div>
+  </div>
+</div>
+
+<div class="question-card" data-answer="a">
+  <p class="q-text">A linear regression on 100 data points gives slope = 0.15 and SE = 0.20. Using t = slope / SE, is the slope likely significant at the 5% level?</p>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>No, because t is 0.75</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>Yes, because t is 1.33</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>Yes, because any positive slope is significant</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">With 100 data points, a rough rule is that |t| needs to be around 2 or larger for p &lt; 0.05. Here t = 0.15 / 0.20 = 0.75, so this would not be significant.</div>
+  </div>
+</div>
+
+<div class="question-card" data-answer="c">
+  <p class="q-text">Use the R output below. What is the predicted systolic blood pressure for a 50-year-old?</p>
+  <pre>Call:
+lm(formula = systolic_bp ~ age, data = clinic)
+
+Coefficients:
+            Estimate
+(Intercept)   82.00
+age            0.50</pre>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>82 mmHg</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>100 mmHg</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>107 mmHg</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">The fitted line is predicted systolic BP = 82 + 0.50 × age. At age 50, the prediction is 82 + 0.50 × 50 = 107 mmHg.</div>
+  </div>
+</div>
+
+<div class="question-card" data-answer="b">
+  <p class="q-text">Using the same model, how should we interpret the age slope?</p>
+  <pre>systolic_bp = 82.00 + 0.50 × age</pre>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>A 1 mmHg increase in BP predicts 0.50 extra years of age</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>Each extra year of age predicts 0.50 higher systolic BP on average</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>A person aged 0 has exactly 0.50 mmHg systolic BP</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">The slope is 0.50, so each additional year of age is associated with 0.50 higher predicted systolic BP on average.</div>
+  </div>
+</div>
+
+<div class="question-card" data-answer="c">
+  <p class="q-text">Researchers model gift aid in thousands of dollars from family income in thousands of dollars. What is the best conclusion from the income row?</p>
+  <pre>Coefficients:
+               Estimate   Std. Error   t value   Pr(&gt;|t|)
+(Intercept)      18.20       1.10       16.55     &lt;0.001
+income           -0.04       0.01       -4.00     0.0002</pre>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>Higher income is associated with higher gift aid</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>Income cannot be interpreted because the intercept is significant</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>Higher income is associated with lower gift aid</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">The estimate is negative and the p-value is far below 0.05, so there is strong evidence that higher income is associated with lower gift aid in this model.</div>
+  </div>
+</div>
+
+<div class="question-card" data-answer="a">
+  <p class="q-text">In this R output, what does the age estimate say?</p>
+  <pre>Coefficients:
+             Estimate   Std. Error   t value   Pr(&gt;|t|)
+(Intercept)   128.49       4.68       27.44     &lt;2e-16
+Age            -1.096      0.084     -13.03     &lt;2e-16</pre>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>Each extra year of age predicts about 1.1 lower RFFT points</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>Each extra RFFT point predicts about 1.1 lower years of age</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>The average RFFT score in the sample is -1.096</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">The estimate is negative, so the predicted RFFT score decreases as age increases. The slope is about -1.1 points per year.</div>
+  </div>
+</div>
+
+<div class="question-card" data-answer="c">
+  <p class="q-text">A study with n = 50,000 reports a slope of 0.002 with p &lt; 0.001. What is the best interpretation?</p>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>The effect must be large because p is below 0.001</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>The result proves that the slope is exactly 0.002 in every population</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>The data strongly suggest a nonzero slope, but the effect may be small</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">A small p-value is evidence against a zero slope, but it does not by itself say that the effect is large. Large samples can make tiny effects statistically significant.</div>
+  </div>
+</div>
+
+<div class="question-card" data-answer="b">
+  <p class="q-text">A study finds p = 0.03 for the slope relating weekly exercise to resting heart rate. Which interpretation is correct?</p>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>There is a 3% chance that the null hypothesis is true</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>If the true slope were zero, results this extreme would occur about 3% of the time</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>About 3% of future samples will have exactly the same slope</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">A p-value is computed under the null hypothesis. Here, p = 0.03 means results this extreme would be uncommon if the true slope were zero.</div>
+  </div>
+</div>
+
+<div class="question-card" data-answer="a">
+  <p class="q-text">Look at this 95% confidence interval for a slope. What conclusion matches it?</p>
+  <div class="diagram">
+    <svg width="700" height="105" viewBox="0 0 700 105" role="img" aria-label="Number line from -0.2 to 0.4 with confidence interval from -0.10 to 0.30 and estimate 0.10">
+      <line x1="80" y1="58" x2="620" y2="58" stroke="#1a2a2a" stroke-width="2" />
+      <line x1="80" y1="50" x2="80" y2="66" stroke="#1a2a2a" />
+      <text x="63" y="90" font-size="13">-0.20</text>
+      <line x1="170" y1="50" x2="170" y2="66" stroke="#1a2a2a" />
+      <text x="151" y="90" font-size="13">-0.10</text>
+      <line x1="260" y1="47" x2="260" y2="69" stroke="#1a2a2a" stroke-width="2" />
+      <text x="253" y="90" font-size="13">0</text>
+      <line x1="350" y1="50" x2="350" y2="66" stroke="#1a2a2a" />
+      <text x="333" y="90" font-size="13">0.10</text>
+      <line x1="530" y1="50" x2="530" y2="66" stroke="#1a2a2a" />
+      <text x="513" y="90" font-size="13">0.30</text>
+      <line x1="620" y1="50" x2="620" y2="66" stroke="#1a2a2a" />
+      <text x="603" y="90" font-size="13">0.40</text>
+      <line x1="170" y1="31" x2="530" y2="31" stroke="#00565e" stroke-width="6" stroke-linecap="round" />
+      <circle cx="350" cy="31" r="6" fill="#00565e" />
+      <text x="290" y="22" font-size="13">95% CI for slope</text>
+    </svg>
+  </div>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>Not significant at 5%, because the interval includes zero</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>Significant and negative, because the interval starts below zero</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>Significant and positive, because the estimate is above zero</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">The CI runs from -0.10 to 0.30, so it crosses zero. A 95% CI that includes zero is not significant at the 5% level.</div>
+  </div>
+</div>
+
+<div class="question-card" data-kind="dropdown">
+  <p class="q-text">Use the dropdowns to match each R output column name to its meaning.</p>
+  <pre>             Estimate   Std. Error   t value   Pr(&gt;|t|)
+Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
+  <div class="dropdown-match">
+    <div class="match-row">
+      <div class="match-prompt">Coefficient estimate, such as the slope</div>
+      <select class="match-select" data-answer="estimate">
+        <option value="">Choose one</option>
+        <option value="p">Pr(&gt;|t|)</option>
+        <option value="estimate">Estimate</option>
+        <option value="se">Std. Error</option>
+        <option value="t">t value</option>
+      </select>
+    </div>
+    <div class="match-row">
+      <div class="match-prompt">Uncertainty in the coefficient estimate</div>
+      <select class="match-select" data-answer="se">
+        <option value="">Choose one</option>
+        <option value="p">Pr(&gt;|t|)</option>
+        <option value="estimate">Estimate</option>
+        <option value="se">Std. Error</option>
+        <option value="t">t value</option>
+      </select>
+    </div>
+    <div class="match-row">
+      <div class="match-prompt">Estimate divided by standard error</div>
+      <select class="match-select" data-answer="t">
+        <option value="">Choose one</option>
+        <option value="p">Pr(&gt;|t|)</option>
+        <option value="estimate">Estimate</option>
+        <option value="se">Std. Error</option>
+        <option value="t">t value</option>
+      </select>
+    </div>
+    <div class="match-row">
+      <div class="match-prompt">p-value for the coefficient test</div>
+      <select class="match-select" data-answer="p">
+        <option value="">Choose one</option>
+        <option value="p">Pr(&gt;|t|)</option>
+        <option value="estimate">Estimate</option>
+        <option value="se">Std. Error</option>
+        <option value="t">t value</option>
+      </select>
+    </div>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">Estimate is the coefficient estimate, Std. Error is its uncertainty, t value is Estimate divided by Std. Error, and Pr(&gt;|t|) is the p-value for the coefficient test.</div>
+  </div>
+</div>
+
+<div class="submit-bar" id="submitBar">
+  <p>You've reached the end of the quiz!</p>
+  <button class="btn btn-submit" id="submitBtn" type="button">See My Results</button>
+</div>
+
+<div class="summary-overlay" id="summaryOverlay">
+  <div class="summary-box">
+    <h2>Quiz Complete!</h2>
+    <div class="summary-emoji" id="summaryEmoji"></div>
+    <div class="score-text" id="scoreText">-</div>
+    <div class="score-sub" id="scoreSub"></div>
+    <div class="completion-code" id="completionCode" style="display:none;">
+      <p>Enter this code in your LMS to mark the lesson complete:</p>
+      <div class="code" id="codeValue"></div>
+    </div>
+    <div style="margin-top:1rem;">
+      <button class="btn btn-close-sum" id="closeSum" type="button">Review Answers</button>
+      <button class="btn btn-reset" id="resetBtn" type="button">Try Again</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+(function () {
+  /* COMPLETION_CODE: change the code and threshold here. */
+  var COMPLETION_CODE = 'GENESIS';
+  var PASS_THRESHOLD = 0.8;
+
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.question-card'));
+  var total = cards.length;
+  var current = 0;
+  var state = [];
+
+  cards.forEach(function (card, i) {
+    state.push({ picked: null, checked: false, correct: false });
+
+    if (card.getAttribute('data-kind') === 'dropdown') {
+      card.querySelectorAll('select').forEach(function (select) {
+        select.addEventListener('change', function () {
+          state[i].picked = allDropdownsAnswered(card) ? 'dropdown-complete' : null;
+          updateDots();
+          if (i === current && !state[i].checked) checkBtn.disabled = !state[i].picked;
+        });
+      });
+      return;
+    }
+
+    card.querySelectorAll('input[type="radio"]').forEach(function (r) {
+      r.name = 'q' + i;
+      r.addEventListener('change', function () {
+        state[i].picked = r.value;
+        updateDots();
+        if (i === current && !state[i].checked) checkBtn.disabled = false;
+      });
+    });
+  });
+
+  var bar = document.getElementById('progressBar');
+  cards.forEach(function (_, i) {
+    var d = document.createElement('div');
+    d.className = 'dot';
+    d.textContent = i + 1;
+    d.addEventListener('click', function () { goTo(i); });
+    bar.appendChild(d);
+  });
+
+  var btnRow = document.createElement('div');
+  btnRow.className = 'btn-row';
+
+  var prevBtn = document.createElement('button');
+  prevBtn.className = 'btn btn-nav';
+  prevBtn.textContent = '← Previous';
+  prevBtn.type = 'button';
+
+  var nextBtn = document.createElement('button');
+  nextBtn.className = 'btn btn-nav';
+  nextBtn.textContent = 'Next Question →';
+  nextBtn.type = 'button';
+
+  var checkBtn = document.createElement('button');
+  checkBtn.className = 'btn btn-check';
+  checkBtn.textContent = 'Check 🔍';
+  checkBtn.type = 'button';
+
+  prevBtn.addEventListener('click', function () { goTo(current - 1); });
+  nextBtn.addEventListener('click', function () { goTo(current + 1); });
+  checkBtn.addEventListener('click', function () { checkAnswer(current); });
+
+  var qCounter = document.getElementById('qCounter');
+  var submitBar = document.getElementById('submitBar');
+
+  function allDropdownsAnswered(card) {
+    return Array.prototype.slice.call(card.querySelectorAll('select')).every(function (select) {
+      return select.value !== '';
+    });
+  }
+
+  function goTo(i) {
+    if (i < 0 || i >= total) return;
+    cards[current].classList.remove('active');
+    current = i;
+    cards[current].classList.add('active');
+    render();
+  }
+
+  function render() {
+    if (btnRow.parentNode) btnRow.parentNode.removeChild(btnRow);
+    btnRow.innerHTML = '';
+    qCounter.textContent = 'Question ' + (current + 1) + ' of ' + total;
+
+    if (current > 0) btnRow.appendChild(prevBtn);
+    else btnRow.appendChild(document.createElement('div'));
+
+    var rightGroup = document.createElement('div');
+    rightGroup.style.cssText = 'display:flex; gap:0.5rem;';
+
+    if (!state[current].checked) {
+      checkBtn.disabled = !state[current].picked;
+      rightGroup.appendChild(checkBtn);
+    }
+
+    if (current < total - 1) {
+      rightGroup.appendChild(nextBtn);
+    }
+
+    btnRow.appendChild(rightGroup);
+    cards[current].appendChild(btnRow);
+
+    submitBar.classList.toggle('show', current === total - 1);
+    updateDots();
+  }
+
+  function checkAnswer(i) {
+    var card = cards[i];
+    if (card.getAttribute('data-kind') === 'dropdown') {
+      checkDropdownAnswer(i);
+      return;
+    }
+
+    var answer = card.getAttribute('data-answer');
+    var picked = state[i].picked;
+    if (!picked) return;
+
+    state[i].checked = true;
+    state[i].correct = (picked === answer);
+
+    card.querySelectorAll('label').forEach(function (label) {
+      var opt = label.getAttribute('data-option');
+      label.classList.add('disabled');
+      if (opt === answer) label.classList.add(picked === answer ? 'correct' : 'reveal');
+      else if (opt === picked) label.classList.add('incorrect');
+    });
+
+    showFeedback(card, state[i].correct);
+    render();
+  }
+
+  function checkDropdownAnswer(i) {
+    var card = cards[i];
+    var selects = Array.prototype.slice.call(card.querySelectorAll('select'));
+    if (!allDropdownsAnswered(card)) return;
+
+    var allCorrect = true;
+    selects.forEach(function (select) {
+      var row = select.closest('.match-row');
+      row.classList.remove('correct', 'incorrect');
+      if (select.value === select.getAttribute('data-answer')) {
+        row.classList.add('correct');
+      } else {
+        row.classList.add('incorrect');
+        allCorrect = false;
+      }
+      select.disabled = true;
+    });
+
+    state[i].checked = true;
+    state[i].correct = allCorrect;
+    showFeedback(card, allCorrect);
+    render();
+  }
+
+  function showFeedback(card, isRight) {
+    var fb = card.querySelector('.feedback');
+    var banner = card.querySelector('.feedback-banner');
+
+    fb.classList.remove('is-correct', 'is-incorrect');
+    banner.classList.remove('is-correct', 'is-incorrect');
+
+    fb.classList.add('show', isRight ? 'is-correct' : 'is-incorrect');
+    banner.classList.add(isRight ? 'is-correct' : 'is-incorrect');
+    banner.textContent = isRight ? '✅  Correct!' : '❌  Incorrect';
+  }
+
+  function updateDots() {
+    var dots = bar.querySelectorAll('.dot');
+    dots.forEach(function (d, i) {
+      d.className = 'dot';
+      if (i === current) d.classList.add('current');
+      else if (state[i].checked && state[i].correct) d.classList.add('correct');
+      else if (state[i].checked && !state[i].correct) d.classList.add('incorrect');
+      else if (state[i].picked) d.classList.add('answered');
+    });
+  }
+
+  var overlay = document.getElementById('summaryOverlay');
+  var completionCode = document.getElementById('completionCode');
+  var codeValue = document.getElementById('codeValue');
+
+  function showSummary() {
+    cards.forEach(function (card, i) {
+      if (!state[i].checked && state[i].picked) checkAnswer(i);
+    });
+
+    var done = state.filter(function (s) { return s.checked; }).length;
+    var right = state.filter(function (s) { return s.correct; }).length;
+    var pct = done > 0 ? right / total : 0;
+    var pctDisplay = Math.round(pct * 100);
+
+    document.getElementById('scoreText').textContent = done === 0 ? '-' : right + ' / ' + total;
+
+    var emoji, msg;
+    if (done === 0) {
+      emoji = '🤔';
+      msg = 'No questions answered yet. Give it a go!';
+    } else if (pct === 1) {
+      emoji = '🎉';
+      msg = 'Perfect score. You are ready to work with regression inference in R.';
+    } else if (pct >= 0.8) {
+      emoji = '🌟';
+      msg = 'Excellent. Review the few missed items and you will be in strong shape.';
+    } else if (pct >= 0.5) {
+      emoji = '💪';
+      msg = 'Good effort. Review the explanations, especially the R output and p-value items.';
+    } else {
+      emoji = '📚';
+      msg = 'Good start. Focus your review on slope interpretation, standard errors, confidence intervals, and R output columns.';
+    }
+
+    document.getElementById('summaryEmoji').textContent = emoji;
+    document.getElementById('scoreSub').textContent = msg;
+
+    if (pct >= PASS_THRESHOLD && done > 0) {
+      codeValue.textContent = COMPLETION_CODE;
+      completionCode.style.display = 'block';
+    } else {
+      completionCode.style.display = 'none';
+    }
+
+    overlay.classList.add('show');
+  }
+
+  document.getElementById('summaryBtn').addEventListener('click', showSummary);
+  document.getElementById('submitBtn').addEventListener('click', showSummary);
+  document.getElementById('closeSum').addEventListener('click', function () { overlay.classList.remove('show'); });
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.classList.remove('show'); });
+
+  document.getElementById('resetBtn').addEventListener('click', function () {
+    overlay.classList.remove('show');
+
+    cards.forEach(function (card, i) {
+      state[i] = { picked: null, checked: false, correct: false };
+      card.classList.remove('active');
+
+      card.querySelectorAll('label').forEach(function (label) {
+        label.className = '';
+      });
+
+      card.querySelectorAll('input[type="radio"]').forEach(function (r) {
+        r.checked = false;
+      });
+
+      card.querySelectorAll('select').forEach(function (select) {
+        select.value = '';
+        select.disabled = false;
+      });
+
+      card.querySelectorAll('.match-row').forEach(function (row) {
+        row.classList.remove('correct', 'incorrect');
+      });
+
+      var fb = card.querySelector('.feedback');
+      var banner = card.querySelector('.feedback-banner');
+      fb.className = 'feedback';
+      banner.className = 'feedback-banner';
+      banner.textContent = '';
+    });
+
+    current = 0;
+    cards[0].classList.add('active');
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  cards[0].classList.add('active');
+  render();
+})();
+</script>
+</body>
+</html>
