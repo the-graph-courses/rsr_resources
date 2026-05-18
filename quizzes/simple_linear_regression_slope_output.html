@@ -124,6 +124,11 @@
   }
   .match-select:disabled { opacity: 0.75; }
 
+  .subquestion { margin-bottom: 1.4rem; padding-bottom: 1.2rem; border-bottom: 1px dashed var(--border); }
+  .subquestion:last-of-type { margin-bottom: 1.2rem; padding-bottom: 0; border-bottom: none; }
+  .subquestion .sub-q { font-size: 0.98rem; font-weight: 600; color: var(--dark-teal); margin-bottom: 0.75rem; }
+  .subquestion .options { margin-bottom: 0; }
+
   .feedback { display: none; margin-bottom: 1.2rem; border-radius: 8px; overflow: hidden; }
   .feedback.show { display: block; }
   .feedback-banner { padding: 0.6rem 1rem; font-weight: 700; font-size: 0.92rem; display: flex; align-items: center; gap: 0.5rem; }
@@ -385,9 +390,9 @@ Age            -1.096      0.084     -13.03     &lt;2e-16</pre>
 <div class="question-card" data-answer="c">
   <p class="q-text">A study with n = 50,000 reports a slope of 0.002 with p &lt; 0.001. What is the best interpretation?</p>
   <div class="options">
-    <label data-option="a"><input type="radio" value="a"><span>The effect must be large because p is below 0.001</span></label>
-    <label data-option="b"><input type="radio" value="b"><span>The result proves that the slope is exactly 0.002 in every population</span></label>
-    <label data-option="c"><input type="radio" value="c"><span>The data strongly suggest a nonzero slope, but the effect may be small</span></label>
+    <label data-option="a"><input type="radio" value="a"><span>The association in the population must be large because the p-value is very small.</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>The slope is exactly 0.002 in the population, but may be smaller in the study sample.</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>There is strong evidence against a zero slope in the population, but the effect may be small.</span></label>
   </div>
   <div class="feedback">
     <div class="feedback-banner"></div>
@@ -395,16 +400,30 @@ Age            -1.096      0.084     -13.03     &lt;2e-16</pre>
   </div>
 </div>
 
-<div class="question-card" data-answer="b">
-  <p class="q-text">A study finds p = 0.03 for the slope relating weekly exercise to resting heart rate. Which interpretation is correct?</p>
-  <div class="options">
-    <label data-option="a"><input type="radio" value="a"><span>There is a 3% chance that the null hypothesis is true</span></label>
-    <label data-option="b"><input type="radio" value="b"><span>If the true slope were zero, results this extreme would occur about 3% of the time</span></label>
-    <label data-option="c"><input type="radio" value="c"><span>About 3% of future samples will have exactly the same slope</span></label>
+<div class="question-card" data-kind="multipart">
+  <p class="q-text">A study finds p = 0.03 for the slope relating weekly exercise to resting heart rate.</p>
+
+  <div class="subquestion" data-answer="a">
+    <p class="sub-q">Part 1: What is the null hypothesis being tested here?</p>
+    <div class="options">
+      <label data-option="a"><input type="radio" value="a"><span>The true slope is zero, so weekly exercise has no linear association with heart rate</span></label>
+      <label data-option="b"><input type="radio" value="b"><span>The true slope is non-zero, so weekly exercise is linearly associated with heart rate</span></label>
+      <label data-option="c"><input type="radio" value="c"><span>Mean resting heart rate equals mean weekly exercise across the whole population</span></label>
+    </div>
   </div>
+
+  <div class="subquestion" data-answer="b">
+    <p class="sub-q">Part 2: Which interpretation of p = 0.03 is correct?</p>
+    <div class="options">
+      <label data-option="a"><input type="radio" value="a"><span>The probability that the null hypothesis of no slope is true is about 3%</span></label>
+      <label data-option="b"><input type="radio" value="b"><span>The probability of results this extreme, if the true slope were zero, is about 3%</span></label>
+      <label data-option="c"><input type="radio" value="c"><span>The probability that future samples will produce this exact slope is about 3%</span></label>
+    </div>
+  </div>
+
   <div class="feedback">
     <div class="feedback-banner"></div>
-    <div class="feedback-explanation">A p-value is computed under the null hypothesis. Here, p = 0.03 means results this extreme would be uncommon if the true slope were zero.</div>
+    <div class="feedback-explanation">The null hypothesis for a slope test is that the true slope equals zero (no linear association). A p-value is computed assuming this null is true, so p = 0.03 means results this extreme would occur only about 3% of the time if the slope were truly zero. It is not the probability that the null itself is true.</div>
   </div>
 </div>
 
@@ -542,6 +561,20 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
       return;
     }
 
+    if (card.getAttribute('data-kind') === 'multipart') {
+      card.querySelectorAll('.subquestion').forEach(function (sub, si) {
+        sub.querySelectorAll('input[type="radio"]').forEach(function (r) {
+          r.name = 'q' + i + '_' + si;
+          r.addEventListener('change', function () {
+            state[i].picked = allSubsAnswered(card) ? 'multipart-complete' : null;
+            updateDots();
+            if (i === current && !state[i].checked) checkBtn.disabled = !state[i].picked;
+          });
+        });
+      });
+      return;
+    }
+
     card.querySelectorAll('input[type="radio"]').forEach(function (r) {
       r.name = 'q' + i;
       r.addEventListener('change', function () {
@@ -592,6 +625,12 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
     });
   }
 
+  function allSubsAnswered(card) {
+    return Array.prototype.slice.call(card.querySelectorAll('.subquestion')).every(function (sub) {
+      return sub.querySelector('input[type="radio"]:checked') !== null;
+    });
+  }
+
   function goTo(i) {
     if (i < 0 || i >= total) return;
     cards[current].classList.remove('active');
@@ -633,6 +672,10 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
       checkDropdownAnswer(i);
       return;
     }
+    if (card.getAttribute('data-kind') === 'multipart') {
+      checkMultipartAnswer(i);
+      return;
+    }
 
     var answer = card.getAttribute('data-answer');
     var picked = state[i].picked;
@@ -649,6 +692,29 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
     });
 
     showFeedback(card, state[i].correct);
+    render();
+  }
+
+  function checkMultipartAnswer(i) {
+    var card = cards[i];
+    if (!allSubsAnswered(card)) return;
+
+    var allCorrect = true;
+    card.querySelectorAll('.subquestion').forEach(function (sub) {
+      var answer = sub.getAttribute('data-answer');
+      var picked = sub.querySelector('input[type="radio"]:checked').value;
+      sub.querySelectorAll('label').forEach(function (label) {
+        var opt = label.getAttribute('data-option');
+        label.classList.add('disabled');
+        if (opt === answer) label.classList.add(picked === answer ? 'correct' : 'reveal');
+        else if (opt === picked) label.classList.add('incorrect');
+      });
+      if (picked !== answer) allCorrect = false;
+    });
+
+    state[i].checked = true;
+    state[i].correct = allCorrect;
+    showFeedback(card, allCorrect);
     render();
   }
 
