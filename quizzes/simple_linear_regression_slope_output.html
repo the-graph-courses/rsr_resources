@@ -128,6 +128,7 @@
   .subquestion:last-of-type { margin-bottom: 1.2rem; padding-bottom: 0; border-bottom: none; }
   .subquestion .sub-q { font-size: 0.98rem; font-weight: 600; color: var(--dark-teal); margin-bottom: 0.75rem; }
   .subquestion .options { margin-bottom: 0; }
+  .subquestion .feedback { margin-top: 0.8rem; margin-bottom: 0; }
 
   .feedback { display: none; margin-bottom: 1.2rem; border-radius: 8px; overflow: hidden; }
   .feedback.show { display: block; }
@@ -410,6 +411,10 @@ Age            -1.096      0.084     -13.03     &lt;2e-16</pre>
       <label data-option="b"><input type="radio" value="b"><span>The true slope is non-zero, so weekly exercise is linearly associated with heart rate</span></label>
       <label data-option="c"><input type="radio" value="c"><span>Mean resting heart rate equals mean weekly exercise across the whole population</span></label>
     </div>
+    <div class="feedback">
+      <div class="feedback-banner"></div>
+      <div class="feedback-explanation">The null hypothesis for a regression slope test is that the true slope equals zero — i.e. no linear association between predictor and outcome in the population.</div>
+    </div>
   </div>
 
   <div class="subquestion" data-answer="b">
@@ -419,11 +424,10 @@ Age            -1.096      0.084     -13.03     &lt;2e-16</pre>
       <label data-option="b"><input type="radio" value="b"><span>The probability of results this extreme, if the true slope were zero, is about 3%</span></label>
       <label data-option="c"><input type="radio" value="c"><span>The probability that future samples will produce this exact slope is about 3%</span></label>
     </div>
-  </div>
-
-  <div class="feedback">
-    <div class="feedback-banner"></div>
-    <div class="feedback-explanation">The null hypothesis for a slope test is that the true slope equals zero (no linear association). A p-value is computed assuming this null is true, so p = 0.03 means results this extreme would occur only about 3% of the time if the slope were truly zero. It is not the probability that the null itself is true.</div>
+    <div class="feedback">
+      <div class="feedback-banner"></div>
+      <div class="feedback-explanation">A p-value is computed assuming the null is true. So p = 0.03 means results this extreme would occur about 3% of the time if the slope were truly zero — not the probability that the null itself is true.</div>
+    </div>
   </div>
 </div>
 
@@ -554,6 +558,7 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
       card.querySelectorAll('select').forEach(function (select) {
         select.addEventListener('change', function () {
           state[i].picked = allDropdownsAnswered(card) ? 'dropdown-complete' : null;
+          saveState();
           updateDots();
           if (i === current && !state[i].checked) checkBtn.disabled = !state[i].picked;
         });
@@ -567,6 +572,7 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
           r.name = 'q' + i + '_' + si;
           r.addEventListener('change', function () {
             state[i].picked = allSubsAnswered(card) ? 'multipart-complete' : null;
+            saveState();
             updateDots();
             if (i === current && !state[i].checked) checkBtn.disabled = !state[i].picked;
           });
@@ -579,6 +585,7 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
       r.name = 'q' + i;
       r.addEventListener('change', function () {
         state[i].picked = r.value;
+        saveState();
         updateDots();
         if (i === current && !state[i].checked) checkBtn.disabled = false;
       });
@@ -631,12 +638,139 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
     });
   }
 
+  /* Persistence: progress is saved to localStorage under a key that includes a fingerprint
+     of question text + correct answers. Any edit to a question or its answer key changes the
+     fingerprint, so stale saves are automatically ignored. Hash input is text only — base64
+     images and inline SVG markup don't bloat it. */
+  function hashString(s) {
+    var h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (var i = 0; i < s.length; i++) {
+      var ch = s.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  }
+
+  function fingerprintQuiz() {
+    var parts = [];
+    cards.forEach(function (card) {
+      var kind = card.getAttribute('data-kind') || 'mcq';
+      parts.push(kind);
+      if (kind === 'multipart') {
+        card.querySelectorAll('.subquestion').forEach(function (sub) {
+          parts.push(sub.getAttribute('data-answer') || '');
+          var subQ = sub.querySelector('.sub-q');
+          parts.push(subQ ? subQ.textContent : '');
+          sub.querySelectorAll('label span').forEach(function (s) { parts.push(s.textContent); });
+        });
+      } else if (kind === 'dropdown') {
+        var qt = card.querySelector('.q-text');
+        parts.push(qt ? qt.textContent : '');
+        card.querySelectorAll('.match-row').forEach(function (row) {
+          var prompt = row.querySelector('.match-prompt');
+          parts.push(prompt ? prompt.textContent : '');
+          parts.push(row.querySelector('select').getAttribute('data-answer') || '');
+        });
+      } else {
+        parts.push(card.getAttribute('data-answer') || '');
+        var qt2 = card.querySelector('.q-text');
+        parts.push(qt2 ? qt2.textContent : '');
+        card.querySelectorAll('label span').forEach(function (s) { parts.push(s.textContent); });
+      }
+    });
+    return hashString(parts.join('|'));
+  }
+
+  var quizName = (location.pathname.split('/').pop() || 'quiz').replace(/\.html?$/i, '');
+  var quizKey = 'quiz-progress:' + quizName + ':' + fingerprintQuiz();
+
+  function saveState() {
+    try {
+      var payload = {
+        v: 1,
+        current: current,
+        cards: cards.map(function (card, i) {
+          var kind = card.getAttribute('data-kind') || 'mcq';
+          if (kind === 'multipart') {
+            var picks = Array.prototype.slice.call(card.querySelectorAll('.subquestion')).map(function (sub) {
+              var r = sub.querySelector('input[type="radio"]:checked');
+              return r ? r.value : null;
+            });
+            return { kind: kind, picks: picks, checked: state[i].checked };
+          }
+          if (kind === 'dropdown') {
+            var dpicks = Array.prototype.slice.call(card.querySelectorAll('select')).map(function (s) {
+              return s.value || null;
+            });
+            return { kind: kind, picks: dpicks, checked: state[i].checked };
+          }
+          return { kind: 'mcq', picked: state[i].picked, checked: state[i].checked };
+        })
+      };
+      localStorage.setItem(quizKey, JSON.stringify(payload));
+    } catch (e) { /* quota / private mode / disabled — silently skip */ }
+  }
+
+  function loadState() {
+    var data;
+    try {
+      var raw = localStorage.getItem(quizKey);
+      if (!raw) return;
+      data = JSON.parse(raw);
+    } catch (e) { return; }
+    if (!data || data.v !== 1 || !Array.isArray(data.cards) || data.cards.length !== cards.length) return;
+
+    data.cards.forEach(function (saved, i) {
+      var card = cards[i];
+      var kind = card.getAttribute('data-kind') || 'mcq';
+      if (kind !== saved.kind) return;
+
+      if (kind === 'multipart') {
+        var subs = card.querySelectorAll('.subquestion');
+        (saved.picks || []).forEach(function (pick, si) {
+          if (!pick || !subs[si]) return;
+          var r = subs[si].querySelector('input[value="' + pick + '"]');
+          if (r) r.checked = true;
+        });
+        if (allSubsAnswered(card)) state[i].picked = 'multipart-complete';
+        if (saved.checked && state[i].picked) checkMultipartAnswer(i);
+      } else if (kind === 'dropdown') {
+        var selects = card.querySelectorAll('select');
+        (saved.picks || []).forEach(function (pick, si) {
+          if (!pick || !selects[si]) return;
+          selects[si].value = pick;
+        });
+        if (allDropdownsAnswered(card)) state[i].picked = 'dropdown-complete';
+        if (saved.checked && state[i].picked) checkDropdownAnswer(i);
+      } else {
+        if (saved.picked) {
+          var rr = card.querySelector('input[value="' + saved.picked + '"]');
+          if (rr) rr.checked = true;
+          state[i].picked = saved.picked;
+        }
+        if (saved.checked && state[i].picked) checkAnswer(i);
+      }
+    });
+
+    if (typeof data.current === 'number' && data.current >= 0 && data.current < cards.length) {
+      current = data.current;
+    }
+  }
+
+  function clearState() {
+    try { localStorage.removeItem(quizKey); } catch (e) {}
+  }
+
   function goTo(i) {
     if (i < 0 || i >= total) return;
     cards[current].classList.remove('active');
     current = i;
     cards[current].classList.add('active');
     render();
+    saveState();
   }
 
   function render() {
@@ -692,6 +826,7 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
     });
 
     showFeedback(card, state[i].correct);
+    saveState();
     render();
   }
 
@@ -703,18 +838,20 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
     card.querySelectorAll('.subquestion').forEach(function (sub) {
       var answer = sub.getAttribute('data-answer');
       var picked = sub.querySelector('input[type="radio"]:checked').value;
+      var subCorrect = (picked === answer);
       sub.querySelectorAll('label').forEach(function (label) {
         var opt = label.getAttribute('data-option');
         label.classList.add('disabled');
-        if (opt === answer) label.classList.add(picked === answer ? 'correct' : 'reveal');
+        if (opt === answer) label.classList.add(subCorrect ? 'correct' : 'reveal');
         else if (opt === picked) label.classList.add('incorrect');
       });
-      if (picked !== answer) allCorrect = false;
+      showFeedback(sub, subCorrect);
+      if (!subCorrect) allCorrect = false;
     });
 
     state[i].checked = true;
     state[i].correct = allCorrect;
-    showFeedback(card, allCorrect);
+    saveState();
     render();
   }
 
@@ -739,6 +876,7 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
     state[i].checked = true;
     state[i].correct = allCorrect;
     showFeedback(card, allCorrect);
+    saveState();
     render();
   }
 
@@ -819,6 +957,7 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
 
   document.getElementById('resetBtn').addEventListener('click', function () {
     overlay.classList.remove('show');
+    clearState();
 
     cards.forEach(function (card, i) {
       state[i] = { picked: null, checked: false, correct: false };
@@ -841,11 +980,11 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
         row.classList.remove('correct', 'incorrect');
       });
 
-      var fb = card.querySelector('.feedback');
-      var banner = card.querySelector('.feedback-banner');
-      fb.className = 'feedback';
-      banner.className = 'feedback-banner';
-      banner.textContent = '';
+      card.querySelectorAll('.feedback').forEach(function (fb) { fb.className = 'feedback'; });
+      card.querySelectorAll('.feedback-banner').forEach(function (banner) {
+        banner.className = 'feedback-banner';
+        banner.textContent = '';
+      });
     });
 
     current = 0;
@@ -854,7 +993,8 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  cards[0].classList.add('active');
+  loadState();
+  cards[current].classList.add('active');
   render();
 })();
 </script>
