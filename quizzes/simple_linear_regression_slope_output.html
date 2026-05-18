@@ -434,20 +434,14 @@ Age            -1.096      0.084     -13.03     &lt;2e-16</pre>
 <div class="question-card" data-answer="a">
   <p class="q-text">Look at this 95% confidence interval for a slope. What conclusion matches it?</p>
   <div class="diagram">
-    <svg width="700" height="105" viewBox="0 0 700 105" role="img" aria-label="Number line from -0.2 to 0.4 with confidence interval from -0.10 to 0.30 and estimate 0.10">
+    <svg width="700" height="105" viewBox="0 0 700 105" role="img" aria-label="Number line marked at -0.2, 0, and 0.2 with a 95% confidence interval that crosses zero">
       <line x1="80" y1="58" x2="620" y2="58" stroke="#1a2a2a" stroke-width="2" />
       <line x1="80" y1="50" x2="80" y2="66" stroke="#1a2a2a" />
-      <text x="63" y="90" font-size="13">-0.20</text>
-      <line x1="170" y1="50" x2="170" y2="66" stroke="#1a2a2a" />
-      <text x="151" y="90" font-size="13">-0.10</text>
+      <text x="66" y="90" font-size="13">-0.2</text>
       <line x1="260" y1="47" x2="260" y2="69" stroke="#1a2a2a" stroke-width="2" />
       <text x="253" y="90" font-size="13">0</text>
-      <line x1="350" y1="50" x2="350" y2="66" stroke="#1a2a2a" />
-      <text x="333" y="90" font-size="13">0.10</text>
-      <line x1="530" y1="50" x2="530" y2="66" stroke="#1a2a2a" />
-      <text x="513" y="90" font-size="13">0.30</text>
-      <line x1="620" y1="50" x2="620" y2="66" stroke="#1a2a2a" />
-      <text x="603" y="90" font-size="13">0.40</text>
+      <line x1="440" y1="50" x2="440" y2="66" stroke="#1a2a2a" />
+      <text x="429" y="90" font-size="13">0.2</text>
       <line x1="170" y1="31" x2="530" y2="31" stroke="#00565e" stroke-width="6" stroke-linecap="round" />
       <circle cx="350" cy="31" r="6" fill="#00565e" />
       <text x="290" y="22" font-size="13">95% CI for slope</text>
@@ -470,26 +464,6 @@ Age            -1.096      0.084     -13.03     &lt;2e-16</pre>
 Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
   <div class="dropdown-match">
     <div class="match-row">
-      <div class="match-prompt">Coefficient estimate, such as the slope</div>
-      <select class="match-select" data-answer="estimate">
-        <option value="">Choose one</option>
-        <option value="p">Pr(&gt;|t|)</option>
-        <option value="estimate">Estimate</option>
-        <option value="se">Std. Error</option>
-        <option value="t">t value</option>
-      </select>
-    </div>
-    <div class="match-row">
-      <div class="match-prompt">Uncertainty in the coefficient estimate</div>
-      <select class="match-select" data-answer="se">
-        <option value="">Choose one</option>
-        <option value="p">Pr(&gt;|t|)</option>
-        <option value="estimate">Estimate</option>
-        <option value="se">Std. Error</option>
-        <option value="t">t value</option>
-      </select>
-    </div>
-    <div class="match-row">
       <div class="match-prompt">Estimate divided by standard error</div>
       <select class="match-select" data-answer="t">
         <option value="">Choose one</option>
@@ -500,8 +474,28 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
       </select>
     </div>
     <div class="match-row">
+      <div class="match-prompt">Coefficient estimate (slope)</div>
+      <select class="match-select" data-answer="estimate">
+        <option value="">Choose one</option>
+        <option value="p">Pr(&gt;|t|)</option>
+        <option value="estimate">Estimate</option>
+        <option value="se">Std. Error</option>
+        <option value="t">t value</option>
+      </select>
+    </div>
+    <div class="match-row">
       <div class="match-prompt">p-value for the coefficient test</div>
       <select class="match-select" data-answer="p">
+        <option value="">Choose one</option>
+        <option value="p">Pr(&gt;|t|)</option>
+        <option value="estimate">Estimate</option>
+        <option value="se">Std. Error</option>
+        <option value="t">t value</option>
+      </select>
+    </div>
+    <div class="match-row">
+      <div class="match-prompt">Uncertainty in the coefficient estimate</div>
+      <select class="match-select" data-answer="se">
         <option value="">Choose one</option>
         <option value="p">Pr(&gt;|t|)</option>
         <option value="estimate">Estimate</option>
@@ -636,6 +630,10 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
     return Array.prototype.slice.call(card.querySelectorAll('.subquestion')).every(function (sub) {
       return sub.querySelector('input[type="radio"]:checked') !== null;
     });
+  }
+
+  function allAnswered() {
+    return state.every(function (s) { return s.picked !== null; });
   }
 
   /* Persistence: progress is saved to localStorage under a key that includes a fingerprint
@@ -901,6 +899,20 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
       else if (state[i].checked && !state[i].correct) d.classList.add('incorrect');
       else if (state[i].picked) d.classList.add('answered');
     });
+    updateSubmitButton();
+  }
+
+  function updateSubmitButton() {
+    var submitBtn = document.getElementById('submitBtn');
+    var msg = submitBar.querySelector('p');
+    if (allAnswered()) {
+      submitBtn.disabled = false;
+      msg.textContent = "You've reached the end of the quiz!";
+    } else {
+      submitBtn.disabled = true;
+      var remaining = state.filter(function (s) { return s.picked === null; }).length;
+      msg.textContent = 'Answer all questions to finish — ' + remaining + ' still to go.';
+    }
   }
 
   var overlay = document.getElementById('summaryOverlay');
@@ -908,22 +920,37 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
   var codeValue = document.getElementById('codeValue');
 
   function showSummary() {
-    cards.forEach(function (card, i) {
-      if (!state[i].checked && state[i].picked) checkAnswer(i);
-    });
+    var resetBtn = document.getElementById('resetBtn');
+    var finished = allAnswered();
 
-    var done = state.filter(function (s) { return s.checked; }).length;
+    /* Only auto-grade if every question has a pick — peeking at progress mid-quiz
+       should not silently grade answers the student hasn't reviewed. */
+    if (finished) {
+      cards.forEach(function (card, i) {
+        if (!state[i].checked && state[i].picked) checkAnswer(i);
+      });
+    }
+
+    resetBtn.style.display = finished ? '' : 'none';
+
+    if (!finished) {
+      var answered = state.filter(function (s) { return s.picked !== null; }).length;
+      var remaining = total - answered;
+      document.getElementById('summaryEmoji').textContent = '📝';
+      document.getElementById('scoreText').textContent = answered + ' / ' + total;
+      document.getElementById('scoreSub').textContent = 'Keep going — ' + remaining + ' question' + (remaining === 1 ? '' : 's') + ' still to answer before you can finish.';
+      completionCode.style.display = 'none';
+      overlay.classList.add('show');
+      return;
+    }
+
     var right = state.filter(function (s) { return s.correct; }).length;
-    var pct = done > 0 ? right / total : 0;
-    var pctDisplay = Math.round(pct * 100);
+    var pct = right / total;
 
-    document.getElementById('scoreText').textContent = done === 0 ? '-' : right + ' / ' + total;
+    document.getElementById('scoreText').textContent = right + ' / ' + total;
 
     var emoji, msg;
-    if (done === 0) {
-      emoji = '🤔';
-      msg = 'No questions answered yet. Give it a go!';
-    } else if (pct === 1) {
+    if (pct === 1) {
       emoji = '🎉';
       msg = 'Perfect score. You are ready to work with simple linear regression in R.';
     } else if (pct >= 0.8) {
@@ -940,7 +967,7 @@ Age           -1.096       0.084     -13.03     &lt;2e-16</pre>
     document.getElementById('summaryEmoji').textContent = emoji;
     document.getElementById('scoreSub').textContent = msg;
 
-    if (pct >= PASS_THRESHOLD && done > 0) {
+    if (pct >= PASS_THRESHOLD) {
       codeValue.textContent = COMPLETION_CODE;
       completionCode.style.display = 'block';
     } else {
