@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Intro to Simple Linear Regression (SLR)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --teal: #0d7377; --teal-dark: #0a5d61; --gold: #f0c808;
@@ -121,6 +122,516 @@
       .row,.equation-layout { grid-template-columns:1fr !important; }
       .toolbar { flex-direction:column; align-items:stretch; }
       .toolbar-intro .descr { max-width:none; }
+    }
+
+    /* Finalized aesthetic cascade.
+       CSS only: preserves local markup, inputs, answer logic, and layout. */
+    :root {
+      --bg:#dfe8ea;
+      --paper:#f7f4ed;
+      --ink:#101418;
+      --muted:#665f51;
+      --line:#d6cfbd;
+      --teal:#0d7377;
+      --teal-dark:#0a5d61;
+      --teal-soft:#e3f3f3;
+      --gold:#f0c808;
+      --gold-soft:#fff3cc;
+      --rose:#b83b5e;
+      --rose-soft:#fdeef1;
+      --green:#2c8a4a;
+      --blue:#2f5f98;
+      --blue-soft:#e7eef7;
+      --white:#fffef9;
+      --border:#101418;
+      --shadow:rgba(16,20,24,0.42);
+    }
+
+    body {
+      background:var(--bg);
+      color:var(--ink);
+      font-family:'Space Grotesk', Arial, Helvetica, sans-serif;
+      font-size:8.55pt;
+      line-height:1.24;
+    }
+
+    .toolbar {
+      color:var(--ink);
+      margin-top:24px;
+    }
+
+    .toolbar-intro .title {
+      color:var(--teal);
+      font-family:'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size:10pt;
+      letter-spacing:0.12em;
+      text-transform:uppercase;
+    }
+
+    .toolbar-intro .descr {
+      color:#3a4a4f;
+    }
+
+    button,
+    .zoom-group {
+      border:2px solid var(--ink);
+      border-radius:7px;
+      background:var(--paper);
+      box-shadow:3px 3px 0 var(--shadow);
+      font-family:'Space Grotesk', Arial, Helvetica, sans-serif;
+    }
+
+    .zoom-group {
+      overflow:visible;
+    }
+
+    .zoom-group button {
+      box-shadow:none;
+      border-radius:0;
+    }
+
+    .zoom-group button + button,
+    .zoom-group .zoom-label {
+      border-left:2px solid var(--ink);
+    }
+
+    .zoom-group .zoom-label {
+      color:var(--muted);
+      font-family:'JetBrains Mono', Consolas, Menlo, monospace;
+      font-weight:800;
+    }
+
+    button.primary {
+      background:var(--teal);
+      color:#fff;
+      border-color:var(--ink);
+    }
+
+    .page {
+      background:var(--paper);
+      border:2px solid var(--ink);
+      border-radius:10px;
+      padding:3.2mm 7mm 2.4mm;
+      box-shadow:8px 8px 0 rgba(16,20,24,0.13), 0 14px 36px rgba(16,20,24,0.14);
+      gap:2.7mm;
+    }
+
+    .row {
+      gap:3mm;
+    }
+
+    header {
+      border-bottom:1mm solid var(--gold);
+      padding-bottom:0.85mm;
+      margin-bottom:0.15mm;
+    }
+
+    h1 {
+      color:var(--teal);
+      font-family:'Space Grotesk', Arial, Helvetica, sans-serif;
+      font-size:21pt;
+      font-weight:800;
+      letter-spacing:-0.03em;
+    }
+
+    .subtitle {
+      color:var(--muted);
+      font-family:'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size:7.45pt;
+      letter-spacing:0.02em;
+    }
+
+    .group-label {
+      color:var(--ink);
+      font-family:'Space Grotesk', Arial, Helvetica, sans-serif;
+      font-size:8pt;
+      font-weight:900;
+      letter-spacing:0.02em;
+      text-transform:none;
+      margin:0.15mm 0;
+    }
+
+    .group-label::before,
+    .group-label::after {
+      border-top:2px solid var(--ink);
+    }
+
+    .group-label span {
+      background:var(--paper);
+      border:2px solid var(--ink);
+      border-radius:5px;
+      padding:0.45mm 1.8mm;
+    }
+
+    .box {
+      background:var(--white);
+      border:2px solid var(--ink);
+      border-radius:8px;
+      box-shadow:4px 4px 0 var(--shadow);
+      overflow:visible;
+    }
+
+    .box-tag {
+      border-bottom:2px solid var(--ink);
+      border-radius:6px 6px 0 0;
+      font-family:'Space Grotesk', Arial, Helvetica, sans-serif;
+      font-size:8.2pt;
+      font-weight:900;
+      letter-spacing:0.02em;
+      text-transform:none;
+      padding:0.75mm 2.4mm 0.6mm;
+    }
+
+    .box-body {
+      background:var(--white);
+      border-radius:0 0 6px 6px;
+      padding:1mm 2mm 1.1mm;
+      gap:0.45mm;
+    }
+
+    .box:not(.tag-gold):not(.tag-rose):not(.tag-blue):not(.body-cream) .box-body {
+      background:var(--teal-soft);
+    }
+
+    .box.tag-gold .box-body,
+    .box.body-cream .box-body {
+      background:var(--gold-soft);
+    }
+
+    .box.tag-rose .box-body {
+      background:var(--rose-soft);
+    }
+
+    .box.tag-blue .box-body {
+      background:var(--blue-soft);
+    }
+
+    .formula,
+    .r-code,
+    .worked,
+    .fill.code,
+    code {
+      font-family:'JetBrains Mono', Consolas, Menlo, monospace !important;
+    }
+
+    .equation-formula {
+      font-family:'Space Grotesk', Arial, Helvetica, sans-serif;
+      letter-spacing:-0.035em;
+    }
+
+    .visual,
+    .worked {
+      border:2px solid var(--ink);
+      border-radius:8px;
+      background:var(--white);
+      box-shadow:none;
+    }
+
+    .visual {
+      padding:0.85mm 1mm 0.95mm;
+    }
+
+    .r-code {
+      border:2px solid var(--ink);
+      border-radius:7px;
+      background:#1d2229;
+      color:#f0ecdf;
+      font-size:6.45pt;
+      line-height:1.22;
+    }
+
+    .r-code .cm {
+      color:#a8b3b4;
+    }
+
+    .r-code .fn {
+      color:#8fd5d2;
+    }
+
+    .r-code .hl-int,
+    .r-code .hl-slope {
+      border:1px solid rgba(240,200,8,0.55);
+      border-radius:3px;
+    }
+
+    .worked {
+      background:var(--white);
+      border-style:dashed;
+    }
+
+    .fill {
+      border-bottom:1.8px solid var(--teal);
+      background:rgba(255,255,255,0.36);
+      border-radius:3px 3px 0 0;
+    }
+
+    .fill:focus {
+      border-bottom-color:var(--teal-dark);
+      box-shadow:0 3px 0 rgba(240,200,8,0.35);
+    }
+
+    .hint {
+      color:#8b897d;
+      font-family:'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size:4.9pt;
+      letter-spacing:0.03em;
+    }
+
+    .b.solved .fill {
+      background:rgba(255,255,255,0.36);
+      border-bottom-color:var(--teal-dark);
+    }
+
+    footer {
+      background:var(--teal);
+      border-top:0;
+      border-radius:7px;
+      color:#fff;
+      margin-top:auto;
+      padding:1mm 2mm;
+      box-shadow:4px 4px 0 var(--shadow);
+      font-family:'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size:7.3pt;
+      letter-spacing:0.02em;
+    }
+
+    footer a {
+      color:#fff;
+      font-weight:900;
+    }
+
+    @media print {
+      body {
+        background:white;
+        font-size:7.75pt;
+        line-height:1.13;
+      }
+
+      .page {
+        border:0;
+        border-radius:0;
+        box-shadow:none;
+        padding:1.6mm 5mm 0.9mm;
+        gap:1.2mm;
+        background:white;
+      }
+
+      header {
+        border-bottom-color:var(--gold);
+        border-bottom-width:0.8mm;
+        padding-bottom:0.25mm;
+        margin-bottom:0;
+      }
+
+      h1 {
+        font-size:16.8pt;
+      }
+
+      .subtitle {
+        font-size:6.6pt;
+        line-height:1.04;
+        margin-top:0.2mm;
+      }
+
+      .box,
+      .visual,
+      .worked,
+      button,
+      .zoom-group,
+      footer,
+      .group-label span {
+        box-shadow:none;
+      }
+
+      .box,
+      .visual,
+      .worked,
+      .group-label span {
+        border-width:1.4px;
+        border-radius:5px;
+      }
+
+      .box-tag {
+        border-bottom-width:1.4px;
+        border-radius:4px 4px 0 0;
+        font-size:7pt;
+        font-weight:900;
+        letter-spacing:0.015em;
+        text-transform:none;
+        padding:0.38mm 1.55mm 0.28mm;
+        line-height:1.08;
+      }
+
+      .box-body {
+        padding:0.45mm 1.15mm 0.55mm;
+        gap:0.2mm;
+      }
+
+      .row {
+        gap:1mm;
+      }
+
+      .group-label {
+        font-size:6.75pt;
+        margin:0;
+      }
+
+      .group-label span {
+        padding:0.2mm 1mm;
+      }
+
+      .visual {
+        padding:0.25mm 0.45mm 0.35mm;
+      }
+
+      .visual-caption {
+        font-size:6.3pt;
+        line-height:1.1;
+      }
+
+      .r-code {
+        font-size:5.75pt;
+        line-height:1.02;
+        padding:0.35mm 1.1mm;
+      }
+
+      .worked {
+        font-size:7.1pt;
+        line-height:1.22 !important;
+        padding:0.45mm 1mm;
+      }
+
+      .hint {
+        display:none !important;
+      }
+
+      .fill {
+        transition:none;
+      }
+
+      .fill.wrong-pick {
+        color:var(--ink);
+        border-bottom-color:var(--teal) !important;
+      }
+
+      footer {
+        border-radius:0;
+        padding:0.22mm 0;
+        font-size:6.25pt;
+      }
+    }
+
+    @media screen and (max-width:820px) {
+      .toolbar {
+        color:var(--ink);
+        margin-top:12px;
+      }
+
+      html,
+      body {
+        overflow-x:auto;
+      }
+
+      .toolbar-actions {
+        justify-content:flex-start;
+      }
+
+      button {
+        padding:6px 8px;
+      }
+
+      .zoom-group button {
+        padding:5px 7px;
+      }
+
+      .zoom-group .zoom-label {
+        min-width:38px;
+        padding:0 6px;
+      }
+
+      .page {
+        border-radius:10px;
+        padding:16px;
+        overflow:visible;
+      }
+
+      .box {
+        box-shadow:3px 3px 0 var(--shadow);
+      }
+
+      .visual,
+      .worked {
+        box-shadow:none;
+      }
+
+      .box,
+      .box-body,
+      .visual,
+      .worked {
+        overflow:visible;
+      }
+
+      .box-body p,
+      .visual-caption {
+        overflow-wrap:anywhere;
+      }
+
+      .equation-formula,
+      .formula {
+        white-space:normal;
+      }
+
+      .b {
+        max-width:min(100%, 34vw);
+      }
+
+      .fill {
+        max-width:100%;
+      }
+    }
+
+    @media screen and (max-width:430px) {
+      body {
+        font-size:7.8pt;
+      }
+
+      .toolbar-actions {
+        gap:6px;
+      }
+
+      .print-button {
+        flex-basis:100%;
+        justify-content:center;
+      }
+
+      .page {
+        padding:10px;
+      }
+
+      h1 {
+        font-size:17.5pt;
+      }
+
+      .subtitle {
+        font-size:6.7pt;
+      }
+
+      .box-tag {
+        font-size:7pt;
+        font-weight:900;
+        letter-spacing:0.015em;
+        text-transform:none;
+        padding-left:1.5mm;
+        padding-right:1.5mm;
+      }
+
+      .box-body {
+        padding:0.8mm 1.2mm;
+      }
+
+      .visual {
+        padding:4px;
+      }
     }
   </style>
 </head>
