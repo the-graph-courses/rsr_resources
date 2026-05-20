@@ -585,6 +585,37 @@
             letter-spacing: 0.02em;
         }
 
+        .group-label {
+            display: flex;
+            align-items: center;
+            gap: 3mm;
+            color: var(--ink);
+            font-family: 'Space Grotesk', Arial, Helvetica, sans-serif;
+            font-size: 8pt;
+            font-weight: 900;
+            letter-spacing: 0.02em;
+            text-transform: none;
+            margin: 0.15mm 0;
+            break-after: avoid;
+            page-break-after: avoid;
+        }
+
+        .group-label::before,
+        .group-label::after {
+            content: "";
+            flex: 1;
+            border-top: 2px solid var(--ink);
+            height: 0;
+        }
+
+        .group-label span {
+            background: var(--paper);
+            border: 2px solid var(--ink);
+            border-radius: 5px;
+            padding: 0.45mm 1.8mm;
+            white-space: nowrap;
+        }
+
         .box {
             background: var(--white);
             border: 2px solid var(--ink);
@@ -796,6 +827,24 @@
                 margin-top: 0.2mm;
             }
 
+            .group-label {
+                gap: 2mm;
+                font-size: 6.7pt;
+                margin: 0.02mm 0;
+            }
+
+            .group-label::before,
+            .group-label::after {
+                border-top-width: 1.4px;
+            }
+
+            .group-label span {
+                background: white;
+                border-width: 1.4px;
+                border-radius: 4px;
+                padding: 0.22mm 1.15mm;
+            }
+
             .box,
             .visual,
             .factor-card,
@@ -1004,6 +1053,11 @@
                 overflow: visible;
             }
 
+            .group-label span {
+                white-space: normal;
+                text-align: center;
+            }
+
             .box-body p,
             .note,
             .factor-card,
@@ -1056,6 +1110,11 @@
 
             .subtitle {
                 font-size: 6.7pt;
+            }
+
+            .group-label {
+                gap: 7px;
+                font-size: 7.1pt;
             }
 
             .box-tag {
@@ -1293,6 +1352,8 @@
         </div>
 
         <!-- ROW 3: BUILDING THE 95% CI + NUMBER LINE VIZ -->
+        <div class="group-label"><span>Building the interval</span></div>
+
         <div class="row split-44-56">
             <div class="box tag-ci">
                 <div class="box-tag"><span>Building the 95% CI</span></div>
@@ -1350,6 +1411,8 @@
         </div>
 
         <!-- ROW 4: SIGNIFICANCE + R OUTPUT -->
+        <div class="group-label"><span>Checking significance</span></div>
+
         <div class="row split-46-54">
             <div class="box tag-rose">
                 <div class="box-tag"><span>Significance and the zero-slope test</span></div>
