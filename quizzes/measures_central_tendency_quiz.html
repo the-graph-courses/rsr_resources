@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Measures of Central Tendency Quiz</title>
+<style>
+  :root {
+    --dark-teal: #00565e;
+    --light-teal: #5fbfbf;
+    --yellow: #f5c542;
+    --yellow-light: #fdf3d7;
+    --white: #ffffff;
+    --bg: #f4f7f7;
+    --text: #1a2a2a;
+    --border: #d0dede;
+    --green: #27ae60;
+    --green-bg: #e8f8ef;
+    --red: #e04040;
+    --red-bg: #fdecea;
+    --code-bg: #102426;
+    --line-mean: #1a2a2a;
+    --line-median: #c2185b;
+    --line-mode: #2e7d32;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; padding: 1.5rem 1rem; }
+  .quiz-container { max-width: 760px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 1.5rem; border-bottom: 3px solid var(--yellow); padding-bottom: 1.2rem; }
+  header h1 { color: var(--dark-teal); font-size: 1.35rem; font-weight: 700; }
+  header p { color: #5a7a7a; font-size: 0.9rem; margin-top: 0.25rem; }
+  .progress-bar { display: flex; justify-content: center; gap: 0.4rem; margin-bottom: 0.6rem; flex-wrap: wrap; }
+  .dot {
+    width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 700; color: #6a8a8a; background: var(--white); border: 2.5px solid var(--border);
+    cursor: pointer; transition: all 0.15s; user-select: none;
+  }
+  .dot.current { background: var(--light-teal); border-color: var(--light-teal); color: var(--white); box-shadow: 0 0 0 3px rgba(95,191,191,0.3); }
+  .dot.answered { border-color: var(--light-teal); color: var(--light-teal); position: relative; }
+  .dot.answered::after { content: ''; position: absolute; top: 2px; right: 2px; width: 7px; height: 7px; border-radius: 50%; background: var(--light-teal); }
+  .dot.correct { background: var(--green); border-color: var(--green); color: var(--white); }
+  .dot.correct::after { display: none; }
+  .dot.incorrect { background: var(--red); border-color: var(--red); color: var(--white); }
+  .dot.incorrect::after { display: none; }
+  .legend { display: flex; justify-content: center; gap: 1.1rem; margin-bottom: 1.2rem; font-size: 0.78rem; color: #6a8a8a; flex-wrap: wrap; }
+  .legend span { display: flex; align-items: center; gap: 0.3rem; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .q-counter { font-size: 0.85rem; font-weight: 600; color: var(--dark-teal); }
+  .btn-summary { background: var(--dark-teal); color: var(--white); border: none; padding: 0.5rem 1.1rem; border-radius: 20px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .btn-summary:hover { background: #003d43; }
+  .divider { border: none; border-top: 1px solid var(--border); margin-bottom: 1.8rem; }
+  .question-card { display: none; }
+  .question-card.active { display: block; }
+  .q-text { font-size: 1.05rem; font-weight: 500; color: var(--text); margin-bottom: 1.1rem; line-height: 1.5; }
+  .options { display: flex; flex-direction: column; gap: 0.55rem; margin-bottom: 1.2rem; }
+  .options label {
+    display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.8rem 0.95rem;
+    border: 2px solid var(--border); border-radius: 8px; cursor: pointer;
+    font-size: 0.94rem; transition: border-color 0.15s, background 0.15s;
+    background: var(--white);
+  }
+  .options label:hover { border-color: var(--light-teal); background: #eaf6f6; }
+  .options input[type="radio"] { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; border: 2px solid #b0c8c8; border-radius: 50%; flex-shrink: 0; transition: all 0.12s; position: relative; margin-top: 0.15rem; }
+  .options input[type="radio"]:checked { border-color: var(--dark-teal); background: var(--dark-teal); }
+  .options input[type="radio"]:checked::after { content: ''; position: absolute; top: 4px; left: 4px; width: 8px; height: 8px; background: var(--white); border-radius: 50%; }
+  .options label.correct { border-color: var(--green); background: var(--green-bg); }
+  .options label.correct input[type="radio"] { border-color: var(--green); background: var(--green); }
+  .options label.incorrect { border-color: var(--red); background: var(--red-bg); }
+  .options label.incorrect input[type="radio"] { border-color: var(--red); background: var(--red); }
+  .options label.reveal { border-color: var(--green); background: var(--green-bg); }
+  .options label.reveal input[type="radio"] { border-color: var(--green); background: var(--green); }
+  .options label.disabled { pointer-events: none; opacity: 0.55; }
+  .options label.correct.disabled, .options label.incorrect.disabled, .options label.reveal.disabled { opacity: 1; }
+  .options span { flex: 1; }
+  code { background: rgba(0,0,0,0.06); padding: 0.05rem 0.3rem; border-radius: 3px; font-family: 'Courier New', monospace; font-size: 0.88em; }
+  pre { background: var(--code-bg); color: #f8ffff; border-radius: 8px; padding: 0.85rem 1rem; margin: 0 0 1rem; overflow-x: auto; font-size: 0.82rem; line-height: 1.45; font-family: 'Courier New', monospace; }
+  pre code { background: none; padding: 0; color: inherit; font-size: 1em; }
+  .data-list { background: var(--yellow-light); border: 2px dashed var(--yellow); border-radius: 8px; padding: 0.7rem 0.95rem; margin-bottom: 1rem; font-family: 'Courier New', monospace; font-size: 0.95rem; color: var(--dark-teal); text-align: center; letter-spacing: 0.04em; }
+  .data-list .data-note { display: block; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.78rem; color: #5a7a7a; letter-spacing: 0; margin-top: 0.3rem; font-style: italic; }
+  .diagram { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem; margin: 0 0 1rem; overflow-x: auto; }
+  svg text { font-family: 'Segoe UI', system-ui, sans-serif; fill: var(--text); }
+  .dropdown-match { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.2rem; }
+  .match-row { display: grid; grid-template-columns: 1fr 200px; gap: 0.8rem; align-items: center; padding: 0.75rem 0.95rem; background: var(--white); border: 2px solid var(--border); border-radius: 8px; }
+  .match-row.correct { border-color: var(--green); background: var(--green-bg); }
+  .match-row.incorrect { border-color: var(--red); background: var(--red-bg); }
+  .match-prompt { font-size: 0.92rem; line-height: 1.4; }
+  .match-prompt code { background: rgba(0,0,0,0.06); padding: 0.05rem 0.3rem; border-radius: 3px; font-family: 'Courier New', monospace; font-size: 0.85em; }
+  .match-prompt .data-snippet { font-family: 'Courier New', monospace; font-size: 0.9rem; color: var(--dark-teal); letter-spacing: 0.03em; }
+  .match-select { width: 100%; padding: 0.55rem 0.65rem; border: 2px solid #b0c8c8; border-radius: 8px; background: var(--white); color: var(--text); font-size: 0.88rem; font-family: inherit; }
+  .match-select:disabled { opacity: 0.8; }
+  .feedback { display: none; margin-bottom: 1.2rem; border-radius: 8px; overflow: hidden; }
+  .feedback.show { display: block; }
+  .feedback-banner { padding: 0.6rem 1rem; font-weight: 700; font-size: 0.92rem; display: flex; align-items: center; gap: 0.5rem; }
+  .feedback-banner.is-correct { background: var(--green); color: var(--white); }
+  .feedback-banner.is-incorrect { background: var(--red); color: var(--white); }
+  .feedback-explanation { padding: 0.85rem 1rem; font-size: 0.9rem; line-height: 1.5; }
+  .feedback.is-correct .feedback-explanation { background: var(--green-bg); color: #1a3a24; }
+  .feedback.is-incorrect .feedback-explanation { background: var(--red-bg); color: #3a1a1a; }
+  .feedback-explanation code { background: rgba(255,255,255,0.5); padding: 0.05rem 0.3rem; border-radius: 3px; font-family: 'Courier New', monospace; font-size: 0.88em; }
+  .btn-row { display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; }
+  .btn { border: none; padding: 0.6rem 1.4rem; border-radius: 20px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: background 0.15s; display: inline-flex; align-items: center; gap: 0.4rem; }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .btn-nav { background: var(--light-teal); color: var(--white); }
+  .btn-nav:hover:not(:disabled) { background: #4aadad; }
+  .btn-check { background: var(--dark-teal); color: var(--white); }
+  .btn-check:hover:not(:disabled) { background: #003d43; }
+  .btn-submit { background: var(--yellow); color: var(--dark-teal); font-weight: 700; font-size: 0.95rem; padding: 0.75rem 2rem; }
+  .btn-submit:hover { background: #e8b530; }
+  .submit-bar { display: none; text-align: center; margin-top: 1.5rem; padding: 1.2rem; background: var(--yellow-light); border: 2px solid var(--yellow); border-radius: 10px; }
+  .submit-bar.show { display: block; }
+  .submit-bar p { font-size: 0.9rem; color: var(--dark-teal); margin-bottom: 0.8rem; font-weight: 500; }
+  .summary-overlay { display: none; position: fixed; inset: 0; background: rgba(0,40,44,0.45); z-index: 100; justify-content: center; align-items: center; }
+  .summary-overlay.show { display: flex; }
+  .summary-box { background: var(--white); border-radius: 14px; padding: 2rem 2rem 1.6rem; max-width: 440px; width: 90%; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,0.18); }
+  .summary-box h2 { color: var(--dark-teal); margin-bottom: 0.3rem; font-size: 1.25rem; }
+  .summary-emoji { font-size: 2.8rem; margin: 0.5rem 0; }
+  .summary-box .score-text { font-size: 2.2rem; font-weight: 800; color: var(--dark-teal); margin: 0.3rem 0; }
+  .summary-box .score-sub { font-size: 0.95rem; color: #4a6a6a; margin-bottom: 1.2rem; line-height: 1.45; }
+  .summary-box .btn { margin: 0.3rem; }
+  .btn-close-sum { background: var(--light-teal); color: var(--white); }
+  .btn-reset { background: var(--dark-teal); color: var(--white); }
+  .completion-code { margin-top: 1rem; padding: 1rem; background: var(--yellow-light); border: 2px dashed var(--yellow); border-radius: 10px; }
+  .completion-code p { font-size: 0.85rem; color: var(--dark-teal); margin-bottom: 0.4rem; }
+  .completion-code .code { font-size: 1.6rem; font-weight: 800; color: var(--dark-teal); letter-spacing: 0.1em; font-family: 'Courier New', monospace; user-select: all; }
+  @media (max-width: 620px) {
+    .match-row { grid-template-columns: 1fr; }
+    .top-row { align-items: flex-start; gap: 0.75rem; }
+  }
+</style>
+</head>
+<body>
+<div class="quiz-container">
+<header>
+  <h1>Measures of Central Tendency Quiz</h1>
+  <p>Mean, median, mode, skewness, and R · thegraphcourses.org</p>
+</header>
+<div class="progress-bar" id="progressBar"></div>
+<div class="legend">
+  <span><span class="legend-dot" style="background:var(--light-teal);"></span> Current</span>
+  <span><span class="legend-dot" style="background:var(--white); border: 2px solid var(--light-teal);"></span> Answered</span>
+  <span><span class="legend-dot" style="background:var(--green);"></span> Correct</span>
+  <span><span class="legend-dot" style="background:var(--red);"></span> Incorrect</span>
+</div>
+<div class="top-row">
+  <span class="q-counter" id="qCounter">Question 1 of 11</span>
+  <button class="btn-summary" id="summaryBtn" type="button">Quiz Summary</button>
+</div>
+<hr class="divider">
+
+<!-- Q1 NEW (c) - Mean from sum -->
+<div class="question-card" data-answer="c">
+  <p class="q-text">The sum of 12 BMI measurements is 318. What is the <strong>mean</strong> BMI?</p>
+  <div class="data-list">n = 12 &nbsp;·&nbsp; Σx = 318</div>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>24.5</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>25.5</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>26.5</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">The mean is the sum of values divided by the count: 318 / 12 = <strong>26.5</strong>. You do not need each individual value to compute the mean, only the total and how many observations contributed to it.</div>
+  </div>
+</div>
+
+<!-- Q2 NEW (c) - Median from sorted, even N -->
+<div class="question-card" data-answer="c">
+  <p class="q-text">The BMI values below have already been sorted. What is the <strong>median</strong>?</p>
+  <div class="data-list">23, 24, 27, 28<span class="data-note">already sorted from smallest to largest</span></div>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>24</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>25</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>25.5</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">With an even number of values, the median is the average of the two middle values. Here the middle two are 24 and 27, so the median = (24 + 27) / 2 = <strong>25.5</strong>.</div>
+  </div>
+</div>
+
+<!-- Q3 (was Q7) (b) - Median odd N unsorted -->
+<div class="question-card" data-answer="b">
+  <p class="q-text">What is the <strong>median</strong> of these BMI values?</p>
+  <div class="data-list">27, 22, 24, 18, 26</div>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>22</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>24</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>26</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">Always order the data first: 18, 22, <strong>24</strong>, 26, 27. With 5 values, the median is the (5+1)/2 = 3rd value, which is 24.</div>
+  </div>
+</div>
+
+<!-- Q4 (was Q5) match: property to measure -->
+<div class="question-card" data-kind="dropdown">
+  <p class="q-text">Match each property to the measure of central tendency it best describes.</p>
+  <div class="dropdown-match">
+    <div class="match-row"><div class="match-prompt">May not exist if all values in the dataset are unique</div>
+      <select class="match-select" data-answer="mode">
+        <option value="">Choose one</option>
+        <option value="mean">Mean</option>
+        <option value="median">Median</option>
+        <option value="mode">Mode</option>
+      </select></div>
+    <div class="match-row"><div class="match-prompt">Calculated as the sum of values divided by the count of values</div>
+      <select class="match-select" data-answer="mean">
+        <option value="">Choose one</option>
+        <option value="mean">Mean</option>
+        <option value="median">Median</option>
+        <option value="mode">Mode</option>
+      </select></div>
+    <div class="match-row"><div class="match-prompt">Most sensitive to outliers and skewness</div>
+      <select class="match-select" data-answer="mean">
+        <option value="">Choose one</option>
+        <option value="mean">Mean</option>
+        <option value="median">Median</option>
+        <option value="mode">Mode</option>
+      </select></div>
+    <div class="match-row"><div class="match-prompt">Divides ordered data into two equal halves</div>
+      <select class="match-select" data-answer="median">
+        <option value="">Choose one</option>
+        <option value="mean">Mean</option>
+        <option value="median">Median</option>
+        <option value="mode">Mode</option>
+      </select></div>
+    <div class="match-row"><div class="match-prompt">Always equals one of the values observed in the dataset (when it exists)</div>
+      <select class="match-select" data-answer="mode">
+        <option value="">Choose one</option>
+        <option value="mean">Mean</option>
+        <option value="median">Median</option>
+        <option value="mode">Mode</option>
+      </select></div>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">The mean is calculated by summing and dividing, which makes it sensitive to extreme values. The median is robust because it depends only on the middle of the ordered data. The mode is the most frequent value: it always lies on a real observation, and it might not exist if every value is unique.</div>
+  </div>
+</div>
+
+<!-- Q5 (was Q10) match: dataset to mode classification -->
+<div class="question-card" data-kind="dropdown">
+  <p class="q-text">For each dataset, identify whether it is unimodal, multimodal, or has no mode.</p>
+  <div class="dropdown-match">
+    <div class="match-row">
+      <div class="match-prompt"><span class="data-snippet">20, 22, 22, 24, 26, 26, 28</span></div>
+      <select class="match-select" data-answer="multimodal">
+        <option value="">Choose one</option>
+        <option value="unimodal">Unimodal</option>
+        <option value="multimodal">Multimodal</option>
+        <option value="none">No mode</option>
+      </select>
+    </div>
+    <div class="match-row">
+      <div class="match-prompt"><span class="data-snippet">19, 20, 22, 24, 26, 28, 30</span></div>
+      <select class="match-select" data-answer="none">
+        <option value="">Choose one</option>
+        <option value="unimodal">Unimodal</option>
+        <option value="multimodal">Multimodal</option>
+        <option value="none">No mode</option>
+      </select>
+    </div>
+    <div class="match-row">
+      <div class="match-prompt"><span class="data-snippet">18, 21, 23, 23, 25, 27, 28</span></div>
+      <select class="match-select" data-answer="unimodal">
+        <option value="">Choose one</option>
+        <option value="unimodal">Unimodal</option>
+        <option value="multimodal">Multimodal</option>
+        <option value="none">No mode</option>
+      </select>
+    </div>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation"><strong>Unimodal</strong> datasets have exactly one most-frequent value. <strong>Multimodal</strong> datasets have two or more values tied as most frequent. Datasets with all-unique values have <strong>no mode</strong>.</div>
+  </div>
+</div>
+
+<!-- Q6 (was Q11) (b) - DescTools::Mode -->
+<div class="question-card" data-answer="b">
+  <p class="q-text">Base R has <code>mean()</code> and <code>median()</code> functions, but not a function for the statistical mode. Which function should you use instead?</p>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span><code>base::mode()</code>, since it returns the most common value when applied to a numeric vector</span></label>
+    <label data-option="b"><input type="radio" value="b"><span><code>DescTools::Mode()</code>, using a capital M to distinguish it from base R's <code>mode()</code></span></label>
+    <label data-option="c"><input type="radio" value="c"><span><code>tidyverse::mode()</code>, which returns the most common value of any vector</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">Base R does have a function named <code>mode()</code>, but it returns the storage type of an object (e.g., <code>"numeric"</code>), not the statistical mode. <code>DescTools</code> provides <code>Mode()</code> with a capital M, which returns the most frequently occurring value.</div>
+  </div>
+</div>
+
+<!-- Q7 (was Q13, now 2 options) (a) - mode() case sensitivity -->
+<div class="question-card" data-answer="a">
+  <p class="q-text">This code throws an unexpected result. What is the most likely fix?</p>
+  <pre>mode(yao$height_cm)
+[1] "numeric"</pre>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>Use <code>Mode()</code> from DescTools with a capital M; R is case-sensitive and base R's <code>mode()</code> returns the storage type of an object</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>Add <code>na.rm = TRUE</code> inside <code>mode()</code>; missing values must be removed before <code>mode()</code> can return the statistical mode</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">R is case-sensitive. Lowercase <code>mode()</code> in base R returns the storage type of an object. Capital <code>Mode()</code> from DescTools returns the statistical mode.</div>
+  </div>
+</div>
+
+<!-- Q8 (was Q12, new wording) (b) - mean returns NA -->
+<div class="question-card" data-answer="b">
+  <p class="q-text">Which of these might explain why this code returns <code>NA</code>?</p>
+  <pre>mean(yao$n_bedridden_days)
+[1] NA</pre>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>The column was imported as character, so its mean cannot be computed</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>The column contains missing values, and by default <code>mean()</code> returns <code>NA</code> when any are present</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>The column has too many decimal places, causing <code>mean()</code> to overflow</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">Base R's <code>mean()</code>, <code>median()</code>, and <code>DescTools::Mode()</code> all return <code>NA</code> when their input contains any <code>NA</code> values. Add <code>na.rm = TRUE</code> inside the call to drop missing values before calculating: <code>mean(yao$n_bedridden_days, na.rm = TRUE)</code>.</div>
+  </div>
+</div>
+
+<!-- Q9 (was Q16) (a) - outlier affects mean -->
+<div class="question-card" data-answer="a">
+  <p class="q-text">A dataset of household incomes contains many low-to-mid earners and one extremely high outlier (a millionaire). Which measure of central tendency is <strong>most affected</strong> by this outlier?</p>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>The mean</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>The median</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>The mode</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">The mean is computed using the magnitude of every value, so a single very large value pulls it noticeably upward. The median and mode depend only on positions or frequencies of values, not their magnitudes, so they are far more robust to outliers.</div>
+  </div>
+</div>
+
+<!-- Q10 (was Q14) (a) - skew from histogram -->
+<div class="question-card" data-answer="a">
+  <p class="q-text">The histogram below shows a distribution with three vertical lines marking the mode, median, and mean. Based on the positions of these three measures, this distribution is:</p>
+  <div class="diagram">
+    <svg viewBox="0 0 620 240" xmlns="http://www.w3.org/2000/svg" width="100%" role="img" aria-label="Right-skewed histogram with three vertical lines labelled Mode, Median, and Mean from left to right">
+      <g transform="translate(40, 30)">
+        <rect x="10" y="30" width="36" height="130" fill="#00565e" fill-opacity="0.55" stroke="#00565e" stroke-width="0.7"/>
+        <rect x="48" y="10" width="36" height="150" fill="#00565e" fill-opacity="0.55" stroke="#00565e" stroke-width="0.7"/>
+        <rect x="86" y="30" width="36" height="130" fill="#00565e" fill-opacity="0.55" stroke="#00565e" stroke-width="0.7"/>
+        <rect x="124" y="60" width="36" height="100" fill="#00565e" fill-opacity="0.55" stroke="#00565e" stroke-width="0.7"/>
+        <rect x="162" y="90" width="36" height="70" fill="#00565e" fill-opacity="0.55" stroke="#00565e" stroke-width="0.7"/>
+        <rect x="200" y="115" width="36" height="45" fill="#00565e" fill-opacity="0.55" stroke="#00565e" stroke-width="0.7"/>
+        <rect x="238" y="130" width="36" height="30" fill="#00565e" fill-opacity="0.55" stroke="#00565e" stroke-width="0.7"/>
+        <rect x="276" y="140" width="36" height="20" fill="#00565e" fill-opacity="0.55" stroke="#00565e" stroke-width="0.7"/>
+        <rect x="314" y="146" width="36" height="14" fill="#00565e" fill-opacity="0.55" stroke="#00565e" stroke-width="0.7"/>
+        <rect x="352" y="151" width="36" height="9" fill="#00565e" fill-opacity="0.55" stroke="#00565e" stroke-width="0.7"/>
+        <rect x="390" y="154" width="36" height="6" fill="#00565e" fill-opacity="0.55" stroke="#00565e" stroke-width="0.7"/>
+        <rect x="428" y="156" width="36" height="4" fill="#00565e" fill-opacity="0.55" stroke="#00565e" stroke-width="0.7"/>
+        <rect x="466" y="158" width="36" height="2" fill="#00565e" fill-opacity="0.55" stroke="#00565e" stroke-width="0.7"/>
+        <line x1="0" y1="160" x2="520" y2="160" stroke="#1a2a2a" stroke-width="1.2"/>
+        <line x1="66" y1="0" x2="66" y2="160" stroke="#2e7d32" stroke-width="3"/>
+        <text x="66" y="-8" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e7d32">Mode</text>
+        <line x1="116" y1="0" x2="116" y2="160" stroke="#c2185b" stroke-width="3" stroke-dasharray="7,4"/>
+        <text x="116" y="-8" text-anchor="middle" font-size="13" font-weight="bold" fill="#c2185b">Median</text>
+        <line x1="180" y1="0" x2="180" y2="160" stroke="#1a2a2a" stroke-width="3" stroke-dasharray="2,4"/>
+        <text x="180" y="-8" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a2a2a">Mean</text>
+      </g>
+    </svg>
+  </div>
+  <div class="options">
+    <label data-option="a"><input type="radio" value="a"><span>Right-skewed (positive skew): mode &lt; median &lt; mean</span></label>
+    <label data-option="b"><input type="radio" value="b"><span>Left-skewed (negative skew): mean &lt; median &lt; mode</span></label>
+    <label data-option="c"><input type="radio" value="c"><span>Symmetric: mean ≈ median ≈ mode</span></label>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">The long tail trails to the right, and the mean is pulled toward that tail because it is sensitive to outliers. When the order is mode &lt; median &lt; mean, the distribution is right-skewed (positively skewed).</div>
+  </div>
+</div>
+
+<!-- Q11 (was Q15) match: three distributions to skew type -->
+<div class="question-card" data-kind="dropdown">
+  <p class="q-text">Three distributions are shown below, each marked with the <span style="color:#2e7d32;font-weight:600;">mode</span>, <span style="color:#c2185b;font-weight:600;">median</span>, and <span style="color:#1a2a2a;font-weight:600;">mean</span>. Match each distribution (A, B, C) to its skew type.</p>
+  <div class="diagram">
+    <svg viewBox="0 0 720 220" xmlns="http://www.w3.org/2000/svg" width="100%" role="img" aria-label="Three small distributions A, B, and C with mode, median, and mean lines drawn on each">
+      <g transform="translate(15, 25)">
+        <text x="105" y="-5" text-anchor="middle" font-size="14" font-weight="bold" fill="#00565e">A</text>
+        <rect x="10" y="130" width="20" height="15" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="32" y="105" width="20" height="40" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="54" y="75" width="20" height="70" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="76" y="40" width="20" height="105" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="98" y="35" width="20" height="110" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="120" y="75" width="20" height="70" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="142" y="105" width="20" height="40" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="164" y="130" width="20" height="15" fill="#00565e" fill-opacity="0.5"/>
+        <line x1="0" y1="145" x2="210" y2="145" stroke="#1a2a2a" stroke-width="1"/>
+        <line x1="100" y1="20" x2="100" y2="145" stroke="#2e7d32" stroke-width="2.5"/>
+        <line x1="104" y1="20" x2="104" y2="145" stroke="#c2185b" stroke-width="2.5" stroke-dasharray="5,3"/>
+        <line x1="108" y1="20" x2="108" y2="145" stroke="#1a2a2a" stroke-width="2.5" stroke-dasharray="2,3"/>
+      </g>
+      <g transform="translate(255, 25)">
+        <text x="105" y="-5" text-anchor="middle" font-size="14" font-weight="bold" fill="#00565e">B</text>
+        <rect x="10" y="40" width="20" height="105" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="32" y="20" width="20" height="125" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="54" y="50" width="20" height="95" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="76" y="80" width="20" height="65" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="98" y="105" width="20" height="40" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="120" y="120" width="20" height="25" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="142" y="130" width="20" height="15" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="164" y="138" width="20" height="7" fill="#00565e" fill-opacity="0.5"/>
+        <line x1="0" y1="145" x2="210" y2="145" stroke="#1a2a2a" stroke-width="1"/>
+        <line x1="44" y1="10" x2="44" y2="145" stroke="#2e7d32" stroke-width="2.5"/>
+        <line x1="70" y1="10" x2="70" y2="145" stroke="#c2185b" stroke-width="2.5" stroke-dasharray="5,3"/>
+        <line x1="98" y1="10" x2="98" y2="145" stroke="#1a2a2a" stroke-width="2.5" stroke-dasharray="2,3"/>
+      </g>
+      <g transform="translate(495, 25)">
+        <text x="105" y="-5" text-anchor="middle" font-size="14" font-weight="bold" fill="#00565e">C</text>
+        <rect x="10" y="138" width="20" height="7" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="32" y="130" width="20" height="15" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="54" y="120" width="20" height="25" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="76" y="105" width="20" height="40" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="98" y="80" width="20" height="65" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="120" y="50" width="20" height="95" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="142" y="20" width="20" height="125" fill="#00565e" fill-opacity="0.5"/>
+        <rect x="164" y="40" width="20" height="105" fill="#00565e" fill-opacity="0.5"/>
+        <line x1="0" y1="145" x2="210" y2="145" stroke="#1a2a2a" stroke-width="1"/>
+        <line x1="96" y1="10" x2="96" y2="145" stroke="#1a2a2a" stroke-width="2.5" stroke-dasharray="2,3"/>
+        <line x1="124" y1="10" x2="124" y2="145" stroke="#c2185b" stroke-width="2.5" stroke-dasharray="5,3"/>
+        <line x1="150" y1="10" x2="150" y2="145" stroke="#2e7d32" stroke-width="2.5"/>
+      </g>
+      <g transform="translate(220, 195)">
+        <line x1="0" y1="6" x2="20" y2="6" stroke="#2e7d32" stroke-width="2.5"/>
+        <text x="25" y="11" font-size="11" fill="#1a2a2a">Mode</text>
+        <line x1="80" y1="6" x2="100" y2="6" stroke="#c2185b" stroke-width="2.5" stroke-dasharray="5,3"/>
+        <text x="105" y="11" font-size="11" fill="#1a2a2a">Median</text>
+        <line x1="170" y1="6" x2="190" y2="6" stroke="#1a2a2a" stroke-width="2.5" stroke-dasharray="2,3"/>
+        <text x="195" y="11" font-size="11" fill="#1a2a2a">Mean</text>
+      </g>
+    </svg>
+  </div>
+  <div class="dropdown-match">
+    <div class="match-row">
+      <div class="match-prompt">Distribution A</div>
+      <select class="match-select" data-answer="symmetric">
+        <option value="">Choose one</option>
+        <option value="right">Right-skewed</option>
+        <option value="left">Left-skewed</option>
+        <option value="symmetric">Symmetric</option>
+      </select>
+    </div>
+    <div class="match-row">
+      <div class="match-prompt">Distribution B</div>
+      <select class="match-select" data-answer="right">
+        <option value="">Choose one</option>
+        <option value="right">Right-skewed</option>
+        <option value="left">Left-skewed</option>
+        <option value="symmetric">Symmetric</option>
+      </select>
+    </div>
+    <div class="match-row">
+      <div class="match-prompt">Distribution C</div>
+      <select class="match-select" data-answer="left">
+        <option value="">Choose one</option>
+        <option value="right">Right-skewed</option>
+        <option value="left">Left-skewed</option>
+        <option value="symmetric">Symmetric</option>
+      </select>
+    </div>
+  </div>
+  <div class="feedback">
+    <div class="feedback-banner"></div>
+    <div class="feedback-explanation">In symmetric distributions, all three measures coincide. In right-skewed distributions, the long right tail pulls the mean rightward, giving mode &lt; median &lt; mean. In left-skewed distributions, the long left tail pulls the mean leftward, giving mean &lt; median &lt; mode.</div>
+  </div>
+</div>
+
+<div class="submit-bar" id="submitBar">
+  <p>You've reached the end of the quiz!</p>
+  <button class="btn btn-submit" id="submitBtn" type="button">See My Results</button>
+</div>
+<div class="summary-overlay" id="summaryOverlay">
+  <div class="summary-box">
+    <h2>Quiz Complete!</h2>
+    <div class="summary-emoji" id="summaryEmoji"></div>
+    <div class="score-text" id="scoreText">-</div>
+    <div class="score-sub" id="scoreSub"></div>
+    <div class="completion-code" id="completionCode" style="display:none;">
+      <p>Enter this code in your LMS to mark the lesson complete:</p>
+      <div class="code" id="codeValue"></div>
+    </div>
+    <div style="margin-top:1rem;">
+      <button class="btn btn-close-sum" id="closeSum" type="button">Review Answers</button>
+      <button class="btn btn-reset" id="resetBtn" type="button">Try Again</button>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function () {
+  var COMPLETION_CODE = 'CENTRAL';
+  var PASS_THRESHOLD = 0.8;
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.question-card'));
+  var total = cards.length;
+  var current = 0;
+  var state = [];
+  cards.forEach(function (card, i) {
+    state.push({ picked: null, checked: false, correct: false });
+    if (card.getAttribute('data-kind') === 'dropdown') {
+      card.querySelectorAll('select').forEach(function (select) {
+        select.addEventListener('change', function () {
+          state[i].picked = allDropdownsAnswered(card) ? 'dropdown-complete' : null;
+          saveState();
+          updateDots();
+          if (i === current && !state[i].checked) checkBtn.disabled = !state[i].picked;
+        });
+      });
+      return;
+    }
+    card.querySelectorAll('input[type="radio"]').forEach(function (r) {
+      r.name = 'q' + i;
+      r.addEventListener('change', function () {
+        state[i].picked = r.value;
+        saveState();
+        updateDots();
+        if (i === current && !state[i].checked) checkBtn.disabled = false;
+      });
+    });
+  });
+  var bar = document.getElementById('progressBar');
+  cards.forEach(function (_, i) {
+    var d = document.createElement('div');
+    d.className = 'dot';
+    d.textContent = i + 1;
+    d.addEventListener('click', function () { goTo(i); });
+    bar.appendChild(d);
+  });
+  var btnRow = document.createElement('div');
+  btnRow.className = 'btn-row';
+  var prevBtn = document.createElement('button');
+  prevBtn.className = 'btn btn-nav';
+  prevBtn.textContent = '\u2190 Previous';
+  prevBtn.type = 'button';
+  var nextBtn = document.createElement('button');
+  nextBtn.className = 'btn btn-nav';
+  nextBtn.textContent = 'Next Question \u2192';
+  nextBtn.type = 'button';
+  var checkBtn = document.createElement('button');
+  checkBtn.className = 'btn btn-check';
+  checkBtn.textContent = 'Check \ud83d\udd0d';
+  checkBtn.type = 'button';
+  prevBtn.addEventListener('click', function () { goTo(current - 1); });
+  nextBtn.addEventListener('click', function () { goTo(current + 1); });
+  checkBtn.addEventListener('click', function () { checkAnswer(current); });
+  var qCounter = document.getElementById('qCounter');
+  var submitBar = document.getElementById('submitBar');
+  function allDropdownsAnswered(card) {
+    return Array.prototype.slice.call(card.querySelectorAll('select')).every(function (select) {
+      return select.value !== '';
+    });
+  }
+  function allAnswered() {
+    return state.every(function (s) { return s.picked !== null; });
+  }
+  function hashString(s) {
+    var h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (var i = 0; i < s.length; i++) {
+      var ch = s.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  }
+  function fingerprintQuiz() {
+    var parts = [];
+    cards.forEach(function (card) {
+      var kind = card.getAttribute('data-kind') || 'mcq';
+      parts.push(kind);
+      if (kind === 'dropdown') {
+        var qt = card.querySelector('.q-text');
+        parts.push(qt ? qt.textContent : '');
+        card.querySelectorAll('.match-row').forEach(function (row) {
+          var prompt = row.querySelector('.match-prompt');
+          parts.push(prompt ? prompt.textContent : '');
+          parts.push(row.querySelector('select').getAttribute('data-answer') || '');
+        });
+      } else {
+        parts.push(card.getAttribute('data-answer') || '');
+        var qt2 = card.querySelector('.q-text');
+        parts.push(qt2 ? qt2.textContent : '');
+        card.querySelectorAll('label span, label .code-option').forEach(function (s) { parts.push(s.textContent); });
+      }
+    });
+    return hashString(parts.join('|'));
+  }
+  var quizName = (location.pathname.split('/').pop() || 'quiz').replace(/\.html?$/i, '');
+  var quizKey = 'quiz-progress:' + quizName + ':' + fingerprintQuiz();
+  function saveState() {
+    try {
+      var payload = {
+        v: 1,
+        current: current,
+        cards: cards.map(function (card, i) {
+          var kind = card.getAttribute('data-kind') || 'mcq';
+          if (kind === 'dropdown') {
+            var dpicks = Array.prototype.slice.call(card.querySelectorAll('select')).map(function (s) {
+              return s.value || null;
+            });
+            return { kind: kind, picks: dpicks, checked: state[i].checked };
+          }
+          return { kind: 'mcq', picked: state[i].picked, checked: state[i].checked };
+        })
+      };
+      localStorage.setItem(quizKey, JSON.stringify(payload));
+    } catch (e) {}
+  }
+  function loadState() {
+    var data;
+    try {
+      var raw = localStorage.getItem(quizKey);
+      if (!raw) return;
+      data = JSON.parse(raw);
+    } catch (e) { return; }
+    if (!data || data.v !== 1 || !Array.isArray(data.cards) || data.cards.length !== cards.length) return;
+    data.cards.forEach(function (saved, i) {
+      var card = cards[i];
+      var kind = card.getAttribute('data-kind') || 'mcq';
+      if (kind !== saved.kind) return;
+      if (kind === 'dropdown') {
+        var selects = card.querySelectorAll('select');
+        (saved.picks || []).forEach(function (pick, si) {
+          if (!pick || !selects[si]) return;
+          selects[si].value = pick;
+        });
+        if (allDropdownsAnswered(card)) state[i].picked = 'dropdown-complete';
+        if (saved.checked && state[i].picked) checkDropdownAnswer(i);
+      } else {
+        if (saved.picked) {
+          var rr = card.querySelector('input[value="' + saved.picked + '"]');
+          if (rr) rr.checked = true;
+          state[i].picked = saved.picked;
+        }
+        if (saved.checked && state[i].picked) checkAnswer(i);
+      }
+    });
+    if (typeof data.current === 'number' && data.current >= 0 && data.current < cards.length) {
+      current = data.current;
+    }
+  }
+  function clearState() { try { localStorage.removeItem(quizKey); } catch (e) {} }
+  function goTo(i) {
+    if (i < 0 || i >= total) return;
+    cards[current].classList.remove('active');
+    current = i;
+    cards[current].classList.add('active');
+    render();
+    saveState();
+  }
+  function render() {
+    if (btnRow.parentNode) btnRow.parentNode.removeChild(btnRow);
+    btnRow.innerHTML = '';
+    qCounter.textContent = 'Question ' + (current + 1) + ' of ' + total;
+    if (current > 0) btnRow.appendChild(prevBtn);
+    else btnRow.appendChild(document.createElement('div'));
+    var rightGroup = document.createElement('div');
+    rightGroup.style.cssText = 'display:flex; gap:0.5rem;';
+    if (!state[current].checked) {
+      checkBtn.disabled = !state[current].picked;
+      rightGroup.appendChild(checkBtn);
+    }
+    if (current < total - 1) rightGroup.appendChild(nextBtn);
+    btnRow.appendChild(rightGroup);
+    cards[current].appendChild(btnRow);
+    submitBar.classList.toggle('show', current === total - 1);
+    updateDots();
+  }
+  function checkAnswer(i) {
+    var card = cards[i];
+    if (card.getAttribute('data-kind') === 'dropdown') { checkDropdownAnswer(i); return; }
+    var answer = card.getAttribute('data-answer');
+    var picked = state[i].picked;
+    if (!picked) return;
+    state[i].checked = true;
+    state[i].correct = (picked === answer);
+    card.querySelectorAll('label').forEach(function (label) {
+      var opt = label.getAttribute('data-option');
+      label.classList.add('disabled');
+      if (opt === answer) label.classList.add(picked === answer ? 'correct' : 'reveal');
+      else if (opt === picked) label.classList.add('incorrect');
+    });
+    showFeedback(card, state[i].correct);
+    saveState();
+    render();
+  }
+  function checkDropdownAnswer(i) {
+    var card = cards[i];
+    var selects = Array.prototype.slice.call(card.querySelectorAll('select'));
+    if (!allDropdownsAnswered(card)) return;
+    var allCorrect = true;
+    selects.forEach(function (select) {
+      var row = select.closest('.match-row');
+      row.classList.remove('correct', 'incorrect');
+      if (select.value === select.getAttribute('data-answer')) row.classList.add('correct');
+      else { row.classList.add('incorrect'); allCorrect = false; }
+      select.disabled = true;
+    });
+    state[i].checked = true;
+    state[i].correct = allCorrect;
+    showFeedback(card, allCorrect);
+    saveState();
+    render();
+  }
+  function showFeedback(card, isRight) {
+    var fb = card.querySelector('.feedback');
+    var banner = card.querySelector('.feedback-banner');
+    fb.classList.remove('is-correct', 'is-incorrect');
+    banner.classList.remove('is-correct', 'is-incorrect');
+    fb.classList.add('show', isRight ? 'is-correct' : 'is-incorrect');
+    banner.classList.add(isRight ? 'is-correct' : 'is-incorrect');
+    banner.textContent = isRight ? '\u2705  Correct!' : '\u274c  Incorrect';
+  }
+  function updateDots() {
+    var dots = bar.querySelectorAll('.dot');
+    dots.forEach(function (d, i) {
+      d.className = 'dot';
+      if (i === current) d.classList.add('current');
+      else if (state[i].checked && state[i].correct) d.classList.add('correct');
+      else if (state[i].checked && !state[i].correct) d.classList.add('incorrect');
+      else if (state[i].picked) d.classList.add('answered');
+    });
+    updateSubmitButton();
+  }
+  function updateSubmitButton() {
+    var submitBtn = document.getElementById('submitBtn');
+    var msg = submitBar.querySelector('p');
+    if (allAnswered()) { submitBtn.disabled = false; msg.textContent = "You've reached the end of the quiz!"; }
+    else {
+      submitBtn.disabled = true;
+      var remaining = state.filter(function (s) { return s.picked === null; }).length;
+      msg.textContent = 'Answer all questions to finish. ' + remaining + ' still to go.';
+    }
+  }
+  var overlay = document.getElementById('summaryOverlay');
+  var completionCode = document.getElementById('completionCode');
+  var codeValue = document.getElementById('codeValue');
+  function showSummary() {
+    var resetBtn = document.getElementById('resetBtn');
+    var finished = allAnswered();
+    if (finished) {
+      cards.forEach(function (card, i) {
+        if (!state[i].checked && state[i].picked) checkAnswer(i);
+      });
+    }
+    resetBtn.style.display = finished ? '' : 'none';
+    if (!finished) {
+      var answered = state.filter(function (s) { return s.picked !== null; }).length;
+      var remaining = total - answered;
+      document.getElementById('summaryEmoji').textContent = '\ud83d\udcdd';
+      document.getElementById('scoreText').textContent = answered + ' / ' + total;
+      document.getElementById('scoreSub').textContent = 'Keep going. ' + remaining + ' question' + (remaining === 1 ? '' : 's') + ' still to answer before you can finish.';
+      completionCode.style.display = 'none';
+      overlay.classList.add('show');
+      return;
+    }
+    var right = state.filter(function (s) { return s.correct; }).length;
+    var pct = right / total;
+    document.getElementById('scoreText').textContent = right + ' / ' + total;
+    var emoji, msg;
+    if (pct === 1) { emoji = '\ud83c\udf89'; msg = 'Perfect score. You have a strong grip on mean, median, mode, and skewness.'; }
+    else if (pct >= 0.8) { emoji = '\ud83c\udf1f'; msg = 'Excellent. Review the few missed items and you will be in strong shape for the next lesson.'; }
+    else if (pct >= 0.5) { emoji = '\ud83d\udcaa'; msg = 'Good effort. Review the explanations, especially the skewness and R code items.'; }
+    else { emoji = '\ud83d\udcda'; msg = 'Good start. Focus your review on the definitions and on how skewness relates to the mean, median, and mode.'; }
+    document.getElementById('summaryEmoji').textContent = emoji;
+    document.getElementById('scoreSub').textContent = msg;
+    if (pct >= PASS_THRESHOLD) { codeValue.textContent = COMPLETION_CODE; completionCode.style.display = 'block'; }
+    else completionCode.style.display = 'none';
+    overlay.classList.add('show');
+  }
+  document.getElementById('summaryBtn').addEventListener('click', showSummary);
+  document.getElementById('submitBtn').addEventListener('click', showSummary);
+  document.getElementById('closeSum').addEventListener('click', function () { overlay.classList.remove('show'); });
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.classList.remove('show'); });
+  document.getElementById('resetBtn').addEventListener('click', function () {
+    overlay.classList.remove('show');
+    clearState();
+    cards.forEach(function (card, i) {
+      state[i] = { picked: null, checked: false, correct: false };
+      card.classList.remove('active');
+      card.querySelectorAll('label').forEach(function (label) { label.className = ''; });
+      card.querySelectorAll('input[type="radio"]').forEach(function (r) { r.checked = false; });
+      card.querySelectorAll('select').forEach(function (select) { select.value = ''; select.disabled = false; });
+      card.querySelectorAll('.match-row').forEach(function (row) { row.classList.remove('correct', 'incorrect'); });
+      card.querySelectorAll('.feedback').forEach(function (fb) { fb.className = 'feedback'; });
+      card.querySelectorAll('.feedback-banner').forEach(function (banner) { banner.className = 'feedback-banner'; banner.textContent = ''; });
+    });
+    current = 0;
+    cards[0].classList.add('active');
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  loadState();
+  cards[current].classList.add('active');
+  render();
+})();
+</script>
+</body>
+</html>
