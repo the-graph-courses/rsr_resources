@@ -1,0 +1,345 @@
+---
+title: "Confounding, Multiple Regression, and Interaction"
+subtitle: "Testosterone and body weight in NHANES adults"
+author: "RSR Resources"
+format:
+  html:
+    toc: false
+    number-sections: false
+    theme: cosmo
+    fig-width: 9
+    fig-height: 5.5
+    css: |
+      section.level1 {
+        min-height: 92vh;
+        padding: 2.5rem 0 3rem;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      section.level1:last-of-type { border-bottom: none; }
+      .quarto-title-block { margin-bottom: 0; }
+      h1 { color: #006D77; font-weight: 700; }
+      h2 { color: #006D77; font-size: 1.35rem; margin-top: 1.25rem; }
+      .callout { margin-top: 1rem; }
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r setup, include=FALSE}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(broom)
+
+nhanes <- read_csv(
+  "datasets_staging/cleaned/openintro_nhanes_samp_adult_500.csv",
+  show_col_types = FALSE
+) |>
+  filter(
+    !is.na(Testosterone), !is.na(Weight), !is.na(Gender), !is.na(Age)
+  ) |>
+  mutate(
+    log_testo = log(Testosterone),
+    Gender = factor(Gender, levels = c("female", "male"))
+  )
+
+theme_rsr <- theme_minimal(base_size = 15) +
+  theme(
+    plot.title = element_text(face = "bold", color = "#006D77"),
+    legend.position = "bottom"
+  )
+
+pal_sex <- c(female = "#E07A5F", male = "#006D77")
+naive_col <- "#333333"
+```
+
+# The data
+
+We ask whether **body weight** is associated with **testosterone** in US adults.
+
+The OpenIntro NHANES sample has lab values for 500 adults. After dropping missing testosterone, weight, sex, or age, we keep **`r nrow(nhanes)`** complete cases.
+
+::: {.callout-note}
+Testosterone is right-skewed, so we model **`log(Testosterone)`** rather than the raw lab value.
+:::
+
+# What is confounding?
+
+A **confounder** is a third variable that:
+
+1. Is associated with the **exposure** (weight)
+2. Is associated with the **outcome** (log testosterone)
+3. Is **not** on the causal pathway from exposure to outcome
+
+If we ignore it, the simple relationship we see can be **misleading**.
+
+```{r confounding-diagram, echo=FALSE, fig.cap="Sex sits on back-door paths between weight and testosterone."}
+#| fig-width: 8
+#| fig-height: 3
+confound_df <- data.frame(
+  x = c(1, 2, 3),
+  y = c(2, 2, 2),
+  label = c("Weight", "Sex", "log(Testosterone)")
+)
+
+ggplot(confound_df, aes(x, y, label = label)) +
+  geom_label(fill = "white", color = "#006D77", size = 5, label.size = 0.4) +
+  annotate(
+    "segment", x = 1.35, xend = 1.65, y = 2.15, yend = 2.35,
+    arrow = arrow(length = unit(0.18, "cm")), linewidth = 0.6, color = "#555"
+  ) +
+  annotate(
+    "segment", x = 2.35, xend = 2.65, y = 2.15, yend = 2.35,
+    arrow = arrow(length = unit(0.18, "cm")), linewidth = 0.6, color = "#555"
+  ) +
+  annotate(
+    "segment", x = 1.25, xend = 2.75, y = 1.85, yend = 1.85,
+    arrow = arrow(length = unit(0.18, "cm")), linewidth = 0.6, color = "#888", linetype = "dashed"
+  ) +
+  annotate("text", x = 2, y = 1.55, label = "spurious pooled slope?", size = 4, color = "#888") +
+  coord_equal(xlim = c(0.6, 3.4), ylim = c(1.2, 2.7)) +
+  theme_void()
+```
+
+**Sex** is a classic confounder here: males are heavier on average and have much higher testosterone.
+
+# First look — scatter
+
+Before fitting anything, plot the outcome against the main predictor. Points only — no lines yet.
+
+```{r scatter-raw, fig.cap="Higher weight goes with higher log testosterone mainly because males dominate the upper-left cloud."}
+ggplot(nhanes, aes(Weight, log_testo)) +
+  geom_point(alpha = 0.65, size = 2.2, color = "#555") +
+  labs(x = "Weight (kg)", y = "log(Testosterone)") +
+  theme_rsr
+```
+
+Does more weight go with higher or lower testosterone? The pooled cloud slopes upward.
+
+# Naive model — weight only
+
+```{r model-simple}
+m_simple <- lm(log_testo ~ Weight, data = nhanes)
+summary(m_simple)
+```
+
+```{r scatter-simple, fig.cap="The pooled slope is positive and highly significant."}
+ggplot(nhanes, aes(Weight, log_testo)) +
+  geom_point(alpha = 0.55, size = 2, color = "#555") +
+  geom_smooth(method = "lm", se = TRUE, color = naive_col, linewidth = 1) +
+  labs(
+    x = "Weight (kg)",
+    y = "log(Testosterone)",
+    title = "Pooled regression ignores sex"
+  ) +
+  theme_rsr
+```
+
+Each extra **kg** is associated with about **`r round(coef(m_simple)["Weight"], 3)`** units on the log scale. That sounds like a real weight effect — but we have not accounted for sex.
+
+# Same plot — colour reveals the pattern
+
+```{r scatter-colour, fig.cap="Within each sex, weight and log testosterone are nearly flat; pooling groups creates an upward slope."}
+ggplot(nhanes, aes(Weight, log_testo, color = Gender)) +
+  geom_point(alpha = 0.55, size = 2) +
+  geom_smooth(
+    aes(group = 1),
+    method = "lm", se = FALSE, color = naive_col, linewidth = 1
+  ) +
+  scale_color_manual(values = pal_sex) +
+  labs(
+    x = "Weight (kg)",
+    y = "log(Testosterone)",
+    color = "Sex",
+    title = "The naive line still comes from the pooled model"
+  ) +
+  theme_rsr
+```
+
+::: {.callout-important}
+## Simpson's paradox
+
+The pooled trend says weight goes with higher testosterone. Within each sex, the trend is flat or even slightly negative. **Sex** connects to both weight and testosterone — a back-door path.
+:::
+
+# Confounding does not always flip the sign
+
+A sign reversal is the dramatic version. Confounding can also **shrink**, **inflate**, or **hide** an association without reversing it.
+
+The real question is always: **what comparison is this coefficient making?**
+
+# Multiple linear regression — adjust for sex
+
+Add sex on the right-hand side. Same weight slope in every group, different intercepts — **parallel lines**.
+
+$$
+\log(\text{Testosterone}) = \beta_0 + \beta_1\,\text{Weight} + \beta_2\,\text{Male}
+$$
+
+```{r model-additive}
+m_add <- lm(log_testo ~ Weight + Gender, data = nhanes)
+tidy(m_add, conf.int = TRUE) |>
+  mutate(across(where(is.numeric), \(x) round(x, 4)))
+```
+
+```{r scatter-additive, fig.cap="Parallel lines: one weight slope, shifted intercepts by sex."}
+pred_add <- expand.grid(
+  Weight = seq(min(nhanes$Weight), max(nhanes$Weight), length.out = 100),
+  Gender = levels(nhanes$Gender)
+)
+pred_add$fitted <- predict(m_add, newdata = pred_add)
+
+ggplot(nhanes, aes(Weight, log_testo, color = Gender)) +
+  geom_point(alpha = 0.55, size = 2) +
+  geom_line(data = pred_add, aes(y = fitted), linewidth = 1) +
+  scale_color_manual(values = pal_sex) +
+  labs(
+    x = "Weight (kg)",
+    y = "log(Testosterone)",
+    color = "Sex",
+    title = "Additive model: Weight + Sex"
+  ) +
+  theme_rsr
+```
+
+After adjustment, the weight coefficient is near **zero** (p = `r format.pval(summary(m_add)$coefficients["Weight", "Pr(>|t|)"], digits = 2, eps = 0.001)`). Sex carries most of the difference in testosterone levels.
+
+# Coefficients at a glance
+
+```{r coef-table}
+bind_rows(
+  naive    = tidy(m_simple, conf.int = TRUE),
+  adjusted = tidy(m_add, conf.int = TRUE),
+  .id = "model"
+) |>
+  filter(term %in% c("Weight", "(Intercept)")) |>
+  mutate(across(where(is.numeric), \(x) round(x, 4)))
+```
+
+The weight slope shrinks from **`r round(coef(m_simple)["Weight"], 3)`** to **`r round(coef(m_add)["Weight"], 3)`** once we hold sex constant.
+
+# Add another predictor — age (additive only)
+
+Real analyses often adjust for more than one factor. **Age** also relates to weight and to hormones, so we add it **additively** alongside sex:
+
+$$
+\log(\text{Testosterone}) = \beta_0 + \beta_1\,\text{Weight} + \beta_2\,\text{Male} + \beta_3\,\text{Age}
+$$
+
+```{r model-age}
+m_age <- lm(log_testo ~ Weight + Gender + Age, data = nhanes)
+tidy(m_age, conf.int = TRUE) |>
+  mutate(across(where(is.numeric), \(x) round(x, 4)))
+```
+
+Each term is a **separate adjustment**: the weight coefficient is now the association between weight and log testosterone **among people of the same sex and age**.
+
+We do **not** add `Weight * Age` here. Age is a confounder we want to control, not a group where we expect the weight slope to change.
+
+::: {.callout-tip}
+## When to use `+` (addition)
+
+Use **`+`** when a variable is a **confounder** or **precision covariate** and you are happy assuming the weight effect is the **same** across its levels. That gives parallel adjustment: one slope for weight, intercept shifts for sex, a linear shift per year of age.
+:::
+
+# When a common weight slope is too strict
+
+The additive model **forces the same weight slope** for males and females. That may be wrong if biology makes the weight–testosterone link **different by sex**.
+
+Use an **interaction** instead of only adding sex:
+
+$$
+\log(\text{Testosterone}) = \beta_0 + \beta_1\,\text{Weight} + \beta_2\,\text{Male} + \beta_3\,(\text{Weight} \times \text{Male})
+$$
+
+In R: `Weight * Gender` expands to `Weight + Gender + Weight:Gender`.
+
+```{r model-interaction}
+m_int <- lm(log_testo ~ Weight * Gender, data = nhanes)
+tidy(m_int, conf.int = TRUE) |>
+  mutate(across(where(is.numeric), \(x) round(x, 4)))
+```
+
+The **`Weight:Gendermale`** row tests whether the weight slope **differs** between sexes (p = `r format.pval(summary(m_int)$coefficients["Weight:Gendermale", "Pr(>|t|)"], digits = 2, eps = 0.001)`).
+
+```{r scatter-interaction, fig.cap="Interaction model: separate weight slopes for males and females."}
+pred_int <- expand.grid(
+  Weight = seq(min(nhanes$Weight), max(nhanes$Weight), length.out = 100),
+  Gender = levels(nhanes$Gender)
+)
+pred_int$fitted <- predict(m_int, newdata = pred_int)
+
+ggplot(nhanes, aes(Weight, log_testo, color = Gender)) +
+  geom_point(alpha = 0.55, size = 2) +
+  geom_line(data = pred_int, aes(y = fitted), linewidth = 1) +
+  scale_color_manual(values = pal_sex) +
+  labs(
+    x = "Weight (kg)",
+    y = "log(Testosterone)",
+    color = "Sex",
+    title = "Interaction model: Weight * Sex"
+  ) +
+  theme_rsr
+```
+
+::: {.callout-tip}
+## Rules of thumb: `+` versus `*`
+
+| Situation | Typical choice |
+|-----------|----------------|
+| Variable is a confounder; same exposure effect in all groups | **`+`** (e.g. `Weight + Gender + Age`) |
+| You have a scientific reason the exposure effect **differs by group** | **`*`** (e.g. `Weight * Gender`) |
+| Stratified plots show **parallel** lines | Prefer **`+`** |
+| Stratified plots show **clearly different slopes** | Consider **`*`** |
+| Interaction p-value is large and lines look parallel | **`+`** is often enough |
+| Many predictors; interaction not pre-specified | Start with **`+`**; add `*` only when justified |
+
+**Addition** answers: "What is the weight association **holding** sex (and age) constant?" **Multiplication** answers: "Does the weight association **depend on** sex?"
+:::
+
+# Compare weight slopes across models
+
+```{r coef-compare, fig.cap="The pooled weight effect shrinks after adjustment; interaction allows different slopes by sex."}
+coef_df <- bind_rows(
+  tidy(m_simple, conf.int = TRUE) |>
+    filter(term == "Weight") |>
+    mutate(model = "1. Pooled"),
+  tidy(m_add, conf.int = TRUE) |>
+    filter(term == "Weight") |>
+    mutate(model = "2. + Sex"),
+  tidy(m_age, conf.int = TRUE) |>
+    filter(term == "Weight") |>
+    mutate(model = "3. + Sex + Age"),
+  tidy(m_int, conf.int = TRUE) |>
+    filter(term == "Weight") |>
+    mutate(model = "4. Interaction (female slope)")
+) |>
+  mutate(model = factor(model, levels = unique(model)))
+
+ggplot(coef_df, aes(estimate, model, xmin = conf.low, xmax = conf.high)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "#888") +
+  geom_errorbarh(height = 0.15, linewidth = 0.8, color = "#006D77") +
+  geom_point(size = 3, color = "#006D77") +
+  labs(
+    x = "Weight slope on log(Testosterone) scale",
+    y = NULL,
+    title = "Weight slopes across models"
+  ) +
+  theme_rsr
+```
+
+# Takeaways
+
+1. **Confounding** can make a pooled association look real when it is mostly compositional (here, mixing males and females).
+2. **Multiple linear regression** changes the comparison: from pooled association to association **holding selected variables constant**.
+3. Add confounders with **`+`** when you want shared slopes; use **`*`** when the exposure effect may **differ by group**.
+4. Always **plot by group** before trusting one-number summaries.
+5. Causal language still needs more than adjustment — but the right controls clarify **which** association you are estimating.
+
+::: {.callout-note}
+Data: OpenIntro NHANES adult sample (`openintro_nhanes_samp_adult_500.csv`), CC-BY-SA 4.0; underlying NHANES is US-government public domain.
+:::
