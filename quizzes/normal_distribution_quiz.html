@@ -105,9 +105,6 @@
   .summary-box .btn { margin: 0.3rem; }
   .btn-close-sum { background: var(--light-teal); color: var(--white); }
   .btn-reset { background: var(--dark-teal); color: var(--white); }
-  .completion-code { margin-top: 1rem; padding: 1rem; background: var(--yellow-light); border: 2px dashed var(--yellow); border-radius: 10px; }
-  .completion-code p { font-size: 0.85rem; color: var(--dark-teal); margin-bottom: 0.4rem; }
-  .completion-code .code { font-size: 1.6rem; font-weight: 800; color: var(--dark-teal); letter-spacing: 0.1em; font-family: 'Courier New', monospace; user-select: all; }
   @media (max-width: 620px) {
     .top-row { align-items: flex-start; gap: 0.75rem; }
   }
@@ -353,10 +350,6 @@
     <div class="summary-emoji" id="summaryEmoji"></div>
     <div class="score-text" id="scoreText">-</div>
     <div class="score-sub" id="scoreSub"></div>
-    <div class="completion-code" id="completionCode" style="display:none;">
-      <p>Enter this code in your LMS to mark the lesson complete:</p>
-      <div class="code" id="codeValue"></div>
-    </div>
     <div style="margin-top:1rem;">
       <button class="btn btn-close-sum" id="closeSum" type="button">Review Answers</button>
       <button class="btn btn-reset" id="resetBtn" type="button">Try Again</button>
@@ -366,8 +359,6 @@
 </div>
 <script>
 (function () {
-  var COMPLETION_CODE = 'NORMAL';
-  var PASS_THRESHOLD = 0.8;
   var cards = Array.prototype.slice.call(document.querySelectorAll('.question-card'));
   var total = cards.length;
   var current = 0;
@@ -624,8 +615,6 @@
     }
   }
   var overlay = document.getElementById('summaryOverlay');
-  var completionCode = document.getElementById('completionCode');
-  var codeValue = document.getElementById('codeValue');
   function showSummary() {
     var resetBtn = document.getElementById('resetBtn');
     var finished = allAnswered();
@@ -641,7 +630,6 @@
       document.getElementById('summaryEmoji').textContent = '\ud83d\udcdd';
       document.getElementById('scoreText').textContent = answered + ' / ' + total;
       document.getElementById('scoreSub').textContent = 'Keep going. ' + remaining + ' question' + (remaining === 1 ? '' : 's') + ' still to answer before you can finish.';
-      completionCode.style.display = 'none';
       overlay.classList.add('show');
       return;
     }
@@ -664,12 +652,6 @@
     }
     document.getElementById('summaryEmoji').textContent = emoji;
     document.getElementById('scoreSub').textContent = msg;
-    if (pct >= PASS_THRESHOLD) {
-      codeValue.textContent = COMPLETION_CODE;
-      completionCode.style.display = 'block';
-    } else {
-      completionCode.style.display = 'none';
-    }
     overlay.classList.add('show');
   }
   document.getElementById('summaryBtn').addEventListener('click', showSummary);
