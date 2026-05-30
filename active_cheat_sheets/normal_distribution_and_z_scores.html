@@ -7,30 +7,42 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
+            --bg: #dfe8ea;
+            --paper: #f7f4ed;
+            --white: #fffef9;
+            --ink: #101418;
+            --muted: #665f51;
             --teal: #0d7377;
             --teal-dark: #0a5d61;
-            --teal-soft: #eff7f7;
+            --teal-soft: #e3f3f3;
             --gold: #f0c808;
-            --gold-soft: #fff9df;
+            --gold-soft: #fff3cc;
             --rose: #b83b5e;
             --rose-soft: #fdeef1;
             --green: #2c8a4a;
-            --ink: #182326;
-            --muted: #5d6d72;
-            --border: #e1e5e8;
-            --white: #ffffff;
-            --est-rose: #c25a6e;
-            --est-rose-soft: #fce8ec;
-            --se-blue: #5f8bb8;
-            --se-blue-soft: #e7eef7;
-            --ci-navy: #324f7e;
-            --ci-navy-soft: #eef1f7;
-            --t-green: #5a9168;
-            --t-green-soft: #f0f6f1;
-            --p-gold: #b09148;
-            --p-gold-soft: #fbf6e7;
-            --violet: #6e4d9e;
-            --violet-soft: #f5f0fa;
+            --navy: #2f5f98;
+            --navy-soft: #e7eef7;
+            --orange: #d97706;
+            --orange-soft: #fff1dc;
+            --sky: #0b8fa3;
+            --sky-soft: #e8f7fa;
+            --plum: #6b3fa0;
+            --plum-soft: #f1e8f8;
+            --border: #101418;
+            --shadow: rgba(16, 20, 24, 0.42);
+
+            --est-rose: var(--rose);
+            --est-rose-soft: var(--rose-soft);
+            --se-blue: var(--navy);
+            --se-blue-soft: var(--navy-soft);
+            --ci-navy: var(--navy);
+            --ci-navy-soft: var(--navy-soft);
+            --t-green: var(--teal);
+            --t-green-soft: var(--teal-soft);
+            --p-gold: var(--orange);
+            --p-gold-soft: var(--orange-soft);
+            --violet: var(--plum);
+            --violet-soft: var(--plum-soft);
         }
         * { box-sizing: border-box; }
         body {
@@ -110,7 +122,7 @@
             flex-shrink: 0;
         }
         header { border-bottom: 1.2mm solid var(--gold); padding-bottom: 0.4mm; line-height: 1.1; }
-        h1 { margin: 0; color: var(--teal); font-size: 18pt; line-height: 0.98; letter-spacing: -0.02em; }
+        h1 { margin: 0; color: var(--orange); font-size: 18pt; line-height: 0.98; letter-spacing: -0.02em; }
         .subtitle { margin-top: 0.5mm; color: var(--muted); font-weight: 700; font-size: 8.4pt; line-height: 1.2; }
         .box {
             border: 1px solid var(--border);
@@ -180,6 +192,10 @@
         }
         .box.tag-gold .box-tag { background: var(--gold); color: var(--ink); }
         .box.tag-gold .box-body { background: var(--gold-soft); }
+        .box.tag-orange .box-tag { background: var(--orange); color: #fff; }
+        .box.tag-orange .box-body { background: var(--orange-soft); }
+        .box.tag-plum .box-tag { background: var(--plum); color: #fff; }
+        .box.tag-plum .box-body { background: var(--plum-soft); }
         .box.tag-violet .box-tag { background: var(--violet); color: #fff; }
         .box.tag-violet .box-body { background: var(--violet-soft); }
         .box.tag-t-green .box-tag { background: var(--t-green); color: #fff; }
@@ -207,7 +223,7 @@
         .se-blue { color: var(--se-blue); }
         .t-green { color: var(--t-green); }
         .ci-navy { color: var(--ci-navy); }
-        .p-gold { color: #8a7137; }
+        .p-gold { color: var(--orange); }
         .violet { color: var(--violet); }
         .rose { color: var(--rose); }
         .green { color: var(--green); }
@@ -417,7 +433,7 @@
         .metric-card.se .mc-value { color: var(--se-blue); }
         .metric-card.ci .mc-value { color: var(--ci-navy); }
         .metric-card.t .mc-value { color: var(--t-green); }
-        .metric-card.p .mc-value { color: #8a7137; }
+        .metric-card.p .mc-value { color: var(--orange); }
         .metric-card .mc-desc { font-size: 6.5pt; color: var(--ink); line-height: 1.55; margin-top: 0.1mm; }
         .metric-card .mc-desc .fill { font-size: 6.5pt; padding: 0 0.3mm 0.4px; min-width: 2mm; }
         .metric-card .mc-desc .hint { font-size: 3.5pt; }
@@ -429,7 +445,7 @@
         .report-card .rc-tag { font-size: 6.1pt; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; display: inline-block; padding: 0.3mm 1.5mm; border-radius: 3px; margin-bottom: 0.4mm; color: #fff; line-height: 1.1; }
         .report-card.preferred { border-left: 3px solid var(--ci-navy); background: #fafbfd; }
         .report-card.preferred .rc-tag { background: var(--ci-navy); }
-        .report-card.alt { border-left: 3px solid var(--p-gold); background: #fcfaf3; }
+        .report-card.alt { border-left: 3px solid var(--p-gold); background: var(--orange-soft); }
         .report-card.alt .rc-tag { background: var(--p-gold); }
         .report-card .rc-quote { font-family: Georgia, serif; font-style: italic; font-size: 7.9pt; line-height: 1.3; margin: 0.3mm 0 0.5mm; color: var(--ink); }
         .report-card .rc-shows { font-size: 7.3pt; color: var(--muted); line-height: 1.5; }
@@ -450,7 +466,7 @@
         .vocab-grid .v-term.est { background: var(--est-rose-soft); color: var(--est-rose); border: 1px solid #e9c2cc; }
         .vocab-grid .v-term.se { background: var(--se-blue-soft); color: var(--se-blue); border: 1px solid #c7d4e6; }
         .vocab-grid .v-term.tt { background: var(--t-green-soft); color: var(--t-green); border: 1px solid #c2d7c8; }
-        .vocab-grid .v-term.pp { background: var(--p-gold-soft); color: #8a7137; border: 1px solid #e1d2a9; }
+        .vocab-grid .v-term.pp { background: var(--p-gold-soft); color: var(--orange); border: 1px solid #e1d2a9; }
         .vocab-grid .v-term.h0 { background: var(--violet-soft); color: var(--violet); border: 1px solid #d4c7e6; }
         .vocab-grid .v-def { font-size: 7.9pt; }
         footer { border-top: 1px solid #cfdcde; padding-top: 0.6mm; display: flex; justify-content: center; color: var(--muted); font-size: 8pt; font-weight: 800; margin-top: auto; line-height: 1.2; }
@@ -534,9 +550,9 @@
         :root {
             --bg: #dfe8ea;
             --paper: #f7f4ed;
+            --white: #fffef9;
             --ink: #101418;
             --muted: #665f51;
-            --line: #d6cfbd;
             --teal: #0d7377;
             --teal-dark: #0a5d61;
             --teal-soft: #e3f3f3;
@@ -545,25 +561,34 @@
             --rose: #b83b5e;
             --rose-soft: #fdeef1;
             --green: #2c8a4a;
-            --soft: #eef6f6;
-            --cream: #fff3cc;
-            --blue: #2f5f98;
-            --blue-soft: #e7eef7;
-            --white: #fffef9;
+            --navy: #2f5f98;
+            --navy-soft: #e7eef7;
+            --orange: #d97706;
+            --orange-soft: #fff1dc;
+            --sky: #0b8fa3;
+            --sky-soft: #e8f7fa;
+            --plum: #6b3fa0;
+            --plum-soft: #f1e8f8;
             --border: #101418;
             --shadow: rgba(16, 20, 24, 0.42);
+
+            --line: #d6cfbd;
+            --soft: var(--sky-soft);
+            --cream: var(--gold-soft);
+            --blue: var(--navy);
+            --blue-soft: var(--navy-soft);
             --est-rose: #b83b5e;
             --est-rose-soft: #fdeef1;
-            --se-blue: #2f5f98;
-            --se-blue-soft: #e7eef7;
-            --ci-navy: #2f5f98;
-            --ci-navy-soft: #e7eef7;
+            --se-blue: var(--navy);
+            --se-blue-soft: var(--navy-soft);
+            --ci-navy: var(--navy);
+            --ci-navy-soft: var(--navy-soft);
             --t-green: #0d7377;
             --t-green-soft: #e3f3f3;
-            --p-gold: #a37b00;
-            --p-gold-soft: #fff3cc;
-            --violet: #6e4d9e;
-            --violet-soft: #f5f0fa;
+            --p-gold: var(--orange);
+            --p-gold-soft: var(--orange-soft);
+            --violet: var(--plum);
+            --violet-soft: var(--plum-soft);
         }
 
         body {
@@ -646,7 +671,7 @@
         }
 
         h1 {
-            color: var(--teal);
+            color: var(--orange);
             font-family: 'Space Grotesk', Arial, Helvetica, sans-serif;
             font-size: 19pt;
             font-weight: 800;
@@ -722,20 +747,45 @@
             gap: 0.45mm;
         }
 
-        .box:not(.tag-gold):not(.tag-rose):not(.tag-violet):not(.tag-t-green):not(.tag-p-gold):not(.tag-ci-navy) .box-body,
+        .box:not(.tag-gold):not(.tag-orange):not(.tag-plum):not(.tag-rose):not(.tag-violet):not(.tag-t-green):not(.tag-p-gold):not(.tag-ci-navy) .box-body,
         .box.tag-t-green .box-body {
             background: var(--teal-soft);
         }
 
-        .box.tag-gold .box-tag,
-        .box.tag-p-gold .box-tag {
+        .box.tag-gold .box-tag {
             background: var(--gold);
             color: var(--ink);
         }
 
-        .box.tag-gold .box-body,
-        .box.tag-p-gold .box-body {
+        .box.tag-gold .box-body {
             background: var(--gold-soft);
+        }
+
+        .box.tag-orange .box-tag {
+            background: var(--orange);
+            color: #fff;
+        }
+
+        .box.tag-orange .box-body {
+            background: var(--orange-soft);
+        }
+
+        .box.tag-plum .box-tag {
+            background: var(--plum);
+            color: #fff;
+        }
+
+        .box.tag-plum .box-body {
+            background: var(--plum-soft);
+        }
+
+        .box.tag-p-gold .box-tag {
+            background: var(--orange);
+            color: #fff;
+        }
+
+        .box.tag-p-gold .box-body {
+            background: var(--orange-soft);
         }
 
         .box.tag-violet .box-body {
@@ -743,7 +793,7 @@
         }
 
         .box.tag-ci-navy .box-body {
-            background: var(--blue-soft);
+            background: var(--navy-soft);
         }
 
         .mathline,
@@ -876,8 +926,8 @@
 
         .metric-card.p .mc-tag,
         .report-card.alt .rc-tag {
-            background: var(--gold);
-            color: var(--ink);
+            background: var(--orange);
+            color: #fff;
         }
 
         .report-card.preferred,
@@ -902,8 +952,8 @@
         }
 
         .vocab-grid .v-term.pp {
-            background: var(--gold-soft);
-            color: #8a6a00;
+            background: var(--orange-soft);
+            color: var(--orange);
         }
 
         .fill {
@@ -1436,27 +1486,27 @@
         </header>
 
         <div class="row split-58-42">
-            <div class="box tag-t-green">
+            <div class="box tag-orange">
                 <div class="box-tag"><span>What a normal distribution is</span></div>
                 <div class="box-body">
                     <p>A <b>normal distribution</b> is a special, bell-shaped <span class="b"><input class="fill" data-answer="density"><span class="hint">density / frequency / linear</span></span> curve that describes the tendency for data to <span class="b"><input class="fill" data-answer="cluster" data-alt="gather"><span class="hint">cluster / scatter / spike</span></span> around a central value. That central value is the population mean <span class="t-green" style="font-weight:800;">&mu;</span>, which always sits in the <span class="b"><input class="fill" data-answer="middle" data-alt="center|centre"><span class="hint">middle / corner / edge</span></span> of the curve, so most data fall <span class="b"><input class="fill" data-answer="near"><span class="hint">near / far from / above</span></span> the mean and fewer points land in either <span class="b"><input class="fill" data-answer="tail" data-alt="tails"><span class="hint">tail / peak / center</span></span>. It arises naturally for many variables, such as height, weight, and exam scores.</p>
                 </div>
             </div>
-            <div class="box tag-t-green">
+            <div class="box tag-orange">
                 <div class="box-tag"><span>The bell shape</span></div>
                 <div class="box-body" style="gap:0.4mm;">
                     <div class="fig">
                         <svg viewBox="0 0 300 120" role="img" aria-label="A symmetric bell-shaped normal curve centered at the mean">
                             <path d="M 30 100 C 90 100, 115 30, 150 30 C 185 30, 210 100, 270 100 Z" fill="#e3f3f3"/>
                             <path d="M 30 100 C 90 100, 115 30, 150 30 C 185 30, 210 100, 270 100" fill="none" stroke="#0d7377" stroke-width="1.8"/>
-                            <line x1="20" y1="100" x2="282" y2="100" stroke="#5d6d72" stroke-width="1"/>
-                            <line x1="150" y1="30" x2="150" y2="104" stroke="#5d6d72" stroke-width="0.9" stroke-dasharray="3,2"/>
-                            <line x1="92" y1="100" x2="92" y2="105" stroke="#5d6d72" stroke-width="0.8"/>
-                            <line x1="208" y1="100" x2="208" y2="105" stroke="#5d6d72" stroke-width="0.8"/>
-                            <text x="150" y="62" text-anchor="middle" font-size="7" font-weight="800" fill="#a37b00">total area = 100%</text>
+                            <line x1="20" y1="100" x2="282" y2="100" stroke="#665f51" stroke-width="1"/>
+                            <line x1="150" y1="30" x2="150" y2="104" stroke="#665f51" stroke-width="0.9" stroke-dasharray="3,2"/>
+                            <line x1="92" y1="100" x2="92" y2="105" stroke="#665f51" stroke-width="0.8"/>
+                            <line x1="208" y1="100" x2="208" y2="105" stroke="#665f51" stroke-width="0.8"/>
+                            <text x="150" y="62" text-anchor="middle" font-size="7" font-weight="800" fill="#d97706">total area = 100%</text>
                             <text x="150" y="114" text-anchor="middle" font-size="6.4" font-weight="800" fill="#0d7377">&mu;</text>
-                            <text x="92" y="114" text-anchor="middle" font-size="6.4" fill="#5d6d72">&minus;1&sigma;</text>
-                            <text x="208" y="114" text-anchor="middle" font-size="6.4" fill="#5d6d72">+1&sigma;</text>
+                            <text x="92" y="114" text-anchor="middle" font-size="6.4" fill="#665f51">&minus;1&sigma;</text>
+                            <text x="208" y="114" text-anchor="middle" font-size="6.4" fill="#665f51">+1&sigma;</text>
                         </svg>
                     </div>
                     <p>Shape facts: it is <span class="b"><input class="fill" data-answer="unimodal"><span class="hint">unimodal / bimodal / skewed</span></span> (a single <b>peak</b>) and <span class="b"><input class="fill" data-answer="symmetric" data-alt="symmetrical"><span class="hint">symmetric / lopsided / flat</span></span> about its mean. As a density curve, the total <span class="b"><input class="fill" data-answer="area"><span class="hint">area / height / width</span></span> under it always equals <span class="b"><input class="fill code" data-answer="1" data-alt="100%|one"><span class="hint">1 / 0 / 50%</span></span>. A variable that follows it is written X ~ <span class="b"><input class="fill code" data-answer="N" data-alt="n"><span class="hint">N / U / P</span></span>(&mu;, &sigma;).</p>
@@ -1499,33 +1549,33 @@
                     <div class="fig">
                         <svg viewBox="0 0 360 150" role="img" aria-label="Normal curve with nested brackets for 68, 95 and 99.7 percent">
                             <path d="M 50 120 C 120 120, 150 28, 180 28 C 210 28, 240 120, 310 120 Z" fill="#fff3cc"/>
-                            <path d="M 50 120 C 120 120, 150 28, 180 28 C 210 28, 240 120, 310 120" fill="none" stroke="#a37b00" stroke-width="1.5"/>
-                            <line x1="40" y1="120" x2="320" y2="120" stroke="#5d6d72" stroke-width="1"/>
-                            <g stroke="#5d6d72" stroke-width="0.7" stroke-dasharray="2.5,2">
+                            <path d="M 50 120 C 120 120, 150 28, 180 28 C 210 28, 240 120, 310 120" fill="none" stroke="#d97706" stroke-width="1.5"/>
+                            <line x1="40" y1="120" x2="320" y2="120" stroke="#665f51" stroke-width="1"/>
+                            <g stroke="#665f51" stroke-width="0.7" stroke-dasharray="2.5,2">
                                 <line x1="180" y1="28" x2="180" y2="124"/>
                                 <line x1="144" y1="54" x2="144" y2="124"/><line x1="216" y1="54" x2="216" y2="124"/>
                                 <line x1="108" y1="86" x2="108" y2="124"/><line x1="252" y1="86" x2="252" y2="124"/>
                                 <line x1="72" y1="112" x2="72" y2="124"/><line x1="288" y1="112" x2="288" y2="124"/>
                             </g>
-                            <g stroke="#a37b00" stroke-width="1.4" fill="none">
+                            <g stroke="#d97706" stroke-width="1.4" fill="none">
                                 <path d="M 144 56 L 216 56"/><path d="M 144 56 l 0 4"/><path d="M 216 56 l 0 4"/>
                                 <path d="M 108 88 L 252 88"/><path d="M 108 88 l 0 4"/><path d="M 252 88 l 0 4"/>
                                 <path d="M 72 108 L 288 108"/><path d="M 72 108 l 0 4"/><path d="M 288 108 l 0 4"/>
                             </g>
-                            <g font-size="6.2" fill="#5d6d72" text-anchor="middle">
+                            <g font-size="6.2" fill="#665f51" text-anchor="middle">
                                 <text x="72" y="134">&minus;3&sigma;</text><text x="108" y="134">&minus;2&sigma;</text><text x="144" y="134">&minus;1&sigma;</text>
                                 <text x="180" y="134" font-weight="800" fill="#0d7377">&mu;</text>
                                 <text x="216" y="134">+1&sigma;</text><text x="252" y="134">+2&sigma;</text><text x="288" y="134">+3&sigma;</text>
                             </g>
                         </svg>
                         <div class="fig-lbl" style="left:50%; top:30%; width:20%; transform:translateX(-50%);">
-                            <span class="b"><input class="fill code" data-answer="68%" data-alt="68" style="background:#ffffff;"><span class="hint">68% / 50% / 95%</span></span>
+                            <span class="b"><input class="fill code" data-answer="68%" data-alt="68" style="background:#fffef9;"><span class="hint">68% / 50% / 95%</span></span>
                         </div>
                         <div class="fig-lbl" style="left:50%; top:50%; width:20%; transform:translateX(-50%);">
-                            <span class="b"><input class="fill code" data-answer="95%" data-alt="95" style="background:#ffffff;"><span class="hint">95% / 68% / 99.7%</span></span>
+                            <span class="b"><input class="fill code" data-answer="95%" data-alt="95" style="background:#fffef9;"><span class="hint">95% / 68% / 99.7%</span></span>
                         </div>
                         <div class="fig-lbl" style="left:50%; top:66%; width:22%; transform:translateX(-50%);">
-                            <span class="b"><input class="fill code" data-answer="99.7%" data-alt="99.7" style="background:#ffffff;"><span class="hint">99.7% / 95% / 100%</span></span>
+                            <span class="b"><input class="fill code" data-answer="99.7%" data-alt="99.7" style="background:#fffef9;"><span class="hint">99.7% / 95% / 100%</span></span>
                         </div>
                         <div class="fig-caption">Fill the area captured by each nested bracket.</div>
                     </div>
@@ -1550,24 +1600,24 @@
                     <p style="margin:0 0 0.2mm; font-size:7.6pt;">Blood pressure with <b>&mu; = 130</b> and <b>&sigma; = 20</b>, so each tick is one standard deviation. Standardizing maps each raw value to a z-axis below.</p>
                     <div class="fig">
                         <svg viewBox="0 0 360 150" role="img" aria-label="Blood pressure axis aligned with a z-score axis below it">
-                            <text x="30" y="18" font-size="7.4" fill="#5d6d72">Blood pressure</text>
-                            <line x1="30" y1="42" x2="330" y2="42" stroke="#5d6d72" stroke-width="1"/>
-                            <g stroke="#5d6d72" stroke-width="0.8"><line x1="30" y1="39" x2="30" y2="45"/><line x1="80" y1="39" x2="80" y2="45"/><line x1="130" y1="39" x2="130" y2="45"/><line x1="180" y1="39" x2="180" y2="45"/><line x1="230" y1="39" x2="230" y2="45"/><line x1="280" y1="39" x2="280" y2="45"/><line x1="330" y1="39" x2="330" y2="45"/></g>
-                            <g font-size="7.6" fill="#5d6d72" text-anchor="middle"><text x="30" y="33">70</text><text x="80" y="33">90</text><text x="130" y="33">110</text><text x="180" y="33" font-weight="800" fill="#0d7377">130</text><text x="230" y="33">150</text><text x="280" y="33">170</text><text x="330" y="33">190</text></g>
-                            <line x1="30" y1="96" x2="330" y2="96" stroke="#5d6d72" stroke-width="1"/>
-                            <g stroke="#5d6d72" stroke-width="0.8"><line x1="30" y1="93" x2="30" y2="99"/><line x1="80" y1="93" x2="80" y2="99"/><line x1="130" y1="93" x2="130" y2="99"/><line x1="180" y1="93" x2="180" y2="99"/><line x1="230" y1="93" x2="230" y2="99"/><line x1="280" y1="93" x2="280" y2="99"/><line x1="330" y1="93" x2="330" y2="99"/></g>
-                            <g font-size="7.6" fill="#5d6d72" text-anchor="middle"><text x="30" y="110">&minus;3</text><text x="80" y="110">&minus;2</text><text x="130" y="110">&minus;1</text><text x="230" y="110">+1</text><text x="280" y="110">+2</text><text x="330" y="110">+3</text></g>
-                            <text x="330" y="124" font-size="7.4" fill="#5d6d72" text-anchor="end">z-score (&sigma; units)</text>
+                            <text x="30" y="18" font-size="7.4" fill="#665f51">Blood pressure</text>
+                            <line x1="30" y1="42" x2="330" y2="42" stroke="#665f51" stroke-width="1"/>
+                            <g stroke="#665f51" stroke-width="0.8"><line x1="30" y1="39" x2="30" y2="45"/><line x1="80" y1="39" x2="80" y2="45"/><line x1="130" y1="39" x2="130" y2="45"/><line x1="180" y1="39" x2="180" y2="45"/><line x1="230" y1="39" x2="230" y2="45"/><line x1="280" y1="39" x2="280" y2="45"/><line x1="330" y1="39" x2="330" y2="45"/></g>
+                            <g font-size="7.6" fill="#665f51" text-anchor="middle"><text x="30" y="33">70</text><text x="80" y="33">90</text><text x="130" y="33">110</text><text x="180" y="33" font-weight="800" fill="#0d7377">130</text><text x="230" y="33">150</text><text x="280" y="33">170</text><text x="330" y="33">190</text></g>
+                            <line x1="30" y1="96" x2="330" y2="96" stroke="#665f51" stroke-width="1"/>
+                            <g stroke="#665f51" stroke-width="0.8"><line x1="30" y1="93" x2="30" y2="99"/><line x1="80" y1="93" x2="80" y2="99"/><line x1="130" y1="93" x2="130" y2="99"/><line x1="180" y1="93" x2="180" y2="99"/><line x1="230" y1="93" x2="230" y2="99"/><line x1="280" y1="93" x2="280" y2="99"/><line x1="330" y1="93" x2="330" y2="99"/></g>
+                            <g font-size="7.6" fill="#665f51" text-anchor="middle"><text x="30" y="110">&minus;3</text><text x="80" y="110">&minus;2</text><text x="130" y="110">&minus;1</text><text x="230" y="110">+1</text><text x="280" y="110">+2</text><text x="330" y="110">+3</text></g>
+                            <text x="330" y="124" font-size="7.4" fill="#665f51" text-anchor="end">z-score (&sigma; units)</text>
                             <line x1="180" y1="45" x2="180" y2="132" stroke="#0d7377" stroke-width="0.9" stroke-dasharray="3,2"/>
                             <circle cx="97.5" cy="42" r="2.8" fill="#fff" stroke="#0d7377" stroke-width="1.4"/>
                             <line x1="97.5" y1="42" x2="97.5" y2="132" stroke="#0d7377" stroke-width="1" stroke-dasharray="2.5,2"/>
                             <text x="97.5" y="27" font-size="7.4" fill="#0d7377" text-anchor="middle" font-weight="700">x = 97</text>
                         </svg>
                         <div class="fig-lbl" style="left:50%; top:84%; width:15%; transform:translateX(-50%);">
-                            <span class="b"><input class="fill code" data-answer="0" style="background:#ffffff;"><span class="hint">0 / 1 / 130</span></span>
+                            <span class="b"><input class="fill code" data-answer="0" style="background:#fffef9;"><span class="hint">0 / 1 / 130</span></span>
                         </div>
                         <div class="fig-lbl" style="left:27%; top:84%; width:22%; transform:translateX(-50%);">
-                            <span class="b"><input class="fill code" data-answer="-1.65" data-alt="−1.65" style="background:#ffffff;"><span class="hint">-1.65 / -1 / 0</span></span>
+                            <span class="b"><input class="fill code" data-answer="-1.65" data-alt="−1.65" style="background:#fffef9;"><span class="hint">-1.65 / -1 / 0</span></span>
                         </div>
                     </div>
                 </div>
@@ -1586,11 +1636,11 @@
                                 <path d="M 20 72 C 60 72, 80 16, 100 16 C 120 16, 140 72, 180 72 Z" fill="#e7eef7"/>
                                 <path d="M 20 72 C 60 72, 80 16, 100 16 C 120 16, 140 72, 180 72 Z" fill="#b83b5e" opacity="0.55" clip-path="url(#tail)"/>
                                 <path d="M 20 72 C 60 72, 80 16, 100 16 C 120 16, 140 72, 180 72" fill="none" stroke="#2f5f98" stroke-width="1.4"/>
-                                <line x1="14" y1="72" x2="186" y2="72" stroke="#5d6d72" stroke-width="0.9"/>
+                                <line x1="14" y1="72" x2="186" y2="72" stroke="#665f51" stroke-width="0.9"/>
                                 <line x1="50" y1="40" x2="50" y2="74" stroke="#b83b5e" stroke-width="1" stroke-dasharray="2,1.5"/>
-                                <line x1="100" y1="72" x2="100" y2="76" stroke="#5d6d72" stroke-width="0.8"/>
+                                <line x1="100" y1="72" x2="100" y2="76" stroke="#665f51" stroke-width="0.8"/>
                                 <text x="50" y="84" font-size="6.2" fill="#b83b5e" text-anchor="middle" font-weight="700">z = &minus;2</text>
-                                <text x="100" y="84" font-size="6.2" fill="#5d6d72" text-anchor="middle">0</text>
+                                <text x="100" y="84" font-size="6.2" fill="#665f51" text-anchor="middle">0</text>
                             </svg>
                             <div class="fig-lbl" style="left:12%; top:42%; width:40%; transform:none;">
                                 <span class="b"><input class="fill code" data-answer="2.28%" data-alt="2.28|0.0228"><span class="hint">2.28% / 50% / 95%</span></span>
@@ -1623,7 +1673,7 @@
 
         <div class="group-label"><span>Where this is heading</span></div>
 
-        <div class="box tag-t-green">
+        <div class="box tag-plum">
             <div class="box-tag"><span>Why we learn this: the road to standard errors and the t-statistic</span></div>
             <div class="box-body">
 <p>The <b>z-score</b> introduces a foundational statistical concept: <b>(Observed Value &minus; Expected Value) / Spread</b>. This formula creates a unit-free ratio that tells you how surprising a number actually is.</p>
