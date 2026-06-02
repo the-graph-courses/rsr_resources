@@ -1,0 +1,28 @@
+{
+  "output": "/Users/kendavidn/Dropbox/tgc_github_projects/rsr_resources/active_cheat_sheets/one_sample_t_test_cupcake_audit_slide.pptx",
+  "outputBytes": 32270,
+  "slideCount": 1,
+  "slideSize": {
+    "width": 1600,
+    "height": 900
+  },
+  "previewDir": "/Users/kendavidn/Dropbox/tgc_github_projects/rsr_resources/outputs/manual-20260601-204138-cupcake/presentations/cupcake-audit/preview",
+  "previewPaths": [
+    "/Users/kendavidn/Dropbox/tgc_github_projects/rsr_resources/outputs/manual-20260601-204138-cupcake/presentations/cupcake-audit/preview/slide-01.png"
+  ],
+  "layoutDir": "/Users/kendavidn/Dropbox/tgc_github_projects/rsr_resources/outputs/manual-20260601-204138-cupcake/presentations/cupcake-audit/layout/final",
+  "layoutResults": [
+    {
+      "layoutPath": "/Users/kendavidn/Dropbox/tgc_github_projects/rsr_resources/outputs/manual-20260601-204138-cupcake/presentations/cupcake-audit/layout/final/slide-01.layout.json"
+    }
+  ],
+  "contactSheet": "/Users/kendavidn/Dropbox/tgc_github_projects/rsr_resources/outputs/manual-20260601-204138-cupcake/presentations/cupcake-audit/preview/contact-sheet.png",
+  "slides": [
+    {
+      "index": 1,
+      "requestedSlideNumber": 1,
+      "modulePath": "/Users/kendavidn/Dropbox/tgc_github_projects/rsr_resources/outputs/manual-20260601-204138-cupcake/presentations/cupcake-audit/slides/slide-01.mjs",
+      "exportName": "slide01"
+    }
+  ]
+}

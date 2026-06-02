@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" font-family="Helvetica, Arial, sans-serif">
+  <!-- baseline -->
+  <line x1="60" y1="250" x2="660" y2="250" stroke="#566573" stroke-width="1.5"/>
+
+  <!-- mean line -->
+  <line x1="360" y1="55" x2="360" y2="265" stroke="#34495e" stroke-width="1.5" stroke-dasharray="5,4"/>
+
+  <!-- wide bell (n = 8) -->
+  <path d="M110,250 C250,250 290,120 360,120 C430,120 470,250 610,250" fill="#f5b7b1" fill-opacity="0.55" stroke="#cb4335" stroke-width="2"/>
+
+  <!-- narrow bell (n = 30) -->
+  <path d="M250,250 C320,250 340,60 360,60 C380,60 400,250 470,250" fill="#a9cce3" fill-opacity="0.7" stroke="#2e86c1" stroke-width="2"/>
+
+  <!-- legend -->
+  <rect x="500" y="40" width="16" height="16" fill="#f5b7b1" stroke="#cb4335"/>
+  <text x="524" y="53" font-size="14" fill="#922b21">n = 8 (wider spread)</text>
+  <rect x="500" y="66" width="16" height="16" fill="#a9cce3" stroke="#2e86c1"/>
+  <text x="524" y="79" font-size="14" fill="#1b4f72">n = 30 (narrower spread)</text>
+
+  <text x="360" y="28" text-anchor="middle" font-size="16" font-weight="bold" fill="#34495e">Larger samples &#8594; tighter sampling distribution</text>
+</svg>

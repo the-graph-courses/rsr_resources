@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <clipPath id="bell">
+      <path d="M80,250 C200,250 240,80 360,80 C480,80 520,250 640,250 Z"/>
+    </clipPath>
+    <marker id="arrow2" markerWidth="12" markerHeight="12" refX="8" refY="6" orient="auto">
+      <path d="M0,0 L10,6 L0,12 Z" fill="#566573"/>
+    </marker>
+  </defs>
+
+  <!-- area under curve -->
+  <g clip-path="url(#bell)">
+    <rect x="80" y="60" width="560" height="200" fill="#d6eaf8"/>
+    <!-- shaded left tail (below 2.1 kg) -->
+    <rect x="80" y="60" width="63" height="200" fill="#5499c7"/>
+  </g>
+
+  <!-- curve outline -->
+  <path d="M80,250 C200,250 240,80 360,80 C480,80 520,250 640,250" fill="none" stroke="#1b4f72" stroke-width="2.5"/>
+  <!-- baseline -->
+  <line x1="60" y1="250" x2="660" y2="250" stroke="#566573" stroke-width="1.5"/>
+
+  <!-- mean line -->
+  <line x1="360" y1="80" x2="360" y2="265" stroke="#34495e" stroke-width="1.5" stroke-dasharray="5,4"/>
+  <text x="360" y="284" text-anchor="middle" font-size="13" fill="#34495e">mean &#956; = 3.37 kg</text>
+
+  <!-- x value line -->
+  <line x1="143" y1="210" x2="143" y2="265" stroke="#922b21" stroke-width="1.5"/>
+  <text x="143" y="284" text-anchor="middle" font-size="13" fill="#922b21">x = 2.1 kg</text>
+
+  <!-- distance arrow -->
+  <line x1="360" y1="125" x2="150" y2="125" stroke="#566573" stroke-width="2" marker-end="url(#arrow2)"/>
+  <text x="255" y="115" text-anchor="middle" font-size="13" fill="#566573">about 2.7 SDs below the mean</text>
+
+  <!-- formula -->
+  <text x="360" y="34" text-anchor="middle" font-size="17" font-weight="bold" fill="#1b4f72">Z = (x &#8722; &#956;) / &#963;</text>
+</svg>

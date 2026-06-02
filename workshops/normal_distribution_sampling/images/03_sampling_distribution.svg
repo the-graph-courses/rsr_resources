@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <pattern id="dots2" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="12" cy="12" r="5" fill="#7fb3d5"/>
+    </pattern>
+    <marker id="arrow3" markerWidth="12" markerHeight="12" refX="8" refY="6" orient="auto">
+      <path d="M0,0 L10,6 L0,12 Z" fill="#566573"/>
+    </marker>
+  </defs>
+
+  <!-- Population -->
+  <rect x="25" y="90" width="150" height="140" rx="14" fill="url(#dots2)" stroke="#2e86c1" stroke-width="2"/>
+  <text x="100" y="78" text-anchor="middle" font-size="15" font-weight="bold" fill="#1b4f72">Population</text>
+
+  <!-- Arrow 1 -->
+  <line x1="180" y1="160" x2="250" y2="160" stroke="#566573" stroke-width="2.5" marker-end="url(#arrow3)"/>
+
+  <!-- Sample + mean -->
+  <rect x="255" y="115" width="150" height="90" rx="12" fill="#fdedec" stroke="#cb4335" stroke-width="2"/>
+  <text x="330" y="103" text-anchor="middle" font-size="14" fill="#922b21">draw n babies</text>
+  <g fill="#ec7063">
+    <circle cx="285" cy="150" r="7"/>
+    <circle cx="312" cy="150" r="7"/>
+    <circle cx="339" cy="150" r="7"/>
+    <circle cx="366" cy="150" r="7"/>
+    <circle cx="298" cy="178" r="7"/>
+    <circle cx="325" cy="178" r="7"/>
+    <circle cx="352" cy="178" r="7"/>
+  </g>
+  <text x="330" y="225" text-anchor="middle" font-size="14" fill="#922b21">record the mean x&#772;</text>
+
+  <!-- Arrow 2 -->
+  <line x1="410" y1="160" x2="480" y2="160" stroke="#566573" stroke-width="2.5" marker-end="url(#arrow3)"/>
+
+  <!-- Histogram of means -->
+  <g fill="#f1948a" stroke="#cb4335" stroke-width="1">
+    <rect x="505" y="210" width="20" height="30"/>
+    <rect x="527" y="180" width="20" height="60"/>
+    <rect x="549" y="140" width="20" height="100"/>
+    <rect x="571" y="110" width="20" height="130"/>
+    <rect x="593" y="140" width="20" height="100"/>
+    <rect x="615" y="180" width="20" height="60"/>
+    <rect x="637" y="210" width="20" height="30"/>
+  </g>
+  <line x1="498" y1="240" x2="665" y2="240" stroke="#566573" stroke-width="1.5"/>
+  <text x="581" y="92" text-anchor="middle" font-size="15" font-weight="bold" fill="#922b21">Distribution</text>
+  <text x="581" y="262" text-anchor="middle" font-size="13" fill="#566573">of sample means x&#772;</text>
+
+  <!-- repeat note -->
+  <path d="M330,250 C330,295 581,295 581,268" fill="none" stroke="#566573" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow3)"/>
+  <text x="455" y="312" text-anchor="middle" font-size="13" fill="#566573">repeat 1000 times</text>
+</svg>
