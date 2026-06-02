@@ -97,7 +97,7 @@ z_light
 
 **Q1b.** What does this z-score tell you about how far this baby's weight is from the mean?
 
-Ans: The z-score is approximately -2.71, which means this baby's weight is about 2.71 standard deviations *below* the population mean. This is quite far from the average.
+Ans: The z-score is approximately -2.68, which means this baby's weight is about 2.68 standard deviations *below* the population mean. This is quite far from the average.
 
 > ![z-score on a normal curve](images/02_zscore.svg)
 >
@@ -221,9 +221,9 @@ The doctor decides to collect more data. They gather records for 30 full-term ba
 
 ```{r}
 flint_large <- tibble(weight_kg = c(3.0, 3.3, 2.8, 3.7, 3.2, 3.2, 3.3, 2.7,
-                                    3.1, 3.5, 2.5, 3.2, 3.0, 3.3, 3.4, 3.0,
-                                    3.9, 3.1, 3.0, 3.2, 3.3, 2.8, 3.1, 2.8,
-                                    3.0, 3.2, 3.3, 3.4, 3.5, 3.6))
+                                    3.1, 2.9, 3.7, 3.4, 3.5, 2.5, 3.0, 3.3,
+                                    2.0, 3.4, 3.0, 3.2, 2.7, 4.4, 3.0, 2.6,
+                                    3.6, 2.8, 3.2, 3.5, 3.4, 3.9))
 
 mean_flint_large <- mean(flint_large$weight_kg)
 mean_flint_large
@@ -320,7 +320,9 @@ p_value
 
 **Q4a.** How does this mathematically calculated p-value compare to the proportion you found in your simulation in Part 3?
 
-Ans: The mathematically calculated p-value (around 0.02) is very close to the proportion we found in our simulation (around 2% to 3%), showing that the mathematical formulas approximate the true behavior of repeated sampling.
+Ans: They are very close. The mathematically calculated p-value (around 0.014) is almost identical to the proportion we found in our simulation (around 2%). 
+
+The small remaining difference comes from the t-test relying on the sample's standard deviation to estimate the (unknown) population standard deviation, plus the randomness in our 1000 simulated samples.
 
 ## The easy way: `t.test()`
 
@@ -342,7 +344,7 @@ Ans: Yes. The `t.test()` output reports essentially the same t-statistic and p-v
 
 Ans: The t-statistic tells us how many standard errors the sample mean lies below the national population mean. The p-value is the probability of seeing a sample mean this low (or lower) purely by chance if the true mean of this dataset really were the national average. 
 
-Because it is small (about 0.02), a sample mean this low would be quite unlikely under chance alone, which is evidence that this group of babies really is lighter than the national average.
+Because it is small (about 0.014), a sample mean this low would be quite unlikely under chance alone, which is evidence that this group of babies really is lighter than the national average.
 
 # Wrap up
 
