@@ -1,52 +1,54 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" font-family="Helvetica, Arial, sans-serif">
   <defs>
-    <pattern id="dots2" width="24" height="24" patternUnits="userSpaceOnUse">
+    <pattern id="baby-dots" width="24" height="24" patternUnits="userSpaceOnUse">
       <circle cx="12" cy="12" r="5" fill="#7fb3d5"/>
     </pattern>
-    <marker id="arrow3" markerWidth="12" markerHeight="12" refX="8" refY="6" orient="auto">
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="8" refY="6" orient="auto">
       <path d="M0,0 L10,6 L0,12 Z" fill="#566573"/>
     </marker>
   </defs>
 
+  <text x="380" y="32" text-anchor="middle" font-size="18" font-weight="bold" fill="#34495e">Building a Sampling Distribution</text>
+
   <!-- Population -->
-  <rect x="25" y="90" width="150" height="140" rx="14" fill="url(#dots2)" stroke="#2e86c1" stroke-width="2"/>
-  <text x="100" y="78" text-anchor="middle" font-size="15" font-weight="bold" fill="#1b4f72">Population</text>
+  <rect x="35" y="96" width="145" height="126" rx="14" fill="url(#baby-dots)" stroke="#2e86c1" stroke-width="2"/>
+  <text x="108" y="78" text-anchor="middle" font-size="15" font-weight="bold" fill="#1b4f72">Population</text>
+  <text x="108" y="244" text-anchor="middle" font-size="13" fill="#566573">all full-term births</text>
 
   <!-- Arrow 1 -->
-  <line x1="180" y1="160" x2="250" y2="160" stroke="#566573" stroke-width="2.5" marker-end="url(#arrow3)"/>
+  <line x1="190" y1="158" x2="258" y2="158" stroke="#566573" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="224" y="140" text-anchor="middle" font-size="13" fill="#566573">draw n</text>
 
-  <!-- Sample + mean -->
-  <rect x="255" y="115" width="150" height="90" rx="12" fill="#fdedec" stroke="#cb4335" stroke-width="2"/>
-  <text x="330" y="103" text-anchor="middle" font-size="14" fill="#922b21">draw n babies</text>
+  <!-- Sample -->
+  <rect x="270" y="98" width="140" height="120" rx="14" fill="#fdedec" stroke="#cb4335" stroke-width="2"/>
+  <text x="340" y="78" text-anchor="middle" font-size="15" font-weight="bold" fill="#922b21">One sample</text>
   <g fill="#ec7063">
-    <circle cx="285" cy="150" r="7"/>
-    <circle cx="312" cy="150" r="7"/>
-    <circle cx="339" cy="150" r="7"/>
-    <circle cx="366" cy="150" r="7"/>
-    <circle cx="298" cy="178" r="7"/>
-    <circle cx="325" cy="178" r="7"/>
-    <circle cx="352" cy="178" r="7"/>
+    <circle cx="303" cy="136" r="7"/>
+    <circle cx="330" cy="136" r="7"/>
+    <circle cx="357" cy="136" r="7"/>
+    <circle cx="384" cy="136" r="7"/>
+    <circle cx="316" cy="164" r="7"/>
+    <circle cx="343" cy="164" r="7"/>
+    <circle cx="370" cy="164" r="7"/>
   </g>
-  <text x="330" y="225" text-anchor="middle" font-size="14" fill="#922b21">record the mean x&#772;</text>
+  <text x="340" y="242" text-anchor="middle" font-size="13" fill="#922b21">compute one mean x&#772;</text>
 
   <!-- Arrow 2 -->
-  <line x1="410" y1="160" x2="480" y2="160" stroke="#566573" stroke-width="2.5" marker-end="url(#arrow3)"/>
+  <line x1="420" y1="158" x2="488" y2="158" stroke="#566573" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="454" y="140" text-anchor="middle" font-size="13" fill="#566573">repeat</text>
 
   <!-- Histogram of means -->
-  <g fill="#f1948a" stroke="#cb4335" stroke-width="1">
-    <rect x="505" y="210" width="20" height="30"/>
-    <rect x="527" y="180" width="20" height="60"/>
-    <rect x="549" y="140" width="20" height="100"/>
-    <rect x="571" y="110" width="20" height="130"/>
-    <rect x="593" y="140" width="20" height="100"/>
-    <rect x="615" y="180" width="20" height="60"/>
-    <rect x="637" y="210" width="20" height="30"/>
+  <text x="594" y="78" text-anchor="middle" font-size="15" font-weight="bold" fill="#922b21">Sample means</text>
+  <g fill="#f5b7b1" stroke="#cb4335" stroke-width="1">
+    <rect x="518" y="210" width="20" height="30"/>
+    <rect x="540" y="182" width="20" height="58"/>
+    <rect x="562" y="144" width="20" height="96"/>
+    <rect x="584" y="116" width="20" height="124"/>
+    <rect x="606" y="144" width="20" height="96"/>
+    <rect x="628" y="182" width="20" height="58"/>
+    <rect x="650" y="210" width="20" height="30"/>
   </g>
-  <line x1="498" y1="240" x2="665" y2="240" stroke="#566573" stroke-width="1.5"/>
-  <text x="581" y="92" text-anchor="middle" font-size="15" font-weight="bold" fill="#922b21">Distribution</text>
-  <text x="581" y="262" text-anchor="middle" font-size="13" fill="#566573">of sample means x&#772;</text>
+  <line x1="510" y1="240" x2="678" y2="240" stroke="#566573" stroke-width="1.5"/>
+  <text x="594" y="264" text-anchor="middle" font-size="13" fill="#566573">sampling distribution</text>
 
-  <!-- repeat note -->
-  <path d="M330,250 C330,295 581,295 581,268" fill="none" stroke="#566573" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow3)"/>
-  <text x="455" y="312" text-anchor="middle" font-size="13" fill="#566573">repeat 1000 times</text>
 </svg>

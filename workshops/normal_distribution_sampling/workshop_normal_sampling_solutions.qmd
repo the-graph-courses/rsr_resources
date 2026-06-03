@@ -1,11 +1,10 @@
 ---
 title: "Workshop 3: Normal Distribution & Sampling Distributions (Solutions)"
-output:
-  prettydoc::html_pretty:
-    theme: architect
-    toc: true
 author: "GRAPH Courses team"
-editor_options: 
+format:
+  html:
+    toc: true
+editor_options:
   chunk_output_type: inline
 ---
 
@@ -66,9 +65,11 @@ ggplot(births, aes(x = weight_kg)) +
        y = "Count")
 ```
 
-**Q1a.** Does the distribution look approximately normal (bell-shaped)?
+::: {.callout-tip title="Q1a"}
+Does the distribution look approximately normal (bell-shaped)?
 
-Ans: Yes, it looks approximately normal. It has a single peak in the center and falls off symmetrically on both sides, creating a characteristic bell shape.
+**Ans:** Yes, it looks approximately normal. It has a single peak in the center and falls off symmetrically on both sides, creating a characteristic bell shape.
+:::
 
 Since we have data for nearly all US births in 2014, we can treat this dataset as our **population**. Let's calculate the population mean ($\mu$) and population standard deviation ($\sigma$).
 
@@ -95,13 +96,17 @@ z_light <- (2.1 - pop_mean) / pop_sd
 z_light
 ```
 
-**Q1b.** What does this z-score tell you about how far this baby's weight is from the mean?
+::: {.callout-tip title="Q1b"}
+What does this z-score tell you about how far this baby's weight is from the mean?
 
-Ans: The z-score is approximately -2.68, which means this baby's weight is about 2.68 standard deviations *below* the population mean. This is quite far from the average.
+**Ans:** The z-score is approximately -2.68, which means this baby's weight is about 2.68 standard deviations *below* the population mean. This is quite far from the average.
+:::
 
-> ![z-score on a normal curve](images/02_zscore.svg)
->
-> *A z-score measures how many standard deviations a value lies from the mean. Here 2.1 kg sits about 2.7 SDs into the left tail.*
+::: {.callout-note title="Illustration"}
+![z-score on a normal curve](images/02_zscore.svg)
+
+*A z-score measures how many standard deviations a value lies from the mean. Here 2.1 kg sits about 2.7 SDs into the left tail.*
+:::
 
 Next, use the `pnorm()` function to calculate the exact proportion of babies weighing *less* than 2.1 kg in a normal distribution with our population mean and SD.
 
@@ -119,9 +124,11 @@ births %>%
   adorn_pct_formatting()
 ```
 
-**Q1c.** How does the theoretical probability from `pnorm()` compare to the actual proportion we calculated from the data using `tabyl()`?
+::: {.callout-tip title="Q1c"}
+How does the theoretical probability from `pnorm()` compare to the actual proportion we calculated from the data using `tabyl()`?
 
-Ans: The theoretical probability from `pnorm()` is very similar to the actual proportion calculated from the data. Both indicate that about half a percent of full-term babies weigh less than 2.1 kg.
+**Ans:** The theoretical probability from `pnorm()` is very similar to the actual proportion calculated from the data. Both indicate that about half a percent of full-term babies weigh less than 2.1 kg.
+:::
 
 
 ## Practice: How unusual is a heavy baby?
@@ -156,11 +163,21 @@ births %>%
 
 In Part 1, we asked if a *single baby* was unusual. But what if we want to know if a *group of babies* is unusual?
 
-The key shift is that we no longer look at one baby. Instead we take a whole **sample** of babies from the **population** and summarise it with a single number: the sample mean.
+The key shift is that we no longer look at one baby. Instead we take a whole **sample** of babies from the **population** and summarise it with a single number: the sample mean. The distribution of this sample mean is called a **sampling distribution**.
 
-## The doctor's 8 babies
+::: {.callout-note title="Illustration"}
+![Building a sampling distribution](images/03_sampling_distribution.svg)
 
-Imagine in 2014, a doctor at a hospital in Flint, Michigan noticed a spate of low birth weights for full-term babies. They looked at the records for their last 8 full-term deliveries:
+*Repeatedly draw a sample, record its mean, and collect those means into their own distribution.*
+:::
+
+## Illustrative hospital data (Flint-inspired scenario)
+
+In 2014, Flint, Michigan switched its public water source, which led to a well-documented public health crisis. Researchers later linked the crisis to worse birth outcomes using **CDC natality records** and city-level statistical methods (for example, [Wang et al., 2021](https://link.springer.com/article/10.1007/s00148-021-00876-9)).
+
+Below, we use a small synthetic sample of weights inspired by that real-world context to illustrate the concepts of sampling distributions.
+
+Imagine a doctor at a hospital in Flint noticed what seemed like lighter-than-usual full-term babies and pulled the weights from their last 8 full-term deliveries:
 
 ```{r}
 flint_small <- tibble(weight_kg = c(3.0, 3.3, 2.8, 3.7, 3.2, 3.2, 3.3, 2.7))
@@ -172,37 +189,24 @@ The mean of these 8 babies is `r round(mean_flint_small, 2)` kg. This is lower t
 
 But is it *unusually* low? To answer this, we need to know what kind of sample means we would get just by random chance. We can build a **sampling distribution** by drawing random samples of size $n=8$ from our population over and over again, recording the mean each time.
 
-> ![building a sampling distribution](images/03_sampling_distribution.svg)
->
-> *Repeatedly draw a sample, record its mean, and collect those means into their own distribution.*
-
 ```{r}
 set.seed(123) # for reproducibility
-sample_means_8 <- c()
 
-# Draw 1000 random samples of size 8
-for (i in 1:1000) {
-  sample_means_8[i] <- births %>% 
-    sample_n(8) %>% 
-    pull(weight_kg) %>% 
-    mean()
-}
-
-sim_data_8 <- tibble(mean = sample_means_8)
+sim_data_8 <- tibble(
+  mean = replicate(1000, mean(sample(births$weight_kg, 8)))
+)
 
 # Plot the sampling distribution
 ggplot(sim_data_8, aes(x = mean)) +
-  geom_histogram(fill = "pink", color = "white", bins = 30) +
-  geom_vline(xintercept = mean_flint_small, color = "red", linetype = "dashed", linewidth = 1) +
-  theme_minimal() +
-  labs(title = "Sampling Distribution of Sample Means (n=8)",
-       x = "Sample Mean Weight (kg)",
-       y = "Frequency")
+  geom_histogram(binwidth = 0.025, fill = "#f5b7b1") +
+  geom_vline(xintercept = mean_flint_small, color = "#34495e") +
+  coord_cartesian(xlim = c(2.8, 3.9)) +
+  labs(title = "Sample Means (n=8)", x = "Mean (kg)", y = "Count")
 ```
 
 ## How unusual was the doctor's sample?
 
-Let's see exactly what proportion of our 1000 random samples had a mean as low as (or lower than) the Flint hospital's mean:
+Let's see exactly what proportion of our 1000 random samples had a mean as low as (or lower than) the hospital sample mean:
 
 ```{r}
 sim_data_8 %>% 
@@ -211,13 +215,15 @@ sim_data_8 %>%
   adorn_pct_formatting()
 ```
 
-**Q2a.** Based on this simulation, is a sample mean of `r round(mean_flint_small, 2)` highly unusual for a sample of 8 babies? Should the doctor be extremely worried yet?
+::: {.callout-tip title="Q2a"}
+Based on this simulation, is a sample mean of `r round(mean_flint_small, 2)` highly unusual for a sample of 8 babies? Should the doctor be extremely worried yet?
 
-Ans: Based on the simulation, around 10% of random samples of size 8 naturally have a mean this low or lower. While it's on the lower side, it is not highly unusual. The doctor may not yet have enough reason to be worried based solely on this small sample of 8 babies.
+**Ans:** Based on the simulation, around 10% of random samples of size 8 naturally have a mean this low or lower. While it's on the lower side, it is not highly unusual. The doctor may not yet have enough reason to be worried based solely on this small sample of 8 babies.
+:::
 
 # Part 3: Sampling Distributions (Larger Sample)
 
-The doctor decides to collect more data. They gather records for 30 full-term babies in total:
+The doctor decides to collect more data. They gather weights for 30 full-term babies in total:
 
 ```{r}
 flint_large <- tibble(weight_kg = c(3.0, 3.3, 2.8, 3.7, 3.2, 3.2, 3.3, 2.7,
@@ -235,29 +241,19 @@ Let's build a new sampling distribution for $n=30$.
 
 ```{r}
 set.seed(123)
-sample_means_30 <- c()
-
-# Draw 1000 random samples of size 30
-for (i in 1:1000) {
-  sample_means_30[i] <- births %>% 
-    sample_n(30) %>% 
-    pull(weight_kg) %>% 
-    mean()
-}
-
-sim_data_30 <- tibble(mean = sample_means_30)
+sim_data_30 <- tibble(
+  mean = replicate(1000, mean(sample(births$weight_kg, 30)))
+)
 
 # Plot the new sampling distribution
 ggplot(sim_data_30, aes(x = mean)) +
-  geom_histogram(fill = "pink", color = "white", bins = 30) +
-  geom_vline(xintercept = mean_flint_large, color = "red", linetype = "dashed", linewidth = 1) +
-  theme_minimal() +
-  labs(title = "Sampling Distribution of Sample Means (n=30)",
-       x = "Sample Mean Weight (kg)",
-       y = "Frequency")
+  geom_histogram(binwidth = 0.025, fill = "#a9cce3") +
+  geom_vline(xintercept = mean_flint_large, color = "#34495e") +
+  coord_cartesian(xlim = c(2.8, 3.9)) +
+  labs(title = "Sample Means (n=30)", x = "Mean (kg)", y = "Count")
 ```
 
-Check the proportion of random samples with a mean below the Flint hospital's larger sample mean:
+Check the proportion of random samples with a mean below the hospital's larger sample mean:
 
 ```{r}
 sim_data_30 %>% 
@@ -266,26 +262,35 @@ sim_data_30 %>%
   adorn_pct_formatting()
 ```
 
-**Q3a.** Compare the sampling distribution for $n=8$ and the sampling distribution for $n=30$. What happens to the "spread" (width) of the distribution as the sample size increases?
+::: {.callout-tip title="Q3a"}
+Compare the sampling distribution for $n=8$ and the sampling distribution for $n=30$. What happens to the "spread" (width) of the distribution as the sample size increases?
 
-Ans: As the sample size increases from $n=8$ to $n=30$, the spread (width) of the sampling distribution decreases. The sample means are clustered much more tightly around the true population mean.
+**Ans:** As the sample size increases from $n=8$ to $n=30$, the spread (width) of the sampling distribution decreases. The sample means are clustered much more tightly around the true population mean.
+:::
 
-> ![larger samples give a tighter sampling distribution](images/04_clt_narrowing.svg)
->
-> *As the sample size grows, the sampling distribution of the mean gets narrower and taller around the population mean.*
 
-**Q3b.** Is the Flint hospital's mean now considered unusually low? Why is it more unusual now even though the sample mean value barely changed?
+::: {.callout-tip title="Q3b"}
+Is the hospital sample mean now considered unusually low? Why is it more unusual now even though the sample mean value barely changed?
 
-Ans: Yes, it is now considered unusual. Because the sampling distribution for $n=30$ is much narrower, it's significantly rarer to randomly draw a sample with a mean that is that far below the national average. What was plausible chance for 8 babies is highly unlikely for 30 babies.
+**Ans:** Yes, it is now considered unusual relative to the national sampling distribution. Because the sampling distribution for $n=30$ is much narrower, it's significantly rarer to randomly draw a sample with a mean that is that far below the national average. What was plausible chance for 8 babies is highly unlikely for 30 babies. Remember that this is still a teaching scenario; real Flint studies used city-wide data and found more modest changes.
+:::
 
+::: {.callout-note title="Illustration"}
+![Larger samples give a tighter sampling distribution](images/04_clt_narrowing.svg)
+
+:::
 
 # Part 4: Standard Error and the t-statistic
 
-In the previous sections, we had access to the full population data, so we could simulate the sampling distribution directly. In the real world, researchers almost never have the population data. 
+So far, we have answered the question "is this sample mean unusually low?" by simulating many random samples from the full 2014 births dataset. That worked because, for this workshop, we have the whole population available.
 
-Instead, we use mathematical formulas. The standard deviation of the sampling distribution is called the **Standard Error (SE)**. 
+In most real studies, we do not have the whole population. We might only have one sample, like the 30 hospital births. Instead of simulating thousands of samples, we can use a formula to estimate how much sample means usually vary.
+
+That typical variation is called the **Standard Error (SE)**. You can think of it as the standard deviation of the sampling distribution: a small SE means sample means tend to cluster tightly around the population mean; a large SE means they are more spread out.
 
 The formula is: $SE = \frac{\sigma}{\sqrt{n}}$
+
+Here, $\sigma$ is the population standard deviation and $n$ is the sample size.
 
 Since we usually don't know the population standard deviation $\sigma$, we estimate it using our sample's standard deviation ($s$).
 
@@ -300,7 +305,7 @@ se_flint
 
 ## From standard error to a t-score
 
-Now we can calculate a **t-score**. This is just like a z-score, but for a sample mean! It tells us how many Standard Errors our sample mean is from the population mean.
+Now we can turn the hospital's sample mean into a **t-score**. This is like a z-score, but for a sample mean instead of one individual baby. It tells us how many standard errors the hospital mean is below the national mean.
 
 Formula: $t = \frac{\bar{x} - \mu}{SE}$
 
@@ -311,18 +316,20 @@ t_score
 
 ## Getting a p-value with `pt()`
 
-Finally, instead of `pnorm()`, we use `pt()` to calculate the p-value for our t-score. The `df` (degrees of freedom) is $n - 1$.
+Finally, we use `pt()` to turn the t-score into a p-value. This gives us the same kind of answer as the simulation: the probability of getting a sample mean this low (or lower) by chance. For a t-distribution, we also need the degrees of freedom, which is $n - 1$.
 
 ```{r}
 p_value <- pt(q = t_score, df = 30 - 1)
 p_value
 ```
 
-**Q4a.** How does this mathematically calculated p-value compare to the proportion you found in your simulation in Part 3?
+::: {.callout-tip title="Q4a"}
+How does this mathematically calculated p-value compare to the proportion you found in your simulation in Part 3?
 
-Ans: They are very close. The mathematically calculated p-value (around 0.014) is almost identical to the proportion we found in our simulation (around 2%). 
+**Ans:** They are very close. The mathematically calculated p-value (around 0.014) is almost identical to the proportion we found in our simulation (around 2%). 
 
 The small remaining difference comes from the t-test relying on the sample's standard deviation to estimate the (unknown) population standard deviation, plus the randomness in our 1000 simulated samples.
+:::
 
 ## The easy way: `t.test()`
 
@@ -336,24 +343,30 @@ t.test(flint_large$weight_kg, mu = pop_mean, alternative = "less")
 
 Examine the output.  
 
-**Q4b.** Do the `t` statistic and `p-value` reported by `t.test()` match the `t_score` and `p_value` you calculated by hand?
+::: {.callout-tip title="Q4b"}
+Do the `t` statistic and `p-value` reported by `t.test()` match the `t_score` and `p_value` you calculated by hand?
 
-Ans: Yes. The `t.test()` output reports essentially the same t-statistic and p-value that we calculated manually. Any tiny differences are just due to rounding.
+**Ans:** Yes. The `t.test()` output reports essentially the same t-statistic and p-value that we calculated manually. Any tiny differences are just due to rounding.
+:::
 
-**Q4c.** In your own words, what do the `t` statistic and the `p-value` in this output represent?
+::: {.callout-tip title="Q4c"}
+In your own words, what do the `t` statistic and the `p-value` in this output represent?
 
-Ans: The t-statistic tells us how many standard errors the sample mean lies below the national population mean. The p-value is the probability of seeing a sample mean this low (or lower) purely by chance if the true mean of this dataset really were the national average. 
+**Ans:** The t-statistic tells us how many standard errors the sample mean lies below the national population mean. The p-value is the probability of seeing a sample mean this low (or lower) purely by chance if the true mean of this dataset really were the national average. 
 
-Because it is small (about 0.014), a sample mean this low would be quite unlikely under chance alone, which is evidence that this group of babies really is lighter than the national average.
+Because it is small (about 0.014), a sample mean this low would be quite unlikely under chance alone, which is evidence that this hospital sample is lighter than the national average in our exercise.
+:::
 
 # Wrap up
 
 You've successfully:
+
 - Checked a population for normality and calculated probabilities with `pnorm()`
 - Standardized values using Z-scores
-- Simulated sampling distributions using `for` loops
+- Simulated sampling distributions using `replicate()`
 - Demonstrated the Central Limit Theorem by comparing distributions for $n=8$ and $n=30$
 - Calculated Standard Errors and t-statistics by hand
 - Run a formal one-sample t-test using `t.test()`
+- Connected the hospital example to real Flint water crisis research, while using illustrative weights for practice
 
-Great work! Save and submit your Rmd.
+Great work! Save and submit your Qmd.
