@@ -187,7 +187,9 @@ mean_flint_small
 
 The mean of these 8 babies is `r round(mean_flint_small, 2)` kg. This is lower than the national average of 3.37 kg. 
 
-But is it *unusually* low? To answer this, we need to know what kind of sample means we would get just by random chance. We can build a **sampling distribution** by drawing random samples of size $n=8$ from our population over and over again, recording the mean each time.
+But is it *unusually* low? To answer this, we need to know what kind of sample means we would get just by random chance if the hospital were really no different from the nation. That "no difference" claim is the **null hypothesis** ($H_0$): the hospital's mean birth weight equals the national mean.
+
+We can build a **sampling distribution of the null** by drawing random samples of size $n=8$ from the national `births` population over and over again and recording each mean.
 
 ```{r}
 set.seed(123) # for reproducibility
@@ -199,9 +201,9 @@ sim_data_8 <- tibble(
 # Plot the sampling distribution
 ggplot(sim_data_8, aes(x = mean)) +
   geom_histogram(binwidth = 0.025, fill = "#f5b7b1") +
-  geom_vline(xintercept = mean_flint_small, color = "#34495e") +
+  geom_vline(xintercept = mean_flint_small, color = "#3ea387", linetype = "dashed") +
   coord_cartesian(xlim = c(2.8, 3.9)) +
-  labs(title = "Sample Means (n=8)", x = "Mean (kg)", y = "Count")
+  labs(title = "Sampling distribution (n=8) with line at our sample mean", x = "Mean (kg)", y = "Count")
 ```
 
 ## How unusual was the doctor's sample?
@@ -248,9 +250,9 @@ sim_data_30 <- tibble(
 # Plot the new sampling distribution
 ggplot(sim_data_30, aes(x = mean)) +
   geom_histogram(binwidth = 0.025, fill = "#a9cce3") +
-  geom_vline(xintercept = mean_flint_large, color = "#34495e") +
+  geom_vline(xintercept = mean_flint_large, color = "#3ea387", linetype = "dashed") +
   coord_cartesian(xlim = c(2.8, 3.9)) +
-  labs(title = "Sample Means (n=30)", x = "Mean (kg)", y = "Count")
+  labs(title = "Sampling distribution (n=30) with line at our sample mean", x = "Mean (kg)", y = "Count")
 ```
 
 Check the proportion of random samples with a mean below the hospital's larger sample mean:
@@ -316,7 +318,7 @@ t_score
 
 ## Getting a p-value with `pt()`
 
-Finally, we use `pt()` to turn the t-score into a p-value. This gives us the same kind of answer as the simulation: the probability of getting a sample mean this low (or lower) by chance. For a t-distribution, we also need the degrees of freedom, which is $n - 1$.
+Finally, we use `pt()` to turn the t-score into a p-value. This gives us the same kind of answer as the simulation: the probability of getting a sample mean this low (or lower) **if $H_0$ is true**. For a t-distribution, we also need the degrees of freedom, which is $n - 1$.
 
 ```{r}
 p_value <- pt(q = t_score, df = 30 - 1)
@@ -350,11 +352,11 @@ Do the `t` statistic and `p-value` reported by `t.test()` match the `t_score` an
 :::
 
 ::: {.callout-tip title="Q4c"}
-In your own words, what do the `t` statistic and the `p-value` in this output represent?
+In your own words, what is the **null hypothesis** here? What do the `t` statistic and the `p-value` tell you about it?
 
-**Ans:** The t-statistic tells us how many standard errors the sample mean lies below the national population mean. The p-value is the probability of seeing a sample mean this low (or lower) purely by chance if the true mean of this dataset really were the national average. 
+**Ans:** The null hypothesis is that the hospital's mean birth weight equals the national mean ($H_0$: $\bar{x}_\text{hospital} = \mu_\text{national}$). The t-statistic tells us how many standard errors the hospital mean lies below the national mean. The p-value is the probability of seeing a sample mean this low (or lower) if $H_0$ were true.
 
-Because it is small (about 0.014), a sample mean this low would be quite unlikely under chance alone, which is evidence that this hospital sample is lighter than the national average in our exercise.
+Because it is small (about 0.014), a mean this low would be unlikely under the null, which is evidence against $H_0$ in our exercise.
 :::
 
 # Wrap up

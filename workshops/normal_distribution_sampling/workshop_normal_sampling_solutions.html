@@ -419,7 +419,8 @@ Illustration
 </div>
 </div>
 <p>The mean of these 8 babies is 3.15 kg. This is lower than the national average of 3.37 kg.</p>
-<p>But is it <em>unusually</em> low? To answer this, we need to know what kind of sample means we would get just by random chance. We can build a <strong>sampling distribution</strong> by drawing random samples of size <span class="math inline">\(n=8\)</span> from our population over and over again, recording the mean each time.</p>
+<p>But is it <em>unusually</em> low? To answer this, we need to know what kind of sample means we would get just by random chance if the hospital were really no different from the nation. That “no difference” claim is the <strong>null hypothesis</strong> (<span class="math inline">\(H_0\)</span>): the hospital’s mean birth weight equals the national mean.</p>
+<p>We can build a <strong>sampling distribution of the null</strong> by drawing random samples of size <span class="math inline">\(n=8\)</span> from the national <code>births</code> population over and over again and recording each mean.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>) <span class="co"># for reproducibility</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -430,9 +431,9 @@ Illustration
 <span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the sampling distribution</span></span>
 <span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(sim_data_8, <span class="fu">aes</span>(<span class="at">x =</span> mean)) <span class="sc">+</span></span>
 <span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="fl">0.025</span>, <span class="at">fill =</span> <span class="st">"#f5b7b1"</span>) <span class="sc">+</span></span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> mean_flint_small, <span class="at">color =</span> <span class="st">"#34495e"</span>) <span class="sc">+</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> mean_flint_small, <span class="at">color =</span> <span class="st">"#3ea387"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
 <span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="fl">2.8</span>, <span class="fl">3.9</span>)) <span class="sc">+</span></span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Sample Means (n=8)"</span>, <span class="at">x =</span> <span class="st">"Mean (kg)"</span>, <span class="at">y =</span> <span class="st">"Count"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Sampling distribution (n=8) with line at our sample mean"</span>, <span class="at">x =</span> <span class="st">"Mean (kg)"</span>, <span class="at">y =</span> <span class="st">"Count"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -498,9 +499,9 @@ Q2a
 <span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the new sampling distribution</span></span>
 <span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(sim_data_30, <span class="fu">aes</span>(<span class="at">x =</span> mean)) <span class="sc">+</span></span>
 <span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="fl">0.025</span>, <span class="at">fill =</span> <span class="st">"#a9cce3"</span>) <span class="sc">+</span></span>
-<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> mean_flint_large, <span class="at">color =</span> <span class="st">"#34495e"</span>) <span class="sc">+</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> mean_flint_large, <span class="at">color =</span> <span class="st">"#3ea387"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
 <span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="fl">2.8</span>, <span class="fl">3.9</span>)) <span class="sc">+</span></span>
-<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Sample Means (n=30)"</span>, <span class="at">x =</span> <span class="st">"Mean (kg)"</span>, <span class="at">y =</span> <span class="st">"Count"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Sampling distribution (n=30) with line at our sample mean"</span>, <span class="at">x =</span> <span class="st">"Mean (kg)"</span>, <span class="at">y =</span> <span class="st">"Count"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -601,7 +602,7 @@ Illustration
 </section>
 <section id="getting-a-p-value-with-pt" class="level2">
 <h2 class="anchored" data-anchor-id="getting-a-p-value-with-pt">Getting a p-value with <code>pt()</code></h2>
-<p>Finally, we use <code>pt()</code> to turn the t-score into a p-value. This gives us the same kind of answer as the simulation: the probability of getting a sample mean this low (or lower) by chance. For a t-distribution, we also need the degrees of freedom, which is <span class="math inline">\(n - 1\)</span>.</p>
+<p>Finally, we use <code>pt()</code> to turn the t-score into a p-value. This gives us the same kind of answer as the simulation: the probability of getting a sample mean this low (or lower) <strong>if <span class="math inline">\(H_0\)</span> is true</strong>. For a t-distribution, we also need the degrees of freedom, which is <span class="math inline">\(n - 1\)</span>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>p_value <span class="ot">&lt;-</span> <span class="fu">pt</span>(<span class="at">q =</span> t_score, <span class="at">df =</span> <span class="dv">30</span> <span class="sc">-</span> <span class="dv">1</span>)</span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>p_value</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -670,16 +671,25 @@ Q4c
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>In your own words, what do the <code>t</code> statistic and the <code>p-value</code> in this output represent?</p>
-<p><strong>Ans:</strong> The t-statistic tells us how many standard errors the sample mean lies below the national population mean. The p-value is the probability of seeing a sample mean this low (or lower) purely by chance if the true mean of this dataset really were the national average.</p>
-<p>Because it is small (about 0.014), a sample mean this low would be quite unlikely under chance alone, which is evidence that this hospital sample is lighter than the national average in our exercise.</p>
+<p>In your own words, what is the <strong>null hypothesis</strong> here? What do the <code>t</code> statistic and the <code>p-value</code> tell you about it?</p>
+<p><strong>Ans:</strong> The null hypothesis is that the hospital’s mean birth weight equals the national mean (<span class="math inline">\(H_0\)</span>: <span class="math inline">\(\bar{x}_\text{hospital} = \mu_\text{national}\)</span>). The t-statistic tells us how many standard errors the hospital mean lies below the national mean. The p-value is the probability of seeing a sample mean this low (or lower) if <span class="math inline">\(H_0\)</span> were true.</p>
+<p>Because it is small (about 0.014), a mean this low would be unlikely under the null, which is evidence against <span class="math inline">\(H_0\)</span> in our exercise.</p>
 </div>
 </div>
 </section>
 </section>
 <section id="wrap-up" class="level1">
 <h1>Wrap up</h1>
-<p>You’ve successfully: - Checked a population for normality and calculated probabilities with <code>pnorm()</code> - Standardized values using Z-scores - Simulated sampling distributions using <code>replicate()</code> - Demonstrated the Central Limit Theorem by comparing distributions for <span class="math inline">\(n=8\)</span> and <span class="math inline">\(n=30\)</span> - Calculated Standard Errors and t-statistics by hand - Run a formal one-sample t-test using <code>t.test()</code> - Connected the hospital example to real Flint water crisis research, while using illustrative weights for practice</p>
+<p>You’ve successfully:</p>
+<ul>
+<li>Checked a population for normality and calculated probabilities with <code>pnorm()</code></li>
+<li>Standardized values using Z-scores</li>
+<li>Simulated sampling distributions using <code>replicate()</code></li>
+<li>Demonstrated the Central Limit Theorem by comparing distributions for <span class="math inline">\(n=8\)</span> and <span class="math inline">\(n=30\)</span></li>
+<li>Calculated Standard Errors and t-statistics by hand</li>
+<li>Run a formal one-sample t-test using <code>t.test()</code></li>
+<li>Connected the hospital example to real Flint water crisis research, while using illustrative weights for practice</li>
+</ul>
 <p>Great work! Save and submit your Qmd.</p>
 </section>
 
