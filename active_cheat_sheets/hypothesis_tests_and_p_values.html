@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Standard Error &amp; Confidence Intervals</title>
+  <title>Intro to Statistical Tests: P-Values</title>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -40,8 +40,8 @@
       background: var(--bg);
       color: var(--ink);
       font-family: 'Space Grotesk', Arial, Helvetica, sans-serif;
-      font-size: 8.35pt;
-      line-height: 1.22;
+      font-size: 8.25pt;
+      line-height: 1.21;
     }
     .toolbar {
       width: 210mm;
@@ -105,18 +105,18 @@
       box-shadow: 8px 8px 0 rgba(16, 20, 24, 0.13), 0 14px 36px rgba(16, 20, 24, 0.14);
       display: flex;
       flex-direction: column;
-      gap: 2.1mm;
+      gap: 1.95mm;
       transform-origin: top center;
     }
     header {
       border-bottom: 1mm solid var(--chapter);
-      padding-bottom: 0.85mm;
+      padding-bottom: 0.8mm;
       line-height: 1.1;
     }
     h1 {
       margin: 0;
       color: var(--chapter);
-      font-size: 18.3pt;
+      font-size: 18.4pt;
       font-weight: 800;
       line-height: 0.98;
       letter-spacing: 0;
@@ -125,7 +125,7 @@
       margin-top: 0.5mm;
       color: var(--muted);
       font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
-      font-size: 7.3pt;
+      font-size: 7.25pt;
       font-weight: 700;
       letter-spacing: 0.02em;
     }
@@ -134,19 +134,19 @@
       align-items: center;
       gap: 2.7mm;
       color: var(--ink);
-      font-size: 7.8pt;
+      font-size: 7.75pt;
       font-weight: 900;
-      margin: 0.05mm 0;
+      margin: 0;
       break-after: avoid;
     }
     .group-label::before, .group-label::after { content: ""; flex: 1; border-top: 2px solid var(--ink); height: 0; }
-    .group-label span { background: var(--paper); border: 2px solid var(--ink); border-radius: 5px; padding: 0.38mm 1.7mm; white-space: nowrap; }
-    .row { display: grid; gap: 2.7mm; align-items: stretch; }
+    .group-label span { background: var(--paper); border: 2px solid var(--ink); border-radius: 5px; padding: 0.36mm 1.65mm; white-space: nowrap; }
+    .row { display: grid; gap: 2.55mm; align-items: stretch; }
     .row.cols-2 { grid-template-columns: 1fr 1fr; }
     .row.split-56-44 { grid-template-columns: 56fr 44fr; }
     .row.split-50-50 { grid-template-columns: 1fr 1fr; }
     .row.split-47-53 { grid-template-columns: 47fr 53fr; }
-    .box, .box-body, .row > *, .fig, .contrast-card, .metric-table, .verdict-row { min-width: 0; }
+    .box, .box-body, .row > *, .fig, .hyp-card, .decision-step, .verdict-row { min-width: 0; }
     .box {
       background: var(--white);
       border: 2px solid var(--ink);
@@ -161,21 +161,21 @@
       color: white;
       border-bottom: 2px solid var(--ink);
       border-radius: 6px 6px 0 0;
-      font-size: 8.05pt;
+      font-size: 8pt;
       font-weight: 900;
       letter-spacing: 0.02em;
-      padding: 0.68mm 2.2mm 0.55mm;
+      padding: 0.66mm 2.15mm 0.52mm;
       line-height: 1.15;
       display: flex;
       align-items: baseline;
       gap: 6px;
       flex-wrap: wrap;
     }
-    .box-tag .mode-hint { font-weight: 700; opacity: 0.75; font-size: 6.3pt; }
+    .box-tag .mode-hint { font-weight: 700; opacity: 0.75; font-size: 6.2pt; }
     .box-body {
       border-radius: 0 0 6px 6px;
-      padding: 0.9mm 1.8mm 1mm;
-      gap: 0.42mm;
+      padding: 0.82mm 1.7mm 0.92mm;
+      gap: 0.36mm;
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -185,10 +185,10 @@
     .box-body p { margin: 0; overflow-wrap: break-word; }
     .box-body ul {
       margin: 0;
-      padding-left: 3.1mm;
+      padding-left: 3.05mm;
       display: flex;
       flex-direction: column;
-      gap: 0.25mm;
+      gap: 0.18mm;
     }
     .tag-chapter .box-tag { background: var(--chapter); color: #fff; }
     .tag-chapter .box-body { background: var(--chapter-soft); }
@@ -208,150 +208,144 @@
     .rose { color: var(--rose); }
     .plum { color: var(--plum); }
     .green { color: var(--green); }
-    code, .code, .big-eq, .formula { font-family: 'JetBrains Mono', Consolas, Menlo, monospace; }
-    .big-eq {
-      font-size: 13.3pt;
-      font-weight: 900;
-      white-space: nowrap;
-      letter-spacing: 0;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 1;
-      width: 100%;
-      padding: 0.45mm 0;
-    }
+    code, .code, .big-eq, .formula, .hyp-label, .decision-label { font-family: 'JetBrains Mono', Consolas, Menlo, monospace; }
     .formula {
       border: 2px solid var(--ink);
       border-radius: 7px;
       background: var(--white);
-      padding: 0.9mm 1.5mm;
+      padding: 0.75mm 1.2mm;
       text-align: center;
-      font-size: 11.5pt;
+      font-size: 10.6pt;
       font-weight: 900;
       line-height: 1.18;
-      margin: 0.2mm 0;
+      margin: 0.1mm 0;
     }
-    .formula.coded { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.8mm; }
-    .sym-est { color: var(--chapter); }
-    .sym-crit { color: var(--orange); }
-    .sym-se { color: var(--navy); }
-    .symbol-key {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.35mm;
-      font-size: 7.55pt;
-      line-height: 1.18;
-    }
-    .symbol-key div {
-      border: 1.5px solid var(--ink);
-      border-radius: 5px;
+    .formula.tight { font-size: 9.25pt; padding: 0.55mm 1mm; }
+    .sym-p { color: #8a6800; }
+    .sym-h0 { color: var(--navy); }
+    .sym-tail { color: var(--rose); }
+    .mini-note {
+      border: 2px solid var(--ink);
+      border-radius: 7px;
       background: var(--white);
-      padding: 0.35mm 0.85mm;
+      padding: 0.58mm 1.25mm;
+      font-size: 7.35pt;
+      font-weight: 760;
+      line-height: 1.2;
     }
-    .frac { display: inline-flex; flex-direction: column; align-items: center; font-size: 12.3pt; line-height: 1; margin: 0 0.9mm; vertical-align: middle; }
-    .frac .num { padding: 0 0.8mm 0.45mm; border-bottom: 1.5px solid var(--ink); }
-    .frac .den { padding-top: 0.45mm; }
-    .xbar {
-      position: relative;
-      display: inline-block;
-      line-height: 1;
-      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
-      font-weight: 850;
-    }
-    .xbar::before {
-      content: "";
-      position: absolute;
-      left: 0.02em;
-      right: 0.02em;
-      top: -0.08em;
-      border-top: 1.4px solid currentColor;
-    }
+    .mini-note.chapter { background: var(--chapter-soft); color: #064e3b; }
+    .mini-note.gold { background: var(--gold-soft); color: #6f5200; }
     .fig {
       position: relative;
       border: 2px solid var(--ink);
       border-radius: 8px;
-      padding: 0.45mm 0.8mm 0.6mm;
+      padding: 0.42mm 0.75mm 0.55mm;
       background: var(--white);
       overflow: visible;
     }
     .fig svg { display: block; width: 100%; height: auto; }
     .fig-caption {
-      font-size: 6.75pt;
+      font-size: 6.65pt;
       color: var(--ink);
       text-align: center;
-      line-height: 1.18;
-      padding-top: 0.2mm;
+      line-height: 1.16;
+      padding-top: 0.12mm;
     }
-    .contrast-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4mm; }
-    .contrast-card {
+    .hyp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25mm;
+    }
+    .hyp-card {
       border: 2px solid var(--ink);
       border-radius: 7px;
       background: var(--white);
-      padding: 0.75mm 1.25mm;
+      padding: 0.62mm 1.05mm;
       display: flex;
       flex-direction: column;
-      gap: 0.35mm;
+      gap: 0.25mm;
     }
-    .contrast-card .label {
-      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
-      font-size: 6.8pt;
-      font-weight: 900;
+    .hyp-label {
+      font-size: 7pt;
+      font-weight: 950;
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
-    .contrast-card.sd .label { color: var(--orange); }
-    .contrast-card.se .label { color: var(--chapter); }
-    .metric-table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      border: 2px solid var(--ink);
-      border-radius: 7px;
-      overflow: hidden;
-      background: var(--white);
-      font-size: 7.25pt;
-      line-height: 1.18;
+    .hyp-card.null .hyp-label { color: var(--navy); }
+    .hyp-card.alt .hyp-label { color: var(--chapter); }
+    .decision-flow {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.1mm;
+      margin: 0.1mm 0;
     }
-    .metric-table th {
-      background: var(--orange);
-      color: #fff;
-      border-bottom: 2px solid var(--ink);
-      padding: 0.45mm 0.8mm;
-      text-align: left;
-      font-weight: 900;
-    }
-    .metric-table th:nth-child(2) { background: var(--chapter); }
-    .metric-table td {
-      padding: 0.45mm 0.8mm;
-      vertical-align: top;
-      border-bottom: 1px dashed #d6cfbd;
-    }
-    .metric-table tr:last-child td { border-bottom: 0; }
-    .metric-table td + td, .metric-table th + th { border-left: 1.5px solid var(--ink); }
-    .mini-note {
+    .decision-step {
       border: 2px solid var(--ink);
       border-radius: 7px;
       background: var(--white);
-      padding: 0.65mm 1.4mm;
-      font-size: 7.45pt;
-      font-weight: 760;
-      line-height: 1.22;
+      padding: 0.55mm 1mm;
+      display: flex;
+      flex-direction: column;
+      gap: 0.18mm;
     }
-    .mini-note.chapter { background: var(--chapter-soft); color: #064e3b; }
-    .pill-row { display: flex; flex-wrap: wrap; gap: 0.8mm; align-items: center; justify-content: center; margin-top: 0.15mm; }
-    .pill {
-      border: 2px solid var(--ink);
-      border-radius: 999px;
-      padding: 0.28mm 1.25mm;
+    .decision-label {
+      font-size: 6.65pt;
+      font-weight: 950;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .decision-step.sig .decision-label { color: var(--chapter); }
+    .decision-step.nonsig .decision-label { color: var(--rose); }
+    .alpha-scale {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.8mm;
+    }
+    .alpha-chip {
+      border: 1.6px solid var(--ink);
+      border-radius: 6px;
       background: var(--white);
-      font-size: 6.8pt;
+      padding: 0.42mm 0.6mm;
+      text-align: center;
+      font-size: 6.75pt;
       font-weight: 850;
-      white-space: nowrap;
+      line-height: 1.12;
     }
-    .pill.chapter { background: var(--chapter-soft); color: var(--chapter-dark); }
-    .pill.navy { background: var(--navy-soft); color: var(--navy); }
-    .pill.gold { background: var(--gold-soft); color: #8a6800; }
+    .alpha-chip b { display: block; font-family: 'JetBrains Mono', Consolas, Menlo, monospace; font-size: 7.05pt; }
+    .hyp-examples { display: flex; flex-direction: column; gap: 0.55mm; }
+    .hyp-ex {
+      border: 1.6px solid var(--ink);
+      border-radius: 6px;
+      background: var(--white);
+      padding: 0.45mm 1mm;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.18mm;
+    }
+    .hyp-ex .qn { font-style: italic; font-family: Georgia, serif; font-size: 6.95pt; color: var(--ink); line-height: 1.18; }
+    .hyp-ex .hyp-line { font-size: 7.05pt; line-height: 1.22; display: grid; grid-template-columns: 22mm 1fr; gap: 0.18mm 1.4mm; align-items: baseline; }
+    .hyp-ex .hyp-line .sym { font-family: 'JetBrains Mono', Consolas, Menlo, monospace; font-weight: 850; }
+    .hyp-ex .hyp-line .sym.h0 { color: var(--navy); }
+    .hyp-ex .hyp-line .sym.h1 { color: var(--chapter); }
+    .hyp-ex .hyp-line .words { font-family: Georgia, serif; font-style: italic; color: var(--ink); }
+    .nb { font-style: italic; font-family: Georgia, serif; }
+    .study-card {
+      border: 2px solid var(--ink);
+      border-radius: 7px;
+      background: var(--white);
+      padding: 0.6mm 1.15mm;
+      display: flex;
+      flex-direction: column;
+      gap: 0.28mm;
+    }
+    .study-card + .study-card { margin-top: 0.55mm; }
+    .study-card .study-head { font-size: 6.9pt; font-weight: 950; letter-spacing: 0.03em; text-transform: uppercase; font-family: 'JetBrains Mono', Consolas, Menlo, monospace; }
+    .study-card.s-rej .study-head { color: var(--chapter); }
+    .study-card.s-fail .study-head { color: var(--rose); }
+    .study-card .scenario { font-size: 7pt; font-style: italic; font-family: Georgia, serif; color: var(--ink); line-height: 1.22; }
+    .study-card .reported { font-size: 7.1pt; font-family: 'JetBrains Mono', Consolas, Menlo, monospace; font-weight: 850; line-height: 1.22; }
+    .study-card .decision { font-size: 7.2pt; line-height: 1.22; }
+    .study-card .meaning { font-size: 7pt; line-height: 1.22; }
     .b {
       display: inline-flex;
       flex-direction: column;
@@ -382,12 +376,12 @@
     .fill.code { font-family: 'JetBrains Mono', Consolas, Menlo, monospace; }
     .fill:focus { outline: none; border-bottom-color: var(--chapter-dark); box-shadow: 0 3px 0 rgba(4, 120, 87, 0.22); }
     .hint {
-      font-size: 4.72pt;
+      font-size: 4.65pt;
       color: #8b897d;
       font-weight: 800;
       font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
       line-height: 1.05;
-      margin-top: 0.32mm;
+      margin-top: 0.3mm;
       letter-spacing: 0.03em;
       white-space: normal;
       overflow-wrap: anywhere;
@@ -408,27 +402,27 @@
     .verdict-row {
       border: 2px solid var(--ink);
       border-radius: 8px;
-      padding: 0.7mm 1.45mm;
+      padding: 0.62mm 1.25mm;
       background: var(--white);
       display: grid;
       grid-template-columns: 1fr auto;
-      gap: 0.28mm 1.7mm;
+      gap: 0.24mm 1.5mm;
       align-items: center;
     }
-    .verdict-row + .verdict-row { margin-top: 0.55mm; }
-    .v-text { font-size: 7.35pt; font-family: Georgia, serif; font-style: italic; color: var(--ink); line-height: 1.25; overflow-wrap: break-word; }
-    .verdict-btns { display: flex; gap: 0.8mm; }
+    .verdict-row + .verdict-row { margin-top: 0.45mm; }
+    .v-text { font-size: 7.2pt; font-family: Georgia, serif; font-style: italic; color: var(--ink); line-height: 1.22; overflow-wrap: break-word; }
+    .verdict-btns { display: flex; gap: 0.7mm; }
     .v-btn {
-      font-size: 6.05pt;
+      font-size: 5.95pt;
       font-weight: 850;
-      padding: 0.42mm 1.55mm;
+      padding: 0.38mm 1.4mm;
       border-radius: 999px;
       border: 1.5px solid var(--ink);
       background: var(--white);
       box-shadow: none;
       cursor: pointer;
       white-space: nowrap;
-      line-height: 1.15;
+      line-height: 1.12;
     }
     .v-btn.yes { color: var(--chapter-dark); border-color: var(--chapter-dark); }
     .v-btn.no { color: var(--rose); border-color: var(--rose); }
@@ -438,12 +432,12 @@
     .v-explanation {
       display: none;
       grid-column: 1 / -1;
-      font-size: 6.9pt;
+      font-size: 6.75pt;
       color: var(--muted);
       border-top: 1.5px dashed var(--ink);
-      padding-top: 0.5mm;
-      margin-top: 0.25mm;
-      line-height: 1.28;
+      padding-top: 0.45mm;
+      margin-top: 0.2mm;
+      line-height: 1.24;
     }
     .verdict-row.revealed .v-explanation { display: block; }
     footer {
@@ -451,11 +445,11 @@
       border-radius: 7px;
       color: #fff;
       margin-top: auto;
-      padding: 0.85mm 2mm;
+      padding: 0.82mm 2mm;
       box-shadow: 4px 4px 0 var(--shadow);
       text-align: center;
       font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
-      font-size: 7.15pt;
+      font-size: 7.1pt;
       font-weight: 800;
       letter-spacing: 0.02em;
     }
@@ -463,7 +457,7 @@
     footer a:hover { text-decoration: underline; }
     @page { size: A4; margin: 0; }
     @media print {
-      body { background: white; font-size: 7.55pt; line-height: 1.1; }
+      body { background: white; font-size: 7.45pt; line-height: 1.08; }
       .toolbar { display: none; }
       .page {
         width: 210mm;
@@ -473,42 +467,51 @@
         border: 0;
         border-radius: 0;
         box-shadow: none;
-        padding: 1.55mm 5mm 0.85mm;
-        gap: 2.1mm;
+        padding: 1.5mm 5mm 0.85mm;
+        gap: 1.82mm;
         background: white;
         overflow: hidden;
         transform: none !important;
       }
-      header { border-bottom-width: 0.75mm; padding-bottom: 0.22mm; }
-      h1 { font-size: 15.3pt; }
-      .subtitle { font-size: 6.35pt; line-height: 1.02; margin-top: 0.18mm; }
-      .group-label { gap: 2mm; font-size: 6.55pt; margin: 0; }
+      header { border-bottom-width: 0.75mm; padding-bottom: 0.2mm; }
+      h1 { font-size: 15.4pt; }
+      .subtitle { font-size: 6.3pt; line-height: 1.02; margin-top: 0.18mm; }
+      .group-label { gap: 2mm; font-size: 6.45pt; margin: 0; }
       .group-label::before, .group-label::after { border-top-width: 1.4px; }
-      .group-label span { background: white; border-width: 1.4px; border-radius: 4px; padding: 0.17mm 1.05mm; }
-      .row { gap: 2.7mm; }
-      .box, .fig, .contrast-card, .metric-table, .mini-note, .pill, .verdict-row { box-shadow: none; border-width: 1.35px; border-radius: 5px; }
-      .box-tag { border-bottom-width: 1.35px; border-radius: 4px 4px 0 0; font-size: 6.85pt; padding: 0.33mm 1.35mm 0.25mm; line-height: 1.05; }
-      .box-body { padding: 0.42mm 0.95mm 0.5mm; gap: 0.16mm; }
-      .box-body ul { padding-left: 2.4mm; gap: 0.08mm; }
-      .fig { padding: 0.12mm 0.35mm 0.2mm; }
-      .fig-caption { font-size: 5.55pt; padding-top: 0; line-height: 1.08; }
-      .formula { border-width: 1.35px; border-radius: 5px; padding: 0.32mm 0.75mm; font-size: 9.7pt; margin: 0.05mm 0; }
-      .symbol-key { gap: 0.15mm; font-size: 6.35pt; }
-      .symbol-key div { border-width: 1px; padding: 0.16mm 0.55mm; }
-      .big-eq { font-size: 11.6pt !important; padding: 0.1mm 0; }
-      .frac { font-size: 10.4pt !important; }
-      .contrast-grid { gap: 0.75mm; }
-      .contrast-card { padding: 0.35mm 0.75mm; gap: 0.12mm; }
-      .contrast-card .label { font-size: 5.8pt; }
-      .metric-table { font-size: 6.35pt; line-height: 1.08; }
-      .metric-table th { padding: 0.24mm 0.55mm; border-bottom-width: 1px; }
-      .metric-table td { padding: 0.22mm 0.55mm; }
-      .mini-note { font-size: 6.35pt; padding: 0.3mm 0.8mm; }
-      .pill-row { gap: 0.45mm; }
-      .pill { font-size: 5.8pt; padding: 0.13mm 0.7mm; }
-      .verdict-row { padding: 0.28mm 0.72mm; gap: 0.1mm 0.75mm; }
-      .verdict-row + .verdict-row { margin-top: 0.16mm; }
-      .v-text { font-size: 6.25pt; line-height: 1.08; }
+      .group-label span { background: white; border-width: 1.4px; border-radius: 4px; padding: 0.16mm 1mm; }
+      .row { gap: 2.35mm; }
+      .box, .fig, .hyp-card, .decision-step, .alpha-chip, .mini-note, .verdict-row { box-shadow: none; border-width: 1.35px; border-radius: 5px; }
+      .box-tag { border-bottom-width: 1.35px; border-radius: 4px 4px 0 0; font-size: 6.75pt; padding: 0.31mm 1.25mm 0.24mm; line-height: 1.04; }
+      .box-body { padding: 0.38mm 0.88mm 0.46mm; gap: 0.12mm; }
+      .box-body ul { padding-left: 2.3mm; gap: 0.04mm; }
+      .formula { border-width: 1.35px; border-radius: 5px; padding: 0.28mm 0.65mm; font-size: 8.95pt; margin: 0; }
+      .formula.tight { font-size: 7.75pt; padding: 0.22mm 0.55mm; }
+      .mini-note { font-size: 6.15pt; padding: 0.26mm 0.72mm; }
+      .fig { padding: 0.1mm 0.32mm 0.18mm; }
+      .fig-caption { font-size: 5.45pt; padding-top: 0; line-height: 1.05; }
+      .hyp-grid { gap: 0.65mm; }
+      .hyp-card { padding: 0.32mm 0.65mm; gap: 0.08mm; }
+      .hyp-label { font-size: 5.7pt; }
+      .decision-flow { gap: 0.65mm; margin: 0; }
+      .decision-step { padding: 0.28mm 0.62mm; gap: 0.06mm; }
+      .decision-label { font-size: 5.55pt; }
+      .alpha-scale { gap: 0.45mm; }
+      .alpha-chip { font-size: 5.55pt; padding: 0.2mm 0.38mm; }
+      .alpha-chip b { font-size: 5.85pt; }
+      .hyp-examples { gap: 0.3mm; }
+      .hyp-ex { padding: 0.22mm 0.6mm; border-width: 1.05px; border-radius: 4px; gap: 0.05mm; }
+      .hyp-ex .qn { font-size: 5.85pt; line-height: 1.05; }
+      .hyp-ex .hyp-line { font-size: 6pt; line-height: 1.06; grid-template-columns: 16mm 1fr; gap: 0.05mm 0.9mm; }
+      .study-card { padding: 0.28mm 0.6mm; border-width: 1.05px; border-radius: 4px; gap: 0.08mm; }
+      .study-card + .study-card { margin-top: 0.18mm; }
+      .study-card .study-head { font-size: 5.7pt; }
+      .study-card .scenario { font-size: 5.95pt; line-height: 1.06; }
+      .study-card .reported { font-size: 5.95pt; line-height: 1.06; }
+      .study-card .decision { font-size: 6pt; line-height: 1.06; }
+      .study-card .meaning { font-size: 5.95pt; line-height: 1.06; }
+      .verdict-row { padding: 0.24mm 0.65mm; gap: 0.08mm 0.65mm; }
+      .verdict-row + .verdict-row { margin-top: 0.12mm; }
+      .v-text { font-size: 6.05pt; line-height: 1.06; }
       .hint { display: none !important; }
       .fill { transition: none; }
       .fill.wrong-pick { color: var(--ink); border-bottom-color: var(--chapter) !important; }
@@ -516,23 +519,23 @@
       .verdict-row .v-explanation { display: none !important; }
       .verdict-row::after {
         content: "Correct";
-        font-size: 5.15pt;
+        font-size: 5.05pt;
         font-weight: 800;
-        padding: 0.2mm 0.75mm;
+        padding: 0.18mm 0.7mm;
         border-radius: 999px;
         background: #d4ecd9;
         border: 1px solid var(--green);
         color: #1e6a30;
       }
       .verdict-row[data-correct="no"]::after { content: "Misconception"; background: #f7d4dd; border-color: var(--rose); color: #8c2e48; }
-      footer { border-radius: 0; padding: 0.18mm 0; font-size: 6.05pt; box-shadow: none; }
-      .fill, .box, .box-tag, .box-body, .fig, .formula, .contrast-card, .metric-table, .metric-table th, .mini-note, .pill, .verdict-row, footer { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      footer { border-radius: 0; padding: 0.17mm 0; font-size: 5.95pt; box-shadow: none; }
+      .fill, .box, .box-tag, .box-body, .fig, .formula, .hyp-card, .decision-step, .alpha-chip, .mini-note, .verdict-row, footer { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
     }
     @media screen and (max-width: 820px) {
       html, body { overflow-x: hidden; }
       .page, .toolbar { width: calc(100vw - 16px); }
       .page { padding: 16px; min-height: auto; transform: none !important; overflow: visible; }
-      .row, .contrast-grid { grid-template-columns: 1fr !important; }
+      .row, .hyp-grid, .decision-flow, .alpha-scale { grid-template-columns: 1fr !important; }
       .toolbar { flex-direction: column; align-items: stretch; margin-top: 12px; }
       .toolbar-actions { justify-content: flex-start; }
       .toolbar-intro .descr { max-width: none; }
@@ -543,19 +546,15 @@
       .b { width: min(30vw, 140px); max-width: 100%; }
       .fill { width: 100% !important; max-width: 100%; }
       .hint { max-width: 100%; }
-      .formula { white-space: normal; overflow-wrap: anywhere; font-size: 10.2pt; }
-      .big-eq { white-space: normal; font-size: 11.2pt; }
+      .formula { white-space: normal; overflow-wrap: anywhere; font-size: 10.1pt; }
       .fig-caption { overflow-wrap: anywhere; }
-      .metric-table { font-size: 7pt; }
-      .metric-table th, .metric-table td { padding: 0.55mm 0.75mm; }
-      .pill { white-space: normal; text-align: center; }
       .verdict-btns { flex-wrap: wrap; }
     }
     @media screen and (max-width: 460px) {
-      body { font-size: 7.9pt; }
+      body { font-size: 7.85pt; }
       .page { padding: 10px; }
       h1 { font-size: 16.5pt; }
-      .box-tag { font-size: 7.1pt; padding-left: 1.5mm; padding-right: 1.5mm; }
+      .box-tag { font-size: 7.05pt; padding-left: 1.5mm; padding-right: 1.5mm; }
       .box-body { padding: 0.8mm 1.2mm; }
       .fig { padding: 4px; }
       .b { width: min(28vw, 120px); }
@@ -587,166 +586,172 @@
   <div class="page-wrap" id="pageWrap">
     <section class="page" id="sheet">
       <header>
-        <h1>Intro to Statistical Tests: Standard Error &amp; Confidence Intervals</h1>
-        <div class="subtitle">How sample estimates get uncertainty bands before a statistical test</div>
+        <h1>Intro to Statistical Tests: P-Values</h1>
+        <div class="subtitle">How to judge whether a sample result is surprising when the null story is true</div>
       </header>
 
-      <div class="group-label"><span>From sample to uncertainty</span></div>
-
-      <div class="row split-56-44">
-        <div class="box tag-chapter">
-          <div class="box-tag"><span>The estimation problem</span></div>
-          <div class="box-body">
-            <p>In statistics, we usually cannot measure the whole <span class="b"><input class="fill" data-answer="population"><span class="hint">population / sample / interval</span></span>. We take a sample and use a sample <span class="b"><input class="fill" data-answer="statistic"><span class="hint">statistic / parameter / label</span></span>, such as <span class="xbar">x</span>, to estimate a fixed but unknown population <span class="b"><input class="fill" data-answer="parameter"><span class="hint">parameter / statistic / graph</span></span>, such as &mu;.</p>
-            <p>If we drew a new random sample, the estimate would probably be a little different. That sample-to-sample movement is <span class="b"><input class="fill" data-answer="sampling variation"><span class="hint">sampling variation / publication bias / rounding error</span></span>.</p>
-            <div class="mini-note chapter">The typical sample-to-sample spread of an estimate is the <span class="b"><input class="fill" data-answer="standard error"><span class="hint">standard error / standard deviation / raw score</span></span>. A range built from an estimate plus and minus a margin of error is a <span class="b"><input class="fill" data-answer="confidence interval" data-alt="ci|conf int"><span class="hint">confidence interval / data table / p value</span></span>.</div>
-          </div>
-        </div>
-        <div class="box tag-chapter">
-          <div class="box-tag"><span>Sample means and true mean</span></div>
-          <div class="box-body" style="gap:0.22mm;">
-            <div class="fig">
-              <svg viewBox="0 0 300 112" role="img" aria-label="Several sample means scattered around one true population mean">
-                <rect x="22" y="14" width="256" height="78" rx="10" fill="#f5fbf8" stroke="#101418" stroke-width="1.2"/>
-                <line x1="150" y1="19" x2="150" y2="94" stroke="#047857" stroke-width="2" stroke-dasharray="4,3"/>
-                <text x="150" y="105" fill="#047857" font-size="7" font-weight="800" text-anchor="middle">true mean &mu;</text>
-                <g fill="#2f5f98" stroke="#101418" stroke-width="1">
-                  <circle cx="105" cy="43" r="5"/><circle cx="131" cy="67" r="5"/><circle cx="146" cy="35" r="5"/>
-                  <circle cx="158" cy="61" r="5"/><circle cx="177" cy="48" r="5"/><circle cx="194" cy="72" r="5"/>
-                </g>
-                <g fill="#665f51" font-size="6.4" font-weight="800" text-anchor="middle">
-                  <text x="105" y="32">sample 1</text><text x="131" y="82">sample 2</text><text x="177" y="37">sample 5</text>
-                </g>
-              </svg>
-            </div>
-            <p class="fig-caption">Each navy dot is one possible sample mean. The true mean is fixed; the sample mean moves.</p>
-            <p>Smaller movement means a more <span class="b"><input class="fill" data-answer="precise"><span class="hint">precise / biased / categorical</span></span> estimate.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="group-label"><span>Standard error</span></div>
-
-      <div class="row split-50-50">
-        <div class="box tag-orange">
-          <div class="box-tag"><span>SD vs SE</span></div>
-          <div class="box-body">
-            <table class="metric-table">
-              <tr><th>Standard deviation</th><th>Standard error</th></tr>
-              <tr>
-                <td>Spread of <span class="b"><input class="fill" data-answer="individual values"><span class="hint">individual values / sample means / p values</span></span> around their mean.</td>
-                <td>Spread of an <span class="b"><input class="fill" data-answer="estimate"><span class="hint">estimate / label / raw score</span></span> across repeated samples.</td>
-              </tr>
-              <tr>
-                <td>If average sleep is 7 hours and SD is 1 hour, one person's sleep is typically about <span class="b"><input class="fill" data-answer="1 hour" data-alt="one hour"><span class="hint">1 hour / 7 hours / 0.2 hours</span></span> from the mean.</td>
-                <td>If repeated sleep samples have SE = 0.2 hours, a sample mean is typically about <span class="b"><input class="fill" data-answer="0.2 hours" data-alt="0.2 hour"><span class="hint">0.2 hours / 1 hour / 7 hours</span></span> from the true mean.</td>
-              </tr>
-              <tr>
-                <td>Describes <span class="b"><input class="fill" data-answer="variation"><span class="hint">variation / confidence / causation</span></span> in the data.</td>
-                <td>Describes <span class="b"><input class="fill" data-answer="precision"><span class="hint">precision / correlation / skew</span></span> of the estimate.</td>
-              </tr>
-            </table>
-            <p>So SD is about spread in the <span class="b"><input class="fill" data-answer="data"><span class="hint">data / graph / model</span></span>; SE is about uncertainty in the <span class="b"><input class="fill" data-answer="estimate"><span class="hint">estimate / raw value / axis label</span></span>.</p>
-          </div>
-        </div>
-        <div class="box tag-chapter">
-          <div class="box-tag"><span>Standard error of the mean</span></div>
-          <div class="box-body">
-            <div class="formula">SE(<span class="xbar">x</span>) = <span class="frac"><span class="num">s</span><span class="den">&radic;n</span></span></div>
-            <p>For a mean, SE equals the sample <span class="b"><input class="fill" data-answer="standard deviation"><span class="hint">standard deviation / median / variance</span></span> divided by the square root of the sample <span class="b"><input class="fill" data-answer="size"><span class="hint">size / mean / label</span></span>.</p>
-            <p><b>Example:</b> A sample of n = 100 exam scores has s = 12 points.</p>
-            <div class="formula" style="font-size:10pt;">SE = <span class="frac"><span class="num">s</span><span class="den">&radic;n</span></span><br>SE = <span class="frac"><span class="num">12</span><span class="den">&radic;100</span></span><br>SE = <span class="b"><input class="fill code" data-answer="1.2"><span class="hint">1.2 / 12 / 0.12</span></span> points</div>
-            <div class="pill-row">
-              <span class="pill chapter">larger n &rarr; smaller SE</span>
-              <span class="pill navy">larger SD &rarr; larger SE</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="group-label"><span>Confidence intervals</span></div>
+      <div class="group-label"><span>Hypothesis testing</span></div>
 
       <div class="row split-47-53">
-        <div class="box tag-chapter">
-          <div class="box-tag"><span>How a CI is built</span></div>
+        <div class="box tag-navy">
+          <div class="box-tag"><span>Two competing stories</span></div>
           <div class="box-body">
-            <div class="formula coded">CI = <span class="sym-est"><span class="xbar">x</span></span> &plusmn; <span class="sym-crit">1.96</span> &times; <span class="sym-se"><span class="frac"><span class="num">s</span><span class="den">&radic;n</span></span></span></div>
-            <div class="symbol-key">
-              <div><span class="sym-est"><span class="xbar">x</span></span> is the <span class="b"><input class="fill" data-answer="mean estimate" data-alt="sample mean"><span class="hint">mean estimate / population variance / p value</span></span>.</div>
-              <div><span class="sym-crit">1.96</span> is the <span class="b"><input class="fill" data-answer="critical value"><span class="hint">critical value / sample size / mean estimate</span></span> for a 95% normal-based interval.</div>
-              <div><span class="sym-se">s / &radic;n</span> is the <span class="b"><input class="fill" data-answer="standard error"><span class="hint">standard error / raw score / null hypothesis</span></span>.</div>
+            <div class="hyp-grid">
+              <div class="hyp-card null">
+                <div class="hyp-label">H<sub>0</sub>: null</div>
+                <p>Says there is <span class="b"><input class="fill" data-answer="no real effect" data-alt="no effect|no real difference"><span class="hint">no real effect / a proven effect / clinical value</span></span>.</p>
+              </div>
+              <div class="hyp-card alt">
+                <div class="hyp-label">H<sub>1</sub>: alternative</div>
+                <p>Says a <span class="b"><input class="fill" data-answer="true effect" data-alt="real effect|true difference"><span class="hint">true effect / typo / sample size</span></span> does exist.</p>
+              </div>
             </div>
-            <p><b>Calculate one:</b> n = 100 exam scores, <span class="xbar">x</span> = 80, s = 12.</p>
-            <div class="formula" style="font-size:9.55pt;">SE = 12 / &radic;100 = <span class="b"><input class="fill code" data-answer="1.2"><span class="hint">1.2 / 12 / 100</span></span><br>Margin of error = 1.96 &times; 1.2 = <span class="b"><input class="fill code" data-answer="2.35" data-alt="2.352"><span class="hint">2.35 / 1.96 / 12</span></span><br>95% CI = 80 &plusmn; 2.35 = <span class="b"><input class="fill code" data-answer="77.65 to 82.35" data-alt="77.65-82.35|77.6 to 82.4|77.65 and 82.35"><span class="hint">77.65 to 82.35 / 68 to 92 / 78.8 to 81.2</span></span> points</div>
-            <div class="mini-note">Remember the <b>68-95-99.7 rule</b>: in a normal distribution, about <span class="b"><input class="fill code" data-answer="68%" data-alt="68"><span class="hint">68% / 95% / 99.7%</span></span> falls within 1 SD, <span class="b"><input class="fill code" data-answer="95%" data-alt="95"><span class="hint">95% / 68% / 99.7%</span></span> within 2 SDs, and <span class="b"><input class="fill code" data-answer="99.7%" data-alt="99.7"><span class="hint">99.7% / 95% / 68%</span></span> within 3 SDs. For a 95% CI, the precise z cutoff is 1.96; 2 is the quick approximation we usually learn for easy mental math.</div>
+            <p>In <span class="b"><input class="fill" data-answer="hypothesis testing"><span class="hint">hypothesis testing / data cleaning / bootstrapping</span></span>, we ask which story is more <span class="b"><input class="fill" data-answer="consistent"><span class="hint">consistent / colorful / confidential</span></span> with the observed data, then return a p-value calculated under <span class="b"><input class="fill code" data-answer="H0" data-alt="null|null hypothesis"><span class="hint">H0 / H1 / CI</span></span>.</p>
           </div>
         </div>
-        <div class="box tag-navy">
-          <div class="box-tag"><span>What 95% confidence means</span></div>
-          <div class="box-body" style="gap:0.2mm;">
-            <p>A 95% confidence level is about the long-run reliability of the <span class="b"><input class="fill" data-answer="method"><span class="hint">method / parameter / one value</span></span>. If we repeatedly took random samples and built an interval each time, about <span class="b"><input class="fill code" data-answer="95"><span class="hint">95 / 50 / 5</span></span>% of those intervals would contain the true value.</p>
-            <div class="fig">
-              <svg viewBox="0 0 310 116" role="img" aria-label="Several confidence intervals, most crossing the fixed true value and one missing">
-                <rect x="25" y="12" width="258" height="88" rx="8" fill="#f9fbff" stroke="#101418" stroke-width="1.2"/>
-                <line x1="160" y1="16" x2="160" y2="101" stroke="#047857" stroke-width="2" stroke-dasharray="4,3"/>
-                <text x="160" y="111" fill="#047857" font-size="7" font-weight="850" text-anchor="middle">fixed true value</text>
-                <g stroke="#2f5f98" stroke-width="3" stroke-linecap="round">
-                  <line x1="108" y1="28" x2="193" y2="28"/>
-                  <line x1="120" y1="42" x2="178" y2="42"/>
-                  <line x1="92" y1="56" x2="165" y2="56"/>
-                  <line x1="141" y1="70" x2="220" y2="70"/>
-                  <line x1="132" y1="84" x2="174" y2="84"/>
-                </g>
-                <g stroke="#b83b5e" stroke-width="3" stroke-linecap="round">
-                  <line x1="185" y1="94" x2="248" y2="94"/>
-                </g>
-                <g fill="#2f5f98" stroke="#101418" stroke-width="0.8">
-                  <circle cx="150" cy="28" r="3.2"/><circle cx="149" cy="42" r="3.2"/><circle cx="129" cy="56" r="3.2"/>
-                  <circle cx="181" cy="70" r="3.2"/><circle cx="153" cy="84" r="3.2"/>
-                </g>
-                <circle cx="216" cy="94" r="3.2" fill="#b83b5e" stroke="#101418" stroke-width="0.8"/>
-              </svg>
-              <div class="fig-caption">Most intervals cross the fixed true value. A few intervals miss it.</div>
+        <div class="box tag-chapter">
+          <div class="box-tag"><span>Examples in notation</span></div>
+          <div class="box-body">
+            <div class="hyp-examples">
+              <div class="hyp-ex">
+                <div class="qn">Q1: Does the mean adult resting BP differ from 120 mmHg?</div>
+                <div class="hyp-line"><span class="sym h0">H<sub>0</sub>: &mu; = 120</span><span class="words">mean BP <span class="b"><input class="fill" data-answer="equals" data-alt="is equal to|is"><span class="hint">equals / differs from / is greater than</span></span> 120 mmHg</span></div>
+                <div class="hyp-line"><span class="sym h1">H<sub>1</sub>: &mu; &ne; 120</span><span class="words">mean BP <span class="b"><input class="fill" data-answer="differs from" data-alt="is different from|differs|is not equal to"><span class="hint">differs from / equals / matches</span></span> 120 mmHg</span></div>
+              </div>
+              <div class="hyp-ex">
+                <div class="qn">Q2: Does the drug lower cholesterol differently than placebo?</div>
+                <div class="hyp-line"><span class="sym h0">H<sub>0</sub>: &mu;<sub>drug</sub> = &mu;<sub>placebo</sub></span><span class="words">drug and placebo have <span class="b"><input class="fill" data-answer="the same" data-alt="equal|identical"><span class="hint">the same / different / opposite</span></span> mean effect</span></div>
+                <div class="hyp-line"><span class="sym h1">H<sub>1</sub>: &mu;<sub>drug</sub> &ne; &mu;<sub>placebo</sub></span><span class="words">drug and placebo have <span class="b"><input class="fill" data-answer="different" data-alt="unequal|distinct"><span class="hint">different / the same / proven</span></span> mean effects</span></div>
+              </div>
             </div>
+            <p class="nb" style="font-size:6.85pt; color:var(--muted); margin-top:0.25mm;">H<sub>0</sub> always contains the <b>equality</b>; H<sub>1</sub> takes <span class="b"><input class="fill code" data-answer="&ne;" data-alt="!=|not equal"><span class="hint">&ne; / = / &asymp;</span></span> (two-sided) or &lt; / &gt; (one-sided).</p>
           </div>
         </div>
       </div>
 
-      <div class="group-label"><span>Quick interpretation checks</span></div>
+      <div class="group-label"><span>What a p-value says</span></div>
 
       <div class="row split-50-50">
+        <div class="box tag-chapter">
+          <div class="box-tag"><span>The definition</span></div>
+          <div class="box-body">
+            <div class="formula"><span class="sym-p">p</span> = P(result <span class="sym-tail">at least as extreme</span> as observed | <span class="sym-h0">H<sub>0</sub> is true</span>)</div>
+            <p>A p-value is the probability of seeing a result <span class="b"><input class="fill" data-answer="at least as extreme" data-alt="this extreme or more extreme|as extreme or more"><span class="hint">at least as extreme / much smaller / exactly equal</span></span> as the one observed, assuming the <span class="b"><input class="fill" data-answer="null hypothesis" data-alt="H0"><span class="hint">null hypothesis / alternative / confidence interval</span></span> is true.</p>
+            <p>It ranges from <span class="b"><input class="fill code" data-answer="0"><span class="hint">0 / -1 / 5</span></span> to <span class="b"><input class="fill code" data-answer="1"><span class="hint">1 / 50 / 100</span></span>. A small p-value means the data are <span class="b"><input class="fill" data-answer="unlikely"><span class="hint">unlikely / certain / required</span></span> under H<sub>0</sub>; a large p-value means they are <span class="b"><input class="fill" data-answer="plausible" data-alt="likely|consistent"><span class="hint">plausible / impossible / proven</span></span> under H<sub>0</sub>.</p>
+          </div>
+        </div>
+        <div class="box tag-orange">
+          <div class="box-tag"><span>Cholesterol example</span></div>
+          <div class="box-body">
+            <p>Suppose the drug lowers cholesterol by 5 mmol/L on average and placebo lowers it by 2 mmol/L. The observed difference is <span class="b"><input class="fill code" data-answer="3" data-alt="3 mmol/L|3 mmol/l"><span class="hint">3 / 2 / 5</span></span> mmol/L.</p>
+            <p>H<sub>0</sub> says there is no real <span class="b"><input class="fill" data-answer="difference"><span class="hint">difference / population / cutoff</span></span> between drug and placebo. H<sub>1</sub> says a true difference <span class="b"><input class="fill" data-answer="does"><span class="hint">does / does not / might never</span></span> exist.</p>
+            <p>If the software gives p = <span class="b"><input class="fill code" data-answer="0.02" data-alt="2%|0.020"><span class="hint">0.02 / 0.20 / 0.50</span></span>, then under the null there is a <span class="b"><input class="fill code" data-answer="2%" data-alt="2 percent|0.02"><span class="hint">2% / 20% / 50%</span></span> chance of a result this extreme or more extreme.</p>
+            <div class="mini-note gold">That is evidence <span class="b"><input class="fill" data-answer="against" data-alt="against the null"><span class="hint">against / proving / ignoring</span></span> the null, but it is not absolute proof.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-label"><span>Compare p with alpha</span></div>
+
+      <div class="row split-47-53">
         <div class="box tag-gold">
+          <div class="box-tag"><span>The significance level</span></div>
+          <div class="box-body">
+            <p>The significance level, written <span class="b"><input class="fill code" data-answer="alpha" data-alt="α"><span class="hint">alpha / beta / sigma</span></span>, is the cutoff chosen before the test for how much chance is acceptable.</p>
+            <div class="decision-flow">
+              <div class="decision-step sig">
+                <div class="decision-label">p &lt; alpha</div>
+                <p>The result is <span class="b"><input class="fill" data-answer="statistically significant"><span class="hint">statistically significant / automatically clinical / impossible</span></span>, so we reject H<sub>0</sub>.</p>
+              </div>
+              <div class="decision-step nonsig">
+                <div class="decision-label">p &ge; alpha</div>
+                <p>The result is <span class="b"><input class="fill" data-answer="not statistically significant" data-alt="non-significant|nonsignificant"><span class="hint">not statistically significant / proven false / always important</span></span>, so we fail to reject H<sub>0</sub>.</p>
+              </div>
+            </div>
+            <div class="alpha-scale">
+              <div class="alpha-chip"><b>0.01</b>stricter</div>
+              <div class="alpha-chip"><b>0.05</b>common</div>
+              <div class="alpha-chip"><b>0.10</b>more lenient</div>
+            </div>
+            <p>By convention, alpha is often <span class="b"><input class="fill code" data-answer="0.05" data-alt="5%"><span class="hint">0.05 / 0.50 / 1.00</span></span>. Example: p = 0.02 with alpha = 0.05 is <span class="b"><input class="fill" data-answer="significant"><span class="hint">significant / not significant / proven</span></span>; p = 0.08 with alpha = 0.05 is <span class="b"><input class="fill" data-answer="not significant" data-alt="not statistically significant|insignificant"><span class="hint">not significant / significant / proven</span></span>.</p>
+            <div class="mini-note gold">Even when p = 0.02, there is still a <span class="b"><input class="fill code" data-answer="2%" data-alt="2"><span class="hint">2% / 98% / 20%</span></span> chance the result happened by chance. At alpha = 0.05, that leftover uncertainty is usually considered acceptable.</div>
+          </div>
+        </div>
+        <div class="box tag-plum">
+          <div class="box-tag"><span>P-value as tail area</span></div>
+          <div class="box-body" style="gap:0.2mm;">
+            <div class="fig">
+              <svg viewBox="0 0 320 132" role="img" aria-label="Sampling distribution of the test statistic under H0 with shaded p-value tail">
+                <rect x="10" y="8" width="300" height="118" rx="9" fill="#fbf8ff" stroke="#101418" stroke-width="1.2"/>
+                <text x="160" y="20" fill="#2f5f98" font-size="7" font-weight="850" text-anchor="middle">Sampling distribution of the statistic if H<tspan font-size="5.4" baseline-shift="sub">0</tspan> is true</text>
+                <path d="M216,84.5 L224,90.3 L232,94.3 L240,96.8 L248,98.4 L256,99.2 L264,99.6 L272,99.85 L280,99.95 L280,104 L216,104 Z" fill="#fdeef1" stroke="none"/>
+                <line x1="28" y1="104" x2="292" y2="104" stroke="#101418" stroke-width="1.2"/>
+                <path d="M40,103.95 L48,103.85 L56,103.65 L64,103.2 L72,102.4 L80,100.85 L88,98.3 L96,94.3 L104,88.5 L112,80.6 L120,71 L128,60.3 L136,49.6 L144,40.5 L152,34.2 L160,32 L168,34.2 L176,40.5 L184,49.6 L192,60.3 L200,71 L208,80.6 L216,88.5 L224,94.3 L232,98.3 L240,100.85 L248,102.4 L256,103.2 L264,103.65 L272,103.85 L280,103.95" fill="none" stroke="#2f5f98" stroke-width="2.2"/>
+                <path d="M216,88.5 L224,94.3 L232,98.3 L240,100.85 L248,102.4 L256,103.2 L264,103.65 L272,103.85 L280,103.95" fill="none" stroke="#b83b5e" stroke-width="2.2"/>
+                <line x1="216" y1="44" x2="216" y2="108" stroke="#b83b5e" stroke-width="1.8" stroke-dasharray="4,3"/>
+                <text x="216" y="40" fill="#b83b5e" font-size="6.8" font-weight="850" text-anchor="middle">observed</text>
+                <line x1="160" y1="104" x2="160" y2="110" stroke="#101418" stroke-width="1.2"/>
+                <text x="160" y="118" fill="#101418" font-size="6.4" font-weight="800" text-anchor="middle">value expected if H0 true</text>
+                <text x="254" y="76" fill="#b83b5e" font-size="6.8" font-weight="850" text-anchor="middle">p-value</text>
+                <text x="254" y="84" fill="#b83b5e" font-size="6" font-weight="750" text-anchor="middle">(tail area)</text>
+              </svg>
+              <div class="fig-caption">The curve shows what the statistic looks like across repeated samples if H<sub>0</sub> were true. The shaded tail is the p-value.</div>
+            </div>
+            <p>The p-value assumes <span class="b"><input class="fill code" data-answer="H0" data-alt="null|null hypothesis"><span class="hint">H0 / H1 / alpha</span></span> is true. It is <b>not</b> the probability that H<sub>0</sub> is true.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-label"><span>Interpretation traps</span></div>
+
+      <div class="row split-50-50">
+        <div class="box tag-rose">
+          <div class="box-tag"><span>Reported studies: decide and explain</span></div>
+          <div class="box-body">
+            <div class="study-card s-rej">
+              <div class="study-head">Study 1: Vaccine vs placebo</div>
+              <div class="scenario">A trial tests whether a new vaccine reduces infection rates compared to placebo.</div>
+              <div class="reported">Reported: p = 0.003, &alpha; = 0.05</div>
+              <div class="decision">Decision: p <span class="b"><input class="fill code" data-answer="&lt;" data-alt="less than|smaller than"><span class="hint">&lt; / &gt; / =</span></span> &alpha;, so we <span class="b"><input class="fill" data-answer="reject"><span class="hint">reject / fail to reject / prove</span></span> H<sub>0</sub>.</div>
+              <div class="meaning">Meaning: there is <span class="b"><input class="fill" data-answer="statistically significant" data-alt="significant"><span class="hint">statistically significant / no / weak</span></span> evidence the vaccine reduces infections at &alpha; = 0.05.</div>
+            </div>
+            <div class="study-card s-fail">
+              <div class="study-head">Study 2: Memory drug vs placebo</div>
+              <div class="scenario">A trial tests whether a new drug improves memory scores compared to placebo.</div>
+              <div class="reported">Reported: p = 0.12, &alpha; = 0.05</div>
+              <div class="decision">Decision: p <span class="b"><input class="fill code" data-answer="&ge;" data-alt="&gt;|greater than|greater or equal"><span class="hint">&ge; / &lt; / =</span></span> &alpha;, so we <span class="b"><input class="fill" data-answer="fail to reject" data-alt="do not reject"><span class="hint">fail to reject / reject / disprove</span></span> H<sub>0</sub>.</div>
+              <div class="meaning">Meaning: <span class="b"><input class="fill" data-answer="not enough evidence" data-alt="insufficient evidence|too little evidence"><span class="hint">not enough evidence / strong proof / no real effect</span></span> to conclude the drug helps memory at &alpha; = 0.05.</div>
+            </div>
+            <div class="mini-note" style="font-size:6.7pt;"><b>Reminder:</b> failing to reject H<sub>0</sub> is not the same as proving H<sub>0</sub>. The effect could still be real but undetected.</div>
+          </div>
+        </div>
+        <div class="box tag-chapter">
           <div class="box-tag"><span>Correct or misconception?</span></div>
           <div class="box-body">
             <div class="verdict-row" data-correct="yes">
-              <div class="v-text">"A standard deviation describes the spread of individual observations."</div>
+              <div class="v-text">"p = 0.02 means a result this extreme would be rare if H0 were true."</div>
               <div class="verdict-btns"><button type="button" class="v-btn yes" data-pick="yes">Correct</button><button type="button" class="v-btn no" data-pick="no">Misconception</button></div>
-              <div class="v-explanation">SD is about individual data values, such as individual sleep durations.</div>
-            </div>
-            <div class="verdict-row" data-correct="yes">
-              <div class="v-text">"A standard error describes how much an estimate would vary across repeated samples."</div>
-              <div class="verdict-btns"><button type="button" class="v-btn yes" data-pick="yes">Correct</button><button type="button" class="v-btn no" data-pick="no">Misconception</button></div>
-              <div class="v-explanation">SE is about the sampling variation of an estimate, not the spread of individual observations.</div>
+              <div class="v-explanation">Correct. The probability is conditional on the null hypothesis being true.</div>
             </div>
             <div class="verdict-row" data-correct="no">
-              <div class="v-text">"Increasing n usually makes the standard error larger."</div>
+              <div class="v-text">"p = 0.02 means there is a 2% chance that H0 is true."</div>
               <div class="verdict-btns"><button type="button" class="v-btn yes" data-pick="yes">Correct</button><button type="button" class="v-btn no" data-pick="no">Misconception</button></div>
-              <div class="v-explanation">Because n is under the square root in the denominator, larger samples usually reduce SE.</div>
+              <div class="v-explanation">The p-value assumes H0 is true. It does not directly assign a probability to H0.</div>
             </div>
-          </div>
-        </div>
-        <div class="box tag-rose">
-          <div class="box-tag"><span>CI language traps</span></div>
-          <div class="box-body">
             <div class="verdict-row" data-correct="no">
-              <div class="v-text">"There is a 95% chance that the true mean is in this exact computed interval."</div>
+              <div class="v-text">"Not statistically significant means the effect definitely does not exist."</div>
               <div class="verdict-btns"><button type="button" class="v-btn yes" data-pick="yes">Correct</button><button type="button" class="v-btn no" data-pick="no">Misconception</button></div>
-              <div class="v-explanation">Once the interval is computed, the fixed true value is either inside or outside it. The 95% refers to the method over repeated sampling.</div>
+              <div class="v-explanation">There may still be an effect, but the study did not provide enough evidence to reject H0.</div>
             </div>
-            <div class="verdict-row" data-correct="yes">
-              <div class="v-text">"We are 95% confident that the true mean lies in this interval."</div>
+            <div class="verdict-row" data-correct="no">
+              <div class="v-text">"Statistical significance guarantees clinical importance."</div>
               <div class="verdict-btns"><button type="button" class="v-btn yes" data-pick="yes">Correct</button><button type="button" class="v-btn no" data-pick="no">Misconception</button></div>
-              <div class="v-explanation">Correct, because "confident" is a technical word here. It means this interval came from a method that captures the true value about 95% of the time in repeated sampling.</div>
+              <div class="v-explanation">A result can be statistically detectable but too small to matter in practice.</div>
+            </div>
+            <div class="verdict-row" data-correct="no">
+              <div class="v-text">"Fail to reject H0 means we have proven H0 is true."</div>
+              <div class="verdict-btns"><button type="button" class="v-btn yes" data-pick="yes">Correct</button><button type="button" class="v-btn no" data-pick="no">Misconception</button></div>
+              <div class="v-explanation">We only lack enough evidence to reject H0. That is not the same as proving no effect exists.</div>
             </div>
           </div>
         </div>
@@ -779,7 +784,7 @@
       }).join("\n") + "\n" +
       Array.from(document.querySelectorAll(".verdict-row")).map(r => "v:" + (r.dataset.correct || "")).join("\n")
     );
-    const storageKey = "se-ci-stat-tests-cheatsheet-gpt5-gefv-" + fp;
+    const storageKey = "p-values-stat-tests-cheatsheet-composer-q4n7-" + fp;
 
     blanks.forEach(b => {
       const hint = b.querySelector(".hint");
@@ -816,6 +821,7 @@
     const norm = s => String(s)
       .replace(/[\u2212\u2013]/g, "-")
       .replace(/\u2080/g, "0").replace(/\u2081/g, "1").replace(/\u2082/g, "2").replace(/\u2083/g, "3").replace(/\u2084/g, "4")
+      .replace(/\u03b1/g, "alpha")
       .replace(/\u03b2/g, "beta")
       .replace(/\s+/g, " ")
       .trim()
@@ -868,7 +874,7 @@
     restore();
 
     const verdictRows = Array.from(document.querySelectorAll(".verdict-row"));
-    const verdictKey = "se-ci-stat-tests-cheatsheet-gpt5-gefv-verdict-" + fp;
+    const verdictKey = "p-values-stat-tests-cheatsheet-composer-q4n7-verdict-" + fp;
     function applyVerdictPick(row, pick) {
       if (row.classList.contains("revealed")) return;
       const correct = row.dataset.correct;
@@ -924,7 +930,7 @@
     });
 
     const zoomLevels = [0.1, 0.25, 0.5, 0.75, 0.85, 1.0, 1.15, 1.3, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
-    const zoomKey = "se-ci-stat-tests-cheatsheet-gpt5-gefv-zoom";
+    const zoomKey = "p-values-stat-tests-cheatsheet-composer-q4n7-zoom";
     const defaultZoomIdx = zoomLevels.indexOf(1.0);
     let zoomIdx = parseInt(localStorage.getItem(zoomKey) || String(defaultZoomIdx), 10);
     if (isNaN(zoomIdx) || zoomIdx < 0 || zoomIdx >= zoomLevels.length) zoomIdx = defaultZoomIdx;
@@ -941,6 +947,6 @@
     document.getElementById("zoomIn").addEventListener("click", () => { if (zoomIdx < zoomLevels.length - 1) { zoomIdx++; applyZoom(); } });
     applyZoom();
   </script>
-  <!-- GPT-5 gefv -->
+  <!-- Composer q4n7 -->
 </body>
 </html>
