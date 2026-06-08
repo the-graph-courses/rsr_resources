@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intro to Statistical Tests: Standard Error &amp; Confidence Intervals</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #dfe8ea;
+      --paper: #f7f4ed;
+      --white: #fffef9;
+      --ink: #101418;
+      --muted: #665f51;
+      --chapter: #047857;
+      --chapter-dark: #065f46;
+      --chapter-soft: #e6f4ee;
+      --teal: #0d7377;
+      --teal-dark: #0a5d61;
+      --teal-soft: #e3f3f3;
+      --gold: #f0c808;
+      --gold-soft: #fff3cc;
+      --rose: #b83b5e;
+      --rose-soft: #fdeef1;
+      --green: #2c8a4a;
+      --navy: #2f5f98;
+      --navy-soft: #e7eef7;
+      --orange: #d97706;
+      --orange-soft: #fff1dc;
+      --plum: #6b3fa0;
+      --plum-soft: #f1e8f8;
+      --sky: #0b8fa3;
+      --sky-soft: #e8f7fa;
+      --border: #101418;
+      --shadow: rgba(16, 20, 24, 0.42);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Space Grotesk', Arial, Helvetica, sans-serif;
+      font-size: 8.35pt;
+      line-height: 1.22;
+    }
+    .toolbar {
+      width: 210mm;
+      max-width: calc(100vw - 24px);
+      margin: 24px auto 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      line-height: 1.35;
+    }
+    .toolbar-intro { flex: 1; min-width: 0; font-size: 9pt; }
+    .toolbar-intro .title {
+      color: var(--chapter);
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 10pt;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .toolbar-intro .descr { color: #3a4a4f; max-width: 132mm; }
+    .toolbar-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+    button, .zoom-group {
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: 7px;
+      padding: 7px 11px;
+      font: inherit;
+      font-weight: 800;
+      line-height: 1.2;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 var(--shadow);
+    }
+    button.primary { background: var(--chapter); color: #fff; border-color: var(--ink); }
+    .print-button { display: inline-flex; align-items: center; gap: 5px; }
+    .print-button svg { width: 13px; height: 13px; display: block; }
+    .zoom-group { display: inline-flex; align-items: stretch; padding: 0; overflow: visible; }
+    .zoom-group button { border: 0; border-radius: 0; padding: 6px 10px; background: transparent; box-shadow: none; }
+    .zoom-group button + button, .zoom-group .zoom-label { border-left: 2px solid var(--ink); }
+    .zoom-label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      padding: 0 9px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-weight: 900;
+    }
+    .page-wrap { display: flex; flex-direction: column; align-items: center; }
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto 18px;
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: 10px;
+      padding: 3mm 7mm 2.2mm;
+      box-shadow: 8px 8px 0 rgba(16, 20, 24, 0.13), 0 14px 36px rgba(16, 20, 24, 0.14);
+      display: flex;
+      flex-direction: column;
+      gap: 2.1mm;
+      transform-origin: top center;
+    }
+    header {
+      border-bottom: 1mm solid var(--chapter);
+      padding-bottom: 0.85mm;
+      line-height: 1.1;
+    }
+    h1 {
+      margin: 0;
+      color: var(--chapter);
+      font-size: 18.3pt;
+      font-weight: 800;
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+    .subtitle {
+      margin-top: 0.5mm;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 7.3pt;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .group-label {
+      display: flex;
+      align-items: center;
+      gap: 2.7mm;
+      color: var(--ink);
+      font-size: 7.8pt;
+      font-weight: 900;
+      margin: 0.05mm 0;
+      break-after: avoid;
+    }
+    .group-label::before, .group-label::after { content: ""; flex: 1; border-top: 2px solid var(--ink); height: 0; }
+    .group-label span { background: var(--paper); border: 2px solid var(--ink); border-radius: 5px; padding: 0.38mm 1.7mm; white-space: nowrap; }
+    .row { display: grid; gap: 2.7mm; align-items: stretch; }
+    .row.cols-2 { grid-template-columns: 1fr 1fr; }
+    .row.split-56-44 { grid-template-columns: 56fr 44fr; }
+    .row.split-50-50 { grid-template-columns: 1fr 1fr; }
+    .row.split-47-53 { grid-template-columns: 47fr 53fr; }
+    .box, .box-body, .row > *, .fig, .contrast-card, .metric-table, .verdict-row { min-width: 0; }
+    .box {
+      background: var(--white);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      box-shadow: 4px 4px 0 var(--shadow);
+      overflow: visible;
+      display: flex;
+      flex-direction: column;
+    }
+    .box-tag {
+      background: var(--teal);
+      color: white;
+      border-bottom: 2px solid var(--ink);
+      border-radius: 6px 6px 0 0;
+      font-size: 8.05pt;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      padding: 0.68mm 2.2mm 0.55mm;
+      line-height: 1.15;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .box-tag .mode-hint { font-weight: 700; opacity: 0.75; font-size: 6.3pt; }
+    .box-body {
+      border-radius: 0 0 6px 6px;
+      padding: 0.9mm 1.8mm 1mm;
+      gap: 0.42mm;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--teal-soft);
+      overflow: visible;
+    }
+    .box-body p { margin: 0; overflow-wrap: break-word; }
+    .box-body ul {
+      margin: 0;
+      padding-left: 3.1mm;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25mm;
+    }
+    .tag-chapter .box-tag { background: var(--chapter); color: #fff; }
+    .tag-chapter .box-body { background: var(--chapter-soft); }
+    .tag-navy .box-tag { background: var(--navy); color: #fff; }
+    .tag-navy .box-body { background: var(--navy-soft); }
+    .tag-orange .box-tag { background: var(--orange); color: #fff; }
+    .tag-orange .box-body { background: var(--orange-soft); }
+    .tag-gold .box-tag { background: var(--gold); color: var(--ink); }
+    .tag-gold .box-body { background: var(--gold-soft); }
+    .tag-plum .box-tag { background: var(--plum); color: #fff; }
+    .tag-plum .box-body { background: var(--plum-soft); }
+    .tag-rose .box-tag { background: var(--rose); color: #fff; }
+    .tag-rose .box-body { background: var(--rose-soft); }
+    .chapter { color: var(--chapter); }
+    .navy { color: var(--navy); }
+    .orange { color: var(--orange); }
+    .rose { color: var(--rose); }
+    .plum { color: var(--plum); }
+    .green { color: var(--green); }
+    code, .code, .big-eq, .formula { font-family: 'JetBrains Mono', Consolas, Menlo, monospace; }
+    .big-eq {
+      font-size: 13.3pt;
+      font-weight: 900;
+      white-space: nowrap;
+      letter-spacing: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      width: 100%;
+      padding: 0.45mm 0;
+    }
+    .formula {
+      border: 2px solid var(--ink);
+      border-radius: 7px;
+      background: var(--white);
+      padding: 0.9mm 1.5mm;
+      text-align: center;
+      font-size: 11.5pt;
+      font-weight: 900;
+      line-height: 1.18;
+      margin: 0.2mm 0;
+    }
+    .formula.coded { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.8mm; }
+    .sym-est { color: var(--chapter); }
+    .sym-crit { color: var(--orange); }
+    .sym-se { color: var(--navy); }
+    .symbol-key {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.35mm;
+      font-size: 7.55pt;
+      line-height: 1.18;
+    }
+    .symbol-key div {
+      border: 1.5px solid var(--ink);
+      border-radius: 5px;
+      background: var(--white);
+      padding: 0.35mm 0.85mm;
+    }
+    .frac { display: inline-flex; flex-direction: column; align-items: center; font-size: 12.3pt; line-height: 1; margin: 0 0.9mm; vertical-align: middle; }
+    .frac .num { padding: 0 0.8mm 0.45mm; border-bottom: 1.5px solid var(--ink); }
+    .frac .den { padding-top: 0.45mm; }
+    .xbar {
+      position: relative;
+      display: inline-block;
+      line-height: 1;
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-weight: 850;
+    }
+    .xbar::before {
+      content: "";
+      position: absolute;
+      left: 0.02em;
+      right: 0.02em;
+      top: -0.08em;
+      border-top: 1.4px solid currentColor;
+    }
+    .fig {
+      position: relative;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      padding: 0.45mm 0.8mm 0.6mm;
+      background: var(--white);
+      overflow: visible;
+    }
+    .fig svg { display: block; width: 100%; height: auto; }
+    .fig-caption {
+      font-size: 6.75pt;
+      color: var(--ink);
+      text-align: center;
+      line-height: 1.18;
+      padding-top: 0.2mm;
+    }
+    .contrast-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4mm; }
+    .contrast-card {
+      border: 2px solid var(--ink);
+      border-radius: 7px;
+      background: var(--white);
+      padding: 0.75mm 1.25mm;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35mm;
+    }
+    .contrast-card .label {
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 6.8pt;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .contrast-card.sd .label { color: var(--orange); }
+    .contrast-card.se .label { color: var(--chapter); }
+    .metric-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border: 2px solid var(--ink);
+      border-radius: 7px;
+      overflow: hidden;
+      background: var(--white);
+      font-size: 7.25pt;
+      line-height: 1.18;
+    }
+    .metric-table th {
+      background: var(--orange);
+      color: #fff;
+      border-bottom: 2px solid var(--ink);
+      padding: 0.45mm 0.8mm;
+      text-align: left;
+      font-weight: 900;
+    }
+    .metric-table th:nth-child(2) { background: var(--chapter); }
+    .metric-table td {
+      padding: 0.45mm 0.8mm;
+      vertical-align: top;
+      border-bottom: 1px dashed #d6cfbd;
+    }
+    .metric-table tr:last-child td { border-bottom: 0; }
+    .metric-table td + td, .metric-table th + th { border-left: 1.5px solid var(--ink); }
+    .mini-note {
+      border: 2px solid var(--ink);
+      border-radius: 7px;
+      background: var(--white);
+      padding: 0.65mm 1.4mm;
+      font-size: 7.45pt;
+      font-weight: 760;
+      line-height: 1.22;
+    }
+    .mini-note.chapter { background: var(--chapter-soft); color: #064e3b; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 0.8mm; align-items: center; justify-content: center; margin-top: 0.15mm; }
+    .pill {
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      padding: 0.28mm 1.25mm;
+      background: var(--white);
+      font-size: 6.8pt;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+    .pill.chapter { background: var(--chapter-soft); color: var(--chapter-dark); }
+    .pill.navy { background: var(--navy-soft); color: var(--navy); }
+    .pill.gold { background: var(--gold-soft); color: #8a6800; }
+    .b {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      vertical-align: baseline;
+      line-height: 1;
+      margin: 0 0.2mm;
+      text-align: center;
+      max-width: 100%;
+      min-width: 0;
+    }
+    .fill {
+      border: 0;
+      border-bottom: 1.8px solid var(--chapter);
+      border-radius: 3px 3px 0 0;
+      padding: 0 0.3mm 0.5px;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.38);
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: 850;
+      line-height: 1;
+      text-align: center;
+      min-width: 2mm;
+      max-width: 100%;
+      transition: width 0.18s ease-out;
+    }
+    .fill.code { font-family: 'JetBrains Mono', Consolas, Menlo, monospace; }
+    .fill:focus { outline: none; border-bottom-color: var(--chapter-dark); box-shadow: 0 3px 0 rgba(4, 120, 87, 0.22); }
+    .hint {
+      font-size: 4.72pt;
+      color: #8b897d;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      line-height: 1.05;
+      margin-top: 0.32mm;
+      letter-spacing: 0.03em;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      max-width: 34mm;
+      text-align: center;
+    }
+    .b.solved .hint, .hints-hidden .hint { display: none; }
+    .b.solved .fill { background: rgba(255, 255, 255, 0.38); border-bottom-color: var(--chapter-dark); }
+    .fill.wrong-pick { border-bottom-color: var(--rose) !important; color: var(--rose); animation: shake 0.45s; }
+    .fill.correct-flash { animation: correctFlash 0.75s ease-out; }
+    @keyframes shake { 0%, 100% { transform: translateX(0) } 20%, 60% { transform: translateX(-2px) } 40%, 80% { transform: translateX(2px) } }
+    @keyframes correctFlash {
+      0% { background-color: rgba(44, 138, 74, 0); border-bottom-color: var(--chapter) }
+      20% { background-color: rgba(44, 138, 74, 0.30); border-bottom-color: var(--green) }
+      60% { background-color: rgba(44, 138, 74, 0.18); border-bottom-color: var(--green) }
+      100% { background-color: rgba(44, 138, 74, 0); border-bottom-color: var(--chapter) }
+    }
+    .verdict-row {
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      padding: 0.7mm 1.45mm;
+      background: var(--white);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.28mm 1.7mm;
+      align-items: center;
+    }
+    .verdict-row + .verdict-row { margin-top: 0.55mm; }
+    .v-text { font-size: 7.35pt; font-family: Georgia, serif; font-style: italic; color: var(--ink); line-height: 1.25; overflow-wrap: break-word; }
+    .verdict-btns { display: flex; gap: 0.8mm; }
+    .v-btn {
+      font-size: 6.05pt;
+      font-weight: 850;
+      padding: 0.42mm 1.55mm;
+      border-radius: 999px;
+      border: 1.5px solid var(--ink);
+      background: var(--white);
+      box-shadow: none;
+      cursor: pointer;
+      white-space: nowrap;
+      line-height: 1.15;
+    }
+    .v-btn.yes { color: var(--chapter-dark); border-color: var(--chapter-dark); }
+    .v-btn.no { color: var(--rose); border-color: var(--rose); }
+    .v-btn.picked.correct, .v-btn.was-correct { background: #d4ecd9; border-color: var(--green); color: #1e6a30; }
+    .v-btn.picked.incorrect { background: #f7d4dd; border-color: var(--rose); color: #8c2e48; animation: shake 0.45s; }
+    .v-btn:disabled { cursor: default; }
+    .v-explanation {
+      display: none;
+      grid-column: 1 / -1;
+      font-size: 6.9pt;
+      color: var(--muted);
+      border-top: 1.5px dashed var(--ink);
+      padding-top: 0.5mm;
+      margin-top: 0.25mm;
+      line-height: 1.28;
+    }
+    .verdict-row.revealed .v-explanation { display: block; }
+    footer {
+      background: var(--chapter);
+      border-radius: 7px;
+      color: #fff;
+      margin-top: auto;
+      padding: 0.85mm 2mm;
+      box-shadow: 4px 4px 0 var(--shadow);
+      text-align: center;
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 7.15pt;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+    footer a { color: #fff; text-decoration: none; font-weight: 900; }
+    footer a:hover { text-decoration: underline; }
+    @page { size: A4; margin: 0; }
+    @media print {
+      body { background: white; font-size: 7.55pt; line-height: 1.1; }
+      .toolbar { display: none; }
+      .page {
+        width: 210mm;
+        height: 297mm;
+        max-height: 297mm;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 1.55mm 5mm 0.85mm;
+        gap: 0.95mm;
+        background: white;
+        overflow: hidden;
+        transform: none !important;
+      }
+      header { border-bottom-width: 0.75mm; padding-bottom: 0.22mm; }
+      h1 { font-size: 15.3pt; }
+      .subtitle { font-size: 6.35pt; line-height: 1.02; margin-top: 0.18mm; }
+      .group-label { gap: 2mm; font-size: 6.55pt; margin: 0; }
+      .group-label::before, .group-label::after { border-top-width: 1.4px; }
+      .group-label span { background: white; border-width: 1.4px; border-radius: 4px; padding: 0.17mm 1.05mm; }
+      .row { gap: 0.95mm; }
+      .box, .fig, .contrast-card, .metric-table, .mini-note, .pill, .verdict-row { box-shadow: none; border-width: 1.35px; border-radius: 5px; }
+      .box-tag { border-bottom-width: 1.35px; border-radius: 4px 4px 0 0; font-size: 6.85pt; padding: 0.33mm 1.35mm 0.25mm; line-height: 1.05; }
+      .box-body { padding: 0.42mm 0.95mm 0.5mm; gap: 0.16mm; }
+      .box-body ul { padding-left: 2.4mm; gap: 0.08mm; }
+      .fig { padding: 0.12mm 0.35mm 0.2mm; }
+      .fig-caption { font-size: 5.55pt; padding-top: 0; line-height: 1.08; }
+      .formula { border-width: 1.35px; border-radius: 5px; padding: 0.32mm 0.75mm; font-size: 9.7pt; margin: 0.05mm 0; }
+      .symbol-key { gap: 0.15mm; font-size: 6.35pt; }
+      .symbol-key div { border-width: 1px; padding: 0.16mm 0.55mm; }
+      .big-eq { font-size: 11.6pt !important; padding: 0.1mm 0; }
+      .frac { font-size: 10.4pt !important; }
+      .contrast-grid { gap: 0.75mm; }
+      .contrast-card { padding: 0.35mm 0.75mm; gap: 0.12mm; }
+      .contrast-card .label { font-size: 5.8pt; }
+      .metric-table { font-size: 6.35pt; line-height: 1.08; }
+      .metric-table th { padding: 0.24mm 0.55mm; border-bottom-width: 1px; }
+      .metric-table td { padding: 0.22mm 0.55mm; }
+      .mini-note { font-size: 6.35pt; padding: 0.3mm 0.8mm; }
+      .pill-row { gap: 0.45mm; }
+      .pill { font-size: 5.8pt; padding: 0.13mm 0.7mm; }
+      .verdict-row { padding: 0.28mm 0.72mm; gap: 0.1mm 0.75mm; }
+      .verdict-row + .verdict-row { margin-top: 0.16mm; }
+      .v-text { font-size: 6.25pt; line-height: 1.08; }
+      .hint { display: none !important; }
+      .fill { transition: none; }
+      .fill.wrong-pick { color: var(--ink); border-bottom-color: var(--chapter) !important; }
+      button, .verdict-btns { display: none !important; }
+      .verdict-row .v-explanation { display: none !important; }
+      .verdict-row::after {
+        content: "Correct";
+        font-size: 5.15pt;
+        font-weight: 800;
+        padding: 0.2mm 0.75mm;
+        border-radius: 999px;
+        background: #d4ecd9;
+        border: 1px solid var(--green);
+        color: #1e6a30;
+      }
+      .verdict-row[data-correct="no"]::after { content: "Misconception"; background: #f7d4dd; border-color: var(--rose); color: #8c2e48; }
+      footer { border-radius: 0; padding: 0.18mm 0; font-size: 6.05pt; box-shadow: none; }
+      .fill, .box, .box-tag, .box-body, .fig, .formula, .contrast-card, .metric-table, .metric-table th, .mini-note, .pill, .verdict-row, footer { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+    @media screen and (max-width: 820px) {
+      html, body { overflow-x: hidden; }
+      .page, .toolbar { width: calc(100vw - 16px); }
+      .page { padding: 16px; min-height: auto; transform: none !important; overflow: visible; }
+      .row, .contrast-grid { grid-template-columns: 1fr !important; }
+      .toolbar { flex-direction: column; align-items: stretch; margin-top: 12px; }
+      .toolbar-actions { justify-content: flex-start; }
+      .toolbar-intro .descr { max-width: none; }
+      button { padding: 6px 8px; }
+      .zoom-group button { padding: 5px 7px; }
+      .zoom-group .zoom-label { min-width: 38px; padding: 0 6px; }
+      .verdict-row { grid-template-columns: 1fr; }
+      .b { width: min(30vw, 140px); max-width: 100%; }
+      .fill { width: 100% !important; max-width: 100%; }
+      .hint { max-width: 100%; }
+      .formula { white-space: normal; overflow-wrap: anywhere; font-size: 10.2pt; }
+      .big-eq { white-space: normal; font-size: 11.2pt; }
+      .fig-caption { overflow-wrap: anywhere; }
+      .metric-table { font-size: 7pt; }
+      .metric-table th, .metric-table td { padding: 0.55mm 0.75mm; }
+      .pill { white-space: normal; text-align: center; }
+      .verdict-btns { flex-wrap: wrap; }
+    }
+    @media screen and (max-width: 460px) {
+      body { font-size: 7.9pt; }
+      .page { padding: 10px; }
+      h1 { font-size: 16.5pt; }
+      .box-tag { font-size: 7.1pt; padding-left: 1.5mm; padding-right: 1.5mm; }
+      .box-body { padding: 0.8mm 1.2mm; }
+      .fig { padding: 4px; }
+      .b { width: min(28vw, 120px); }
+      .print-button svg { width: 12px; height: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="toolbar-intro">
+      <div class="title">GRAPH Courses cheat sheet</div>
+      <div class="descr">Type your answers into the blanks. Hint options appear in small grey text below each blank. When finished, click Print / Save on the right.</div>
+    </div>
+    <div class="toolbar-actions">
+      <div class="zoom-group" role="group" aria-label="Zoom controls">
+        <button type="button" id="zoomOut" aria-label="Zoom out">Zoom -</button>
+        <button type="button" id="zoomIn" aria-label="Zoom in">Zoom +</button>
+        <span class="zoom-label" id="zoomLabel">100%</span>
+      </div>
+      <button type="button" id="toggleHints">Hide hints</button>
+      <button type="button" id="clearAnswers">Clear</button>
+      <button type="button" class="primary print-button" onclick="window.print()" aria-label="Print or save cheat sheet">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 3h10v5H7V3Zm10 14h2a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h2v4h10v-4Zm-8 2v-6h6v6H9Zm9-7.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" /></svg>
+        Print / Save
+      </button>
+    </div>
+  </div>
+
+  <div class="page-wrap" id="pageWrap">
+    <section class="page" id="sheet">
+      <header>
+        <h1>Intro to Statistical Tests: Standard Error &amp; Confidence Intervals</h1>
+        <div class="subtitle">How sample estimates get uncertainty bands before a statistical test</div>
+      </header>
+
+      <div class="group-label"><span>From sample to uncertainty</span></div>
+
+      <div class="row split-56-44">
+        <div class="box tag-chapter">
+          <div class="box-tag"><span>The estimation problem</span></div>
+          <div class="box-body">
+            <p>In statistics, we usually cannot measure the whole <span class="b"><input class="fill" data-answer="population"><span class="hint">population / sample / interval</span></span>. We take a sample and use a sample <span class="b"><input class="fill" data-answer="statistic"><span class="hint">statistic / parameter / label</span></span>, such as <span class="xbar">x</span>, to estimate a fixed but unknown population <span class="b"><input class="fill" data-answer="parameter"><span class="hint">parameter / statistic / graph</span></span>, such as &mu;.</p>
+            <p>If we drew a new random sample, the estimate would probably be a little different. That sample-to-sample movement is <span class="b"><input class="fill" data-answer="sampling variation"><span class="hint">sampling variation / publication bias / rounding error</span></span>.</p>
+            <div class="mini-note chapter">The typical sample-to-sample spread of an estimate is the <span class="b"><input class="fill" data-answer="standard error"><span class="hint">standard error / standard deviation / raw score</span></span>. A range built from an estimate plus and minus a margin of error is a <span class="b"><input class="fill" data-answer="confidence interval" data-alt="ci|conf int"><span class="hint">confidence interval / data table / p value</span></span>.</div>
+          </div>
+        </div>
+        <div class="box tag-chapter">
+          <div class="box-tag"><span>Sample means and true mean</span></div>
+          <div class="box-body" style="gap:0.22mm;">
+            <div class="fig">
+              <svg viewBox="0 0 300 112" role="img" aria-label="Several sample means scattered around one true population mean">
+                <rect x="22" y="14" width="256" height="78" rx="10" fill="#f5fbf8" stroke="#101418" stroke-width="1.2"/>
+                <line x1="150" y1="19" x2="150" y2="94" stroke="#047857" stroke-width="2" stroke-dasharray="4,3"/>
+                <text x="150" y="105" fill="#047857" font-size="7" font-weight="800" text-anchor="middle">true mean &mu;</text>
+                <g fill="#2f5f98" stroke="#101418" stroke-width="1">
+                  <circle cx="105" cy="43" r="5"/><circle cx="131" cy="67" r="5"/><circle cx="146" cy="35" r="5"/>
+                  <circle cx="158" cy="61" r="5"/><circle cx="177" cy="48" r="5"/><circle cx="194" cy="72" r="5"/>
+                </g>
+                <g fill="#665f51" font-size="6.4" font-weight="800" text-anchor="middle">
+                  <text x="105" y="32">sample 1</text><text x="131" y="82">sample 2</text><text x="177" y="37">sample 5</text>
+                </g>
+              </svg>
+            </div>
+            <p class="fig-caption">Each navy dot is one possible sample mean. The true mean is fixed; the sample mean moves.</p>
+            <p>Smaller movement means a more <span class="b"><input class="fill" data-answer="precise"><span class="hint">precise / biased / categorical</span></span> estimate.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-label"><span>Standard error</span></div>
+
+      <div class="row split-50-50">
+        <div class="box tag-orange">
+          <div class="box-tag"><span>SD vs SE</span></div>
+          <div class="box-body">
+            <table class="metric-table">
+              <tr><th>Standard deviation</th><th>Standard error</th></tr>
+              <tr>
+                <td>Spread of <span class="b"><input class="fill" data-answer="individual values"><span class="hint">individual values / sample means / p values</span></span> around their mean.</td>
+                <td>Spread of an <span class="b"><input class="fill" data-answer="estimate"><span class="hint">estimate / label / raw score</span></span> across repeated samples.</td>
+              </tr>
+              <tr>
+                <td>If average sleep is 7 hours and SD is 1 hour, one person's sleep is typically about <span class="b"><input class="fill" data-answer="1 hour" data-alt="one hour"><span class="hint">1 hour / 7 hours / 0.2 hours</span></span> from the mean.</td>
+                <td>If repeated sleep samples have SE = 0.2 hours, a sample mean is typically about <span class="b"><input class="fill" data-answer="0.2 hours" data-alt="0.2 hour"><span class="hint">0.2 hours / 1 hour / 7 hours</span></span> from the true mean.</td>
+              </tr>
+              <tr>
+                <td>Describes <span class="b"><input class="fill" data-answer="variation"><span class="hint">variation / confidence / causation</span></span> in the data.</td>
+                <td>Describes <span class="b"><input class="fill" data-answer="precision"><span class="hint">precision / correlation / skew</span></span> of the estimate.</td>
+              </tr>
+            </table>
+            <p>So SD is about spread in the <span class="b"><input class="fill" data-answer="data"><span class="hint">data / graph / model</span></span>; SE is about uncertainty in the <span class="b"><input class="fill" data-answer="estimate"><span class="hint">estimate / raw value / axis label</span></span>.</p>
+          </div>
+        </div>
+        <div class="box tag-chapter">
+          <div class="box-tag"><span>Standard error of the mean</span></div>
+          <div class="box-body">
+            <div class="formula">SE(<span class="xbar">x</span>) = <span class="frac"><span class="num">s</span><span class="den">&radic;n</span></span></div>
+            <p>For a mean, SE equals the sample <span class="b"><input class="fill" data-answer="standard deviation"><span class="hint">standard deviation / median / variance</span></span> divided by the square root of the sample <span class="b"><input class="fill" data-answer="size"><span class="hint">size / mean / label</span></span>.</p>
+            <p><b>Example:</b> A sample of n = 100 exam scores has s = 12 points.</p>
+            <div class="formula" style="font-size:10pt;">SE = <span class="frac"><span class="num">s</span><span class="den">&radic;n</span></span><br>SE = <span class="frac"><span class="num">12</span><span class="den">&radic;100</span></span><br>SE = <span class="b"><input class="fill code" data-answer="1.2"><span class="hint">1.2 / 12 / 0.12</span></span> points</div>
+            <div class="pill-row">
+              <span class="pill chapter">larger n &rarr; smaller SE</span>
+              <span class="pill navy">larger SD &rarr; larger SE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-label"><span>Confidence intervals</span></div>
+
+      <div class="row split-47-53">
+        <div class="box tag-chapter">
+          <div class="box-tag"><span>How a CI is built</span></div>
+          <div class="box-body">
+            <div class="formula coded">CI = <span class="sym-est"><span class="xbar">x</span></span> &plusmn; <span class="sym-crit">1.96</span> &times; <span class="sym-se"><span class="frac"><span class="num">s</span><span class="den">&radic;n</span></span></span></div>
+            <div class="symbol-key">
+              <div><span class="sym-est"><span class="xbar">x</span></span> is the <span class="b"><input class="fill" data-answer="mean estimate" data-alt="sample mean"><span class="hint">mean estimate / population variance / p value</span></span>.</div>
+              <div><span class="sym-crit">1.96</span> is the <span class="b"><input class="fill" data-answer="critical value"><span class="hint">critical value / sample size / mean estimate</span></span> for a 95% normal-based interval.</div>
+              <div><span class="sym-se">s / &radic;n</span> is the <span class="b"><input class="fill" data-answer="standard error"><span class="hint">standard error / raw score / null hypothesis</span></span>.</div>
+            </div>
+            <p><b>Calculate one:</b> n = 100 exam scores, <span class="xbar">x</span> = 80, s = 12.</p>
+            <div class="formula" style="font-size:9.55pt;">SE = 12 / &radic;100 = <span class="b"><input class="fill code" data-answer="1.2"><span class="hint">1.2 / 12 / 100</span></span><br>Margin of error = 1.96 &times; 1.2 = <span class="b"><input class="fill code" data-answer="2.35" data-alt="2.352"><span class="hint">2.35 / 1.96 / 12</span></span><br>95% CI = 80 &plusmn; 2.35 = <span class="b"><input class="fill code" data-answer="77.65 to 82.35" data-alt="77.65-82.35|77.6 to 82.4|77.65 and 82.35"><span class="hint">77.65 to 82.35 / 68 to 92 / 78.8 to 81.2</span></span> points</div>
+            <div class="mini-note">Remember the <b>68-95-99.7 rule</b>: in a normal distribution, about <span class="b"><input class="fill code" data-answer="68%" data-alt="68"><span class="hint">68% / 95% / 99.7%</span></span> falls within 1 SD, <span class="b"><input class="fill code" data-answer="95%" data-alt="95"><span class="hint">95% / 68% / 99.7%</span></span> within 2 SDs, and <span class="b"><input class="fill code" data-answer="99.7%" data-alt="99.7"><span class="hint">99.7% / 95% / 68%</span></span> within 3 SDs. For a 95% CI, the precise z cutoff is 1.96; 2 is the quick approximation we usually learn for easy mental math.</div>
+          </div>
+        </div>
+        <div class="box tag-navy">
+          <div class="box-tag"><span>What 95% confidence means</span></div>
+          <div class="box-body" style="gap:0.2mm;">
+            <p>A 95% confidence level is about the long-run reliability of the <span class="b"><input class="fill" data-answer="method"><span class="hint">method / parameter / one value</span></span>. If we repeatedly took random samples and built an interval each time, about <span class="b"><input class="fill code" data-answer="95"><span class="hint">95 / 50 / 5</span></span>% of those intervals would contain the true value.</p>
+            <div class="fig">
+              <svg viewBox="0 0 310 116" role="img" aria-label="Several confidence intervals, most crossing the fixed true value and one missing">
+                <rect x="25" y="12" width="258" height="88" rx="8" fill="#f9fbff" stroke="#101418" stroke-width="1.2"/>
+                <line x1="160" y1="16" x2="160" y2="101" stroke="#047857" stroke-width="2" stroke-dasharray="4,3"/>
+                <text x="160" y="111" fill="#047857" font-size="7" font-weight="850" text-anchor="middle">fixed true value</text>
+                <g stroke="#2f5f98" stroke-width="3" stroke-linecap="round">
+                  <line x1="108" y1="28" x2="193" y2="28"/>
+                  <line x1="120" y1="42" x2="178" y2="42"/>
+                  <line x1="92" y1="56" x2="165" y2="56"/>
+                  <line x1="141" y1="70" x2="220" y2="70"/>
+                  <line x1="132" y1="84" x2="174" y2="84"/>
+                </g>
+                <g stroke="#b83b5e" stroke-width="3" stroke-linecap="round">
+                  <line x1="185" y1="94" x2="248" y2="94"/>
+                </g>
+                <g fill="#2f5f98" stroke="#101418" stroke-width="0.8">
+                  <circle cx="150" cy="28" r="3.2"/><circle cx="149" cy="42" r="3.2"/><circle cx="129" cy="56" r="3.2"/>
+                  <circle cx="181" cy="70" r="3.2"/><circle cx="153" cy="84" r="3.2"/>
+                </g>
+                <circle cx="216" cy="94" r="3.2" fill="#b83b5e" stroke="#101418" stroke-width="0.8"/>
+              </svg>
+              <div class="fig-caption">Most intervals cross the fixed true value. A few intervals miss it.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-label"><span>Quick interpretation checks</span></div>
+
+      <div class="row split-50-50">
+        <div class="box tag-gold">
+          <div class="box-tag"><span>Correct or misconception?</span></div>
+          <div class="box-body">
+            <div class="verdict-row" data-correct="yes">
+              <div class="v-text">"A standard deviation describes the spread of individual observations."</div>
+              <div class="verdict-btns"><button type="button" class="v-btn yes" data-pick="yes">Correct</button><button type="button" class="v-btn no" data-pick="no">Misconception</button></div>
+              <div class="v-explanation">SD is about individual data values, such as individual sleep durations.</div>
+            </div>
+            <div class="verdict-row" data-correct="yes">
+              <div class="v-text">"A standard error describes how much an estimate would vary across repeated samples."</div>
+              <div class="verdict-btns"><button type="button" class="v-btn yes" data-pick="yes">Correct</button><button type="button" class="v-btn no" data-pick="no">Misconception</button></div>
+              <div class="v-explanation">SE is about the sampling variation of an estimate, not the spread of individual observations.</div>
+            </div>
+            <div class="verdict-row" data-correct="no">
+              <div class="v-text">"Increasing n usually makes the standard error larger."</div>
+              <div class="verdict-btns"><button type="button" class="v-btn yes" data-pick="yes">Correct</button><button type="button" class="v-btn no" data-pick="no">Misconception</button></div>
+              <div class="v-explanation">Because n is under the square root in the denominator, larger samples usually reduce SE.</div>
+            </div>
+          </div>
+        </div>
+        <div class="box tag-rose">
+          <div class="box-tag"><span>CI language traps</span></div>
+          <div class="box-body">
+            <div class="verdict-row" data-correct="no">
+              <div class="v-text">"There is a 95% chance that the true mean is in this exact computed interval."</div>
+              <div class="verdict-btns"><button type="button" class="v-btn yes" data-pick="yes">Correct</button><button type="button" class="v-btn no" data-pick="no">Misconception</button></div>
+              <div class="v-explanation">Once the interval is computed, the fixed true value is either inside or outside it. The 95% refers to the method over repeated sampling.</div>
+            </div>
+            <div class="verdict-row" data-correct="yes">
+              <div class="v-text">"We are 95% confident that the true mean lies in this interval."</div>
+              <div class="verdict-btns"><button type="button" class="v-btn yes" data-pick="yes">Correct</button><button type="button" class="v-btn no" data-pick="no">Misconception</button></div>
+              <div class="v-explanation">Correct, because "confident" is a technical word here. It means this interval came from a method that captures the true value about 95% of the time in repeated sampling.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer><a href="https://thegraphcourses.org" target="_blank" rel="noopener">thegraphcourses.org</a></footer>
+    </section>
+  </div>
+
+  <script>
+    const sheet = document.getElementById("sheet"),
+          pageWrap = document.getElementById("pageWrap"),
+          blanks = Array.from(document.querySelectorAll(".b"));
+
+    function fingerprint(str) {
+      let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+      for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      return (h2 >>> 0).toString(36) + (h1 >>> 0).toString(36);
+    }
+    const fp = fingerprint(
+      blanks.map(b => {
+        const inp = b.querySelector(".fill");
+        return (inp.dataset.answer || "") + "|" + (inp.dataset.alt || "");
+      }).join("\n") + "\n" +
+      Array.from(document.querySelectorAll(".verdict-row")).map(r => "v:" + (r.dataset.correct || "")).join("\n")
+    );
+    const storageKey = "se-ci-stat-tests-cheatsheet-gpt5-gefv-" + fp;
+
+    blanks.forEach(b => {
+      const hint = b.querySelector(".hint");
+      if (!hint) return;
+      const opts = hint.textContent.split(/\s*\/\s*/).filter(s => s.length > 0);
+      if (opts.length < 2) return;
+      for (let i = opts.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [opts[i], opts[j]] = [opts[j], opts[i]];
+      }
+      hint.textContent = opts.join(" / ");
+    });
+
+    const measureCanvas = document.createElement("canvas");
+    const measureCtx = measureCanvas.getContext("2d");
+    function getFontShorthand(el) {
+      const s = getComputedStyle(el);
+      return `${s.fontStyle || "normal"} ${s.fontWeight || "400"} ${s.fontSize} ${s.fontFamily}`;
+    }
+    function measureTextWidth(text, inp) {
+      measureCtx.font = getFontShorthand(inp);
+      return measureCtx.measureText(text).width;
+    }
+    function getDefaultWidth(inp) {
+      const answers = [inp.dataset.answer || "", ...(inp.dataset.alt ? inp.dataset.alt.split("|") : [])];
+      let maxW = 0;
+      answers.forEach(ans => { const w = measureTextWidth(ans, inp); if (w > maxW) maxW = w; });
+      return Math.max(maxW + 12, 22);
+    }
+    function getSolvedWidth(inp) { return Math.max(measureTextWidth(inp.value, inp) + 6, 12); }
+    function applyWidth(inp, solved) { inp.style.width = `${solved ? getSolvedWidth(inp) : getDefaultWidth(inp)}px`; }
+    blanks.forEach(b => applyWidth(b.querySelector(".fill"), false));
+
+    const norm = s => String(s)
+      .replace(/[\u2212\u2013]/g, "-")
+      .replace(/\u2080/g, "0").replace(/\u2081/g, "1").replace(/\u2082/g, "2").replace(/\u2083/g, "3").replace(/\u2084/g, "4")
+      .replace(/\u03b2/g, "beta")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+    const answersFor = input => [input.dataset.answer || "", ...(input.dataset.alt ? input.dataset.alt.split("|") : [])].map(norm);
+    const match = (value, input) => answersFor(input).includes(norm(value));
+
+    function flashCorrect(i) {
+      i.classList.remove("correct-flash");
+      void i.offsetWidth;
+      i.classList.add("correct-flash");
+      setTimeout(() => i.classList.remove("correct-flash"), 800);
+    }
+    function flashWrong(i) {
+      i.classList.remove("wrong-pick");
+      void i.offsetWidth;
+      i.classList.add("wrong-pick");
+    }
+    function save() { localStorage.setItem(storageKey, JSON.stringify(blanks.map(b => b.querySelector(".fill").value))); }
+    function restore() {
+      try {
+        const d = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        blanks.forEach((b, i) => {
+          const inp = b.querySelector(".fill");
+          if (d[i]) {
+            inp.value = d[i];
+            if (match(d[i], inp)) { b.classList.add("solved"); applyWidth(inp, true); }
+            else { inp.classList.add("wrong-pick"); }
+          }
+        });
+      } catch { localStorage.removeItem(storageKey); }
+    }
+
+    blanks.forEach(blank => {
+      const inp = blank.querySelector(".fill");
+      inp.addEventListener("input", () => {
+        const was = blank.classList.contains("solved");
+        inp.classList.remove("wrong-pick");
+        const ok = inp.value !== "" && match(inp.value, inp);
+        if (ok && !was) { blank.classList.add("solved"); applyWidth(inp, true); flashCorrect(inp); }
+        else if (ok && was) { applyWidth(inp, true); }
+        else if (!ok && was) { blank.classList.remove("solved"); applyWidth(inp, false); }
+        save();
+      });
+      inp.addEventListener("blur", () => {
+        const v = inp.value.trim();
+        if (v && !match(v, inp)) flashWrong(inp);
+      });
+    });
+    restore();
+
+    const verdictRows = Array.from(document.querySelectorAll(".verdict-row"));
+    const verdictKey = "se-ci-stat-tests-cheatsheet-gpt5-gefv-verdict-" + fp;
+    function applyVerdictPick(row, pick) {
+      if (row.classList.contains("revealed")) return;
+      const correct = row.dataset.correct;
+      const btn = row.querySelector(`.v-btn[data-pick="${pick}"]`);
+      if (!btn) return;
+      const isRight = pick === correct;
+      btn.classList.add("picked", isRight ? "correct" : "incorrect");
+      if (!isRight) {
+        const correctBtn = row.querySelector(`.v-btn[data-pick="${correct}"]`);
+        if (correctBtn) correctBtn.classList.add("was-correct");
+      }
+      row.classList.add("revealed");
+      row.querySelectorAll(".v-btn").forEach(b => b.disabled = true);
+    }
+    function saveVerdicts() {
+      const state = verdictRows.map(row => {
+        const picked = row.querySelector(".v-btn.picked");
+        return picked ? picked.dataset.pick : null;
+      });
+      localStorage.setItem(verdictKey, JSON.stringify(state));
+    }
+    function restoreVerdicts() {
+      try {
+        const state = JSON.parse(localStorage.getItem(verdictKey) || "[]");
+        verdictRows.forEach((row, i) => { if (state[i]) applyVerdictPick(row, state[i]); });
+      } catch { localStorage.removeItem(verdictKey); }
+    }
+    verdictRows.forEach(row => {
+      row.querySelectorAll(".v-btn").forEach(btn => {
+        btn.addEventListener("click", () => { applyVerdictPick(row, btn.dataset.pick); saveVerdicts(); });
+      });
+    });
+    restoreVerdicts();
+
+    document.getElementById("toggleHints").addEventListener("click", e => {
+      sheet.classList.toggle("hints-hidden");
+      e.currentTarget.textContent = sheet.classList.contains("hints-hidden") ? "Show hints" : "Hide hints";
+    });
+    document.getElementById("clearAnswers").addEventListener("click", () => {
+      blanks.forEach(b => {
+        const i = b.querySelector(".fill");
+        i.value = "";
+        i.classList.remove("wrong-pick", "correct-flash");
+        b.classList.remove("solved");
+        applyWidth(i, false);
+      });
+      verdictRows.forEach(row => {
+        row.classList.remove("revealed");
+        row.querySelectorAll(".v-btn").forEach(b => { b.classList.remove("picked", "correct", "incorrect", "was-correct"); b.disabled = false; });
+      });
+      save();
+      saveVerdicts();
+    });
+
+    const zoomLevels = [0.1, 0.25, 0.5, 0.75, 0.85, 1.0, 1.15, 1.3, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
+    const zoomKey = "se-ci-stat-tests-cheatsheet-gpt5-gefv-zoom";
+    const defaultZoomIdx = zoomLevels.indexOf(1.0);
+    let zoomIdx = parseInt(localStorage.getItem(zoomKey) || String(defaultZoomIdx), 10);
+    if (isNaN(zoomIdx) || zoomIdx < 0 || zoomIdx >= zoomLevels.length) zoomIdx = defaultZoomIdx;
+    const zoomLabel = document.getElementById("zoomLabel");
+    function applyZoom() {
+      const z = zoomLevels[zoomIdx];
+      sheet.style.transform = z === 1 ? "" : `scale(${z})`;
+      const baseH = 297;
+      pageWrap.style.minHeight = z === 1 ? "" : `${baseH * z + 20}mm`;
+      zoomLabel.textContent = Math.round(z * 100) + "%";
+      localStorage.setItem(zoomKey, String(zoomIdx));
+    }
+    document.getElementById("zoomOut").addEventListener("click", () => { if (zoomIdx > 0) { zoomIdx--; applyZoom(); } });
+    document.getElementById("zoomIn").addEventListener("click", () => { if (zoomIdx < zoomLevels.length - 1) { zoomIdx++; applyZoom(); } });
+    applyZoom();
+  </script>
+  <!-- GPT-5 gefv -->
+</body>
+</html>

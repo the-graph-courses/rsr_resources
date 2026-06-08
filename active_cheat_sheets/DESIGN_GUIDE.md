@@ -6,14 +6,22 @@ Nothing is set in stone. Feel free to deviate from the guide if it makes sense.
 
 ## What is an Active Concept Sheet?
 
-It is a one-page summary of a lesson's key ideas where key terms, concepts, or examples have fill-in blanks that let students practice active recall. The blanks come with hint options. The goal is active recall with guardrails: students have to retrieve or reason about each concept, but the options keep them from getting stuck.
+It is a one-page summary of a lesson's key ideas where key terms, concepts, or examples have fill-in blanks that let students practice active recall. 
+
+Avoid over-indexing on the specific examples from the lesson. The document should form a general revision document for the concepts and learnings. And may even wanna introduce other examples as practice.
+
+Err on the side of too many blanks rather than too few.
+
+
+
+The blanks come with hint options. The goal is active recall with guardrails: students have to retrieve or reason about each concept, but the options keep them from getting stuck.
 
 ## Content and Visual Guidelines
 
 * **Writing the content:** Write sections and questions in complete sentences. Err on the side of using many blanks rather than too few.
 * **Sentence structure:** Structure sentences so the blank appears after the context. Instead of "[Blank] is the country at the bottom of South America," write "The country at the bottom of South America is [Blank]." This ensures the student has all the necessary context before reaching the blank.
 * **Intelligent bolding:** Filled answers appear as bold text in the final document, so pick blanks for key terms that naturally warrant emphasis. Selectively bold other key concepts throughout the document to aid revision, like a standard cheat sheet, but avoid overdoing it.
-* **Designing fill-in blanks:** Each blank should be answerable by someone who understands the topic well, even if they haven't watched our specific video. Establish and set up any examples used before asking about them.
+* **Designing fill-in blanks:** Each blank should be answerable by someone who understands the topic well, even if they haven't watched our specific video. Avoid over-indexing on the specific examples from the lesson. Establish and set up any examples used before asking about them.
 * **Options:** Provide exactly three options per blank. This prevents students from trivially typing every option to guess. Distractors should be wrong but plausible.
 * **Formatting options:** Options are displayed as plain grey text below the blank. This invites the user to actively type the answer, but gives them guardrails. The typing requirement may necessitate workarounds for complex math notation or subscripts (see "Matching and normalization" below).
 * **Hint randomization:** Hint option order is shuffled at page load.
