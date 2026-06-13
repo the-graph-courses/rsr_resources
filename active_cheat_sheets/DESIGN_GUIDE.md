@@ -19,6 +19,8 @@ The blanks come with hint options. The goal is active recall with guardrails: st
 ## Content and Visual Guidelines
 
 * **Writing the content:** Write sections and questions in complete sentences. Err on the side of using many blanks rather than too few.
+* **Never use em dashes:** Do not use em dashes (`—` / `&mdash;`) anywhere in a sheet. Rewrite the sentence using a comma, colon, parentheses, or two shorter sentences instead.
+* **No model attribution:** Do not sign, stamp, or label the sheet with your model name (for example Opus, GPT, Composer, Claude, Gemini) anywhere in the HTML unless explicitly asked. That includes the footer, header, HTML comments, filenames, and `localStorage` keys. Students should see only lesson content and `thegraphcourses.org` in the footer.
 * **Sentence structure:** Structure sentences so the blank appears after the context. Instead of "[Blank] is the country at the bottom of South America," write "The country at the bottom of South America is [Blank]." This ensures the student has all the necessary context before reaching the blank.
 * **Intelligent bolding:** Filled answers appear as bold text in the final document, so pick blanks for key terms that naturally warrant emphasis. Selectively bold other key concepts throughout the document to aid revision, like a standard cheat sheet, but avoid overdoing it.
 * **Designing fill-in blanks:** Each blank should be answerable by someone who understands the topic well, even if they haven't watched our specific video. Avoid over-indexing on the specific examples from the lesson. Establish and set up any examples used before asking about them.
@@ -54,7 +56,7 @@ Keep the `.page` flex layout so children share vertical space predictably. Apply
 
 ## State Persistence
 
-* **localStorage keys are per-sheet and content-fingerprinted.** Use a slug plus a short hash of the answer key, for example `"t-and-p-values-cheatsheet-1a2b3c4d"`. The fingerprint is computed at page load from each blank's `data-answer + "|" + data-alt` (and each verdict row's `data-correct`) joined in DOM order, hashed with a small inline `cyrb53` function. Any edit that adds, removes, reorders, or changes the correct answer for a blank changes the fingerprint, so old saves are silently ignored and the student starts fresh. Edits to surrounding prose, hint distractors, or styling do not invalidate progress.
+* **localStorage keys are per-sheet and content-fingerprinted.** Use a descriptive content slug plus a short hash of the answer key, for example `"t-and-p-values-cheatsheet-1a2b3c4d"`. Do not embed model names or random author tags in the slug. The fingerprint is computed at page load from each blank's `data-answer + "|" + data-alt` (and each verdict row's `data-correct`) joined in DOM order, hashed with a small inline `cyrb53` function. Any edit that adds, removes, reorders, or changes the correct answer for a blank changes the fingerprint, so old saves are silently ignored and the student starts fresh. Edits to surrounding prose, hint distractors, or styling do not invalidate progress.
 * **Each sheet is self-contained:** the hash function lives inline in that sheet's `<script>` block, just like the rest of its JS. No shared helper file.
 * **What is saved:** the array of typed values (in DOM order), the verdict selections (under `"<slug>-verdict-<fp>"` so it follows the same fingerprint), and the zoom index.
 * **Zoom is not fingerprinted.** Its key is just `"<slug>-zoom"`. Zoom should survive content edits, since it is a user preference, not an answer.

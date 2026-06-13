@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The t-test Family</title>
+  <title>Intro to One-Way ANOVA</title>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -148,7 +148,9 @@
     .row.split-55-45 { grid-template-columns: 55fr 45fr; }
     .row.split-50-50 { grid-template-columns: 1fr 1fr; }
     .row.split-47-53 { grid-template-columns: 47fr 53fr; }
+    .row.split-45-55 { grid-template-columns: 45fr 55fr; }
     .row.split-52-48 { grid-template-columns: 52fr 48fr; }
+    .row.split-58-42 { grid-template-columns: 58fr 42fr; }
     .box, .box-body, .row > *, .fig, .contrast-card, .metric-table, .verdict-row { min-width: 0; }
     .box {
       background: var(--white);
@@ -205,6 +207,8 @@
     .tag-plum .box-body { background: var(--plum-soft); }
     .tag-rose .box-tag { background: var(--rose); color: #fff; }
     .tag-rose .box-body { background: var(--rose-soft); }
+    .tag-teal .box-tag { background: var(--teal); color: #fff; }
+    .tag-teal .box-body { background: var(--teal-soft); }
     .chapter { color: var(--chapter); }
     .navy { color: var(--navy); }
     .orange { color: var(--orange); }
@@ -236,6 +240,7 @@
       margin: 0.2mm 0;
     }
     .formula.coded { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.8mm; }
+    .formula.small { font-size: 9.6pt; padding: 0.6mm 1mm; }
     .hyp {
       font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
       font-weight: 850;
@@ -250,6 +255,8 @@
     }
     .sym-sig { color: var(--chapter); }
     .sym-se { color: var(--navy); }
+    .sym-betw { color: var(--orange); }
+    .sym-with { color: var(--plum); }
     .symbol-key {
       display: grid;
       grid-template-columns: 1fr;
@@ -308,6 +315,8 @@
       overflow: visible;
     }
     .fig svg { display: block; width: 100%; height: auto; }
+    .figcap-v svg { max-height: 116px; }
+    .figcap-f svg { max-height: 120px; }
     .fig-caption {
       font-size: 6.75pt;
       color: var(--ink);
@@ -315,6 +324,7 @@
       line-height: 1.18;
       padding-top: 0.2mm;
     }
+    .triptych { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.4mm; }
     .contrast-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4mm; }
     .metric-table {
       width: 100%;
@@ -328,7 +338,7 @@
       line-height: 1.18;
     }
     .metric-table th {
-      background: var(--chapter);
+      background: var(--navy);
       color: #fff;
       border-bottom: 2px solid var(--ink);
       padding: 0.45mm 0.8mm;
@@ -342,6 +352,7 @@
     }
     .metric-table tr:last-child td { border-bottom: 0; }
     .metric-table td + td, .metric-table th + th { border-left: 1.5px solid var(--ink); }
+    .metric-table .mono { font-family: 'JetBrains Mono', Consolas, Menlo, monospace; }
     .mini-note {
       border: 2px solid var(--ink);
       border-radius: 7px;
@@ -352,6 +363,8 @@
       line-height: 1.22;
     }
     .mini-note.chapter { background: var(--chapter-soft); color: #064e3b; }
+    .mini-note.gold { background: var(--gold-soft); color: #6f5400; }
+    .mini-note.rose { background: var(--rose-soft); color: #8c2e48; }
     .pill-row { display: flex; flex-wrap: wrap; gap: 0.8mm; align-items: center; justify-content: center; margin-top: 0.15mm; }
     .pill {
       border: 2px solid var(--ink);
@@ -487,7 +500,7 @@
         border-radius: 0;
         box-shadow: none;
         padding: 1.55mm 5mm 0.85mm;
-        gap: 2.1mm;
+        gap: 1.3mm;
         height: auto;
         min-height: 0;
         max-height: none;
@@ -501,21 +514,25 @@
       .group-label { gap: 2mm; font-size: 6.55pt; margin: 0; }
       .group-label::before, .group-label::after { border-top-width: 1.4px; }
       .group-label span { background: white; border-width: 1.4px; border-radius: 4px; padding: 0.17mm 1.05mm; }
-      .row { gap: 2.7mm; }
+      .row { gap: 1.7mm; }
       .box, .fig, .metric-table, .mini-note, .pill, .verdict-row { box-shadow: none; border-width: 1.35px; border-radius: 5px; }
       .box-tag { border-bottom-width: 1.35px; border-radius: 4px 4px 0 0; font-size: 6.85pt; padding: 0.33mm 1.35mm 0.25mm; line-height: 1.05; }
       .box-body { padding: 0.42mm 0.95mm 0.5mm; gap: 0.16mm; }
       .box-body ul { padding-left: 2.4mm; gap: 0.08mm; }
       .fig { padding: 0.12mm 0.35mm 0.2mm; }
+      .figcap-v svg { max-height: 74px; }
+      .figcap-f svg { max-height: 80px; }
+      .triptych .fig svg { max-height: 66px; }
       .fig-caption { font-size: 5.55pt; padding-top: 0; line-height: 1.08; }
+      .triptych, .contrast-grid { gap: 0.75mm; }
       .formula { border-width: 1.35px; border-radius: 5px; padding: 0.32mm 0.75mm; font-size: 9.7pt; margin: 0.05mm 0; }
+      .formula.small { font-size: 8.5pt; padding: 0.2mm 0.6mm; }
       .hyp { border-width: 1.2px; font-size: 7.15pt; padding: 0.2mm 0.9mm; }
       .symbol-key { gap: 0.15mm; font-size: 6.35pt; }
       .symbol-key div { border-width: 1px; padding: 0.16mm 0.55mm; }
       .big-eq { font-size: 11.6pt !important; padding: 0.1mm 0; }
       .frac { font-size: 9.4pt !important; }
       .r-code { font-size: 6.2pt; line-height: 1.2; padding: 0.5mm 1.6mm; border-radius: 4px; }
-      .contrast-grid { gap: 0.75mm; }
       .metric-table { font-size: 6.35pt; line-height: 1.08; }
       .metric-table th { padding: 0.24mm 0.55mm; border-bottom-width: 1px; }
       .metric-table td { padding: 0.22mm 0.55mm; }
@@ -548,7 +565,7 @@
       html, body { overflow-x: hidden; }
       .page, .toolbar { width: calc(100vw - 16px); }
       .page { padding: 16px; min-height: auto; transform: none !important; overflow: visible; }
-      .row, .contrast-grid { grid-template-columns: 1fr !important; }
+      .row, .contrast-grid, .triptych { grid-template-columns: 1fr !important; }
       .toolbar { flex-direction: column; align-items: stretch; margin-top: 12px; }
       .toolbar-actions { justify-content: flex-start; }
       .toolbar-intro .descr { max-width: none; }
@@ -604,160 +621,238 @@
   <div class="page-wrap" id="pageWrap">
     <section class="page" id="sheet">
       <header>
-        <h1>Intro to Statistical Tests: The t-test Family</h1>
-        <div class="subtitle">Choosing and reading one-sample, two-sample independent, and paired t-tests</div>
+        <h1>Intro to Statistical Tests: One-Way ANOVA</h1>
+        <div class="subtitle">Comparing three or more group means with a single F-test instead of many t-tests</div>
       </header>
 
-      <div class="group-label"><span>What every t-test does</span></div>
+      <div class="group-label"><span>Why ANOVA? From two means to many</span></div>
 
       <div class="row split-55-45">
         <div class="box tag-chapter">
-          <div class="box-tag"><span>The shared logic</span></div>
+          <div class="box-tag"><span>The idea</span></div>
           <div class="box-body">
-            <p>A t-test is a tool for comparing <span class="b"><input class="fill" data-answer="means"><span class="hint">means / colors / categories</span></span>. It asks whether an observed difference between means is larger than what random <span class="b"><input class="fill" data-answer="sampling variation" data-alt="random variation"><span class="hint">sampling variation / population census / data entry</span></span> alone would produce, or whether that difference is real and <span class="b"><input class="fill" data-answer="significant"><span class="hint">significant / categorical / descriptive</span></span>.</p>
-            <p>The data are reduced to a single <span class="b"><input class="fill" data-answer="t-statistic" data-alt="t statistic|test statistic"><span class="hint">t-statistic / median / mode</span></span>, which is then converted to a <span class="b"><input class="fill" data-answer="p-value" data-alt="p value"><span class="hint">p-value / sample size / box plot</span></span>.</p>
-            <p>If the p-value is below the chosen cutoff, called <span class="b"><input class="fill" data-answer="alpha"><span class="hint">alpha / beta / sigma</span></span> (commonly 0.05), we <span class="b"><input class="fill" data-answer="reject"><span class="hint">reject / accept / prove</span></span> the null hypothesis. If it is above alpha, we <span class="b"><input class="fill" data-answer="fail to reject" data-alt="do not reject"><span class="hint">fail to reject / disprove / confirm</span></span> the null.</p>
-            <div class="mini-note chapter">All three t-tests follow this same logic. They differ only in <span class="b"><input class="fill" data-answer="which two means" data-alt="what two means"><span class="hint">which two means / the alpha level / the p-value cutoff</span></span> are being compared.</div>
+            <p>A t-test compares <span class="b"><input class="fill" data-answer="two" data-alt="2"><span class="hint">two / three / many</span></span> means. <b>ANOVA</b> stands for <span class="b"><input class="fill" data-answer="analysis of variance"><span class="hint">analysis of variance / average of values / a normal variable</span></span>, and it extends that logic to compare <b>three or more</b> means, usually written as <b>k</b> group means.</p>
+            <p>It answers the question with one single <span class="b"><input class="fill" data-answer="F-test" data-alt="f test|F test"><span class="hint">F-test / t-test / z-test</span></span> instead of many pairwise tests. Because it tests all groups at once, it is called an <span class="b"><input class="fill" data-answer="omnibus" data-alt="omnibus test"><span class="hint">omnibus / paired / one-sided</span></span> test.</p>
+            <div class="mini-note chapter"><b>Study (PREVEND):</b> 500 Dutch adults take the RFFT cognition test. We ask whether mean RFFT score differs across the four <span class="b"><input class="fill" data-answer="education" data-alt="education groups|educational"><span class="hint">education / age / blood-pressure</span></span> groups (primary, lower &amp; higher secondary, university).</p></div>
           </div>
         </div>
-        <div class="box tag-navy">
-          <div class="box-tag"><span>Signal over noise: the t-statistic</span></div>
+        <div class="box tag-rose">
+          <div class="box-tag"><span>The multiple-comparison trap</span></div>
           <div class="box-body">
-            <div class="formula coded">t = <span class="frac"><span class="num sym-sig">estimate &minus; null value</span><span class="den sym-se">standard error</span></span></div>
-            <div class="symbol-key">
-              <div>The top is the <span class="sym-sig">signal</span>: how far the observed mean sits from the <span class="b"><input class="fill" data-answer="null"><span class="hint">null / mean / median</span></span> value.</div>
-              <div>The bottom is the <span class="sym-se">standard error</span>, the <span class="b"><input class="fill" data-answer="noise"><span class="hint">noise / signal / bias</span></span> we expect from sampling.</div>
-              <div>A larger t means the signal stands out more, which gives a <span class="b"><input class="fill" data-answer="smaller"><span class="hint">smaller / larger / negative</span></span> p-value.</div>
-            </div>
-            <div class="mini-note">How large a t must be to count depends on the <span class="b"><input class="fill" data-answer="degrees of freedom" data-alt="df"><span class="hint">degrees of freedom / margin of error / null mean</span></span>, which grow with the sample size.</div>
+            <p>Why not just run a t-test on every pair? With 4 groups there are <span class="b"><input class="fill code" data-answer="6"><span class="hint">6 / 4 / 12</span></span> possible pairs, so 6 separate t-tests.</p>
+            <p>Each test carries its own chance of a <span class="b"><input class="fill" data-answer="false positive" data-alt="false alarm|type i error"><span class="hint">false positive / true negative / rounding error</span></span> (about 0.05).</p>
+            <p>So with many groups you are likely to find a "significant" difference purely by <span class="b"><input class="fill" data-answer="chance" data-alt="random chance|luck"><span class="hint">chance / design / proof</span></span>, even when none exists. ANOVA controls this by testing everything <span class="b"><input class="fill" data-answer="at once" data-alt="together|simultaneously"><span class="hint">at once / one at a time / never</span></span>.</p>
+            <div class="formula small">P(&ge;1 false positive) = 1 &minus; (0.95)<sup>6</sup> &asymp; <span class="b"><input class="fill code" data-answer="26%" data-alt="0.26|26 percent|26"><span class="hint">26% / 5% / 50%</span></span></div>
           </div>
         </div>
       </div>
 
-      <div class="group-label"><span>The three types of t-test</span></div>
+      <div class="group-label"><span>Hypotheses and the F-statistic</span></div>
 
-      <div class="row cols-3">
+      <div class="row split-52-48">
         <div class="box tag-chapter">
-          <div class="box-tag"><span>1 &middot; One-sample</span></div>
+          <div class="box-tag"><span>What we are testing</span></div>
           <div class="box-body">
-            <p>Compares <b>one</b> group's mean to a fixed <span class="b"><input class="fill" data-answer="target"><span class="hint">target / second group / before value</span></span>, a known or claimed value.</p>
-            <p><b>Example:</b> pills labeled 500 mg. Is the batch's mean dose really 500?</p>
-            <div class="hyp">H&#8320;: &mu; = 500</div>
-            <p>The target value goes in the <span class="b"><input class="fill code" data-answer="mu"><span class="hint">mu / paired / data</span></span> argument.</p>
-            <div class="r-code"><span class="cm"># one mean vs a target</span>
-<span class="fn">t.test</span>(pill, <span class="ar">mu</span> = 500)</div>
+            <div class="hyp">H&#8320;: &mu;&#8321; = &mu;&#8322; = &mu;&#8323; = &mu;&#8324;</div>
+            <p>The null says all k group means are <span class="b"><input class="fill" data-answer="equal" data-alt="the same"><span class="hint">equal / different / zero</span></span>, so there is no difference anywhere.</p>
+            <div class="hyp">H&#8321;: at least one &mu; differs</div>
+            <p>The alternative says <b>at least one</b> mean differs from the rest. Note it does <b>not</b> say which one. A significant result only tells us that <span class="b"><input class="fill" data-answer="at least one" data-alt="one|some"><span class="hint">at least one / every / no</span></span> true mean is different.</p>
+            <div class="mini-note">We decide using the <span class="b"><input class="fill" data-answer="F-statistic" data-alt="f statistic|f|f-score"><span class="hint">F-statistic / median / t-score</span></span>: a <b>large</b> F is evidence of a real difference; an F near <span class="b"><input class="fill code" data-answer="1"><span class="hint">1 / 100 / 20</span></span> is not.</div>
           </div>
         </div>
-        <div class="box tag-orange">
-          <div class="box-tag"><span>2 &middot; Two-sample independent</span></div>
+        <div class="box tag-navy">
+          <div class="box-tag"><span>The F-ratio: between over within</span></div>
           <div class="box-body">
-            <p>Compares the means of <b>two separate</b> groups made of <span class="b"><input class="fill" data-answer="different"><span class="hint">different / the same / repeated</span></span> individuals.</p>
-            <p><b>Example:</b> pain relief in people given drug A vs people given drug B.</p>
-            <div class="hyp">H&#8320;: &mu;<sub>A</sub> = &mu;<sub>B</sub></div>
-            <p>The null says the two means are <span class="b"><input class="fill" data-answer="equal"><span class="hint">equal / paired / zero</span></span>, so there is no difference.</p>
-            <div class="r-code"><span class="cm"># two separate groups</span>
-<span class="fn">t.test</span>(B, A)</div>
+            <div class="formula coded">F = <span class="frac"><span class="num sym-betw">MS between</span><span class="den sym-with">MS within</span></span> = <span class="frac"><span class="num sym-betw">variance between groups</span><span class="den sym-with">variance within groups</span></span></div>
+            <div class="symbol-key">
+              <div><b class="sym-betw">MS between</b> is the variance <b>between</b> the group means, the <span class="b"><input class="fill" data-answer="signal" data-alt="between"><span class="hint">signal / noise / cutoff</span></span>. MS is short for <span class="b"><input class="fill" data-answer="mean square" data-alt="mean squares"><span class="hint">mean square / margin of safety / most significant</span></span>, another name for a variance.</div>
+              <div><b class="sym-with">MS within</b> is the variance <b>within</b> each group, the <span class="b"><input class="fill" data-answer="noise"><span class="hint">noise / signal / mean</span></span> in the data.</div>
+              <div>Each MS = its sum of squares divided by its <span class="b"><input class="fill" data-answer="degrees of freedom" data-alt="df"><span class="hint">degrees of freedom / sample mean / p-value</span></span>. Big between and small within &rarr; <span class="b"><input class="fill" data-answer="large" data-alt="big|high"><span class="hint">large / small / negative</span></span> F.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-label"><span>The two variances behind F</span></div>
+
+      <div class="row split-50-50">
+        <div class="box tag-orange">
+          <div class="box-tag"><span>Numerator &middot; MS between</span></div>
+          <div class="box-body">
+            <div class="fig figcap-v">
+              <svg viewBox="0 0 148 80" role="img" aria-label="Four group means at different heights with vertical lines to the grand mean line">
+                <line x1="10" y1="70" x2="142" y2="70" stroke="#101418" stroke-width="1.2"/>
+                <line x1="10" y1="44" x2="142" y2="44" stroke="#101418" stroke-width="1.1" stroke-dasharray="4,3"/>
+                <text x="138" y="40" fill="#101418" font-size="6" font-weight="800" text-anchor="end">grand mean</text>
+                <line x1="28" y1="60" x2="28" y2="44" stroke="#d97706" stroke-width="2"/>
+                <line x1="60" y1="50" x2="60" y2="44" stroke="#d97706" stroke-width="2"/>
+                <line x1="92" y1="44" x2="92" y2="32" stroke="#d97706" stroke-width="2"/>
+                <line x1="124" y1="44" x2="124" y2="22" stroke="#d97706" stroke-width="2"/>
+                <circle cx="28" cy="60" r="3.1" fill="#d97706" stroke="#101418" stroke-width="0.8"/>
+                <circle cx="60" cy="50" r="3.1" fill="#d97706" stroke="#101418" stroke-width="0.8"/>
+                <circle cx="92" cy="32" r="3.1" fill="#d97706" stroke="#101418" stroke-width="0.8"/>
+                <circle cx="124" cy="22" r="3.1" fill="#d97706" stroke="#101418" stroke-width="0.8"/>
+                <text x="28" y="78" fill="#665f51" font-size="5.6" text-anchor="middle">prim</text>
+                <text x="60" y="78" fill="#665f51" font-size="5.6" text-anchor="middle">low sec</text>
+                <text x="92" y="78" fill="#665f51" font-size="5.6" text-anchor="middle">hi sec</text>
+                <text x="124" y="78" fill="#665f51" font-size="5.6" text-anchor="middle">univ</text>
+              </svg>
+              <div class="fig-caption">Orange lines = distance from each <b>group mean</b> to the <b>grand mean</b>.</div>
+            </div>
+            <div class="formula small">MS<sub>betw</sub> = <span class="frac"><span class="num">SS<sub>betw</sub></span><span class="den">k &minus; 1</span></span> , &nbsp; SS<sub>betw</sub> = &Sigma; n<sub>j</sub>(<span class="xbar">x</span><sub>j</sub> &minus; <span class="xbar">x</span>)<sup>2</sup></div>
+            <p>We square each group-mean-to-grand-mean gap, weight it by the group's <span class="b"><input class="fill" data-answer="sample size" data-alt="size|n"><span class="hint">sample size / median / variance</span></span>, add them up, and divide by df. The further apart the group means, the <span class="b"><input class="fill" data-answer="larger" data-alt="bigger|higher"><span class="hint">larger / smaller / flatter</span></span> this numerator, and the bigger the F.</p>
           </div>
         </div>
         <div class="box tag-plum">
-          <div class="box-tag"><span>3 &middot; Paired (dependent)</span></div>
+          <div class="box-tag"><span>Denominator &middot; MS within</span></div>
           <div class="box-body">
-            <p>Compares <b>two measurements on the same</b> individuals (or matched pairs).</p>
-            <p><b>Example:</b> blood pressure <b>before</b> and <b>after</b> a drug, for each patient.</p>
-            <p>We run the test on each person's <span class="b"><input class="fill" data-answer="difference"><span class="hint">difference / total / maximum</span></span>; the null is that the mean difference is <span class="b"><input class="fill" data-answer="zero"><span class="hint">zero / 500 / one</span></span>.</p>
-            <div class="hyp">H&#8320;: &mu;<sub>D</sub> = 0</div>
-            <div class="r-code"><span class="cm"># same units, measured twice</span>
-<span class="fn">t.test</span>(after, before,
-       <span class="ar">paired</span> = TRUE)</div>
-            <p>We set <span class="b"><input class="fill code" data-answer="TRUE" data-alt="T"><span class="hint">TRUE / FALSE / 0</span></span> for paired data. It equals a <span class="b"><input class="fill" data-answer="one-sample" data-alt="one sample"><span class="hint">one-sample / two-sample / matched</span></span> t-test on the differences.</p>
+            <div class="fig figcap-v">
+              <svg viewBox="0 0 148 80" role="img" aria-label="Points scattered around each group mean with vertical lines showing within-group spread">
+                <line x1="10" y1="70" x2="142" y2="70" stroke="#101418" stroke-width="1.2"/>
+                <!-- group 1 -->
+                <line x1="20" y1="52" x2="36" y2="52" stroke="#6b3fa0" stroke-width="1.6"/>
+                <line x1="28" y1="44" x2="28" y2="52" stroke="#6b3fa0" stroke-width="1"/><circle cx="28" cy="44" r="1.7" fill="#6b3fa0"/>
+                <line x1="28" y1="52" x2="28" y2="61" stroke="#6b3fa0" stroke-width="1"/><circle cx="28" cy="61" r="1.7" fill="#6b3fa0"/>
+                <circle cx="28" cy="48" r="1.7" fill="#6b3fa0"/><circle cx="28" cy="57" r="1.7" fill="#6b3fa0"/>
+                <!-- group 2 -->
+                <line x1="52" y1="46" x2="68" y2="46" stroke="#6b3fa0" stroke-width="1.6"/>
+                <line x1="60" y1="38" x2="60" y2="46" stroke="#6b3fa0" stroke-width="1"/><circle cx="60" cy="38" r="1.7" fill="#6b3fa0"/>
+                <line x1="60" y1="46" x2="60" y2="55" stroke="#6b3fa0" stroke-width="1"/><circle cx="60" cy="55" r="1.7" fill="#6b3fa0"/>
+                <circle cx="60" cy="42" r="1.7" fill="#6b3fa0"/><circle cx="60" cy="51" r="1.7" fill="#6b3fa0"/>
+                <!-- group 3 -->
+                <line x1="84" y1="38" x2="100" y2="38" stroke="#6b3fa0" stroke-width="1.6"/>
+                <line x1="92" y1="30" x2="92" y2="38" stroke="#6b3fa0" stroke-width="1"/><circle cx="92" cy="30" r="1.7" fill="#6b3fa0"/>
+                <line x1="92" y1="38" x2="92" y2="47" stroke="#6b3fa0" stroke-width="1"/><circle cx="92" cy="47" r="1.7" fill="#6b3fa0"/>
+                <circle cx="92" cy="34" r="1.7" fill="#6b3fa0"/><circle cx="92" cy="43" r="1.7" fill="#6b3fa0"/>
+                <!-- group 4 -->
+                <line x1="116" y1="30" x2="132" y2="30" stroke="#6b3fa0" stroke-width="1.6"/>
+                <line x1="124" y1="22" x2="124" y2="30" stroke="#6b3fa0" stroke-width="1"/><circle cx="124" cy="22" r="1.7" fill="#6b3fa0"/>
+                <line x1="124" y1="30" x2="124" y2="39" stroke="#6b3fa0" stroke-width="1"/><circle cx="124" cy="39" r="1.7" fill="#6b3fa0"/>
+                <circle cx="124" cy="26" r="1.7" fill="#6b3fa0"/><circle cx="124" cy="35" r="1.7" fill="#6b3fa0"/>
+                <text x="28" y="78" fill="#665f51" font-size="5.6" text-anchor="middle">prim</text>
+                <text x="60" y="78" fill="#665f51" font-size="5.6" text-anchor="middle">low sec</text>
+                <text x="92" y="78" fill="#665f51" font-size="5.6" text-anchor="middle">hi sec</text>
+                <text x="124" y="78" fill="#665f51" font-size="5.6" text-anchor="middle">univ</text>
+              </svg>
+              <div class="fig-caption">Purple lines = distance from each <b>person</b> to their own <b>group mean</b>.</div>
+            </div>
+            <div class="formula small">MS<sub>with</sub> = <span class="frac"><span class="num">SS<sub>with</sub></span><span class="den">N &minus; k</span></span> , &nbsp; SS<sub>with</sub> = &Sigma;&Sigma; (x<sub>ij</sub> &minus; <span class="xbar">x</span><sub>j</sub>)<sup>2</sup></div>
+            <p>This measures the <span class="b"><input class="fill" data-answer="noise" data-alt="spread|scatter"><span class="hint">noise / signal / mean</span></span> inside groups. More within-group scatter raises MS within, and since it sits in the <span class="b"><input class="fill" data-answer="denominator" data-alt="bottom"><span class="hint">denominator / numerator / exponent</span></span>, that <b>lowers</b> F and gives <span class="b"><input class="fill" data-answer="less" data-alt="weaker"><span class="hint">less / more / certain</span></span> evidence of a difference.</p>
           </div>
         </div>
       </div>
 
-      <div class="group-label"><span>Two-sided vs one-sided alternatives</span></div>
+      <div class="group-label"><span>What makes F large or small</span></div>
 
-      <div class="row split-52-48">
+      <div class="row">
         <div class="box tag-gold">
-          <div class="box-tag"><span>Picking the alternative hypothesis</span></div>
+          <div class="box-tag"><span>Three pictures: same four groups, very different F</span></div>
           <div class="box-body">
-            <p>The null hypothesis is always an <span class="b"><input class="fill" data-answer="equality" data-alt="equal"><span class="hint">equality / inequality / range</span></span> (for example &mu; = 500). The <b>alternative</b> sets which direction you test for.</p>
-            <p><b>Two-sided</b> (H&#8321;: &mu; &ne; target) detects a difference in <span class="b"><input class="fill" data-answer="either"><span class="hint">either / only one / no</span></span> direction, and it is the <span class="b"><input class="fill" data-answer="default"><span class="hint">default / forbidden / rarest</span></span> in R when you leave the argument out.</p>
-            <p><b>One-sided</b> (H&#8321;: &mu; &gt; target, or &mu; &lt; target) tests only <span class="b"><input class="fill" data-answer="one"><span class="hint">one / both / zero</span></span> direction.</p>
-            <p>Clinical work usually <span class="b"><input class="fill" data-answer="prefers"><span class="hint">prefers / forbids / ignores</span></span> two-sided tests: they catch both improvement and <span class="b"><input class="fill" data-answer="underperformance" data-alt="harm"><span class="hint">underperformance / sample size / rounding</span></span>, and they reduce <span class="b"><input class="fill" data-answer="directional bias"><span class="hint">directional bias / measurement error / random noise</span></span> because the direction must be fixed in advance.</p>
-            <div class="r-code"><span class="fn">t.test</span>(x, <span class="ar">mu</span> = 500, <span class="ar">alternative</span> = <span class="st">"two.sided"</span>)
-<span class="cm"># or "greater" / "less" for one-sided</span></div>
-            <div class="mini-note">Choose the alternative <span class="b"><input class="fill" data-answer="before"><span class="hint">before / after / while</span></span> you look at the data, never to chase a smaller p-value.</div>
-          </div>
-        </div>
-        <div class="box tag-navy">
-          <div class="box-tag"><span>Where the p-value comes from</span></div>
-          <div class="box-body">
-            <div class="contrast-grid">
+            <div class="triptych">
               <div class="fig">
-                <svg viewBox="0 0 144 78" role="img" aria-label="Bell curve with both tails shaded for a two-sided test">
-                  <path d="M0,72 L0,71.7 L8,70.8 L16,68.5 L24,63 L28,58 L28,72 Z" fill="#b83b5e" fill-opacity="0.5"/>
-                  <path d="M116,72 L116,58 L120,63 L128,68.5 L136,70.8 L140,71.7 L140,72 Z" fill="#b83b5e" fill-opacity="0.5"/>
-                  <path d="M0,71.7 L10,70.7 L20,68.1 L30,62 L40,51.5 L50,37.6 L60,25.1 L70,20 L80,25.1 L90,37.6 L100,51.5 L110,62 L120,68.1 L130,70.7 L140,71.7" fill="none" stroke="#2f5f98" stroke-width="2"/>
-                  <line x1="0" y1="72" x2="144" y2="72" stroke="#101418" stroke-width="1.2"/>
-                  <line x1="28" y1="30" x2="28" y2="72" stroke="#b83b5e" stroke-width="1" stroke-dasharray="3,2"/>
-                  <line x1="116" y1="30" x2="116" y2="72" stroke="#b83b5e" stroke-width="1" stroke-dasharray="3,2"/>
+                <svg viewBox="0 0 120 76" role="img" aria-label="Means close together, large within-group spread">
+                  <line x1="6" y1="66" x2="114" y2="66" stroke="#101418" stroke-width="1"/>
+                  <g fill="#5d6d72">
+                    <circle cx="22" cy="26" r="2"/><circle cx="22" cy="38" r="2"/><circle cx="22" cy="50" r="2"/><circle cx="22" cy="58" r="2"/>
+                    <circle cx="46" cy="24" r="2"/><circle cx="46" cy="40" r="2"/><circle cx="46" cy="48" r="2"/><circle cx="46" cy="60" r="2"/>
+                    <circle cx="72" cy="28" r="2"/><circle cx="72" cy="36" r="2"/><circle cx="72" cy="52" r="2"/><circle cx="72" cy="56" r="2"/>
+                    <circle cx="98" cy="22" r="2"/><circle cx="98" cy="42" r="2"/><circle cx="98" cy="50" r="2"/><circle cx="98" cy="60" r="2"/>
+                  </g>
+                  <g stroke="#d97706" stroke-width="2"><line x1="14" y1="43" x2="30" y2="43"/><line x1="38" y1="42" x2="54" y2="42"/><line x1="64" y1="44" x2="80" y2="44"/><line x1="90" y1="43" x2="106" y2="43"/></g>
                 </svg>
-                <div class="fig-caption"><b>Two-sided:</b> both tails count</div>
+                <div class="fig-caption"><b>Low F:</b> small between, large within &rarr; F = <span class="b"><input class="fill" data-answer="low" data-alt="small"><span class="hint">low / high / medium</span></span></div>
               </div>
               <div class="fig">
-                <svg viewBox="0 0 144 78" role="img" aria-label="Bell curve with only the right tail shaded for a one-sided test">
-                  <path d="M98,72 L98,49 L100,51.5 L110,62 L120,68.1 L130,70.7 L140,71.7 L140,72 Z" fill="#b83b5e" fill-opacity="0.5"/>
-                  <path d="M0,71.7 L10,70.7 L20,68.1 L30,62 L40,51.5 L50,37.6 L60,25.1 L70,20 L80,25.1 L90,37.6 L100,51.5 L110,62 L120,68.1 L130,70.7 L140,71.7" fill="none" stroke="#2f5f98" stroke-width="2"/>
-                  <line x1="0" y1="72" x2="144" y2="72" stroke="#101418" stroke-width="1.2"/>
-                  <line x1="98" y1="22" x2="98" y2="72" stroke="#b83b5e" stroke-width="1" stroke-dasharray="3,2"/>
+                <svg viewBox="0 0 120 76" role="img" aria-label="Means far apart but not ordered, small within-group spread">
+                  <line x1="6" y1="66" x2="114" y2="66" stroke="#101418" stroke-width="1"/>
+                  <g fill="#5d6d72">
+                    <circle cx="22" cy="52" r="2"/><circle cx="22" cy="55" r="2"/><circle cx="22" cy="57" r="2"/><circle cx="22" cy="60" r="2"/>
+                    <circle cx="46" cy="16" r="2"/><circle cx="46" cy="19" r="2"/><circle cx="46" cy="21" r="2"/><circle cx="46" cy="24" r="2"/>
+                    <circle cx="72" cy="44" r="2"/><circle cx="72" cy="47" r="2"/><circle cx="72" cy="49" r="2"/><circle cx="72" cy="52" r="2"/>
+                    <circle cx="98" cy="30" r="2"/><circle cx="98" cy="33" r="2"/><circle cx="98" cy="35" r="2"/><circle cx="98" cy="38" r="2"/>
+                  </g>
+                  <g stroke="#d97706" stroke-width="2"><line x1="14" y1="56" x2="30" y2="56"/><line x1="38" y1="20" x2="54" y2="20"/><line x1="64" y1="48" x2="80" y2="48"/><line x1="90" y1="34" x2="106" y2="34"/></g>
                 </svg>
-                <div class="fig-caption"><b>One-sided:</b> just one tail</div>
+                <div class="fig-caption"><b>High F:</b> large between, small within &rarr; F = <span class="b"><input class="fill" data-answer="high" data-alt="large|big"><span class="hint">high / low / medium</span></span></div>
+              </div>
+              <div class="fig">
+                <svg viewBox="0 0 120 76" role="img" aria-label="Means far apart and not ordered, with large within-group spread">
+                  <line x1="6" y1="66" x2="114" y2="66" stroke="#101418" stroke-width="1"/>
+                  <g fill="#5d6d72">
+                    <circle cx="22" cy="37" r="2"/><circle cx="22" cy="46" r="2"/><circle cx="22" cy="55" r="2"/><circle cx="22" cy="63" r="2"/>
+                    <circle cx="46" cy="15" r="2"/><circle cx="46" cy="24" r="2"/><circle cx="46" cy="32" r="2"/><circle cx="46" cy="40" r="2"/>
+                    <circle cx="72" cy="35" r="2"/><circle cx="72" cy="44" r="2"/><circle cx="72" cy="53" r="2"/><circle cx="72" cy="61" r="2"/>
+                    <circle cx="98" cy="22" r="2"/><circle cx="98" cy="31" r="2"/><circle cx="98" cy="40" r="2"/><circle cx="98" cy="48" r="2"/>
+                  </g>
+                  <g stroke="#d97706" stroke-width="2"><line x1="14" y1="50" x2="30" y2="50"/><line x1="38" y1="28" x2="54" y2="28"/><line x1="64" y1="48" x2="80" y2="48"/><line x1="90" y1="35" x2="106" y2="35"/></g>
+                </svg>
+                <div class="fig-caption"><b>Medium F:</b> large between <b>and</b> large within &rarr; F = <span class="b"><input class="fill" data-answer="medium" data-alt="moderate|middling"><span class="hint">medium / high / low</span></span></div>
               </div>
             </div>
-            <p>For the same data, a one-sided test puts all of its rejection region in <span class="b"><input class="fill" data-answer="one"><span class="hint">one / both / no</span></span> tail. That is why a one-sided test is <span class="b"><input class="fill" data-answer="easier" data-alt="less stringent"><span class="hint">easier / harder / impossible</span></span> to pass in its chosen direction, and why two-sided tests are the more <span class="b"><input class="fill" data-answer="stringent" data-alt="strict|conservative"><span class="hint">stringent / lenient / random</span></span> default.</p>
+            <p>Tightly clustered points that still sit far apart (middle panel) are the strongest evidence: the small within-group spread makes it unlikely the gaps are just <span class="b"><input class="fill" data-answer="random variation" data-alt="random|chance|noise"><span class="hint">random variation / true signal / measurement units</span></span>. Wide scatter (right panel) means the same group gaps could plausibly come from <span class="b"><input class="fill" data-answer="one" data-alt="a single|the same"><span class="hint">one / four / no</span></span> shared distribution.</p>
           </div>
         </div>
       </div>
 
-      <div class="group-label"><span>Reading the t.test() output</span></div>
+      <div class="group-label"><span>From F to a p-value, and how to run it in R</span></div>
 
-      <div class="row">
-        <div class="box tag-navy">
-          <div class="box-tag"><span>Where the answer lives in R's output (two-sample)</span></div>
-          <div class="box-body">
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.8mm; align-items:start;">
-              <div class="r-code"><span class="cm">	Welch Two Sample t-test</span>
-
-data:  score by method
-t = 2.41,  df = 38.2,  <span class="ar">p-value = 0.021</span>
-alt. hypothesis: true difference in means
-  is not equal to 0
-95 percent confidence interval:
-  1.12  8.44
-sample estimates:
-mean in group online  mean in group inperson
-               74.2                  69.4</div>
-              <div class="symbol-key">
-                <div>Here p = 0.021 is <b>below</b> &alpha; = 0.05, so we <span class="b"><input class="fill" data-answer="reject"><span class="hint">reject / fail to reject / prove</span></span> H<sub>0</sub>: the two group means are not equal.</div>
-                <div>The null for a two-sample test is that the true difference in means is <span class="b"><input class="fill code" data-answer="0"><span class="hint">0 / 74.2 / 4.8</span></span>.</div>
-                <div>The sample estimate gap is 74.2 &minus; 69.4 = <span class="b"><input class="fill code" data-answer="4.8"><span class="hint">4.8 / 0.021 / 38.2</span></span> points.</div>
-                <div>The 95% <span class="b"><input class="fill" data-answer="confidence interval" data-alt="ci"><span class="hint">confidence interval / null mean / row name</span></span> (1.12 to 8.44) excludes 0, which agrees with rejecting H<sub>0</sub>.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="group-label"><span>Practice</span></div>
-
-      <div class="row">
+      <div class="row split-55-45">
         <div class="box tag-chapter">
-          <div class="box-tag"><span>Identify the test</span></div>
+          <div class="box-tag"><span>Load the data, then run aov()</span></div>
           <div class="box-body">
-            <p><b>1.</b> A water utility claims the average lead level at household taps is 5 ppb. Inspectors sample taps across the city to see whether the true mean differs from 5 ppb. This is a <span class="b"><input class="fill" data-answer="one-sample" data-alt="one sample"><span class="hint">one-sample / paired / independent</span></span> t-test.</p>
-            <p><b>2.</b> Mean final-exam scores are compared for students in an online section and students in an in-person section. This is a two-sample <span class="b"><input class="fill" data-answer="independent"><span class="hint">independent / paired / dependent</span></span> t-test.</p>
-            <p><b>3.</b> The same warehouse pickers are timed on a packing task before and after ergonomics coaching. This is a <span class="b"><input class="fill" data-answer="paired" data-alt="dependent"><span class="hint">paired / one-sample / independent</span></span> t-test.</p>
-            <p><b>4.</b> Mean monthly electricity use is compared between households with solar panels and households without. This is a two-sample <span class="b"><input class="fill" data-answer="independent"><span class="hint">independent / paired / one-sample</span></span> t-test.</p>
+            <div class="r-code"><span class="fn">library</span>(rsr)            <span class="cm"># GRAPH Courses RSR package</span>
+<span class="fn">data</span>(prevend)
+
+<span class="cm"># outcome ~ grouping variable</span>
+fit &lt;- <span class="fn">aov</span>(RFFT ~ education, <span class="ar">data</span> = prevend)
+<span class="fn">summary</span>(fit)
+<span class="cm">#              Df  Sum Sq  Mean Sq  F value  Pr(&gt;F)</span>
+<span class="cm"># education     3  115000    38333    73.3   &lt;2e-16 ***</span>
+<span class="cm"># Residuals   496  259000      522</span></div>
+            <div class="symbol-key">
+              <div>The first output row is the <span class="b"><input class="fill" data-answer="between" data-alt="between-group"><span class="hint">between / within / residual</span></span> variation; "Residuals" is the <span class="b"><input class="fill" data-answer="within" data-alt="within-group"><span class="hint">within / between / total</span></span> variation. <b>Mean Sq</b> = Sum Sq &divide; <span class="b"><input class="fill" data-answer="Df" data-alt="degrees of freedom|df"><span class="hint">Df / F / N</span></span>, and <b>F value</b> = 38,333 &divide; <span class="b"><input class="fill code" data-answer="522"><span class="hint">522 / 496 / 3</span></span> &asymp; 73.3.</div>
+            </div>
+            <div class="mini-note chapter"><b>Report it:</b> "Mean RFFT scores differed significantly across education groups, F(3, 496) = 73.3, p &lt; 0.001." This tells us at least one true mean <span class="b"><input class="fill" data-answer="differs" data-alt="is different"><span class="hint">differs / equals / is zero</span></span>.</div>
+          </div>
+        </div>
+        <div class="box tag-navy">
+          <div class="box-tag"><span>The F-curve turns F into a p-value</span></div>
+          <div class="box-body">
+            <div class="fig figcap-f">
+              <svg viewBox="0 0 170 86" role="img" aria-label="Right-skewed F distribution with the 0.05 cutoff and shaded right tail">
+                <path d="M14,70 C24,69 28,30 34,27 C40,24 48,44 58,52 C70,61 80,64 90,65.5 C105,67.5 118,68.8 130,69.3 C142,69.7 152,70 162,70 Z" fill="#e7eef7" stroke="none"/>
+                <path d="M78,70 L78,62 C82,63.5 86,64.8 90,65.5 C105,67.5 118,68.8 130,69.3 C142,69.7 152,70 162,70 L162,70 L78,70 Z" fill="#b83b5e" fill-opacity="0.5" stroke="none"/>
+                <path d="M14,70 C24,69 28,30 34,27 C40,24 48,44 58,52 C70,61 80,64 90,65.5 C105,67.5 118,68.8 130,69.3 C142,69.7 152,70 162,70" fill="none" stroke="#2f5f98" stroke-width="2"/>
+                <line x1="14" y1="70" x2="164" y2="70" stroke="#101418" stroke-width="1.2"/>
+                <line x1="78" y1="56" x2="78" y2="70" stroke="#b83b5e" stroke-width="1.4" stroke-dasharray="4,3"/>
+                <text x="78" y="52" fill="#b83b5e" font-size="6.2" font-weight="850" text-anchor="middle">cutoff &asymp; 2.62</text>
+                <text x="122" y="60" fill="#b83b5e" font-size="6.2" font-weight="800" text-anchor="middle">tail = p &lt; .05</text>
+                <text x="160" y="80" fill="#665f51" font-size="6" font-weight="700" text-anchor="end">F value</text>
+              </svg>
+              <div class="fig-caption">Convert F to a p-value using the F-curve for your degrees of freedom.</div>
+            </div>
+            <div class="symbol-key">
+              <div>Between df = k &minus; 1 = 4 &minus; 1 = <span class="b"><input class="fill code" data-answer="3"><span class="hint">3 / 4 / 500</span></span>. Within df = N &minus; k = 500 &minus; 4 = <span class="b"><input class="fill code" data-answer="496"><span class="hint">496 / 499 / 4</span></span>.</div>
+              <div>The observed F = 73.3 sits far past the 2.62 cutoff, so p &lt; 0.05 and the difference is <span class="b"><input class="fill" data-answer="significant"><span class="hint">significant / impossible / random</span></span>.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-label"><span>Which pairs differ? Tukey's HSD follow-up</span></div>
+
+      <div class="row">
+        <div class="box tag-plum">
+          <div class="box-tag"><span>Tukey HSD follow-up</span></div>
+          <div class="box-body">
+            <p>A significant ANOVA only says <b>at least one</b> mean differs, not <span class="b"><input class="fill" data-answer="which" data-alt="which pairs|which ones"><span class="hint">which / how many / whether</span></span> pairs. To find the specific pairs while still controlling the false-positive risk, run <b>Tukey's HSD</b> (Honestly Significant <span class="b"><input class="fill" data-answer="Difference"><span class="hint">Difference / Distribution / Deviation</span></span>).</p>
+            <div class="r-code"><span class="fn">TukeyHSD</span>(fit)
+<span class="cm">#                   diff     lwr     upr    p adj</span>
+<span class="cm"># LowSec-Primary   14.78    7.93   21.63    0.000</span>
+<span class="cm"># HiSec-Primary    23.16   16.40   29.92    0.000</span>
+<span class="cm"># Univ-Primary     33.45   26.72   40.18    0.000</span>
+<span class="cm"># ...              (6 pairs in total)</span></div>
+            <p>Each row gives a pair's mean difference (<b>diff</b>), a 95% confidence interval (<b>lwr</b>, <b>upr</b>), and a <span class="b"><input class="fill" data-answer="p adjusted" data-alt="adjusted p|p adj|adjusted p-value"><span class="hint">p adjusted / raw p / sample size</span></span> value already corrected for making several comparisons at once. Here all six <b>p adj</b> values are below 0.05, so every education group differs from every other.</p>
           </div>
         </div>
       </div>
@@ -789,7 +884,7 @@ mean in group online  mean in group inperson
       }).join("\n") + "\n" +
       Array.from(document.querySelectorAll(".verdict-row")).map(r => "v:" + (r.dataset.correct || "")).join("\n")
     );
-    const storageKey = "t-test-family-stat-tests-cheatsheet-" + fp;
+    const storageKey = "intro-anova-stat-tests-cheatsheet-" + fp;
 
     blanks.forEach(b => {
       const hint = b.querySelector(".hint");
@@ -826,6 +921,7 @@ mean in group online  mean in group inperson
     const norm = s => String(s)
       .replace(/[−–]/g, "-")
       .replace(/₀/g, "0").replace(/₁/g, "1").replace(/₂/g, "2").replace(/₃/g, "3").replace(/₄/g, "4")
+      .replace(/α/g, "alpha")
       .replace(/β/g, "beta")
       .replace(/\s+/g, " ")
       .trim()
@@ -878,7 +974,7 @@ mean in group online  mean in group inperson
     restore();
 
     const verdictRows = Array.from(document.querySelectorAll(".verdict-row"));
-    const verdictKey = "t-test-family-stat-tests-cheatsheet-verdict-" + fp;
+    const verdictKey = "intro-anova-stat-tests-cheatsheet-verdict-" + fp;
     function applyVerdictPick(row, pick) {
       if (row.classList.contains("revealed")) return;
       const correct = row.dataset.correct;
@@ -934,7 +1030,7 @@ mean in group online  mean in group inperson
     });
 
     const zoomLevels = [0.1, 0.25, 0.5, 0.75, 0.85, 1.0, 1.15, 1.3, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
-    const zoomKey = "t-test-family-stat-tests-cheatsheet-zoom";
+    const zoomKey = "intro-anova-stat-tests-cheatsheet-zoom";
     const defaultZoomIdx = zoomLevels.indexOf(1.0);
     let zoomIdx = parseInt(localStorage.getItem(zoomKey) || String(defaultZoomIdx), 10);
     if (isNaN(zoomIdx) || zoomIdx < 0 || zoomIdx >= zoomLevels.length) zoomIdx = defaultZoomIdx;

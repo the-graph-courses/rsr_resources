@@ -874,7 +874,7 @@
       }).join("\n") + "\n" +
       Array.from(document.querySelectorAll(".verdict-row")).map(r => "v:" + (r.dataset.correct || "")).join("\n")
     );
-    const storageKey = "se-ci-stat-tests-cheatsheet-gpt5-gefv-" + fp;
+    const storageKey = "se-ci-worksheet-cheatsheet-" + fp;
 
     blanks.forEach(b => {
       const hint = b.querySelector(".hint");
@@ -963,7 +963,7 @@
     restore();
 
     const verdictRows = Array.from(document.querySelectorAll(".verdict-row"));
-    const verdictKey = "se-ci-stat-tests-cheatsheet-gpt5-gefv-verdict-" + fp;
+    const verdictKey = "se-ci-worksheet-cheatsheet-verdict-" + fp;
     function applyVerdictPick(row, pick) {
       if (row.classList.contains("revealed")) return;
       const correct = row.dataset.correct;
@@ -1019,7 +1019,7 @@
     });
 
     const zoomLevels = [0.1, 0.25, 0.5, 0.75, 0.85, 1.0, 1.15, 1.3, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
-    const zoomKey = "se-ci-stat-tests-cheatsheet-gpt5-gefv-zoom";
+    const zoomKey = "se-ci-worksheet-cheatsheet-zoom";
     const defaultZoomIdx = zoomLevels.indexOf(1.0);
     let zoomIdx = parseInt(localStorage.getItem(zoomKey) || String(defaultZoomIdx), 10);
     if (isNaN(zoomIdx) || zoomIdx < 0 || zoomIdx >= zoomLevels.length) zoomIdx = defaultZoomIdx;
@@ -1036,6 +1036,5 @@
     document.getElementById("zoomIn").addEventListener("click", () => { if (zoomIdx < zoomLevels.length - 1) { zoomIdx++; applyZoom(); } });
     applyZoom();
   </script>
-  <!-- GPT-5 gefv -->
 </body>
 </html>
