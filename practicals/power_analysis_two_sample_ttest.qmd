@@ -143,6 +143,22 @@ svg text {
   margin: 0.2rem 0.3rem 0;
 }
 
+.formula-panel {
+  background: var(--light-teal-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.formula-panel .formula-note {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin: 0.85rem 0 0;
+  line-height: 1.55;
+}
+
 .practice {
   padding: 1rem 1.15rem;
   margin: 1rem 0;
@@ -479,6 +495,18 @@ power.t.test(
 ```
 
 Typically, you fill in four values and leave out `n`. That is the value R solves for.
+
+Thx box below shows the formula for the sample size calculation. You do **not** need to memorize the formula. It is here so you can see how the four inputs fit together.
+
+<div class="formula-panel">
+
+$$
+n \approx 2\left(\frac{\bigl(z_{1-\alpha/2} + z_{1-\beta}\bigr)\,\sigma}{\delta}\right)^2
+$$
+
+<p class="formula-note"><strong>Reading the symbols:</strong> $n$ is sample size per group; $\delta$ is <code>delta</code>; $\sigma$ is <code>sd</code>; $\alpha$ is <code>sig.level</code>; and power $= 1 - \beta$, where $\beta$ is the false-negative rate. R uses a slightly more exact calculation, but this is the usual large-sample approximation.</p>
+
+</div>
 
 There are four inputs. Match each one to its R argument using the dropdowns, then check your answers. (The four options are <code>delta</code>, <code>sd</code>, <code>sig.level</code>, and <code>power</code>.)
 

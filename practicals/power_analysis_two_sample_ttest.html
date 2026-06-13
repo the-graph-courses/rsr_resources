@@ -368,7 +368,7 @@ globalThis.qwebrCustomizedWebROptions = {
 };
 
 // Store cell data
-globalThis.qwebrCellDetails = [{"code":"power.t.test(\n  delta = 5,\n  sd = 8,\n  sig.level = 0.05,\n  power = 0.80\n)","options":{"results":"markup","fig-width":7,"warning":"true","editor-word-wrap":"true","classes":"","editor-quick-suggestions":"false","autorun":"false","editor-font-scale":"1","context":"interactive","dpi":72,"out-height":"","output":"true","editor-max-height":"","message":"true","read-only":"false","comment":"","label":"unnamed-chunk-1","fig-height":5,"out-width":"700px","fig-cap":""},"id":1},{"code":"power.t.test(\n  delta = ____,\n  sd = ____,\n  sig.level = ____,\n  power = ____\n)","options":{"results":"markup","fig-width":7,"warning":"true","editor-word-wrap":"true","classes":"","editor-quick-suggestions":"false","autorun":"false","editor-font-scale":"1","context":"interactive","dpi":72,"out-height":"","output":"true","editor-max-height":"","message":"true","read-only":"false","comment":"","label":"unnamed-chunk-2","fig-height":5,"out-width":"700px","fig-cap":""},"id":2},{"code":"power.t.test(\n  delta = ____,\n  sd = ____,\n  sig.level = ____,\n  power = ____\n)","options":{"results":"markup","fig-width":7,"warning":"true","editor-word-wrap":"true","classes":"","editor-quick-suggestions":"false","autorun":"false","editor-font-scale":"1","context":"interactive","dpi":72,"out-height":"","output":"true","editor-max-height":"","message":"true","read-only":"false","comment":"","label":"unnamed-chunk-3","fig-height":5,"out-width":"700px","fig-cap":""},"id":3}];
+globalThis.qwebrCellDetails = [{"id":1,"code":"power.t.test(\n  delta = 5,\n  sd = 8,\n  sig.level = 0.05,\n  power = 0.80\n)","options":{"label":"unnamed-chunk-1","fig-width":7,"out-width":"700px","editor-font-scale":"1","autorun":"false","out-height":"","warning":"true","read-only":"false","editor-word-wrap":"true","editor-quick-suggestions":"false","message":"true","output":"true","results":"markup","dpi":72,"editor-max-height":"","fig-cap":"","context":"interactive","fig-height":5,"classes":"","comment":""}},{"id":2,"code":"power.t.test(\n  delta = ____,\n  sd = ____,\n  sig.level = ____,\n  power = ____\n)","options":{"label":"unnamed-chunk-2","fig-width":7,"out-width":"700px","editor-font-scale":"1","autorun":"false","out-height":"","warning":"true","read-only":"false","editor-word-wrap":"true","editor-quick-suggestions":"false","message":"true","output":"true","results":"markup","dpi":72,"editor-max-height":"","fig-cap":"","context":"interactive","fig-height":5,"classes":"","comment":""}},{"id":3,"code":"power.t.test(\n  delta = ____,\n  sd = ____,\n  sig.level = ____,\n  power = ____\n)","options":{"label":"unnamed-chunk-3","fig-width":7,"out-width":"700px","editor-font-scale":"1","autorun":"false","out-height":"","warning":"true","read-only":"false","editor-word-wrap":"true","editor-quick-suggestions":"false","message":"true","output":"true","results":"markup","dpi":72,"editor-max-height":"","fig-cap":"","context":"interactive","fig-height":5,"classes":"","comment":""}}];
 
 </script>
 <script type="module">
@@ -1622,6 +1622,35 @@ globalThis.qwebrExecuteCode = async function (
 
 </script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -2068,6 +2097,22 @@ svg text {
   margin: 0.2rem 0.3rem 0;
 }
 
+.formula-panel {
+  background: var(--light-teal-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.formula-panel .formula-note {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin: 0.85rem 0 0;
+  line-height: 1.55;
+}
+
 .practice {
   padding: 1rem 1.15rem;
   margin: 1rem 0;
@@ -2399,6 +2444,15 @@ The power.t.test() function call
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span>        <span class="co"># chance to detect a real difference</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Typically, you fill in four values and leave out <code>n</code>. That is the value R solves for.</p>
+<p>You do <strong>not</strong> need to memorize the formula below. R’s <code>power.t.test()</code> works it out for you. It is here so you can see how the four inputs fit together.</p>
+<div class="formula-panel">
+<p><span class="math display">\[
+n \approx 2\left(\frac{\bigl(z_{1-\alpha/2} + z_{1-\beta}\bigr)\,\sigma}{\delta}\right)^2
+\]</span></p>
+<p class="formula-note">
+<strong>Reading the symbols:</strong> <span class="math inline">\(n\)</span> is sample size per group; <span class="math inline">\(\delta\)</span> is <code>delta</code>; <span class="math inline">\(\sigma\)</span> is <code>sd</code>; <span class="math inline">\(\alpha\)</span> is <code>sig.level</code>; and power <span class="math inline">\(= 1 - \beta\)</span>, where <span class="math inline">\(\beta\)</span> is the false-negative rate. R uses a slightly more exact calculation, but this is the usual large-sample approximation.
+</p>
+</div>
 <p>There are four inputs. Match each one to its R argument using the dropdowns, then check your answers. (The four options are <code>delta</code>, <code>sd</code>, <code>sig.level</code>, and <code>power</code>.)</p>
 <div id="arg-match">
 <table class="summary-table">
