@@ -443,9 +443,9 @@ If you recruit too few subjects, your study may be <strong>underpowered</strong>
 
 It's also possible to recruit too many subjects, more than the study needs to demonstrate a convincing effect, and thus waste time and money.
 
-A power analysis is thus usually done before the study is conducted, to determine the sample size needed to achieve a desired level of power. 
+A power analysis is usually done before the study is conducted, to determine the sample size needed to achieve a desired level of power.
 
-In this practical, you will use the R function `power.t.test()` to calculate the sample size needed for a given power.
+There are many kinds of power analysis for different study designs and tests. This practical introduces the idea through one common case: finding sample size for a <strong>two-sample t test</strong> using the R function `power.t.test()`.
 
 After answering all questions, <strong>your completion code will be revealed.</strong> Enter it into the LMS to mark this practical complete.
 
