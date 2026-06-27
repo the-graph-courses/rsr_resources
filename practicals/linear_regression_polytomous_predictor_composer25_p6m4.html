@@ -8,7 +8,7 @@
 
 <meta name="author" content="GRAPH Courses">
 
-<title>Reading check_model() with the SUNSHINE checklist</title>
+<title>Simple linear regression with a polytomous predictor</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -58,16 +58,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="check_model_sunshine_opus48_m4x8_files/libs/clipboard/clipboard.min.js"></script>
-<script src="check_model_sunshine_opus48_m4x8_files/libs/quarto-html/quarto.js"></script>
-<script src="check_model_sunshine_opus48_m4x8_files/libs/quarto-html/popper.min.js"></script>
-<script src="check_model_sunshine_opus48_m4x8_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="check_model_sunshine_opus48_m4x8_files/libs/quarto-html/anchor.min.js"></script>
-<link href="check_model_sunshine_opus48_m4x8_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="check_model_sunshine_opus48_m4x8_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="check_model_sunshine_opus48_m4x8_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="check_model_sunshine_opus48_m4x8_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="check_model_sunshine_opus48_m4x8_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/clipboard/clipboard.min.js"></script>
+<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/quarto.js"></script>
+<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/popper.min.js"></script>
+<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/anchor.min.js"></script>
+<link href="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.47.0/min/vs/editor/editor.main.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   
@@ -346,7 +346,7 @@ iframe.qwebr-output-code-browse {
 // Document level settings ----
 
 // Determine if we need to install R packages
-globalThis.qwebrInstallRPackagesList = ['performance', 'see', 'ggplot2', 'patchwork', 'qqplotr'];
+globalThis.qwebrInstallRPackagesList = [''];
 
 // Specify possible locations to search for the repository
 globalThis.qwebrPackageRepoURLS = ['https://repo.r-wasm.org/'];
@@ -356,7 +356,7 @@ globalThis.qwebrSetupRPackages = !(qwebrInstallRPackagesList.indexOf("") !== -1)
 globalThis.qwebrAutoloadRPackages = true;
 
 // Display a startup message?
-globalThis.qwebrShowStartupMessage = true;
+globalThis.qwebrShowStartupMessage = false;
 globalThis.qwebrShowHeaderMessage = false;
 
 // Describe the webR settings that should be used
@@ -368,7 +368,7 @@ globalThis.qwebrCustomizedWebROptions = {
 };
 
 // Store cell data
-globalThis.qwebrCellDetails = [{"id":1,"code":"library(performance)\n\nmodel <- lm(mpg ~ wt + hp, data = mtcars)\n\nsummary(model)","options":{"results":"markup","output":"true","fig-width":7,"fig-height":5,"editor-max-height":"","message":"true","comment":"","classes":"","warning":"true","read-only":"false","editor-quick-suggestions":"false","autorun":"false","dpi":72,"out-height":"","fig-cap":"","label":"unnamed-chunk-1","out-width":"700px","editor-word-wrap":"true","context":"interactive","editor-font-scale":"1"}},{"id":2,"code":"plot(mpg ~ wt, data = mtcars,\n     pch = 19, col = \"#00565e\",\n     xlab = \"Weight (1000 lbs)\", ylab = \"Miles per gallon\",\n     main = \"Fuel economy vs weight, with fitted line\")\nabline(lm(mpg ~ wt, data = mtcars), col = \"#f5c542\", lwd = 3)","options":{"results":"markup","output":"true","fig-width":"8","fig-height":"5","editor-max-height":"","message":"true","comment":"","classes":"","warning":"true","read-only":"false","editor-quick-suggestions":"false","autorun":"false","dpi":72,"out-height":"","fig-cap":"","label":"unnamed-chunk-2","out-width":"700px","editor-word-wrap":"true","context":"interactive","editor-font-scale":"1"}},{"id":3,"code":"check_model(model)","options":{"results":"markup","output":"true","fig-width":"11","fig-height":"13","editor-max-height":"","message":"true","comment":"","classes":"","warning":"true","read-only":"false","editor-quick-suggestions":"false","autorun":"false","dpi":72,"out-height":"","fig-cap":"","label":"unnamed-chunk-3","out-width":"700px","editor-word-wrap":"true","context":"interactive","editor-font-scale":"1"}},{"id":4,"code":"model2 <- lm(mpg ~ ____, data = mtcars)\n\ncheck_model(____)","options":{"results":"markup","output":"true","fig-width":"11","fig-height":"13","editor-max-height":"","message":"true","comment":"","classes":"","warning":"true","read-only":"false","editor-quick-suggestions":"false","autorun":"false","dpi":72,"out-height":"","fig-cap":"","label":"unnamed-chunk-4","out-width":"700px","editor-word-wrap":"true","context":"interactive","editor-font-scale":"1"}}];
+globalThis.qwebrCellDetails = [{"options":{"classes":"","read-only":"false","message":"true","results":"markup","out-height":"","comment":"","warning":"true","label":"unnamed-chunk-1","editor-font-scale":"1","context":"interactive","editor-quick-suggestions":"false","fig-cap":"","output":"true","dpi":72,"autorun":"false","fig-width":7,"fig-height":5,"out-width":"700px","editor-max-height":"","editor-word-wrap":"true"},"id":1,"code":"library(oibiostat)\ndata(prevend.samp)\n\nprevend <- prevend.samp\nprevend$education <- factor(\n  prevend$Education,\n  levels = 0:3,\n  labels = c(\"primary\", \"lower_secondary\", \"higher_secondary\", \"university\")\n)\n\nmod_edu <- lm(RFFT ~ education, data = prevend)\nsummary(mod_edu)"},{"options":{"classes":"","read-only":"false","message":"true","results":"markup","out-height":"","comment":"","warning":"true","label":"unnamed-chunk-2","editor-font-scale":"1","context":"interactive","editor-quick-suggestions":"false","fig-cap":"","output":"true","dpi":72,"autorun":"false","fig-width":7,"fig-height":5,"out-width":"700px","editor-max-height":"","editor-word-wrap":"true"},"id":2,"code":"library(MASS)\ndata(birthwt)\n\nbirthwt$race <- factor(birthwt$race, levels = c(1, 2, 3),\n                       labels = c(\"white\", \"black\", \"other\"))\n\nmod_race <- lm(bwt ~ race, data = birthwt)\nsummary(mod_race)"},{"options":{"classes":"","read-only":"false","message":"true","results":"markup","out-height":"","comment":"","warning":"true","label":"unnamed-chunk-3","editor-font-scale":"1","context":"interactive","editor-quick-suggestions":"false","fig-cap":"","output":"true","dpi":72,"autorun":"false","fig-width":7,"fig-height":5,"out-width":"700px","editor-max-height":"","editor-word-wrap":"true"},"id":3,"code":"birthwt_black_ref <- birthwt\nbirthwt_black_ref$race <- factor(birthwt_black_ref$race,\n                                 levels = c(\"black\", \"white\", \"other\"))\n\nmod_race_black <- lm(bwt ~ race, data = birthwt_black_ref)\nsummary(mod_race_black)"},{"options":{"classes":"","read-only":"false","message":"true","results":"markup","out-height":"","comment":"","warning":"true","label":"unnamed-chunk-4","editor-font-scale":"1","context":"interactive","editor-quick-suggestions":"false","fig-cap":"","output":"true","dpi":72,"autorun":"false","fig-width":7,"fig-height":5,"out-width":"700px","editor-max-height":"","editor-word-wrap":"true"},"id":4,"code":"library(oibiostat)\ndata(prevend.samp)\n\nprevend <- prevend.samp\nprevend$education <- factor(\n  ____,\n  levels = ____,\n  labels = c(\"primary\", \"lower_secondary\", \"higher_secondary\", \"university\")\n)\n\nmod_fill <- lm(____ ~ ____, data = prevend)\nsummary(mod_fill)"},{"options":{"classes":"","read-only":"false","message":"true","results":"markup","out-height":"","comment":"","warning":"true","label":"unnamed-chunk-5","editor-font-scale":"1","context":"interactive","editor-quick-suggestions":"false","fig-cap":"","output":"true","dpi":72,"autorun":"false","fig-width":7,"fig-height":5,"out-width":"700px","editor-max-height":"","editor-word-wrap":"true"},"id":5,"code":"library(oibiostat)\ndata(famuss)\n\nmod_actn3 <- lm(____ ~ ____, data = famuss)\nsummary(mod_actn3)"}];
 
 </script>
 <script type="module">
@@ -1622,6 +1622,35 @@ globalThis.qwebrExecuteCode = async function (
 
 </script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -1917,8 +1946,8 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Reading check_model() with the SUNSHINE checklist</h1>
-<p class="subtitle lead">WebR practical using performance::check_model()</p>
+<h1 class="title">Simple linear regression with a polytomous predictor</h1>
+<p class="subtitle lead">WebR practical — K−1 dummy variables, reference levels, and group means</p>
 </div>
 
 
@@ -1964,9 +1993,7 @@ body {
   font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.quarto-title-block {
-  display: none;
-}
+.quarto-title-block { display: none; }
 
 .page-shell {
   width: min(900px, calc(100vw - 2rem));
@@ -2007,11 +2034,7 @@ body {
   font-size: 0.98rem;
 }
 
-.panel,
-.practice,
-.callout,
-.webr-wrap,
-.svg-panel {
+.panel, .practice, .callout, .webr-wrap, .svg-panel {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -2032,19 +2055,10 @@ body {
   margin-bottom: 0.8rem;
 }
 
-.panel p:last-child,
-.callout p:last-child {
-  margin-bottom: 0;
-}
+.panel p:last-child, .callout p:last-child { margin-bottom: 0; }
 
-.tight-list {
-  padding-left: 1.15rem;
-  margin-bottom: 0;
-}
-
-.tight-list li {
-  margin-bottom: 0.35rem;
-}
+.tight-list { padding-left: 1.15rem; margin-bottom: 0; }
+.tight-list li { margin-bottom: 0.35rem; }
 
 .svg-panel {
   padding: 0.6rem;
@@ -2052,20 +2066,16 @@ body {
   overflow-x: auto;
 }
 
-.svg-panel svg {
-  width: 100%;
-  min-width: 560px;
-  display: block;
-}
+.svg-panel svg { width: 100%; min-width: 560px; display: block; }
+.svg-caption { color: var(--muted); font-size: 0.9rem; margin: 0.2rem 0.3rem 0; }
 
-svg text {
-  font-family: "Segoe UI", system-ui, sans-serif;
-}
-
-.svg-caption {
-  color: var(--muted);
-  font-size: 0.9rem;
-  margin: 0.2rem 0.3rem 0;
+.formula-panel {
+  background: var(--light-teal-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  overflow-x: auto;
 }
 
 .practice {
@@ -2083,15 +2093,9 @@ svg text {
   margin-bottom: 0.35rem;
 }
 
-.practice p {
-  margin-bottom: 0.7rem;
-}
+.practice p { margin-bottom: 0.7rem; }
 
-.choice-set {
-  display: grid;
-  gap: 0.5rem;
-  margin: 0.8rem 0;
-}
+.choice-set { display: grid; gap: 0.5rem; margin: 0.8rem 0; }
 
 .choice-set label {
   display: flex;
@@ -2136,9 +2140,7 @@ svg text {
   cursor: pointer;
 }
 
-.practice button:hover {
-  background: #003f45;
-}
+.practice button:hover { background: #003f45; }
 
 .practice .practice-feedback {
   display: none;
@@ -2161,36 +2163,8 @@ svg text {
   border: 1px solid #e6b1b1;
 }
 
-.practice label.correct-choice {
-  border-color: var(--good);
-  background: var(--good-bg);
-}
-
-.practice label.incorrect-choice {
-  border-color: var(--bad);
-  background: var(--bad-bg);
-}
-
-.callout {
-  padding: 1rem 1.15rem;
-  border-left: 5px solid var(--light-teal);
-  margin: 1rem 0;
-}
-
-.callout.warning {
-  border-left-color: var(--gold);
-  background: #fffaf0;
-}
-
-.callout.try {
-  border-left-color: var(--dark-teal);
-  background: var(--light-teal-soft);
-}
-
-.callout > :first-child,
-.webr-wrap > h3 {
-  margin-top: 0;
-}
+.practice label.correct-choice { border-color: var(--good); background: var(--good-bg); }
+.practice label.incorrect-choice { border-color: var(--bad); background: var(--bad-bg); }
 
 .webr-wrap {
   padding: 1rem 1.15rem;
@@ -2198,24 +2172,11 @@ svg text {
   border-top: 4px solid var(--light-teal);
 }
 
-.webr-wrap h3 {
-  color: var(--dark-teal);
-  font-size: 1rem;
-}
+.webr-wrap h3 { color: var(--dark-teal); font-size: 1rem; margin-top: 0; }
 
-.answer {
-  margin-top: 0.7rem;
-}
-
-.answer summary {
-  cursor: pointer;
-  font-weight: 700;
-  color: var(--dark-teal);
-}
-
-.answer[open] summary {
-  margin-bottom: 0.4rem;
-}
+.answer { margin-top: 0.7rem; }
+.answer summary { cursor: pointer; font-weight: 700; color: var(--dark-teal); }
+.answer[open] summary { margin-bottom: 0.4rem; }
 
 code {
   background: rgba(0, 86, 94, 0.08);
@@ -2224,97 +2185,11 @@ code {
   color: #123638;
 }
 
-.qwebr-output-code-stdout pre,
-.qwebr-output-code-stderr pre {
-  white-space: pre-wrap;
-}
+.qwebr-output-code-stdout pre, .qwebr-output-code-stderr pre { white-space: pre-wrap; }
 
-.summary-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.95rem;
-  margin: 0.8rem 0 0;
-}
+.panel.completion { border-top: 4px solid var(--gold); }
 
-.summary-table th,
-.summary-table td {
-  border-bottom: 1px solid var(--border);
-  padding: 0.6rem 0.5rem;
-  vertical-align: top;
-}
-
-.summary-table th {
-  text-align: left;
-  color: var(--dark-teal);
-  background: var(--light-teal-soft);
-}
-
-.arg-select {
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 0.92rem;
-  padding: 0.35rem 0.45rem;
-  border: 2px solid var(--border);
-  border-radius: 6px;
-  background: #fff;
-  color: var(--ink);
-  min-width: 11rem;
-}
-
-.arg-select.correct-choice {
-  border-color: var(--good);
-  background: var(--good-bg);
-}
-
-.arg-select.incorrect-choice {
-  border-color: var(--bad);
-  background: var(--bad-bg);
-}
-
-.match-button {
-  background: var(--dark-teal);
-  color: #fff;
-  border: 0;
-  border-radius: 999px;
-  padding: 0.5rem 1rem;
-  font-weight: 800;
-  cursor: pointer;
-  margin-top: 0.9rem;
-}
-
-.match-button:hover {
-  background: #003f45;
-}
-
-.match-feedback {
-  display: none;
-  margin-top: 0.7rem;
-  border-radius: 8px;
-  padding: 0.7rem 0.85rem;
-  font-size: 0.95rem;
-}
-
-.match-feedback.is-correct {
-  display: block;
-  background: var(--good-bg);
-  color: #173a26;
-  border: 1px solid #a9dab9;
-}
-
-.match-feedback.is-incorrect {
-  display: block;
-  background: var(--bad-bg);
-  color: #4b1c1c;
-  border: 1px solid #e6b1b1;
-}
-
-.panel.completion {
-  border-top: 4px solid var(--gold);
-}
-
-.code-progress {
-  font-weight: 800;
-  color: var(--dark-teal);
-}
+.code-progress { font-weight: 800; color: var(--dark-teal); }
 
 .code-box {
   display: none;
@@ -2342,89 +2217,7 @@ code {
   margin-top: 0.3rem;
 }
 
-.footer-note {
-  color: var(--muted);
-  text-align: center;
-  margin-top: 2rem;
-  font-size: 0.9rem;
-}
-
-/* SUNSHINE letter grid */
-.sun-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
-  gap: 0.6rem;
-  margin: 1rem 0 0.4rem;
-}
-
-.sun-card {
-  border-radius: 10px;
-  padding: 0.7rem 0.55rem;
-  text-align: center;
-  border: 1px solid var(--border);
-}
-
-.sun-card .sun-letter {
-  font-size: 1.5rem;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.sun-card .sun-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  margin-top: 0.3rem;
-  line-height: 1.2;
-}
-
-.sun-card .sun-tag {
-  display: inline-block;
-  margin-top: 0.4rem;
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  border-radius: 999px;
-  padding: 0.1rem 0.45rem;
-}
-
-.sun-card.plot {
-  background: #e3f4f4;
-  border-color: var(--light-teal);
-}
-
-.sun-card.plot .sun-letter { color: var(--dark-teal); }
-.sun-card.plot .sun-tag { background: var(--dark-teal); color: #fff; }
-
-.sun-card.think {
-  background: #fff4cf;
-  border-color: var(--gold);
-}
-
-.sun-card.think .sun-letter { color: #8a6800; }
-.sun-card.think .sun-tag { background: #8a6800; color: #fff; }
-
-.legend {
-  display: flex;
-  gap: 1.2rem;
-  flex-wrap: wrap;
-  font-size: 0.85rem;
-  color: var(--muted);
-  margin-top: 0.2rem;
-}
-
-.legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.legend .swatch {
-  width: 0.85rem;
-  height: 0.85rem;
-  border-radius: 3px;
-  display: inline-block;
-}
+.footer-note { color: var(--muted); text-align: center; margin-top: 2rem; font-size: 0.9rem; }
 </style>
 <div class="page-shell">
 <header class="masthead">
@@ -2432,310 +2225,125 @@ code {
 WebR practical
 </div>
 <h1>
-Reading check_model() with the SUNSHINE checklist
+Simple linear regression with a polytomous predictor
 </h1>
 <p>
-The <code>check_model()</code> function draws every regression diagnostic at once — which can feel like a wall of plots. The <strong>SUNSHINE</strong> checklist gives you eight things to look for, so you always know what each panel is for.
+When a categorical predictor has more than two levels, R creates <strong>K − 1</strong> dummy variables. You will fit models, recover group means from the output, and practice choosing a sensible reference level.
 </p>
 </header>
-<div class="warning callout callout-style-simple callout-none no-icon">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-body-container">
-<p><strong>Heads up — first run is slow.</strong> The first time you run a cell, your browser downloads the R packages (<code>performance</code>, <code>see</code>, <code>ggplot2</code>, and friends) and compiles the plots. This can take <strong>30–90 seconds</strong>. After that it is fast. If a cell looks stuck, give it a moment before re-running.</p>
-</div>
-</div>
-</div>
 <section class="panel">
 <h2 class="anchored">
-The SUNSHINE checklist
+Overview
 </h2>
-<p>Whenever you fit a linear regression, the same eight assumptions decide whether the results can be trusted. They spell <strong>SUNSHINE</strong>:</p>
-<div class="sun-grid">
-<div class="sun-card think">
-<div class="sun-letter">
-S
-</div>
-<div class="sun-label">
-Sample size
-</div>
-<div class="sun-tag">
-Think
-</div>
-</div>
-<div class="sun-card think">
-<div class="sun-letter">
-U
-</div>
-<div class="sun-label">
-Uncorrelated errors
-</div>
-<div class="sun-tag">
-Think
-</div>
-</div>
-<div class="sun-card plot">
-<div class="sun-letter">
-N
-</div>
-<div class="sun-label">
-No multicollinearity
-</div>
-<div class="sun-tag">
-Plot
-</div>
-</div>
-<div class="sun-card plot">
-<div class="sun-letter">
-S
-</div>
-<div class="sun-label">
-Shape (linearity)
-</div>
-<div class="sun-tag">
-Plot
-</div>
-</div>
-<div class="sun-card plot">
-<div class="sun-letter">
-H
-</div>
-<div class="sun-label">
-Homogeneity of variance
-</div>
-<div class="sun-tag">
-Plot
-</div>
-</div>
-<div class="sun-card plot">
-<div class="sun-letter">
-I
-</div>
-<div class="sun-label">
-Influential points
-</div>
-<div class="sun-tag">
-Plot
-</div>
-</div>
-<div class="sun-card plot">
-<div class="sun-letter">
-N
-</div>
-<div class="sun-label">
-Normality of residuals
-</div>
-<div class="sun-tag">
-Plot
-</div>
-</div>
-<div class="sun-card think">
-<div class="sun-letter">
-E
-</div>
-<div class="sun-label">
-Exogeneity
-</div>
-<div class="sun-tag">
-Think
-</div>
-</div>
-</div>
-<div class="legend">
-<p><span><span class="swatch" style="background:#5fbfbf"></span> <strong>Plot</strong> — <code>check_model()</code> draws a panel you can read directly.</span> <span><span class="swatch" style="background:#f5c542"></span> <strong>Think</strong> — a design / reasoning question no plot can settle.</span></p>
-</div>
-<p style="margin-top:1rem">
-The key insight: <code>check_model()</code> handles the <strong>five “Plot” letters</strong> for you. The other three — <strong>S</strong>ample size, <strong>U</strong>ncorrelated errors, and <strong>E</strong>xogeneity — are about your study design and data collection, so you have to reason about them yourself.
-</p>
-<p>After answering all questions, <strong>your completion code will be revealed.</strong> Enter it into the LMS to mark this practical complete.</p>
+<p>A <strong>polytomous</strong> predictor has <span class="math inline">\(K &gt; 2\)</span> categories (for example race with three groups, or education with four levels). Do <strong>not</strong> code these as a single numeric variable 0, 1, 2, 3 unless you truly want to force equal steps between every level.</p>
+<p>Instead, R picks one <strong>reference</strong> level and creates one dummy variable for each of the other <span class="math inline">\(K - 1\)</span> levels. Each coefficient is that level’s mean <strong>difference vs the reference</strong>.</p>
+<p>This practical uses datasets from common R packages:</p>
+<ul class="tight-list">
+<li>
+<code>oibiostat::prevend.samp</code> — cognitive test score (<code>RFFT</code>) by education (4 levels)
+</li>
+<li>
+<code>MASS::birthwt</code> — birth weight (<code>bwt</code>) by mother’s race (3 levels)
+</li>
+<li>
+<code>oibiostat::famuss</code> — strength gain (<code>ndrm.ch</code>) by ACTN3 genotype (3 levels)
+</li>
+</ul>
+<p>After answering the questions, <strong>your completion code will be revealed.</strong></p>
 </section>
-<div class="practice" data-answer="c">
+<div class="practice" data-answer="b">
 <div class="practice-title">
 Question 1
 </div>
 <p>
-What is the SUNSHINE checklist a way of remembering?
+A categorical predictor with <span class="math inline">\(K = 4\)</span> levels produces how many dummy coefficients (plus the intercept) in a simple regression?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p0" value="a">The steps for cleaning a dataset.</label> <label><input type="radio" name="p0" value="b">The arguments of the <code>lm()</code> function.</label> <label><input type="radio" name="p0" value="c">The assumptions behind a linear regression.</label>
+<label><input type="radio" name="p0" value="a">4 coefficients plus intercept (one per level).</label> <label><input type="radio" name="p0" value="b">3 coefficients plus intercept (<span class="math inline">\(K - 1\)</span> dummies).</label> <label><input type="radio" name="p0" value="c">1 coefficient plus intercept.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. SUNSHINE is a mnemonic for the regression assumptions you should check before trusting a model." data-incorrect="Not quite. SUNSHINE is a memory aid for the linear-regression assumptions you should check.">
+<div class="practice-feedback" data-correct="Correct. One level is absorbed into the intercept; the other K−1 levels each get a dummy." data-incorrect="Not quite. With K levels, R uses K−1 dummy variables because one level is the reference.">
 
 </div>
 </div>
-<div class="practice" data-answer="b">
+<div class="practice" data-answer="a">
 <div class="practice-title">
 Question 2
 </div>
 <p>
-Three SUNSHINE letters are marked <strong>“Think”</strong> rather than <strong>“Plot”</strong>. Why?
+Why should you avoid coding education as 0, 1, 2, 3 in a single numeric column?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p1" value="a">They are less important than the others.</label> <label><input type="radio" name="p1" value="b">They depend on study design and data collection, so no diagnostic plot can settle them.</label> <label><input type="radio" name="p1" value="c">R has not implemented them yet.</label>
+<label><input type="radio" name="p1" value="a">It forces every step between neighbouring levels to have the same effect size.</label> <label><input type="radio" name="p1" value="b">R cannot read numeric columns.</label> <label><input type="radio" name="p1" value="c">It removes the intercept from the model.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Sample size, uncorrelated errors, and exogeneity are reasoning questions about how the data arose, not things a residual plot can prove." data-incorrect="Not quite. The 'Think' letters are not unimportant — they just can't be judged from a plot, because they depend on design and how the data were collected.">
+<div class="practice-feedback" data-correct="Correct. Numeric coding assumes equal gaps; dummy coding lets each level have its own mean shift vs reference." data-incorrect="Not quite. The problem is the equal-step assumption, not R's ability to fit the model.">
 
 </div>
 </div>
 <section class="panel">
 <h2 class="anchored">
-From model to checklist in two lines
+The equation (four education levels, primary reference)
 </h2>
-<p>The workflow is the same as always: fit a model, then hand it to <code>check_model()</code>.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(performance)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">lm</span>(mpg <span class="sc">~</span> wt <span class="sc">+</span> hp, <span class="at">data =</span> mtcars)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">check_model</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>As the panel appears, walk the <strong>five “Plot” letters</strong> of SUNSHINE in order. Each one tells you exactly which panel to look at and what “good” looks like:</p>
-<table class="summary-table">
-<thead>
-<tr>
-<th>
-Letter
-</th>
-<th>
-Panel to read
-</th>
-<th>
-Good sign
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<strong>N</strong> — No multicollinearity
-</td>
-<td>
-Collinearity bars (VIF)
-</td>
-<td>
-Bars stay low / in the green zone (needs 2+ predictors).
-</td>
-</tr>
-<tr>
-<td>
-<strong>S</strong> — Shape (linearity)
-</td>
-<td>
-Residuals vs fitted
-</td>
-<td>
-Green line stays roughly flat.
-</td>
-</tr>
-<tr>
-<td>
-<strong>H</strong> — Homogeneity
-</td>
-<td>
-Scale–location spread
-</td>
-<td>
-Green line roughly flat (constant spread).
-</td>
-</tr>
-<tr>
-<td>
-<strong>I</strong> — Influential points
-</td>
-<td>
-Residuals vs leverage
-</td>
-<td>
-No point sitting far outside the dashed contour.
-</td>
-</tr>
-<tr>
-<td>
-<strong>N</strong> — Normality
-</td>
-<td>
-Q-Q style plot
-</td>
-<td>
-Dots hug the reference line / stay in the band.
-</td>
-</tr>
-</tbody>
-</table>
+<div class="formula-panel">
+<p><span class="math display">\[\hat{y} = b_0 + b_1 \cdot \text{lower} + b_2 \cdot \text{higher} + b_3 \cdot \text{university}\]</span></p>
+<ul class="tight-list">
+<li>
+Each dummy equals 1 only for its own level and 0 otherwise.
+</li>
+<li>
+<span class="math inline">\(b_0\)</span> = mean of the <strong>reference</strong> group (primary education).
+</li>
+<li>
+Each <span class="math inline">\(b_j\)</span> = that level’s mean minus the reference mean.
+</li>
+<li>
+To recover a group’s mean: add its coefficient to the intercept (reference groups add 0).
+</li>
+</ul>
+</div>
 </section>
+<section class="panel">
+<h2 class="anchored">
+Worked example 1: RFFT score by education (<code>oibiostat::prevend.samp</code>)
+</h2>
+<p>The PREVEND sample includes the Ruff Figural Fluency Test score (<code>RFFT</code>), a measure of executive function, and education coded 0–3. We relabel those codes and set <strong>primary</strong> as the reference.</p>
+</section>
+<div class="webr-wrap">
+<h3 class="anchored">
+R code — prevend, primary reference
+</h3>
+<div id="qwebr-insertion-location-1"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
 <div class="practice" data-answer="a">
 <div class="practice-title">
 Question 3
 </div>
 <p>
-How many of the eight SUNSHINE letters does <code>check_model()</code> draw a panel for?
+The intercept is about 40.9. This is the mean RFFT score for which education group?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p2" value="a">Five of them.</label> <label><input type="radio" name="p2" value="b">All eight.</label> <label><input type="radio" name="p2" value="c">Just one.</label>
+<label><input type="radio" name="p2" value="a">Primary education (the reference level).</label> <label><input type="radio" name="p2" value="b">University education.</label> <label><input type="radio" name="p2" value="c">The average across all four groups.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. check_model() covers the five 'Plot' letters: the two N's, S (shape), H, and I. The other three are reasoning questions." data-incorrect="Not quite. check_model() draws panels for five letters (No multicollinearity, Shape, Homogeneity, Influential points, Normality). The other three are 'Think' letters.">
+<div class="practice-feedback" data-correct="Correct. The intercept is always the reference group mean." data-incorrect="Not quite. Look at which level was set as reference when creating the factor.">
 
 </div>
 </div>
-<section class="panel">
-<h2 class="anchored">
-Worked example: fuel economy of cars
-</h2>
-<p>We will use <code>mtcars</code>, a built-in dataset of 32 cars, and model fuel economy (<code>mpg</code>) from each car’s <strong>weight</strong> (<code>wt</code>) and <strong>horsepower</strong> (<code>hp</code>). Run the cell to fit the model.</p>
-</section>
-<div class="webr-wrap">
-<h3 class="anchored">
-Step 1: fit the model
-</h3>
-<div id="qwebr-insertion-location-1"></div>
-<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
-</div>
-<section class="panel">
-<h2 class="anchored">
-See the regression itself
-</h2>
-<p>Before walking the SUNSHINE letters, it helps to <em>look</em> at the model. The cell below plots fuel economy against weight and draws the fitted straight line — the line whose assumptions the rest of the checklist interrogates.</p>
-</section>
-<div class="webr-wrap">
-<h3 class="anchored">
-The fitted regression line
-</h3>
-<div id="qwebr-insertion-location-2"></div>
-<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
-</div>
-<div class="practice" data-answer="b">
+<div class="practice" data-answer="c">
 <div class="practice-title">
 Question 4
 </div>
 <p>
-The model has 32 cars and two predictors. Which SUNSHINE letter does that fact speak to most directly — and is it something a plot can verify?
+The predicted mean RFFT score for participants with <strong>university</strong> education is approximately:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p3" value="a"><strong>H</strong> (homogeneity), and yes a plot verifies it.</label> <label><input type="radio" name="p3" value="b"><strong>S</strong> (sample size), and no — it is a “Think” letter you judge yourself.</label> <label><input type="radio" name="p3" value="c"><strong>E</strong> (exogeneity), and yes a plot verifies it.</label>
+<label><input type="radio" name="p3" value="a">44.96 points (the coefficient alone).</label> <label><input type="radio" name="p3" value="b">55.7 points (40.9 + 14.8).</label> <label><input type="radio" name="p3" value="c">85.9 points (40.9 + 45.0).</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The number of observations relative to predictors is the Sample-size letter, and you judge it by thinking, not from a residual plot." data-incorrect="Not quite. 'How many observations do I have for this many predictors?' is the Sample-size (S) letter — a 'Think' letter, not something a plot settles.">
+<div class="practice-feedback" data-correct="Correct. University mean = intercept + educationuniversity ≈ 40.9 + 45.0 ≈ 85.9." data-incorrect="Not quite. Add the university coefficient to the intercept. The coefficient is a difference, not the full mean.">
 
-</div>
-</div>
-<div class="webr-wrap">
-<h3 class="anchored">
-Step 2: draw the full SUNSHINE panel
-</h3>
-<div id="qwebr-insertion-location-3"></div>
-<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
-</div>
-<div class="try callout callout-style-simple callout-none no-icon">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-body-container">
-<p>Walk the panel using the five Plot letters: <strong>N</strong>o multicollinearity, <strong>S</strong>hape, <strong>H</strong>omogeneity, <strong>I</strong>nfluential points, <strong>N</strong>ormality. Compare each panel’s dots against its green reference line or band.</p>
-</div>
 </div>
 </div>
 <div class="practice" data-answer="b">
@@ -2743,109 +2351,148 @@ Step 2: draw the full SUNSHINE panel
 Question 5
 </div>
 <p>
-For the <strong>S</strong> (Shape / linearity) and <strong>H</strong> (Homogeneity) letters, the green reference line is reassuring when it is…
+The coefficient for <code>educationlower_secondary</code> (about +14.8) means:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p4" value="a">a steep diagonal.</label> <label><input type="radio" name="p4" value="b">roughly flat and horizontal.</label> <label><input type="radio" name="p4" value="c">a tight loop.</label>
+<label><input type="radio" name="p4" value="a">Lower secondary participants score 14.8 points in total.</label> <label><input type="radio" name="p4" value="b">Lower secondary participants score about 14.8 points <strong>above</strong> the primary group.</label> <label><input type="radio" name="p4" value="c">Lower secondary participants score about 14.8 points above the university group.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Both the Shape and Homogeneity panels want a flat, horizontal green line." data-incorrect="Not quite. For Shape and Homogeneity, a roughly flat horizontal green line is the good sign.">
+<div class="practice-feedback" data-correct="Correct. Every dummy coefficient is vs the reference, not vs other non-reference levels." data-incorrect="Not quite. Each row compares that level to the omitted reference (primary), not to another non-reference level.">
+
+</div>
+</div>
+<div class="svg-panel" aria-label="Four education group means relative to primary reference">
+<svg viewbox="0 0 760 260" role="img">
+  <rect width="760" height="260" rx="8" fill="#fff"></rect>
+  <text x="380" y="24" text-anchor="middle" font-size="13" font-weight="800" fill="#173234">RFFT means by education (schematic, primary = reference)</text>
+  <line x1="50" y1="210" x2="710" y2="210" stroke="#5d7475" stroke-width="1.2"></line>
+  <line x1="50" y1="185" x2="710" y2="185" stroke="#2f5f98" stroke-width="1" stroke-dasharray="4,3"></line>
+  <text x="56" y="180" font-size="10" font-weight="700" fill="#2f5f98">primary ≈ 40.9</text>
+  <line x1="200" y1="185" x2="200" y2="155" stroke="#b83b5e" stroke-width="2.2"></line>
+  <circle cx="200" cy="155" r="6" fill="#00565e"></circle>
+  <text x="200" y="148" text-anchor="middle" font-size="10" font-weight="800" fill="#00565e">55.7</text>
+  <text x="200" y="228" text-anchor="middle" font-size="11" font-weight="700">lower sec.</text>
+  <line x1="380" y1="185" x2="380" y2="115" stroke="#b83b5e" stroke-width="2.2"></line>
+  <circle cx="380" cy="115" r="6" fill="#00565e"></circle>
+  <text x="380" y="108" text-anchor="middle" font-size="10" font-weight="800" fill="#00565e">73.1</text>
+  <text x="380" y="228" text-anchor="middle" font-size="11" font-weight="700">higher sec.</text>
+  <line x1="560" y1="185" x2="560" y2="75" stroke="#b83b5e" stroke-width="2.2"></line>
+  <circle cx="560" cy="75" r="6" fill="#00565e"></circle>
+  <text x="560" y="68" text-anchor="middle" font-size="10" font-weight="800" fill="#00565e">85.9</text>
+  <text x="560" y="228" text-anchor="middle" font-size="11" font-weight="700">university</text>
+  <circle cx="80" cy="185" r="6" fill="#2f5f98"></circle>
+  <text x="80" y="228" text-anchor="middle" font-size="11" font-weight="700">primary</text>
+  <text x="650" y="100" font-size="11" font-weight="800" fill="#b83b5e">Each red bar = coefficient</text>
+</svg>
+<p class="svg-caption">Each rose line is an estimated difference from the primary (reference) mean.</p>
+</div>
+<section class="panel">
+<h2 class="anchored">
+Worked example 2: birth weight by race (<code>MASS::birthwt</code>)
+</h2>
+<p>The <code>birthwt</code> data record infant birth weight in grams and mother’s race (white, black, other). We label the numeric race codes and set <strong>white</strong> as reference.</p>
+</section>
+<div class="webr-wrap">
+<h3 class="anchored">
+R code — birthwt, white reference
+</h3>
+<div id="qwebr-insertion-location-2"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<div class="practice" data-answer="a">
+<div class="practice-title">
+Question 6
+</div>
+<p>
+With white as reference, the intercept (about 3103 g) is the mean birth weight for:
+</p>
+<div class="choice-set">
+<label><input type="radio" name="p5" value="a">White mothers’ babies.</label> <label><input type="radio" name="p5" value="b">Black mothers’ babies.</label> <label><input type="radio" name="p5" value="c">All babies combined.</label>
+</div>
+<button type="button">Check</button>
+<div class="practice-feedback" data-correct="Correct. White is the reference level." data-incorrect="Not quite. The intercept is the reference group mean.">
+
+</div>
+</div>
+<div class="practice" data-answer="b">
+<div class="practice-title">
+Question 7
+</div>
+<p>
+The <code>raceblack</code> coefficient is about −383 g. The predicted mean birth weight for black mothers’ babies is approximately:
+</p>
+<div class="choice-set">
+<label><input type="radio" name="p6" value="a">383 g</label> <label><input type="radio" name="p6" value="b">2720 g (3103 − 383)</label> <label><input type="radio" name="p6" value="c">3486 g (3103 + 383)</label>
+</div>
+<button type="button">Check</button>
+<div class="practice-feedback" data-correct="Correct. Black mean = intercept + raceblack ≈ 3103 − 383 ≈ 2720 g." data-incorrect="Not quite. Add the black coefficient to the intercept. The negative sign means lower than white.">
+
+</div>
+</div>
+<section class="panel">
+<h2 class="anchored">
+Choosing and changing the reference level
+</h2>
+<p>Which reference you pick is a <strong>reporting choice</strong>. Common strategies:</p>
+<ul class="tight-list">
+<li>
+<strong>Natural order</strong> — lowest education level, so effects read as gains up a ladder.
+</li>
+<li>
+<strong>Clinical control</strong> — placebo or standard care, so every coefficient is a treatment effect.
+</li>
+<li>
+<strong>Largest group</strong> — can yield tighter confidence intervals because the reference mean is estimated precisely.
+</li>
+</ul>
+<p>Relevel <code>birthwt</code> so <strong>black</strong> is the reference and compare the output.</p>
+</section>
+<div class="webr-wrap">
+<h3 class="anchored">
+R code — relevel race to black reference
+</h3>
+<div id="qwebr-insertion-location-3"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<div class="practice" data-answer="a">
+<div class="practice-title">
+Question 8
+</div>
+<p>
+With black as reference, the coefficient on <code>racewhite</code> is about +383 g. This means:
+</p>
+<div class="choice-set">
+<label><input type="radio" name="p7" value="a">White babies weigh about 383 g more than black babies, on average.</label> <label><input type="radio" name="p7" value="b">White babies weigh 383 g in total.</label> <label><input type="radio" name="p7" value="c">The race difference disappeared after releveling.</label>
+</div>
+<button type="button">Check</button>
+<div class="practice-feedback" data-correct="Correct. Same underlying gap, new reference: white vs black instead of black vs white." data-incorrect="Not quite. Releveling relabels comparisons; it does not change the data or erase differences.">
 
 </div>
 </div>
 <div class="practice" data-answer="c">
 <div class="practice-title">
-Question 6
+Question 9
 </div>
 <p>
-The second <strong>N</strong> in SUNSHINE — <strong>N</strong>ormality of residuals — is read from which panel?
+With black as reference, the intercept (about 2720 g) represents:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p5" value="a">The collinearity bar chart.</label> <label><input type="radio" name="p5" value="b">The residuals-vs-leverage plot.</label> <label><input type="radio" name="p5" value="c">The Q-Q style plot, where dots should follow the reference line.</label>
+<label><input type="radio" name="p8" value="a">The grand mean across all races.</label> <label><input type="radio" name="p8" value="b">The white group mean.</label> <label><input type="radio" name="p8" value="c">The black group mean.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Normality is judged from the Q-Q style plot — dots tracking the reference line and staying in the band." data-incorrect="Not quite. Normality of residuals is the Q-Q style panel; the dots should follow the reference line and stay inside the band.">
+<div class="practice-feedback" data-correct="Correct. The intercept always tracks the reference group." data-incorrect="Not quite. After releveling, black is reference, so the intercept is the black mean.">
 
 </div>
 </div>
 <section class="panel">
 <h2 class="anchored">
-Match each letter to its panel
+Exercise 1: fill in the education model (<code>prevend.samp</code>)
 </h2>
-<p>Match each of the five “Plot” SUNSHINE letters to the panel it points you to, then check your answers.</p>
-<div id="arg-match">
-<table class="summary-table">
-<thead>
-<tr>
-<th>
-Panel description
-</th>
-<th>
-SUNSHINE letter (pick from dropdown)
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-Bars (one per predictor) showing how inflated each coefficient’s variance is; should stay low.
-</td>
-<td>
-<select class="arg-select" data-answer="N1"> <option value="">Select one</option> <option value="N1">N — No multicollinearity</option> <option value="S">S — Shape (linearity)</option> <option value="H">H — Homogeneity</option> <option value="I">I — Influential points</option> <option value="N2">N — Normality</option> </select>
-</td>
-</tr>
-<tr>
-<td>
-Residuals vs fitted values; a flat green line means a straight line fits.
-</td>
-<td>
-<select class="arg-select" data-answer="S"> <option value="">–</option> <option value="N1">N — No multicollinearity</option> <option value="S">S — Shape (linearity)</option> <option value="H">H — Homogeneity</option> <option value="I">I — Influential points</option> <option value="N2">N — Normality</option> </select>
-</td>
-</tr>
-<tr>
-<td>
-Spread of residuals across fitted values; a flat line means the noise is the same size everywhere.
-</td>
-<td>
-<select class="arg-select" data-answer="H"> <option value="">–</option> <option value="N1">N — No multicollinearity</option> <option value="S">S — Shape (linearity)</option> <option value="H">H — Homogeneity</option> <option value="I">I — Influential points</option> <option value="N2">N — Normality</option> </select>
-</td>
-</tr>
-<tr>
-<td>
-Leverage vs residual size; flags a single point that may be dragging the line.
-</td>
-<td>
-<select class="arg-select" data-answer="I"> <option value="">–</option> <option value="N1">N — No multicollinearity</option> <option value="S">S — Shape (linearity)</option> <option value="H">H — Homogeneity</option> <option value="I">I — Influential points</option> <option value="N2">N — Normality</option> </select>
-</td>
-</tr>
-<tr>
-<td>
-Q-Q style plot comparing residuals to a bell curve; dots should follow the reference line.
-</td>
-<td>
-<select class="arg-select" data-answer="N2"> <option value="">–</option> <option value="N1">N — No multicollinearity</option> <option value="S">S — Shape (linearity)</option> <option value="H">H — Homogeneity</option> <option value="I">I — Influential points</option> <option value="N2">N — Normality</option> </select>
-</td>
-</tr>
-</tbody>
-</table>
-<button type="button" class="match-button" id="arg-match-check">
-Check matches
-</button>
-<div id="arg-match-feedback" class="match-feedback">
-
-</div>
-</div>
-</section>
-<section class="panel">
-<h2 class="anchored">
-Exercise: drop a predictor and watch a letter disappear
-</h2>
-<p>The first <strong>N</strong> (No multicollinearity) only makes sense when there are <strong>two or more</strong> predictors — one predictor cannot be collinear with itself. Fit a single-predictor model (just <code>wt</code>), save it as <code>model2</code>, and check it.</p>
-<p>Replace each <code>____</code> with the right piece, then run the cell.</p>
+<p>Replace each <code>____</code> to build the factor, set primary as the first level, and fit the model.</p>
 </section>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code for the exercise (fill in the blanks)
+R code — exercise 1 (fill in blanks)
 </h3>
 <div id="qwebr-insertion-location-4"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
@@ -2854,52 +2501,77 @@ R code for the exercise (fill in the blanks)
 <summary>
 Show the answer
 </summary>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>model2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(mpg <span class="sc">~</span> wt, <span class="at">data =</span> mtcars)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">check_model</span>(model2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>prevend <span class="ot">&lt;-</span> prevend.samp</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>prevend<span class="sc">$</span>education <span class="ot">&lt;-</span> <span class="fu">factor</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  prevend<span class="sc">$</span>Education,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">levels =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">3</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"primary"</span>, <span class="st">"lower_secondary"</span>, <span class="st">"higher_secondary"</span>, <span class="st">"university"</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>mod_fill <span class="ot">&lt;-</span> <span class="fu">lm</span>(RFFT <span class="sc">~</span> education, <span class="at">data =</span> prevend)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="practice" data-answer="a">
+<div class="practice" data-answer="b">
 <div class="practice-title">
-Question 7
+Question 10
 </div>
 <p>
-With only one predictor in <code>model2</code>, which SUNSHINE letter’s panel drops out of the plot?
+From your completed model, the predicted mean RFFT for <strong>higher secondary</strong> education is approximately:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p6" value="a">The first <strong>N</strong> — No multicollinearity.</label> <label><input type="radio" name="p6" value="b">The <strong>H</strong> — Homogeneity.</label> <label><input type="radio" name="p6" value="c">The second <strong>N</strong> — Normality.</label>
+<label><input type="radio" name="p9" value="a">32.1 points (coefficient only).</label> <label><input type="radio" name="p9" value="b">73.1 points (40.9 + 32.1).</label> <label><input type="radio" name="p9" value="c">55.7 points (40.9 + 14.8).</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Multicollinearity is about predictors relating to each other, so with one predictor that panel disappears." data-incorrect="Not quite. With a single predictor there is nothing to be collinear with, so the No-multicollinearity panel drops out.">
+<div class="practice-feedback" data-correct="Correct. Higher secondary mean = intercept + educationhigher_secondary ≈ 40.9 + 32.1." data-incorrect="Not quite. Use the higher_secondary row, not lower_secondary.">
 
 </div>
 </div>
-<div class="practice" data-answer="c">
+<section class="panel">
+<h2 class="anchored">
+Exercise 2: three-level genotype predictor (<code>oibiostat::famuss</code>)
+</h2>
+<p>The FAMuSS study measured percent change in non-dominant arm strength (<code>ndrm.ch</code>) after resistance training, by ACTN3 genotype (<code>actn3.r577x</code>: CC, CT, or TT). Fill in the blanks and run the cell.</p>
+</section>
+<div class="webr-wrap">
+<h3 class="anchored">
+R code — exercise 2 (fill in blanks)
+</h3>
+<div id="qwebr-insertion-location-5"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<details class="answer">
+<summary>
+Show the answer
+</summary>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>mod_actn3 <span class="ot">&lt;-</span> <span class="fu">lm</span>(ndrm.ch <span class="sc">~</span> actn3.r577x, <span class="at">data =</span> famuss)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>With CC as the default reference, the intercept is the mean change for CC genotype. Each other row is the difference vs CC.</p>
+</details>
+<div class="practice" data-answer="a">
 <div class="practice-title">
-Question 8
+Question 11
 </div>
 <p>
-A colleague says: “The <code>check_model()</code> plots all looked fine, so my predictor must be causing the outcome.” Which SUNSHINE letter shows why that reasoning is flawed?
+In the FAMuSS model, how many genotype coefficients appear below the intercept (excluding the intercept itself)?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p7" value="a"><strong>I</strong> — Influential points.</label> <label><input type="radio" name="p7" value="b"><strong>H</strong> — Homogeneity.</label> <label><input type="radio" name="p7" value="c"><strong>E</strong> — Exogeneity, which is about causal structure and cannot be read off any residual plot.</label>
+<label><input type="radio" name="p10" value="a">2 (for CT and TT; CC is reference).</label> <label><input type="radio" name="p10" value="b">3 (one per genotype).</label> <label><input type="radio" name="p10" value="c">1 (genotype is binary).</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Exogeneity (a 'Think' letter) is about omitted causes and causal structure — clean plots cannot establish it." data-incorrect="Not quite. Clean plots cannot prove causation. Exogeneity (E) is a 'Think' letter about causal structure and omitted confounders.">
+<div class="practice-feedback" data-correct="Correct. Three levels → two dummy variables (K − 1)." data-incorrect="Not quite. With K = 3 levels, expect K − 1 = 2 slope rows.">
 
 </div>
 </div>
 <div class="practice" data-answer="b">
 <div class="practice-title">
-Question 9
+Question 12
 </div>
 <p>
-Overall, how does the SUNSHINE checklist help you use <code>check_model()</code> well?
+The TT coefficient (about +9.2) tells you that TT participants’ mean strength gain is about 9.2 percentage points:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p8" value="a">It replaces <code>check_model()</code> entirely.</label> <label><input type="radio" name="p8" value="b">It tells you what to look for in each panel and reminds you of the three assumptions no plot can show.</label> <label><input type="radio" name="p8" value="c">It guarantees every assumption is satisfied.</label>
+<label><input type="radio" name="p11" value="a">In total, regardless of genotype.</label> <label><input type="radio" name="p11" value="b">Higher than the CC reference group.</label> <label><input type="radio" name="p11" value="c">Higher than the CT group specifically.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. SUNSHINE gives the plots names and adds the three reasoning letters the plots leave out. It does not guarantee anything." data-incorrect="Not quite. SUNSHINE structures how you read the plots and flags the 'Think' letters — it does not replace check_model() or guarantee the assumptions hold.">
+<div class="practice-feedback" data-correct="Correct. Each dummy compares its level to the reference (CC), not to another non-reference level." data-incorrect="Not quite. The TT row is TT vs CC (reference), not TT vs CT.">
 
 </div>
 </div>
@@ -2908,10 +2580,10 @@ Overall, how does the SUNSHINE checklist help you use <code>check_model()</code>
 Completion code
 </h2>
 <p>
-Answer at least 7 out of 9 questions correctly to reveal your completion code. Enter it into the LMS to mark this practical complete.
+Answer at least 10 out of 12 questions correctly to reveal your completion code.
 </p>
 <p>
-<span id="code-progress" class="code-progress">0 of 9 correct (need at least 7)</span>
+<span id="code-progress" class="code-progress">0 of 12 correct (need at least 10)</span>
 </p>
 <div id="code-box" class="code-box">
 <div class="code-label">
@@ -2923,58 +2595,12 @@ Your completion code
 </div>
 </section>
 <p class="footer-note">
-GRAPH Courses practical | The SUNSHINE checklist for performance::check_model()
+GRAPH Courses practical | Polytomous categorical predictors
 </p>
 </div>
 <script>
-const COMPLETION_CODE = "SUNSHINE";
-const COMPLETION_REQUIRED = 7;
-
-function shuffleArgSelectOptions() {
-  document.querySelectorAll("#arg-match .arg-select").forEach((sel) => {
-    const options = Array.from(sel.options);
-    const placeholder = options.shift();
-    options.sort(() => Math.random() - 0.5);
-    sel.replaceChildren(placeholder, ...options);
-    sel.selectedIndex = 0;
-  });
-}
-
-document.getElementById("arg-match-check")?.addEventListener("click", () => {
-  const selects = document.querySelectorAll("#arg-match .arg-select");
-  const feedback = document.getElementById("arg-match-feedback");
-  let allSelected = true;
-  let allCorrect = true;
-
-  selects.forEach((sel) => {
-    sel.classList.remove("correct-choice", "incorrect-choice");
-    if (!sel.value) {
-      allSelected = false;
-      sel.classList.add("incorrect-choice");
-      return;
-    }
-    if (sel.value === sel.dataset.answer) {
-      sel.classList.add("correct-choice");
-    } else {
-      allCorrect = false;
-      sel.classList.add("incorrect-choice");
-    }
-  });
-
-  feedback.classList.remove("is-correct", "is-incorrect");
-  if (!allSelected) {
-    feedback.classList.add("is-incorrect");
-    feedback.textContent = "Choose a letter for every row, then check again.";
-  } else if (allCorrect) {
-    feedback.classList.add("is-correct");
-    feedback.textContent = "All five matches are correct.";
-  } else {
-    feedback.classList.add("is-incorrect");
-    feedback.textContent = "Not quite. Check the rows highlighted in red and try again.";
-  }
-});
-
-shuffleArgSelectOptions();
+const COMPLETION_CODE = "POLYKM1";
+const COMPLETION_REQUIRED = 10;
 
 function updateCompletion() {
   const cards = document.querySelectorAll(".practice");

@@ -1,0 +1,747 @@
+---
+title: "Simple linear regression with a binary predictor"
+subtitle: "WebR practical — dummy coding, group means, and releveling"
+author: "GRAPH Courses"
+format:
+  html:
+    toc: false
+    number-sections: false
+    theme: cosmo
+    page-layout: full
+engine: knitr
+filters:
+  - webr
+webr:
+  show-startup-message: false
+  show-header-message: false
+---
+
+<style>
+:root {
+  --dark-teal: #00565e;
+  --light-teal: #5fbfbf;
+  --light-teal-soft: #e3f4f4;
+  --gold: #f5c542;
+  --ink: #173234;
+  --muted: #5d7475;
+  --page: #f4f7f7;
+  --card: #ffffff;
+  --border: #d0dede;
+  --good: #287a4d;
+  --good-bg: #e8f8ef;
+  --bad: #b83b3b;
+  --bad-bg: #fdecea;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.quarto-title-block { display: none; }
+
+.page-shell {
+  width: min(900px, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding: 1.25rem 0 3rem;
+}
+
+.masthead {
+  background: var(--dark-teal);
+  color: #fff;
+  border-radius: 8px;
+  border-left: 6px solid var(--gold);
+  padding: 1.4rem 1.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.eyebrow {
+  color: var(--gold);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+.masthead h1 {
+  color: #fff;
+  font-size: 1.6rem;
+  line-height: 1.15;
+  font-weight: 800;
+  margin: 0;
+}
+
+.masthead p {
+  max-width: 680px;
+  margin: 0.55rem 0 0;
+  color: #d3eded;
+  font-size: 0.98rem;
+}
+
+.panel, .practice, .callout, .webr-wrap, .svg-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.panel {
+  padding: 1.15rem 1.3rem;
+  margin-bottom: 1rem;
+}
+
+.panel h2 {
+  color: var(--dark-teal);
+  font-weight: 800;
+  margin-top: 0;
+  font-size: 1.3rem;
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 0.45rem;
+  margin-bottom: 0.8rem;
+}
+
+.panel p:last-child, .callout p:last-child { margin-bottom: 0; }
+
+.tight-list { padding-left: 1.15rem; margin-bottom: 0; }
+.tight-list li { margin-bottom: 0.35rem; }
+
+.svg-panel {
+  padding: 0.6rem;
+  margin: 0.85rem 0 0.4rem;
+  overflow-x: auto;
+}
+
+.svg-panel svg { width: 100%; min-width: 560px; display: block; }
+.svg-caption { color: var(--muted); font-size: 0.9rem; margin: 0.2rem 0.3rem 0; }
+
+.formula-panel {
+  background: var(--light-teal-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.practice {
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  border-top: 4px solid var(--gold);
+}
+
+.practice .practice-title {
+  color: var(--dark-teal);
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+}
+
+.practice p { margin-bottom: 0.7rem; }
+
+.choice-set { display: grid; gap: 0.5rem; margin: 0.8rem 0; }
+
+.choice-set label {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 0.72rem 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.choice-set label:hover {
+  border-color: var(--light-teal);
+  background: #edf8f8;
+}
+
+.choice-set input {
+  appearance: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid #aacaca;
+  border-radius: 50%;
+  margin-top: 0.15rem;
+  flex: 0 0 auto;
+}
+
+.choice-set input:checked {
+  border-color: var(--dark-teal);
+  background:
+    radial-gradient(circle at center, #fff 0 34%, transparent 36%),
+    var(--dark-teal);
+}
+
+.practice button {
+  background: var(--dark-teal);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.55rem 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.practice button:hover { background: #003f45; }
+
+.practice .practice-feedback {
+  display: none;
+  margin-top: 0.8rem;
+  border-radius: 8px;
+  padding: 0.75rem 0.85rem;
+}
+
+.practice.is-correct .practice-feedback {
+  display: block;
+  background: var(--good-bg);
+  color: #173a26;
+  border: 1px solid #a9dab9;
+}
+
+.practice.is-incorrect .practice-feedback {
+  display: block;
+  background: var(--bad-bg);
+  color: #4b1c1c;
+  border: 1px solid #e6b1b1;
+}
+
+.practice label.correct-choice { border-color: var(--good); background: var(--good-bg); }
+.practice label.incorrect-choice { border-color: var(--bad); background: var(--bad-bg); }
+
+.callout {
+  padding: 1rem 1.15rem;
+  border-left: 5px solid var(--light-teal);
+  margin: 1rem 0;
+}
+
+.callout.warning { border-left-color: var(--gold); background: #fffaf0; }
+
+.webr-wrap {
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  border-top: 4px solid var(--light-teal);
+}
+
+.webr-wrap h3 { color: var(--dark-teal); font-size: 1rem; margin-top: 0; }
+
+.answer { margin-top: 0.7rem; }
+.answer summary { cursor: pointer; font-weight: 700; color: var(--dark-teal); }
+.answer[open] summary { margin-bottom: 0.4rem; }
+
+code {
+  background: rgba(0, 86, 94, 0.08);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  color: #123638;
+}
+
+.qwebr-output-code-stdout pre, .qwebr-output-code-stderr pre { white-space: pre-wrap; }
+
+.panel.completion { border-top: 4px solid var(--gold); }
+
+.code-progress { font-weight: 800; color: var(--dark-teal); }
+
+.code-box {
+  display: none;
+  text-align: center;
+  background: var(--dark-teal);
+  color: #fff;
+  border-radius: 8px;
+  padding: 1.1rem;
+  margin-top: 0.6rem;
+}
+
+.code-box .code-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.code-box .code-value {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin-top: 0.3rem;
+}
+
+.footer-note { color: var(--muted); text-align: center; margin-top: 2rem; font-size: 0.9rem; }
+</style>
+
+<div class="page-shell">
+
+<header class="masthead">
+  <div class="eyebrow">WebR practical</div>
+  <h1>Simple linear regression with a binary predictor</h1>
+  <p>When a predictor has exactly two groups, <code>lm()</code> draws a line between two group means. You will fit models, read coefficients as differences, and see how changing the reference level relabels (but does not change) the underlying relationship.</p>
+</header>
+
+<section class="panel">
+
+<h2>Overview</h2>
+
+A <strong>binary predictor</strong> takes only two values, such as female vs male or smoker vs nonsmoker. In R you still write a familiar formula:
+
+```r
+lm(outcome ~ group, data = my_data)
+```
+
+R turns the group into a <strong>dummy variable</strong>: 0 for the <strong>reference</strong> level and 1 for the other level. The intercept is the mean of the reference group; the slope is the <strong>difference in means</strong> between the two groups.
+
+This practical uses teaching datasets from common R packages:
+
+<ul class="tight-list">
+  <li><code>openintro::births14</code> — US live births (birth weight by sex)</li>
+  <li><code>MASS::birthwt</code> — Baystate birth weights (birth weight by smoking status)</li>
+  <li><code>DAAG::ais</code> — Australian Institute of Sport athletes (serum ferritin by sex)</li>
+</ul>
+
+After answering the questions, <strong>your completion code will be revealed.</strong>
+
+</section>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 1</div>
+  <p>In a regression with a binary predictor, the intercept $b_0$ equals:</p>
+  <div class="choice-set">
+<label><input type="radio" name="p0" value="a">The overall mean of the outcome, pooling both groups.</label>
+<label><input type="radio" name="p0" value="b">The mean of the outcome in the <strong>reference</strong> group.</label>
+<label><input type="radio" name="p0" value="c">The difference in means between the two groups.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. When every dummy is 0, you are in the reference group, so the intercept is that group's mean." data-incorrect="Not quite. The intercept is the predicted outcome when the dummy equals 0, which is the reference group's mean."></div>
+</div>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 2</div>
+  <p>The slope $b_1$ for the non-reference level tells you:</p>
+  <div class="choice-set">
+<label><input type="radio" name="p1" value="a">How much higher (or lower) the other group's mean is compared with the reference group.</label>
+<label><input type="radio" name="p1" value="b">The mean of the non-reference group on its own.</label>
+<label><input type="radio" name="p1" value="c">Whether the relationship is linear.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The slope is a difference in means, not a standalone mean." data-incorrect="Not quite. The slope is the gap between group means. To get the other group's mean, add the slope to the intercept."></div>
+</div>
+
+<section class="panel">
+
+<h2>The equation</h2>
+
+<div class="formula-panel">
+
+$$\hat{y} = b_0 + b_1 \cdot x$$
+
+<p><strong>Reading the pieces for a binary predictor:</strong></p>
+<ul class="tight-list">
+  <li>$x = 0$ for the reference group; $x = 1$ for the other group.</li>
+  <li>$b_0$ = mean of $y$ in the reference group.</li>
+  <li>$b_1$ = difference in means (other group minus reference group).</li>
+</ul>
+
+</div>
+
+```{=html}
+<div class="svg-panel" aria-label="Two group means connected by a regression line">
+<svg viewBox="0 0 760 260" role="img">
+  <rect width="760" height="260" rx="8" fill="#fff"/>
+  <line x1="70" y1="30" x2="70" y2="210" stroke="#5d7475" stroke-width="1.4"/>
+  <line x1="70" y1="210" x2="700" y2="210" stroke="#5d7475" stroke-width="1.4"/>
+  <text x="24" y="125" text-anchor="middle" font-size="12" font-weight="700" fill="#5d7475" transform="rotate(-90,24,125)">Outcome (y)</text>
+  <line x1="220" y1="130" x2="560" y2="95" stroke="#00565e" stroke-width="3"/>
+  <circle cx="220" cy="130" r="7" fill="#2f5f98" stroke="#1d4275" stroke-width="1.2"/>
+  <circle cx="560" cy="95" r="7" fill="#00565e" stroke="#003f45" stroke-width="1.2"/>
+  <line x1="220" y1="130" x2="560" y2="130" stroke="#b83b5e" stroke-width="1.6" stroke-dasharray="5,3"/>
+  <line x1="560" y1="130" x2="560" y2="95" stroke="#b83b5e" stroke-width="2.2"/>
+  <text x="220" y="118" text-anchor="middle" font-size="11" font-weight="800" fill="#2f5f98">b₀ = ref. mean</text>
+  <text x="575" y="118" font-size="11" font-weight="800" fill="#b83b5e">b₁ = difference</text>
+  <text x="220" y="235" text-anchor="middle" font-size="12" font-weight="800" fill="#173234">Reference (x = 0)</text>
+  <text x="560" y="235" text-anchor="middle" font-size="12" font-weight="800" fill="#173234">Other group (x = 1)</text>
+</svg>
+<p class="svg-caption">With a binary predictor, the fitted line is just the segment joining the two group means.</p>
+</div>
+```
+
+</section>
+
+<section class="panel">
+
+<h2>Worked example 1: birth weight by sex (<code>openintro::births14</code>)</h2>
+
+The <code>births14</code> dataset is a random sample of US live births in 2014. We will model birth weight in pounds (<code>weight</code>) from the baby's sex (<code>sex</code>: female or male).
+
+First, load the data and set <strong>female</strong> as the reference level. Then fit the model and inspect the output.
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code — births14, female reference</h3>
+
+```{webr-r}
+library(openintro)
+data(births14)
+
+births14$sex <- factor(births14$sex, levels = c("female", "male"))
+
+mod_sex <- lm(weight ~ sex, data = births14)
+summary(mod_sex)
+```
+
+</div>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 3</div>
+  <p>With <strong>female</strong> as the reference level, what is the predicted birth weight for a <strong>female</strong> baby (in pounds, to two decimal places)?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p2" value="a">7.02</label>
+<label><input type="radio" name="p2" value="b">0.36</label>
+<label><input type="radio" name="p2" value="c">7.38</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The intercept (about 7.02 lb) is the female mean." data-incorrect="Not quite. Look at the (Intercept) row. That is the female mean because female is the reference level."></div>
+</div>
+
+<div class="practice" data-answer="c">
+  <div class="practice-title">Question 4</div>
+  <p>What is the predicted birth weight for a <strong>male</strong> baby?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p3" value="a">7.02 lb</label>
+<label><input type="radio" name="p3" value="b">0.36 lb</label>
+<label><input type="radio" name="p3" value="c">7.38 lb (about 7.02 + 0.36)</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Add the sexmale slope to the intercept: about 7.02 + 0.36 ≈ 7.38 lb." data-incorrect="Not quite. Male mean = intercept + sexmale coefficient ≈ 7.02 + 0.36."></div>
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 5</div>
+  <p>The coefficient on <code>sexmale</code> is about +0.36. In plain language, this means male babies weigh on average:</p>
+  <div class="choice-set">
+<label><input type="radio" name="p4" value="a">0.36 lb in total.</label>
+<label><input type="radio" name="p4" value="b">About 0.36 lb <strong>more</strong> than female babies.</label>
+<label><input type="radio" name="p4" value="c">About 0.36 lb less than female babies.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The slope is a difference vs the reference group, not a standalone mean." data-incorrect="Not quite. A positive slope means the non-reference group is higher than the reference group by that amount."></div>
+</div>
+
+<section class="panel">
+
+<h2>Switching the reference level</h2>
+
+The reference level is a <strong>labeling choice</strong>. The gap between group means stays the same; only the intercept and the sign of the slope change.
+
+Re-run the model below with <strong>male</strong> as the reference. Compare the output to the previous cell.
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code — relevel sex to male reference</h3>
+
+```{webr-r}
+births14_m <- births14
+births14_m$sex <- factor(births14_m$sex, levels = c("male", "female"))
+
+mod_sex_male_ref <- lm(weight ~ sex, data = births14_m)
+summary(mod_sex_male_ref)
+```
+
+</div>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 6</div>
+  <p>When male is the reference level, the coefficient on <code>sexfemale</code> is about −0.36. Why is it negative?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p5" value="a">Female babies weigh less than male babies, and female is now compared with male as reference.</label>
+<label><input type="radio" name="p5" value="b">The relationship reversed; males now weigh less than females.</label>
+<label><input type="radio" name="p5" value="c">R made a mistake when releveling.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The underlying means are unchanged; the sign flips because the reference group flipped." data-incorrect="Not quite. Releveling changes labels, not the data. Females are still lighter on average; the slope now measures female minus male."></div>
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 7</div>
+  <p>Comparing the two models (female reference vs male reference), the <strong>magnitude</strong> of the sex difference is:</p>
+  <div class="choice-set">
+<label><input type="radio" name="p6" value="a">Larger when male is reference.</label>
+<label><input type="radio" name="p6" value="b">The same (about 0.36 lb).</label>
+<label><input type="radio" name="p6" value="c">Impossible to compare.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. |+0.36| = |−0.36|; only the sign and intercept changed." data-incorrect="Not quite. The absolute difference in group means is unchanged."></div>
+</div>
+
+<section class="panel">
+
+<h2>Worked example 2: birth weight by smoking (<code>MASS::birthwt</code>)</h2>
+
+The classic <code>birthwt</code> data record birth weight in grams (<code>bwt</code>) and whether the mother smoked during pregnancy (<code>smoke</code>: 0 = no, 1 = yes). We treat nonsmokers as the reference group.
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code — birthwt, nonsmoker reference</h3>
+
+```{webr-r}
+library(MASS)
+data(birthwt)
+
+birthwt$smoke <- factor(birthwt$smoke, levels = c(0, 1),
+                        labels = c("nonsmoker", "smoker"))
+
+mod_smoke <- lm(bwt ~ smoke, data = birthwt)
+summary(mod_smoke)
+```
+
+</div>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 8</div>
+  <p>The intercept is about 3056 g. Whose mean birth weight does that represent?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p7" value="a">Babies whose mothers did <strong>not</strong> smoke during pregnancy.</label>
+<label><input type="radio" name="p7" value="b">Babies whose mothers smoked during pregnancy.</label>
+<label><input type="radio" name="p7" value="c">All babies in the dataset combined.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Nonsmoker is the reference level (smoke = 0)." data-incorrect="Not quite. The intercept is always the reference group mean. Here nonsmoker is reference."></div>
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 9</div>
+  <p>The <code>smokesmoker</code> coefficient is about −284 g. The predicted mean birth weight for smokers is approximately:</p>
+  <div class="choice-set">
+<label><input type="radio" name="p8" value="a">284 g</label>
+<label><input type="radio" name="p8" value="b">2772 g (3056 − 284)</label>
+<label><input type="radio" name="p8" value="c">3340 g (3056 + 284)</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Smoker mean = intercept + slope ≈ 3056 − 284 ≈ 2772 g." data-incorrect="Not quite. Add the smoker coefficient to the intercept. The negative slope means smokers are lower."></div>
+</div>
+
+```{=html}
+<div class="svg-panel" aria-label="Side-by-side boxplots of birth weight by smoking status">
+<svg viewBox="0 0 760 260" role="img">
+  <rect width="760" height="260" rx="8" fill="#fff"/>
+  <text x="380" y="24" text-anchor="middle" font-size="13" font-weight="800" fill="#173234">Birth weight by smoking status (schematic)</text>
+  <line x1="60" y1="220" x2="700" y2="220" stroke="#5d7475" stroke-width="1.2"/>
+  <line x1="60" y1="50" x2="60" y2="220" stroke="#5d7475" stroke-width="1.2"/>
+  <rect x="180" y="95" width="120" height="90" fill="#e3f4f4" stroke="#00565e" stroke-width="2" rx="4"/>
+  <line x1="240" y1="80" x2="240" y2="200" stroke="#00565e" stroke-width="2"/>
+  <line x1="200" y1="140" x2="280" y2="140" stroke="#00565e" stroke-width="3"/>
+  <text x="240" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#173234">Nonsmoker</text>
+  <text x="240" y="72" text-anchor="middle" font-size="11" font-weight="800" fill="#2f5f98">≈ 3056 g</text>
+  <rect x="460" y="115" width="120" height="75" fill="#fdecea" stroke="#b83b3b" stroke-width="2" rx="4"/>
+  <line x1="520" y1="100" x2="520" y2="205" stroke="#b83b3b" stroke-width="2"/>
+  <line x1="480" y1="155" x2="560" y2="155" stroke="#b83b3b" stroke-width="3"/>
+  <text x="520" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#173234">Smoker</text>
+  <text x="520" y="92" text-anchor="middle" font-size="11" font-weight="800" fill="#b83b3b">≈ 2772 g</text>
+  <line x1="360" y1="140" x2="360" y2="155" stroke="#b83b5e" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="380" y="132" font-size="11" font-weight="800" fill="#b83b5e">≈ −284 g</text>
+  <defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#b83b5e"/></marker></defs>
+</svg>
+<p class="svg-caption">The regression slope is the vertical shift between the two group means.</p>
+</div>
+```
+
+<section class="panel">
+
+<h2>Exercise 1: fill in the model formula (<code>DAAG::ais</code>)</h2>
+
+The <code>ais</code> dataset contains physiological measurements on elite athletes. Fit a model predicting serum ferritin (<code>ferr</code>, ng/mL) from sex (<code>sex</code>: <code>f</code> or <code>m</code>).
+
+Replace each `____` with the correct variable name, then run the cell.
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code — exercise 1 (fill in blanks)</h3>
+
+```{webr-r}
+library(DAAG)
+data(ais)
+
+mod_ferr <- lm(____ ~ ____, data = ais)
+summary(mod_ferr)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+mod_ferr <- lm(ferr ~ sex, data = ais)
+```
+
+The intercept (about 57) is the mean ferritin for females (<code>f</code> is the default reference). The <code>sexm</code> row (about +39) says males average about 39 ng/mL higher.
+
+</details>
+
+<div class="practice" data-answer="c">
+  <div class="practice-title">Question 10</div>
+  <p>From the filled-in model, the predicted mean ferritin for <strong>male</strong> athletes is approximately:</p>
+  <div class="choice-set">
+<label><input type="radio" name="p9" value="a">39 ng/mL</label>
+<label><input type="radio" name="p9" value="b">57 ng/mL</label>
+<label><input type="radio" name="p9" value="c">96 ng/mL (about 57 + 39)</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Male mean ≈ intercept + sexm ≈ 57 + 39 ≈ 96 ng/mL." data-incorrect="Not quite. Add the sexm coefficient to the intercept."></div>
+</div>
+
+<section class="panel">
+
+<h2>Exercise 2: relevel and refit (<code>births14</code>)</h2>
+
+Complete the code below to set <strong>female</strong> as the reference level for <code>sex</code>, then fit <code>weight ~ sex</code>. Replace each `____`.
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code — exercise 2 (fill in blanks)</h3>
+
+```{webr-r}
+library(openintro)
+data(births14)
+
+births14$sex <- factor(____, levels = c("____", "male"))
+
+mod_fill <- lm(____ ~ ____, data = births14)
+summary(mod_fill)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+births14$sex <- factor(births14$sex, levels = c("female", "male"))
+
+mod_fill <- lm(weight ~ sex, data = births14)
+```
+
+</details>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 11</div>
+  <p>In your completed model, which row in <code>summary()</code> tells you how much heavier male babies are than female babies?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p10" value="a"><code>sexmale</code></label>
+<label><input type="radio" name="p10" value="b"><code>(Intercept)</code></label>
+<label><input type="radio" name="p10" value="c"><code>Residual standard error</code></label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The non-reference level gets its own coefficient row." data-incorrect="Not quite. The intercept is the reference mean. The other level's row is the difference."></div>
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 12</div>
+  <p>Suppose you relevel so <strong>smoker</strong> is the reference in <code>birthwt</code>. The coefficient for <code>nonsmoker</code> would be about:</p>
+  <div class="choice-set">
+<label><input type="radio" name="p11" value="a">−284 g</label>
+<label><input type="radio" name="p11" value="b">+284 g</label>
+<label><input type="radio" name="p11" value="c">3056 g</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Nonsmokers weigh about 284 g more than smokers; the sign flips when smoker becomes reference." data-incorrect="Not quite. When smoker is reference, nonsmoker is above smoker by about 284 g, so the coefficient is positive."></div>
+</div>
+
+<section class="panel completion">
+
+<h2>Completion code</h2>
+
+<p>Answer at least 10 out of 12 questions correctly to reveal your completion code.</p>
+
+<p><span class="code-progress" id="code-progress">0 of 12 correct (need at least 10)</span></p>
+
+<div class="code-box" id="code-box">
+  <div class="code-label">Your completion code</div>
+  <div class="code-value" id="code-value"></div>
+</div>
+
+</section>
+
+<p class="footer-note">GRAPH Courses practical | Binary categorical predictors</p>
+
+</div>
+
+<script>
+const COMPLETION_CODE = "BINREF25";
+const COMPLETION_REQUIRED = 10;
+
+function updateCompletion() {
+  const cards = document.querySelectorAll(".practice");
+  const correct = document.querySelectorAll(".practice.is-correct").length;
+  const total = cards.length;
+  const progress = document.getElementById("code-progress");
+  const box = document.getElementById("code-box");
+  const value = document.getElementById("code-value");
+
+  if (progress) {
+    progress.textContent = correct + " of " + total + " correct (need at least " + COMPLETION_REQUIRED + ")";
+  }
+
+  if (box && value) {
+    if (correct >= COMPLETION_REQUIRED) {
+      value.textContent = COMPLETION_CODE;
+      box.style.display = "block";
+    } else {
+      box.style.display = "none";
+    }
+  }
+}
+
+document.querySelectorAll(".practice").forEach((card) => {
+  const button = card.querySelector("button");
+  const feedback = card.querySelector(".practice-feedback");
+  const answer = card.dataset.answer;
+
+  button.addEventListener("click", () => {
+    const selected = card.querySelector("input[type='radio']:checked");
+    card.classList.remove("is-correct", "is-incorrect");
+    card.querySelectorAll("label").forEach((label) => {
+      label.classList.remove("correct-choice", "incorrect-choice");
+    });
+
+    if (!selected) {
+      card.classList.add("is-incorrect");
+      feedback.textContent = "Choose an answer first, then check it.";
+      updateCompletion();
+      return;
+    }
+
+    const selectedLabel = selected.closest("label");
+    const correctInput = card.querySelector(`input[value="${answer}"]`);
+    const correctLabel = correctInput ? correctInput.closest("label") : null;
+
+    if (selected.value === answer) {
+      card.classList.add("is-correct");
+      selectedLabel.classList.add("correct-choice");
+      feedback.textContent = feedback.dataset.correct;
+    } else {
+      card.classList.add("is-incorrect");
+      selectedLabel.classList.add("incorrect-choice");
+      if (correctLabel) correctLabel.classList.add("correct-choice");
+      feedback.textContent = feedback.dataset.incorrect;
+    }
+
+    updateCompletion();
+  });
+});
+
+updateCompletion();
+</script>
