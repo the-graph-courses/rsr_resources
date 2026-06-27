@@ -58,16 +58,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="linear_regression_binary_predictor_composer25_n2v8_files/libs/clipboard/clipboard.min.js"></script>
-<script src="linear_regression_binary_predictor_composer25_n2v8_files/libs/quarto-html/quarto.js"></script>
-<script src="linear_regression_binary_predictor_composer25_n2v8_files/libs/quarto-html/popper.min.js"></script>
-<script src="linear_regression_binary_predictor_composer25_n2v8_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="linear_regression_binary_predictor_composer25_n2v8_files/libs/quarto-html/anchor.min.js"></script>
-<link href="linear_regression_binary_predictor_composer25_n2v8_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="linear_regression_binary_predictor_composer25_n2v8_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="linear_regression_binary_predictor_composer25_n2v8_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="linear_regression_binary_predictor_composer25_n2v8_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="linear_regression_binary_predictor_composer25_n2v8_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="linear_regression_binary_predictor_files/libs/clipboard/clipboard.min.js"></script>
+<script src="linear_regression_binary_predictor_files/libs/quarto-html/quarto.js"></script>
+<script src="linear_regression_binary_predictor_files/libs/quarto-html/popper.min.js"></script>
+<script src="linear_regression_binary_predictor_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="linear_regression_binary_predictor_files/libs/quarto-html/anchor.min.js"></script>
+<link href="linear_regression_binary_predictor_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="linear_regression_binary_predictor_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="linear_regression_binary_predictor_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="linear_regression_binary_predictor_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="linear_regression_binary_predictor_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.47.0/min/vs/editor/editor.main.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   
@@ -368,7 +368,7 @@ globalThis.qwebrCustomizedWebROptions = {
 };
 
 // Store cell data
-globalThis.qwebrCellDetails = [{"code":"library(openintro)\nlibrary(dplyr)\ndata(births14)\n\nbirths14 <- births14 |>\n  mutate(sex = factor(sex, levels = c(\"female\", \"male\")))\n\nmod_sex <- lm(weight ~ sex, data = births14)\nsummary(mod_sex)","id":1,"options":{"editor-max-height":"","fig-cap":"","out-width":"700px","label":"unnamed-chunk-1","editor-font-scale":"1","context":"interactive","comment":"","editor-quick-suggestions":"false","message":"true","classes":"","read-only":"false","warning":"true","fig-height":5,"output":"true","results":"markup","out-height":"","editor-word-wrap":"true","autorun":"false","fig-width":7,"dpi":72}},{"code":"births14_m <- births14 |>\n  mutate(sex = factor(sex, levels = c(\"male\", \"female\")))\n\nmod_sex_male_ref <- lm(weight ~ sex, data = births14_m)\nsummary(mod_sex_male_ref)","id":2,"options":{"editor-max-height":"","fig-cap":"","out-width":"700px","label":"unnamed-chunk-2","editor-font-scale":"1","context":"interactive","comment":"","editor-quick-suggestions":"false","message":"true","classes":"","read-only":"false","warning":"true","fig-height":5,"output":"true","results":"markup","out-height":"","editor-word-wrap":"true","autorun":"false","fig-width":7,"dpi":72}},{"code":"library(MASS)\nlibrary(dplyr)\ndata(birthwt)\n\nbirthwt <- birthwt |>\n  mutate(smoke = factor(smoke, levels = c(0, 1),\n                        labels = c(\"nonsmoker\", \"smoker\")))\n\nmod_smoke <- lm(bwt ~ smoke, data = birthwt)\nsummary(mod_smoke)","id":3,"options":{"editor-max-height":"","fig-cap":"","out-width":"700px","label":"unnamed-chunk-3","editor-font-scale":"1","context":"interactive","comment":"","editor-quick-suggestions":"false","message":"true","classes":"","read-only":"false","warning":"true","fig-height":5,"output":"true","results":"markup","out-height":"","editor-word-wrap":"true","autorun":"false","fig-width":7,"dpi":72}},{"code":"library(DAAG)\ndata(ais)\n\nmod_ferr <- lm(____ ~ ____, data = ais)\nsummary(mod_ferr)","id":4,"options":{"editor-max-height":"","fig-cap":"","out-width":"700px","label":"unnamed-chunk-4","editor-font-scale":"1","context":"interactive","comment":"","editor-quick-suggestions":"false","message":"true","classes":"","read-only":"false","warning":"true","fig-height":5,"output":"true","results":"markup","out-height":"","editor-word-wrap":"true","autorun":"false","fig-width":7,"dpi":72}},{"code":"library(openintro)\nlibrary(dplyr)\ndata(births14)\n\nbirths14 <- births14 |>\n  mutate(sex = factor(____, levels = c(\"____\", \"male\")))\n\nmod_fill <- lm(____ ~ ____, data = births14)\nsummary(mod_fill)","id":5,"options":{"editor-max-height":"","fig-cap":"","out-width":"700px","label":"unnamed-chunk-5","editor-font-scale":"1","context":"interactive","comment":"","editor-quick-suggestions":"false","message":"true","classes":"","read-only":"false","warning":"true","fig-height":5,"output":"true","results":"markup","out-height":"","editor-word-wrap":"true","autorun":"false","fig-width":7,"dpi":72}}];
+globalThis.qwebrCellDetails = [{"id":1,"options":{"context":"interactive","out-width":"700px","output":"true","read-only":"false","editor-max-height":"","editor-font-scale":"1","warning":"true","fig-cap":"","comment":"","out-height":"","fig-width":7,"message":"true","results":"markup","dpi":72,"autorun":"false","editor-quick-suggestions":"false","classes":"","editor-word-wrap":"true","fig-height":5,"label":"unnamed-chunk-1"},"code":"library(openintro)\nlibrary(dplyr)\ndata(births14)\n\nbirths14 <- births14 |>\n  mutate(sex = factor(sex, levels = c(\"female\", \"male\")))\n\nmod_sex <- lm(weight ~ sex, data = births14)\nsummary(mod_sex)"},{"id":2,"options":{"context":"interactive","out-width":"700px","output":"true","read-only":"false","editor-max-height":"","editor-font-scale":"1","warning":"true","fig-cap":"","comment":"","out-height":"","fig-width":7,"message":"true","results":"markup","dpi":72,"autorun":"false","editor-quick-suggestions":"false","classes":"","editor-word-wrap":"true","fig-height":5,"label":"unnamed-chunk-2"},"code":"births14_m <- births14 |>\n  mutate(sex = factor(sex, levels = c(\"male\", \"female\")))\n\nmod_sex_male_ref <- lm(weight ~ sex, data = births14_m)\nsummary(mod_sex_male_ref)"},{"id":3,"options":{"context":"interactive","out-width":"700px","output":"true","read-only":"false","editor-max-height":"","editor-font-scale":"1","warning":"true","fig-cap":"","comment":"","out-height":"","fig-width":7,"message":"true","results":"markup","dpi":72,"autorun":"false","editor-quick-suggestions":"false","classes":"","editor-word-wrap":"true","fig-height":5,"label":"unnamed-chunk-3"},"code":"library(MASS)\nlibrary(dplyr)\ndata(birthwt)\n\nbirthwt <- birthwt |>\n  mutate(smoke = factor(smoke, levels = c(0, 1),\n                        labels = c(\"nonsmoker\", \"smoker\")))\n\nmod_smoke <- lm(bwt ~ smoke, data = birthwt)\nsummary(mod_smoke)"},{"id":4,"options":{"context":"interactive","out-width":"700px","output":"true","read-only":"false","editor-max-height":"","editor-font-scale":"1","warning":"true","fig-cap":"","comment":"","out-height":"","fig-width":7,"message":"true","results":"markup","dpi":72,"autorun":"false","editor-quick-suggestions":"false","classes":"","editor-word-wrap":"true","fig-height":5,"label":"unnamed-chunk-4"},"code":"library(DAAG)\ndata(ais)\n\nmod_ferr <- lm(____ ~ ____, data = ais)\nsummary(mod_ferr)"},{"id":5,"options":{"context":"interactive","out-width":"700px","output":"true","read-only":"false","editor-max-height":"","editor-font-scale":"1","warning":"true","fig-cap":"","comment":"","out-height":"","fig-width":7,"message":"true","results":"markup","dpi":72,"autorun":"false","editor-quick-suggestions":"false","classes":"","editor-word-wrap":"true","fig-height":5,"label":"unnamed-chunk-5"},"code":"library(openintro)\nlibrary(dplyr)\ndata(births14)\n\nbirths14 <- births14 |>\n  mutate(sex = factor(____, levels = c(\"____\", \"male\")))\n\nmod_fill <- lm(____ ~ ____, data = births14)\nsummary(mod_fill)"}];
 
 </script>
 <script type="module">
@@ -1745,6 +1745,9 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
       theme: 'vs-light',
       automaticLayout: true,           // Works wonderfully with RevealJS
       scrollBeyondLastLine: false,
+      scrollbar: {
+        alwaysConsumeMouseWheel: false
+      },
       minimap: {
         enabled: false
       },
@@ -1942,6 +1945,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
   };
   
 }
+
 </script>
 
 <header id="title-block-header" class="quarto-title-block default">

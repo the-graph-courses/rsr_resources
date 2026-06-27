@@ -58,16 +58,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/clipboard/clipboard.min.js"></script>
-<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/quarto.js"></script>
-<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/popper.min.js"></script>
-<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/anchor.min.js"></script>
-<link href="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="linear_regression_polytomous_predictor_files/libs/clipboard/clipboard.min.js"></script>
+<script src="linear_regression_polytomous_predictor_files/libs/quarto-html/quarto.js"></script>
+<script src="linear_regression_polytomous_predictor_files/libs/quarto-html/popper.min.js"></script>
+<script src="linear_regression_polytomous_predictor_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="linear_regression_polytomous_predictor_files/libs/quarto-html/anchor.min.js"></script>
+<link href="linear_regression_polytomous_predictor_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="linear_regression_polytomous_predictor_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="linear_regression_polytomous_predictor_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="linear_regression_polytomous_predictor_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="linear_regression_polytomous_predictor_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.47.0/min/vs/editor/editor.main.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   
@@ -368,7 +368,7 @@ globalThis.qwebrCustomizedWebROptions = {
 };
 
 // Store cell data
-globalThis.qwebrCellDetails = [{"code":"library(dplyr)\ndata(ToothGrowth)\n\ntooth <- ToothGrowth |>\n  mutate(dose_group = factor(dose,\n                             levels = c(0.5, 1, 2),\n                             labels = c(\"dose_0.5\", \"dose_1\", \"dose_2\")))\n\nmod_dose <- lm(len ~ dose_group, data = tooth)\nsummary(mod_dose)","id":1,"options":{"warning":"true","editor-word-wrap":"true","fig-cap":"","out-height":"","dpi":72,"context":"interactive","output":"true","fig-width":7,"out-width":"700px","autorun":"false","message":"true","results":"markup","classes":"","label":"unnamed-chunk-1","editor-font-scale":"1","comment":"","read-only":"false","fig-height":5,"editor-max-height":"","editor-quick-suggestions":"false"}},{"code":"library(MASS)\nlibrary(dplyr)\ndata(birthwt)\n\nbirthwt <- birthwt |>\n  mutate(race = factor(race, levels = c(1, 2, 3),\n                       labels = c(\"white\", \"black\", \"other\")))\n\nmod_race <- lm(bwt ~ race, data = birthwt)\nsummary(mod_race)","id":2,"options":{"warning":"true","editor-word-wrap":"true","fig-cap":"","out-height":"","dpi":72,"context":"interactive","output":"true","fig-width":7,"out-width":"700px","autorun":"false","message":"true","results":"markup","classes":"","label":"unnamed-chunk-2","editor-font-scale":"1","comment":"","read-only":"false","fig-height":5,"editor-max-height":"","editor-quick-suggestions":"false"}},{"code":"birthwt_ordered <- birthwt |>\n  mutate(race = factor(race, levels = c(\"black\", \"other\", \"white\")))\n\nmod_race_ordered <- lm(bwt ~ race, data = birthwt_ordered)\nsummary(mod_race_ordered)","id":3,"options":{"warning":"true","editor-word-wrap":"true","fig-cap":"","out-height":"","dpi":72,"context":"interactive","output":"true","fig-width":7,"out-width":"700px","autorun":"false","message":"true","results":"markup","classes":"","label":"unnamed-chunk-3","editor-font-scale":"1","comment":"","read-only":"false","fig-height":5,"editor-max-height":"","editor-quick-suggestions":"false"}},{"code":"data(PlantGrowth)\n\nmod_plant <- lm(____ ~ ____, data = PlantGrowth)\nsummary(mod_plant)","id":4,"options":{"warning":"true","editor-word-wrap":"true","fig-cap":"","out-height":"","dpi":72,"context":"interactive","output":"true","fig-width":7,"out-width":"700px","autorun":"false","message":"true","results":"markup","classes":"","label":"unnamed-chunk-4","editor-font-scale":"1","comment":"","read-only":"false","fig-height":5,"editor-max-height":"","editor-quick-suggestions":"false"}},{"code":"data(InsectSprays)\n\nmod_spray <- lm(____ ~ ____, data = InsectSprays)\nsummary(mod_spray)","id":5,"options":{"warning":"true","editor-word-wrap":"true","fig-cap":"","out-height":"","dpi":72,"context":"interactive","output":"true","fig-width":7,"out-width":"700px","autorun":"false","message":"true","results":"markup","classes":"","label":"unnamed-chunk-5","editor-font-scale":"1","comment":"","read-only":"false","fig-height":5,"editor-max-height":"","editor-quick-suggestions":"false"}}];
+globalThis.qwebrCellDetails = [{"id":1,"options":{"read-only":"false","context":"interactive","results":"markup","fig-cap":"","dpi":72,"label":"unnamed-chunk-1","out-width":"700px","fig-width":7,"editor-font-scale":"1","autorun":"false","comment":"","output":"true","editor-word-wrap":"true","classes":"","warning":"true","out-height":"","fig-height":5,"editor-max-height":"","message":"true","editor-quick-suggestions":"false"},"code":"library(dplyr)\ndata(ToothGrowth)\n\ntooth <- ToothGrowth |>\n  mutate(dose_group = factor(dose,\n                             levels = c(0.5, 1, 2),\n                             labels = c(\"dose_0.5\", \"dose_1\", \"dose_2\")))\n\nmod_dose <- lm(len ~ dose_group, data = tooth)\nsummary(mod_dose)"},{"id":2,"options":{"read-only":"false","context":"interactive","results":"markup","fig-cap":"","dpi":72,"label":"unnamed-chunk-2","out-width":"700px","fig-width":7,"editor-font-scale":"1","autorun":"false","comment":"","output":"true","editor-word-wrap":"true","classes":"","warning":"true","out-height":"","fig-height":5,"editor-max-height":"","message":"true","editor-quick-suggestions":"false"},"code":"library(MASS)\nlibrary(dplyr)\ndata(birthwt)\n\nbirthwt <- birthwt |>\n  mutate(race = factor(race, levels = c(1, 2, 3),\n                       labels = c(\"white\", \"black\", \"other\")))\n\nmod_race <- lm(bwt ~ race, data = birthwt)\nsummary(mod_race)"},{"id":3,"options":{"read-only":"false","context":"interactive","results":"markup","fig-cap":"","dpi":72,"label":"unnamed-chunk-3","out-width":"700px","fig-width":7,"editor-font-scale":"1","autorun":"false","comment":"","output":"true","editor-word-wrap":"true","classes":"","warning":"true","out-height":"","fig-height":5,"editor-max-height":"","message":"true","editor-quick-suggestions":"false"},"code":"birthwt_ordered <- birthwt |>\n  mutate(race = factor(race, levels = c(\"black\", \"other\", \"white\")))\n\nmod_race_ordered <- lm(bwt ~ race, data = birthwt_ordered)\nsummary(mod_race_ordered)"},{"id":4,"options":{"read-only":"false","context":"interactive","results":"markup","fig-cap":"","dpi":72,"label":"unnamed-chunk-4","out-width":"700px","fig-width":7,"editor-font-scale":"1","autorun":"false","comment":"","output":"true","editor-word-wrap":"true","classes":"","warning":"true","out-height":"","fig-height":5,"editor-max-height":"","message":"true","editor-quick-suggestions":"false"},"code":"data(PlantGrowth)\n\nmod_plant <- lm(____ ~ ____, data = PlantGrowth)\nsummary(mod_plant)"},{"id":5,"options":{"read-only":"false","context":"interactive","results":"markup","fig-cap":"","dpi":72,"label":"unnamed-chunk-5","out-width":"700px","fig-width":7,"editor-font-scale":"1","autorun":"false","comment":"","output":"true","editor-word-wrap":"true","classes":"","warning":"true","out-height":"","fig-height":5,"editor-max-height":"","message":"true","editor-quick-suggestions":"false"},"code":"data(InsectSprays)\n\nmod_spray <- lm(____ ~ ____, data = InsectSprays)\nsummary(mod_spray)"}];
 
 </script>
 <script type="module">
@@ -1745,6 +1745,9 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
       theme: 'vs-light',
       automaticLayout: true,           // Works wonderfully with RevealJS
       scrollBeyondLastLine: false,
+      scrollbar: {
+        alwaysConsumeMouseWheel: false
+      },
       minimap: {
         enabled: false
       },
@@ -1942,6 +1945,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
   };
   
 }
+
 </script>
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -2231,29 +2235,6 @@ Simple linear regression with a polytomous predictor
 For a categorical predictor with more than two levels, R uses <strong>K − 1</strong> dummy variables. You will fit models, read the coefficients, and change the reference level.
 </p>
 </header>
-<section class="panel">
-<h2 class="anchored">
-Overview
-</h2>
-<p>A <strong>polytomous</strong> predictor has <span class="math inline">\(K &gt; 2\)</span> categories, such as race with three groups or treatment dose with three groups. If the groups are categories, avoid coding them as one numeric variable unless you want to assume a single straight-line trend.</p>
-<p>Instead, R picks one <strong>reference</strong> level and creates one dummy variable for each of the other <span class="math inline">\(K - 1\)</span> levels. Each coefficient is that level’s mean <strong>difference vs the reference</strong>.</p>
-<p>This practical uses datasets available in WebR:</p>
-<ul class="tight-list">
-<li>
-<code>ToothGrowth</code>: tooth length (<code>len</code>) by vitamin C dose (3 levels)
-</li>
-<li>
-<code>MASS::birthwt</code>: birth weight (<code>bwt</code>) by mother’s race (3 levels)
-</li>
-<li>
-<code>PlantGrowth</code>: plant weight (<code>weight</code>) by treatment group (3 levels)
-</li>
-<li>
-<code>InsectSprays</code>: insect count (<code>count</code>) by spray type (6 levels)
-</li>
-</ul>
-<p>After answering the questions, <strong>your completion code will be revealed.</strong></p>
-</section>
 <div class="practice" data-answer="b">
 <div class="practice-title">
 Question 1

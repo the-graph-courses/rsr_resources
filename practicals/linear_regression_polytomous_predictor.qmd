@@ -275,27 +275,6 @@ code {
   <p>For a categorical predictor with more than two levels, R uses <strong>K − 1</strong> dummy variables. You will fit models, read the coefficients, and change the reference level.</p>
 </header>
 
-<section class="panel">
-
-<h2>Overview</h2>
-
-A <strong>polytomous</strong> predictor has $K > 2$ categories, such as race with three groups or treatment dose with three groups. If the groups are categories, avoid coding them as one numeric variable unless you want to assume a single straight-line trend.
-
-Instead, R picks one <strong>reference</strong> level and creates one dummy variable for each of the other $K - 1$ levels. Each coefficient is that level's mean <strong>difference vs the reference</strong>.
-
-This practical uses datasets available in WebR:
-
-<ul class="tight-list">
-  <li><code>ToothGrowth</code>: tooth length (<code>len</code>) by vitamin C dose (3 levels)</li>
-  <li><code>MASS::birthwt</code>: birth weight (<code>bwt</code>) by mother's race (3 levels)</li>
-  <li><code>PlantGrowth</code>: plant weight (<code>weight</code>) by treatment group (3 levels)</li>
-  <li><code>InsectSprays</code>: insect count (<code>count</code>) by spray type (6 levels)</li>
-</ul>
-
-After answering the questions, <strong>your completion code will be revealed.</strong>
-
-</section>
-
 <div class="practice" data-answer="b">
   <div class="practice-title">Question 1</div>
   <p>A categorical predictor with $K = 3$ levels produces how many dummy coefficients (plus the intercept) in a simple regression?</p>

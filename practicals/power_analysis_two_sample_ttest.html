@@ -368,7 +368,7 @@ globalThis.qwebrCustomizedWebROptions = {
 };
 
 // Store cell data
-globalThis.qwebrCellDetails = [{"code":"power.t.test(\n  delta = 5,\n  sd = 8,\n  sig.level = 0.05,\n  power = 0.80\n)","options":{"label":"unnamed-chunk-1","editor-quick-suggestions":"false","warning":"true","message":"true","output":"true","read-only":"false","context":"interactive","classes":"","fig-cap":"","out-height":"","fig-width":7,"editor-font-scale":"1","out-width":"700px","autorun":"false","editor-max-height":"","dpi":72,"editor-word-wrap":"true","fig-height":5,"results":"markup","comment":""},"id":1},{"code":"power.t.test(\n  delta = ____,\n  sd = ____,\n  sig.level = ____,\n  power = ____\n)","options":{"label":"unnamed-chunk-2","editor-quick-suggestions":"false","warning":"true","message":"true","output":"true","read-only":"false","context":"interactive","classes":"","fig-cap":"","out-height":"","fig-width":7,"editor-font-scale":"1","out-width":"700px","autorun":"false","editor-max-height":"","dpi":72,"editor-word-wrap":"true","fig-height":5,"results":"markup","comment":""},"id":2},{"code":"power.t.test(\n  delta = ____,\n  sd = ____,\n  sig.level = ____,\n  power = ____\n)","options":{"label":"unnamed-chunk-3","editor-quick-suggestions":"false","warning":"true","message":"true","output":"true","read-only":"false","context":"interactive","classes":"","fig-cap":"","out-height":"","fig-width":7,"editor-font-scale":"1","out-width":"700px","autorun":"false","editor-max-height":"","dpi":72,"editor-word-wrap":"true","fig-height":5,"results":"markup","comment":""},"id":3}];
+globalThis.qwebrCellDetails = [{"id":1,"code":"power.t.test(\n  delta = 5,\n  sd = 8,\n  sig.level = 0.05,\n  power = 0.80\n)","options":{"out-height":"","autorun":"false","editor-word-wrap":"true","out-width":"700px","comment":"","fig-width":7,"warning":"true","dpi":72,"results":"markup","label":"unnamed-chunk-1","editor-max-height":"","fig-height":5,"fig-cap":"","editor-font-scale":"1","read-only":"false","editor-quick-suggestions":"false","context":"interactive","classes":"","output":"true","message":"true"}},{"id":2,"code":"power.t.test(\n  delta = ____,\n  sd = ____,\n  sig.level = ____,\n  power = ____\n)","options":{"out-height":"","autorun":"false","editor-word-wrap":"true","out-width":"700px","comment":"","fig-width":7,"warning":"true","dpi":72,"results":"markup","label":"unnamed-chunk-2","editor-max-height":"","fig-height":5,"fig-cap":"","editor-font-scale":"1","read-only":"false","editor-quick-suggestions":"false","context":"interactive","classes":"","output":"true","message":"true"}},{"id":3,"code":"power.t.test(\n  delta = ____,\n  sd = ____,\n  sig.level = ____,\n  power = ____\n)","options":{"out-height":"","autorun":"false","editor-word-wrap":"true","out-width":"700px","comment":"","fig-width":7,"warning":"true","dpi":72,"results":"markup","label":"unnamed-chunk-3","editor-max-height":"","fig-height":5,"fig-cap":"","editor-font-scale":"1","read-only":"false","editor-quick-suggestions":"false","context":"interactive","classes":"","output":"true","message":"true"}}];
 
 </script>
 <script type="module">
@@ -1745,6 +1745,9 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
       theme: 'vs-light',
       automaticLayout: true,           // Works wonderfully with RevealJS
       scrollBeyondLastLine: false,
+      scrollbar: {
+        alwaysConsumeMouseWheel: false
+      },
       minimap: {
         enabled: false
       },
@@ -1942,6 +1945,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
   };
   
 }
+
 </script>
 
 <header id="title-block-header" class="quarto-title-block default">

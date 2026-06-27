@@ -29,6 +29,9 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
       theme: 'vs-light',
       automaticLayout: true,           // Works wonderfully with RevealJS
       scrollBeyondLastLine: false,
+      scrollbar: {
+        alwaysConsumeMouseWheel: false
+      },
       minimap: {
         enabled: false
       },
