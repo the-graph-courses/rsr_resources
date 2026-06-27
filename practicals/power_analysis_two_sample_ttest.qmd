@@ -488,7 +488,7 @@ Below is the standard syntax for the `power.t.test()` function.
 ```r
 power.t.test(
   delta = ...,        # difference worth detecting
-  sd = ...,           # the spread
+  sd = ...,           # standard deviation
   sig.level = 0.05,   # false-positive rate
   power = 0.80        # chance to detect a real difference
 )
@@ -612,7 +612,7 @@ There are four inputs. Match each one to its R argument using the dropdowns, the
   <g>
     <rect x="22" y="84" width="248" height="54" rx="12" fill="#fff4cf" stroke="#f5c542" stroke-width="2.5"/>
     <text x="38" y="108" font-size="18" font-weight="800" fill="#8a6800">sd</text>
-    <text x="38" y="128" font-size="13" fill="#173234">the spread (noise)</text>
+    <text x="38" y="128" font-size="13" fill="#173234">standard deviation (noise)</text>
   </g>
   <g>
     <rect x="22" y="150" width="248" height="54" rx="12" fill="#e3f4f4" stroke="#5fbfbf" stroke-width="2.5"/>
@@ -655,21 +655,14 @@ There are four inputs. Match each one to its R argument using the dropdowns, the
 <label><input type="radio" name="p2" value="c"><code>sig.level</code></label>
   </div>
   <button type="button">Check</button>
-  <div class="practice-feedback" data-correct="Correct. delta is the difference worth detecting." data-incorrect="Not quite. delta is the difference worth detecting. sd is the spread, and sig.level is the false-positive rate."></div>
+  <div class="practice-feedback" data-correct="Correct. delta is the difference worth detecting." data-incorrect="Not quite. delta is the difference worth detecting. sd is the standard deviation, and sig.level is the false-positive rate."></div>
 </div>
 
 <section class="panel">
 
 <h2>Worked example 1: blood pressure study</h2>
 
-A team is testing a new blood pressure drug against a placebo.
-
-<ul class="tight-list">
-  <li>They would like to reduce systolic blood pressure by at least <strong>5 mmHg</strong>. A smaller reduction would not be considered worth acting on, so <code>delta = 5</code>.</li>
-  <li>Previous blood pressure trials in similar patients reported a spread of about <strong>8 mmHg</strong>, so <code>sd = 8</code>.</li>
-  <li>They use <code>sig.level = 0.05</code>.</li>
-  <li>They want <code>power = 0.80</code>.</li>
-</ul>
+A team is testing a new blood pressure drug against a placebo. They would like to reduce systolic blood pressure by at least 5 mmHg; a smaller reduction would not be considered worth acting on. Previous blood pressure trials in similar patients reported a standard deviation of about 8 mmHg. The team will use a 5% significance level and wants an 80% chance of detecting a real effect if one exists.
 
 Run the cell to find the sample size needed for each group.
 
@@ -741,14 +734,7 @@ power.t.test(
 
 <h2>Exercise 1: weight-loss study</h2>
 
-A team is testing a weight-loss drug against a placebo.
-
-<ul class="tight-list">
-  <li>They decide that only a weight loss of at least <strong>3 kg</strong> would be worth acting on, so <code>delta = 3</code>.</li>
-  <li>Published weight-loss trials report that weight change varies by about <strong>5 kg</strong> between people, so <code>sd = 5</code>.</li>
-  <li>Use <code>sig.level = 0.05</code>.</li>
-  <li>Use <code>power = 0.80</code>.</li>
-</ul>
+A team is testing a weight-loss drug against a placebo. They decide that only a weight loss of at least 3 kg would be worth acting on. Published weight-loss trials report a standard deviation of about 5 kg for weight change. The team will use a 5% significance level and wants an 80% chance of detecting a real effect if one exists.
 
 Replace each `____` with the right value, then run the cell.
 
@@ -799,14 +785,7 @@ power.t.test(
 
 <h2>Exercise 2: pain relief study</h2>
 
-A team is testing a new pain drug against a placebo. Pain is measured on a 0 to 10 scale.
-
-<ul class="tight-list">
-  <li>They want to detect a <strong>1 point</strong> difference in average pain, so <code>delta = 1</code>.</li>
-  <li>A small pilot study measured pain in a handful of patients, and scores varied by about <strong>2 points</strong>, so <code>sd = 2</code>.</li>
-  <li>Use <code>sig.level = 0.05</code>.</li>
-  <li>Use <code>power = 0.80</code>.</li>
-</ul>
+A team is testing a new pain drug against a placebo. Pain is measured on a 0 to 10 scale. They want to detect a 1 point difference in average pain. A small pilot study measured pain in a handful of patients, and the standard deviation of pain scores was about 2 points. The team will use a 5% significance level and wants an 80% chance of detecting a real effect if one exists.
 
 Replace each `____` with the right value, then run the cell.
 

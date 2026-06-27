@@ -8,7 +8,7 @@
 
 <meta name="author" content="GRAPH Courses">
 
-<title>Sample size for a two-sample t test in R</title>
+<title>Reading check_model() with the SUNSHINE checklist</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -58,16 +58,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="power_analysis_two_sample_ttest_files/libs/clipboard/clipboard.min.js"></script>
-<script src="power_analysis_two_sample_ttest_files/libs/quarto-html/quarto.js"></script>
-<script src="power_analysis_two_sample_ttest_files/libs/quarto-html/popper.min.js"></script>
-<script src="power_analysis_two_sample_ttest_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="power_analysis_two_sample_ttest_files/libs/quarto-html/anchor.min.js"></script>
-<link href="power_analysis_two_sample_ttest_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="power_analysis_two_sample_ttest_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="power_analysis_two_sample_ttest_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="power_analysis_two_sample_ttest_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="power_analysis_two_sample_ttest_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="check_model_sunshine_opus48_m4x8_files/libs/clipboard/clipboard.min.js"></script>
+<script src="check_model_sunshine_opus48_m4x8_files/libs/quarto-html/quarto.js"></script>
+<script src="check_model_sunshine_opus48_m4x8_files/libs/quarto-html/popper.min.js"></script>
+<script src="check_model_sunshine_opus48_m4x8_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="check_model_sunshine_opus48_m4x8_files/libs/quarto-html/anchor.min.js"></script>
+<link href="check_model_sunshine_opus48_m4x8_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="check_model_sunshine_opus48_m4x8_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="check_model_sunshine_opus48_m4x8_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="check_model_sunshine_opus48_m4x8_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="check_model_sunshine_opus48_m4x8_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.47.0/min/vs/editor/editor.main.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   
@@ -346,7 +346,7 @@ iframe.qwebr-output-code-browse {
 // Document level settings ----
 
 // Determine if we need to install R packages
-globalThis.qwebrInstallRPackagesList = [''];
+globalThis.qwebrInstallRPackagesList = ['performance', 'see', 'ggplot2', 'patchwork', 'qqplotr'];
 
 // Specify possible locations to search for the repository
 globalThis.qwebrPackageRepoURLS = ['https://repo.r-wasm.org/'];
@@ -356,7 +356,7 @@ globalThis.qwebrSetupRPackages = !(qwebrInstallRPackagesList.indexOf("") !== -1)
 globalThis.qwebrAutoloadRPackages = true;
 
 // Display a startup message?
-globalThis.qwebrShowStartupMessage = false;
+globalThis.qwebrShowStartupMessage = true;
 globalThis.qwebrShowHeaderMessage = false;
 
 // Describe the webR settings that should be used
@@ -368,7 +368,7 @@ globalThis.qwebrCustomizedWebROptions = {
 };
 
 // Store cell data
-globalThis.qwebrCellDetails = [{"code":"power.t.test(\n  delta = 5,\n  sd = 8,\n  sig.level = 0.05,\n  power = 0.80\n)","options":{"label":"unnamed-chunk-1","editor-quick-suggestions":"false","warning":"true","message":"true","output":"true","read-only":"false","context":"interactive","classes":"","fig-cap":"","out-height":"","fig-width":7,"editor-font-scale":"1","out-width":"700px","autorun":"false","editor-max-height":"","dpi":72,"editor-word-wrap":"true","fig-height":5,"results":"markup","comment":""},"id":1},{"code":"power.t.test(\n  delta = ____,\n  sd = ____,\n  sig.level = ____,\n  power = ____\n)","options":{"label":"unnamed-chunk-2","editor-quick-suggestions":"false","warning":"true","message":"true","output":"true","read-only":"false","context":"interactive","classes":"","fig-cap":"","out-height":"","fig-width":7,"editor-font-scale":"1","out-width":"700px","autorun":"false","editor-max-height":"","dpi":72,"editor-word-wrap":"true","fig-height":5,"results":"markup","comment":""},"id":2},{"code":"power.t.test(\n  delta = ____,\n  sd = ____,\n  sig.level = ____,\n  power = ____\n)","options":{"label":"unnamed-chunk-3","editor-quick-suggestions":"false","warning":"true","message":"true","output":"true","read-only":"false","context":"interactive","classes":"","fig-cap":"","out-height":"","fig-width":7,"editor-font-scale":"1","out-width":"700px","autorun":"false","editor-max-height":"","dpi":72,"editor-word-wrap":"true","fig-height":5,"results":"markup","comment":""},"id":3}];
+globalThis.qwebrCellDetails = [{"id":1,"code":"library(performance)\n\nmodel <- lm(mpg ~ wt + hp, data = mtcars)\n\nsummary(model)","options":{"results":"markup","output":"true","fig-width":7,"fig-height":5,"editor-max-height":"","message":"true","comment":"","classes":"","warning":"true","read-only":"false","editor-quick-suggestions":"false","autorun":"false","dpi":72,"out-height":"","fig-cap":"","label":"unnamed-chunk-1","out-width":"700px","editor-word-wrap":"true","context":"interactive","editor-font-scale":"1"}},{"id":2,"code":"plot(mpg ~ wt, data = mtcars,\n     pch = 19, col = \"#00565e\",\n     xlab = \"Weight (1000 lbs)\", ylab = \"Miles per gallon\",\n     main = \"Fuel economy vs weight, with fitted line\")\nabline(lm(mpg ~ wt, data = mtcars), col = \"#f5c542\", lwd = 3)","options":{"results":"markup","output":"true","fig-width":"8","fig-height":"5","editor-max-height":"","message":"true","comment":"","classes":"","warning":"true","read-only":"false","editor-quick-suggestions":"false","autorun":"false","dpi":72,"out-height":"","fig-cap":"","label":"unnamed-chunk-2","out-width":"700px","editor-word-wrap":"true","context":"interactive","editor-font-scale":"1"}},{"id":3,"code":"check_model(model)","options":{"results":"markup","output":"true","fig-width":"11","fig-height":"13","editor-max-height":"","message":"true","comment":"","classes":"","warning":"true","read-only":"false","editor-quick-suggestions":"false","autorun":"false","dpi":72,"out-height":"","fig-cap":"","label":"unnamed-chunk-3","out-width":"700px","editor-word-wrap":"true","context":"interactive","editor-font-scale":"1"}},{"id":4,"code":"model2 <- lm(mpg ~ ____, data = mtcars)\n\ncheck_model(____)","options":{"results":"markup","output":"true","fig-width":"11","fig-height":"13","editor-max-height":"","message":"true","comment":"","classes":"","warning":"true","read-only":"false","editor-quick-suggestions":"false","autorun":"false","dpi":72,"out-height":"","fig-cap":"","label":"unnamed-chunk-4","out-width":"700px","editor-word-wrap":"true","context":"interactive","editor-font-scale":"1"}}];
 
 </script>
 <script type="module">
@@ -1622,35 +1622,6 @@ globalThis.qwebrExecuteCode = async function (
 
 </script>
 
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 </head>
 
@@ -1946,8 +1917,8 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Sample size for a two-sample t test in R</h1>
-<p class="subtitle lead">WebR practical using power.t.test()</p>
+<h1 class="title">Reading check_model() with the SUNSHINE checklist</h1>
+<p class="subtitle lead">WebR practical using performance::check_model()</p>
 </div>
 
 
@@ -2095,22 +2066,6 @@ svg text {
   color: var(--muted);
   font-size: 0.9rem;
   margin: 0.2rem 0.3rem 0;
-}
-
-.formula-panel {
-  background: var(--light-teal-soft);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1rem 1.15rem;
-  margin: 1rem 0;
-  overflow-x: auto;
-}
-
-.formula-panel .formula-note {
-  color: var(--muted);
-  font-size: 0.92rem;
-  margin: 0.85rem 0 0;
-  line-height: 1.55;
 }
 
 .practice {
@@ -2302,7 +2257,7 @@ code {
   border-radius: 6px;
   background: #fff;
   color: var(--ink);
-  min-width: 9rem;
+  min-width: 11rem;
 }
 
 .arg-select.correct-choice {
@@ -2393,6 +2348,83 @@ code {
   margin-top: 2rem;
   font-size: 0.9rem;
 }
+
+/* SUNSHINE letter grid */
+.sun-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 0.6rem;
+  margin: 1rem 0 0.4rem;
+}
+
+.sun-card {
+  border-radius: 10px;
+  padding: 0.7rem 0.55rem;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+
+.sun-card .sun-letter {
+  font-size: 1.5rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.sun-card .sun-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-top: 0.3rem;
+  line-height: 1.2;
+}
+
+.sun-card .sun-tag {
+  display: inline-block;
+  margin-top: 0.4rem;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+}
+
+.sun-card.plot {
+  background: #e3f4f4;
+  border-color: var(--light-teal);
+}
+
+.sun-card.plot .sun-letter { color: var(--dark-teal); }
+.sun-card.plot .sun-tag { background: var(--dark-teal); color: #fff; }
+
+.sun-card.think {
+  background: #fff4cf;
+  border-color: var(--gold);
+}
+
+.sun-card.think .sun-letter { color: #8a6800; }
+.sun-card.think .sun-tag { background: #8a6800; color: #fff; }
+
+.legend {
+  display: flex;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend .swatch {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 3px;
+  display: inline-block;
+}
 </style>
 <div class="page-shell">
 <header class="masthead">
@@ -2400,118 +2432,398 @@ code {
 WebR practical
 </div>
 <h1>
-Sample size for a two-sample t test in R
+Reading check_model() with the SUNSHINE checklist
 </h1>
 <p>
-Before you collect data, you decide how many subjects to recruit. In this practical, you will use the R function <code>power.t.test()</code> to calculate the sample size for a given power.
+The <code>check_model()</code> function draws every regression diagnostic at once — which can feel like a wall of plots. The <strong>SUNSHINE</strong> checklist gives you eight things to look for, so you always know what each panel is for.
 </p>
 </header>
+<div class="warning callout callout-style-simple callout-none no-icon">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Heads up — first run is slow.</strong> The first time you run a cell, your browser downloads the R packages (<code>performance</code>, <code>see</code>, <code>ggplot2</code>, and friends) and compiles the plots. This can take <strong>30–90 seconds</strong>. After that it is fast. If a cell looks stuck, give it a moment before re-running.</p>
+</div>
+</div>
+</div>
 <section class="panel">
 <h2 class="anchored">
-Overview
+The SUNSHINE checklist
 </h2>
-<p>Deciding how many subjects to recruit is one of the more important decisions you make when planning a study.</p>
-<p>If you recruit too few subjects, your study may be <strong>underpowered</strong> and you may miss a real effect.</p>
-<p>It’s also possible to recruit too many subjects, more than the study needs to demonstrate a convincing effect, and thus waste time and money.</p>
-<p>A power analysis is usually done before the study is conducted, to determine the sample size needed to achieve a desired level of power.</p>
-<p>There are many kinds of power analysis for different study designs and tests. This practical introduces the idea through one common case: finding sample size for a <strong>two-sample t test</strong> using the R function <code>power.t.test()</code>.</p>
+<p>Whenever you fit a linear regression, the same eight assumptions decide whether the results can be trusted. They spell <strong>SUNSHINE</strong>:</p>
+<div class="sun-grid">
+<div class="sun-card think">
+<div class="sun-letter">
+S
+</div>
+<div class="sun-label">
+Sample size
+</div>
+<div class="sun-tag">
+Think
+</div>
+</div>
+<div class="sun-card think">
+<div class="sun-letter">
+U
+</div>
+<div class="sun-label">
+Uncorrelated errors
+</div>
+<div class="sun-tag">
+Think
+</div>
+</div>
+<div class="sun-card plot">
+<div class="sun-letter">
+N
+</div>
+<div class="sun-label">
+No multicollinearity
+</div>
+<div class="sun-tag">
+Plot
+</div>
+</div>
+<div class="sun-card plot">
+<div class="sun-letter">
+S
+</div>
+<div class="sun-label">
+Shape (linearity)
+</div>
+<div class="sun-tag">
+Plot
+</div>
+</div>
+<div class="sun-card plot">
+<div class="sun-letter">
+H
+</div>
+<div class="sun-label">
+Homogeneity of variance
+</div>
+<div class="sun-tag">
+Plot
+</div>
+</div>
+<div class="sun-card plot">
+<div class="sun-letter">
+I
+</div>
+<div class="sun-label">
+Influential points
+</div>
+<div class="sun-tag">
+Plot
+</div>
+</div>
+<div class="sun-card plot">
+<div class="sun-letter">
+N
+</div>
+<div class="sun-label">
+Normality of residuals
+</div>
+<div class="sun-tag">
+Plot
+</div>
+</div>
+<div class="sun-card think">
+<div class="sun-letter">
+E
+</div>
+<div class="sun-label">
+Exogeneity
+</div>
+<div class="sun-tag">
+Think
+</div>
+</div>
+</div>
+<div class="legend">
+<p><span><span class="swatch" style="background:#5fbfbf"></span> <strong>Plot</strong> — <code>check_model()</code> draws a panel you can read directly.</span> <span><span class="swatch" style="background:#f5c542"></span> <strong>Think</strong> — a design / reasoning question no plot can settle.</span></p>
+</div>
+<p style="margin-top:1rem">
+The key insight: <code>check_model()</code> handles the <strong>five “Plot” letters</strong> for you. The other three — <strong>S</strong>ample size, <strong>U</strong>ncorrelated errors, and <strong>E</strong>xogeneity — are about your study design and data collection, so you have to reason about them yourself.
+</p>
 <p>After answering all questions, <strong>your completion code will be revealed.</strong> Enter it into the LMS to mark this practical complete.</p>
 </section>
-<div class="practice" data-answer="a">
+<div class="practice" data-answer="c">
 <div class="practice-title">
 Question 1
 </div>
 <p>
-What does a power analysis for a two-sample t test give you?
+What is the SUNSHINE checklist a way of remembering?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p0" value="a">An estimate of the sample size you need per group.</label> <label><input type="radio" name="p0" value="b">Proof that the new drug works.</label> <label><input type="radio" name="p0" value="c">A guarantee that your p-value will be small.</label>
+<label><input type="radio" name="p0" value="a">The steps for cleaning a dataset.</label> <label><input type="radio" name="p0" value="b">The arguments of the <code>lm()</code> function.</label> <label><input type="radio" name="p0" value="c">The assumptions behind a linear regression.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. It is a planning calculation for sample size. It does not decide the result of any single study." data-incorrect="Not quite. A power analysis estimates the sample size you need. It does not prove a result or guarantee a p-value.">
+<div class="practice-feedback" data-correct="Correct. SUNSHINE is a mnemonic for the regression assumptions you should check before trusting a model." data-incorrect="Not quite. SUNSHINE is a memory aid for the linear-regression assumptions you should check.">
+
+</div>
+</div>
+<div class="practice" data-answer="b">
+<div class="practice-title">
+Question 2
+</div>
+<p>
+Three SUNSHINE letters are marked <strong>“Think”</strong> rather than <strong>“Plot”</strong>. Why?
+</p>
+<div class="choice-set">
+<label><input type="radio" name="p1" value="a">They are less important than the others.</label> <label><input type="radio" name="p1" value="b">They depend on study design and data collection, so no diagnostic plot can settle them.</label> <label><input type="radio" name="p1" value="c">R has not implemented them yet.</label>
+</div>
+<button type="button">Check</button>
+<div class="practice-feedback" data-correct="Correct. Sample size, uncorrelated errors, and exogeneity are reasoning questions about how the data arose, not things a residual plot can prove." data-incorrect="Not quite. The 'Think' letters are not unimportant — they just can't be judged from a plot, because they depend on design and how the data were collected.">
 
 </div>
 </div>
 <section class="panel">
 <h2 class="anchored">
-The power.t.test() function call
+From model to checklist in two lines
 </h2>
-<p>Below is the standard syntax for the <code>power.t.test()</code> function.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">power.t.test</span>(</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">delta =</span> ...,        <span class="co"># difference worth detecting</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd =</span> ...,           <span class="co"># standard deviation</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">sig.level =</span> <span class="fl">0.05</span>,   <span class="co"># false-positive rate</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span>        <span class="co"># chance to detect a real difference</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Typically, you fill in four values and leave out <code>n</code>. That is the value R solves for.</p>
-<p>Thx box below shows the formula for the sample size calculation. You do <strong>not</strong> need to memorize the formula. It is here so you can see how the four inputs fit together.</p>
-<div class="formula-panel">
-<p><span class="math display">\[
-n \approx 2\left(\frac{\bigl(z_{1-\alpha/2} + z_{1-\beta}\bigr)\,\sigma}{\delta}\right)^2
-\]</span></p>
-<p class="formula-note">
-<strong>Reading the symbols:</strong> <span class="math inline">\(n\)</span> is sample size per group; <span class="math inline">\(\delta\)</span> is <code>delta</code>; <span class="math inline">\(\sigma\)</span> is <code>sd</code>; <span class="math inline">\(\alpha\)</span> is <code>sig.level</code>; and power <span class="math inline">\(= 1 - \beta\)</span>, where <span class="math inline">\(\beta\)</span> is the false-negative rate. R uses a slightly more exact calculation, but this is the usual large-sample approximation.
-</p>
-</div>
-<p>There are four inputs. Match each one to its R argument using the dropdowns, then check your answers. (The four options are <code>delta</code>, <code>sd</code>, <code>sig.level</code>, and <code>power</code>.)</p>
-<div id="arg-match">
+<p>The workflow is the same as always: fit a model, then hand it to <code>check_model()</code>.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(performance)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">lm</span>(mpg <span class="sc">~</span> wt <span class="sc">+</span> hp, <span class="at">data =</span> mtcars)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">check_model</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>As the panel appears, walk the <strong>five “Plot” letters</strong> of SUNSHINE in order. Each one tells you exactly which panel to look at and what “good” looks like:</p>
 <table class="summary-table">
 <thead>
 <tr>
 <th>
-R argument (select correct one from dropdown)
+Letter
 </th>
 <th>
-Meaning
+Panel to read
 </th>
 <th>
-Where you get it
+Good sign
 </th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>
-<select class="arg-select" data-answer="delta"> <option value="">Select one</option> <option value="delta">delta</option> <option value="sd">sd</option> <option value="sig.level">sig.level</option> <option value="power">power</option> </select>
+<strong>N</strong> — No multicollinearity
 </td>
 <td>
-The <strong>difference between group means</strong> worth detecting. The smallest effect that would matter in practice.
+Collinearity bars (VIF)
 </td>
 <td>
-From the study goal: what change in the outcome would you act on?
-</td>
-</tr>
-<tr>
-<td>
-<select class="arg-select" data-answer="sd"> <option value="">–</option> <option value="delta">delta</option> <option value="sd">sd</option> <option value="sig.level">sig.level</option> <option value="power">power</option> </select>
-</td>
-<td>
-The <strong>standard deviation</strong> of the outcome within a group; how much subjects vary (the noise).
-</td>
-<td>
-From a pilot study, published trials in similar patients, or clinical records.
+Bars stay low / in the green zone (needs 2+ predictors).
 </td>
 </tr>
 <tr>
 <td>
-<select class="arg-select" data-answer="sig.level"> <option value="">–</option> <option value="delta">delta</option> <option value="sd">sd</option> <option value="sig.level">sig.level</option> <option value="power">power</option> </select>
+<strong>S</strong> — Shape (linearity)
 </td>
 <td>
-The <strong>significance level</strong> (α): the false-positive rate you accept.
+Residuals vs fitted
 </td>
 <td>
-Convention; usually fixed at 0.05.
+Green line stays roughly flat.
 </td>
 </tr>
 <tr>
 <td>
-<select class="arg-select" data-answer="power"> <option value="">–</option> <option value="delta">delta</option> <option value="sd">sd</option> <option value="sig.level">sig.level</option> <option value="power">power</option> </select>
+<strong>H</strong> — Homogeneity
 </td>
 <td>
-<strong>Statistical power</strong> (1 − β): the probability of detecting the difference if it is real.
+Scale–location spread
 </td>
 <td>
-Convention; usually 0.80. Use 0.90 if you want a lower chance of missing a real effect (a false negative).
+Green line roughly flat (constant spread).
+</td>
+</tr>
+<tr>
+<td>
+<strong>I</strong> — Influential points
+</td>
+<td>
+Residuals vs leverage
+</td>
+<td>
+No point sitting far outside the dashed contour.
+</td>
+</tr>
+<tr>
+<td>
+<strong>N</strong> — Normality
+</td>
+<td>
+Q-Q style plot
+</td>
+<td>
+Dots hug the reference line / stay in the band.
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<div class="practice" data-answer="a">
+<div class="practice-title">
+Question 3
+</div>
+<p>
+How many of the eight SUNSHINE letters does <code>check_model()</code> draw a panel for?
+</p>
+<div class="choice-set">
+<label><input type="radio" name="p2" value="a">Five of them.</label> <label><input type="radio" name="p2" value="b">All eight.</label> <label><input type="radio" name="p2" value="c">Just one.</label>
+</div>
+<button type="button">Check</button>
+<div class="practice-feedback" data-correct="Correct. check_model() covers the five 'Plot' letters: the two N's, S (shape), H, and I. The other three are reasoning questions." data-incorrect="Not quite. check_model() draws panels for five letters (No multicollinearity, Shape, Homogeneity, Influential points, Normality). The other three are 'Think' letters.">
+
+</div>
+</div>
+<section class="panel">
+<h2 class="anchored">
+Worked example: fuel economy of cars
+</h2>
+<p>We will use <code>mtcars</code>, a built-in dataset of 32 cars, and model fuel economy (<code>mpg</code>) from each car’s <strong>weight</strong> (<code>wt</code>) and <strong>horsepower</strong> (<code>hp</code>). Run the cell to fit the model.</p>
+</section>
+<div class="webr-wrap">
+<h3 class="anchored">
+Step 1: fit the model
+</h3>
+<div id="qwebr-insertion-location-1"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<section class="panel">
+<h2 class="anchored">
+See the regression itself
+</h2>
+<p>Before walking the SUNSHINE letters, it helps to <em>look</em> at the model. The cell below plots fuel economy against weight and draws the fitted straight line — the line whose assumptions the rest of the checklist interrogates.</p>
+</section>
+<div class="webr-wrap">
+<h3 class="anchored">
+The fitted regression line
+</h3>
+<div id="qwebr-insertion-location-2"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<div class="practice" data-answer="b">
+<div class="practice-title">
+Question 4
+</div>
+<p>
+The model has 32 cars and two predictors. Which SUNSHINE letter does that fact speak to most directly — and is it something a plot can verify?
+</p>
+<div class="choice-set">
+<label><input type="radio" name="p3" value="a"><strong>H</strong> (homogeneity), and yes a plot verifies it.</label> <label><input type="radio" name="p3" value="b"><strong>S</strong> (sample size), and no — it is a “Think” letter you judge yourself.</label> <label><input type="radio" name="p3" value="c"><strong>E</strong> (exogeneity), and yes a plot verifies it.</label>
+</div>
+<button type="button">Check</button>
+<div class="practice-feedback" data-correct="Correct. The number of observations relative to predictors is the Sample-size letter, and you judge it by thinking, not from a residual plot." data-incorrect="Not quite. 'How many observations do I have for this many predictors?' is the Sample-size (S) letter — a 'Think' letter, not something a plot settles.">
+
+</div>
+</div>
+<div class="webr-wrap">
+<h3 class="anchored">
+Step 2: draw the full SUNSHINE panel
+</h3>
+<div id="qwebr-insertion-location-3"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<div class="try callout callout-style-simple callout-none no-icon">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Walk the panel using the five Plot letters: <strong>N</strong>o multicollinearity, <strong>S</strong>hape, <strong>H</strong>omogeneity, <strong>I</strong>nfluential points, <strong>N</strong>ormality. Compare each panel’s dots against its green reference line or band.</p>
+</div>
+</div>
+</div>
+<div class="practice" data-answer="b">
+<div class="practice-title">
+Question 5
+</div>
+<p>
+For the <strong>S</strong> (Shape / linearity) and <strong>H</strong> (Homogeneity) letters, the green reference line is reassuring when it is…
+</p>
+<div class="choice-set">
+<label><input type="radio" name="p4" value="a">a steep diagonal.</label> <label><input type="radio" name="p4" value="b">roughly flat and horizontal.</label> <label><input type="radio" name="p4" value="c">a tight loop.</label>
+</div>
+<button type="button">Check</button>
+<div class="practice-feedback" data-correct="Correct. Both the Shape and Homogeneity panels want a flat, horizontal green line." data-incorrect="Not quite. For Shape and Homogeneity, a roughly flat horizontal green line is the good sign.">
+
+</div>
+</div>
+<div class="practice" data-answer="c">
+<div class="practice-title">
+Question 6
+</div>
+<p>
+The second <strong>N</strong> in SUNSHINE — <strong>N</strong>ormality of residuals — is read from which panel?
+</p>
+<div class="choice-set">
+<label><input type="radio" name="p5" value="a">The collinearity bar chart.</label> <label><input type="radio" name="p5" value="b">The residuals-vs-leverage plot.</label> <label><input type="radio" name="p5" value="c">The Q-Q style plot, where dots should follow the reference line.</label>
+</div>
+<button type="button">Check</button>
+<div class="practice-feedback" data-correct="Correct. Normality is judged from the Q-Q style plot — dots tracking the reference line and staying in the band." data-incorrect="Not quite. Normality of residuals is the Q-Q style panel; the dots should follow the reference line and stay inside the band.">
+
+</div>
+</div>
+<section class="panel">
+<h2 class="anchored">
+Match each letter to its panel
+</h2>
+<p>Match each of the five “Plot” SUNSHINE letters to the panel it points you to, then check your answers.</p>
+<div id="arg-match">
+<table class="summary-table">
+<thead>
+<tr>
+<th>
+Panel description
+</th>
+<th>
+SUNSHINE letter (pick from dropdown)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Bars (one per predictor) showing how inflated each coefficient’s variance is; should stay low.
+</td>
+<td>
+<select class="arg-select" data-answer="N1"> <option value="">Select one</option> <option value="N1">N — No multicollinearity</option> <option value="S">S — Shape (linearity)</option> <option value="H">H — Homogeneity</option> <option value="I">I — Influential points</option> <option value="N2">N — Normality</option> </select>
+</td>
+</tr>
+<tr>
+<td>
+Residuals vs fitted values; a flat green line means a straight line fits.
+</td>
+<td>
+<select class="arg-select" data-answer="S"> <option value="">–</option> <option value="N1">N — No multicollinearity</option> <option value="S">S — Shape (linearity)</option> <option value="H">H — Homogeneity</option> <option value="I">I — Influential points</option> <option value="N2">N — Normality</option> </select>
+</td>
+</tr>
+<tr>
+<td>
+Spread of residuals across fitted values; a flat line means the noise is the same size everywhere.
+</td>
+<td>
+<select class="arg-select" data-answer="H"> <option value="">–</option> <option value="N1">N — No multicollinearity</option> <option value="S">S — Shape (linearity)</option> <option value="H">H — Homogeneity</option> <option value="I">I — Influential points</option> <option value="N2">N — Normality</option> </select>
+</td>
+</tr>
+<tr>
+<td>
+Leverage vs residual size; flags a single point that may be dragging the line.
+</td>
+<td>
+<select class="arg-select" data-answer="I"> <option value="">–</option> <option value="N1">N — No multicollinearity</option> <option value="S">S — Shape (linearity)</option> <option value="H">H — Homogeneity</option> <option value="I">I — Influential points</option> <option value="N2">N — Normality</option> </select>
+</td>
+</tr>
+<tr>
+<td>
+Q-Q style plot comparing residuals to a bell curve; dots should follow the reference line.
+</td>
+<td>
+<select class="arg-select" data-answer="N2"> <option value="">–</option> <option value="N1">N — No multicollinearity</option> <option value="S">S — Shape (linearity)</option> <option value="H">H — Homogeneity</option> <option value="I">I — Influential points</option> <option value="N2">N — Normality</option> </select>
 </td>
 </tr>
 </tbody>
@@ -2523,238 +2835,71 @@ Check matches
 
 </div>
 </div>
-<div class="practice" data-answer="d">
-<div class="practice-title">
-Question 2
-</div>
-<p>
-Which of these is <strong>not</strong> an input you give to <code>power.t.test()</code> when calculating sample size?
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p1" value="a"><code>delta</code></label> <label><input type="radio" name="p1" value="b"><code>sd</code></label> <label><input type="radio" name="p1" value="c"><code>sig.level</code></label> <label><input type="radio" name="p1" value="d"><code>n</code></label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. You supply delta, sd, sig.level, and power. R calculates n." data-incorrect="Not quite. delta, sd, and sig.level are all inputs. n is what R solves for.">
-
-</div>
-</div>
 </section>
-<div class="svg-panel" aria-label="Four inputs feeding into power.t.test, which returns sample size per group">
-<svg viewbox="0 0 760 300" role="img">
-  <defs>
-    <marker id="arrow" viewbox="0 0 10 10" refx="9" refy="5" markerwidth="7" markerheight="7" orient="auto-start-reverse">
-      <path d="M0 0 L10 5 L0 10 z" fill="#7d9698"></path>
-    </marker>
-  </defs>
-  <rect x="0" y="0" width="760" height="300" rx="18" fill="#ffffff"></rect>
-
-  <g>
-    <rect x="22" y="18" width="248" height="54" rx="12" fill="#e3f4f4" stroke="#5fbfbf" stroke-width="2.5"></rect>
-    <text x="38" y="42" font-size="18" font-weight="800" fill="#00565e">delta</text>
-    <text x="38" y="62" font-size="13" fill="#173234">difference worth detecting</text>
-  </g>
-  <g>
-    <rect x="22" y="84" width="248" height="54" rx="12" fill="#fff4cf" stroke="#f5c542" stroke-width="2.5"></rect>
-    <text x="38" y="108" font-size="18" font-weight="800" fill="#8a6800">sd</text>
-    <text x="38" y="128" font-size="13" fill="#173234">standard deviation (noise)</text>
-  </g>
-  <g>
-    <rect x="22" y="150" width="248" height="54" rx="12" fill="#e3f4f4" stroke="#5fbfbf" stroke-width="2.5"></rect>
-    <text x="38" y="174" font-size="18" font-weight="800" fill="#00565e">sig.level</text>
-    <text x="38" y="194" font-size="13" fill="#173234">false-positive rate (0.05)</text>
-  </g>
-  <g>
-    <rect x="22" y="216" width="248" height="54" rx="12" fill="#fff4cf" stroke="#f5c542" stroke-width="2.5"></rect>
-    <text x="38" y="240" font-size="18" font-weight="800" fill="#8a6800">power</text>
-    <text x="38" y="260" font-size="13" fill="#173234">chance to detect it (0.80)</text>
-  </g>
-
-  <line x1="270" y1="45" x2="346" y2="135" stroke="#7d9698" stroke-width="2.5" marker-end="url(#arrow)"></line>
-  <line x1="270" y1="111" x2="346" y2="143" stroke="#7d9698" stroke-width="2.5" marker-end="url(#arrow)"></line>
-  <line x1="270" y1="177" x2="346" y2="157" stroke="#7d9698" stroke-width="2.5" marker-end="url(#arrow)"></line>
-  <line x1="270" y1="243" x2="346" y2="165" stroke="#7d9698" stroke-width="2.5" marker-end="url(#arrow)"></line>
-
-  <rect x="350" y="90" width="178" height="120" rx="16" fill="#00565e"></rect>
-  <text x="439" y="140" text-anchor="middle" font-size="20" font-weight="900" fill="#ffffff">power.t.test()</text>
-  <text x="439" y="168" text-anchor="middle" font-size="14" fill="#cdeeee">solves for n</text>
-
-  <line x1="528" y1="150" x2="572" y2="150" stroke="#7d9698" stroke-width="2.5" marker-end="url(#arrow)"></line>
-
-  <rect x="574" y="90" width="162" height="120" rx="16" fill="#ffffff" stroke="#f5c542" stroke-width="3"></rect>
-  <text x="655" y="138" text-anchor="middle" font-size="30" font-weight="900" fill="#00565e">n</text>
-  <text x="655" y="166" text-anchor="middle" font-size="14" fill="#173234">per group</text>
-  <text x="655" y="188" text-anchor="middle" font-size="13" fill="#5d7475">(round up)</text>
-</svg>
-</div>
-<p class="svg-caption">
-You give R the four inputs. R then returns <code>n</code>, the number of subjects needed in each group.
-</p>
-<div class="practice" data-answer="a">
-<div class="practice-title">
-Question 3
-</div>
-<p>
-In a sample-size calculation, which input is the smallest difference between group means that is worth detecting?
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p2" value="a"><code>delta</code></label> <label><input type="radio" name="p2" value="b"><code>sd</code></label> <label><input type="radio" name="p2" value="c"><code>sig.level</code></label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. delta is the difference worth detecting." data-incorrect="Not quite. delta is the difference worth detecting. sd is the standard deviation, and sig.level is the false-positive rate.">
-
-</div>
-</div>
 <section class="panel">
 <h2 class="anchored">
-Worked example 1: blood pressure study
+Exercise: drop a predictor and watch a letter disappear
 </h2>
-<p>A team is testing a new blood pressure drug against a placebo. They would like to reduce systolic blood pressure by at least 5 mmHg; a smaller reduction would not be considered worth acting on. Previous blood pressure trials in similar patients reported a standard deviation of about 8 mmHg. The team will use a 5% significance level and wants an 80% chance of detecting a real effect if one exists.</p>
-<p>Run the cell to find the sample size needed for each group.</p>
+<p>The first <strong>N</strong> (No multicollinearity) only makes sense when there are <strong>two or more</strong> predictors — one predictor cannot be collinear with itself. Fit a single-predictor model (just <code>wt</code>), save it as <code>model2</code>, and check it.</p>
+<p>Replace each <code>____</code> with the right piece, then run the cell.</p>
 </section>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code for worked example 1
+R code for the exercise (fill in the blanks)
 </h3>
-<div id="qwebr-insertion-location-1"></div>
+<div id="qwebr-insertion-location-4"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 </div>
+<details class="answer">
+<summary>
+Show the answer
+</summary>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>model2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(mpg <span class="sc">~</span> wt, <span class="at">data =</span> mtcars)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">check_model</span>(model2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="practice" data-answer="a">
-<div class="practice-title">
-Question 4
-</div>
-<p>
-Run the cell above. R returns a decimal for <code>n</code>. How many patients are needed in <strong>each group</strong>? Remember to round up.
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p3" value="a">42</label> <label><input type="radio" name="p3" value="b">5</label> <label><input type="radio" name="p3" value="c">8</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. R reports about n = 41.2 per group, which rounds up to 42." data-incorrect="Not quite. R reports about n = 41.2 per group. Round that up to 42.">
-
-</div>
-</div>
-<div class="practice" data-answer="b">
-<div class="practice-title">
-Question 5
-</div>
-<p>
-This is a <strong>two-sample t test</strong> with two groups. How many patients are needed in <strong>total</strong>?
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p4" value="a">42</label> <label><input type="radio" name="p4" value="b">84</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. You need 42 per group, so 84 in total." data-incorrect="Not quite. With 42 patients per group in a two-sample study, the total is 84.">
-
-</div>
-</div>
-<div class="practice" data-answer="a">
-<div class="practice-title">
-Question 6
-</div>
-<p>
-Imagine the team decides that only a blood pressure drop of <strong>8 mmHg</strong> would be worth acting on (a larger difference than the 5 mmHg they started with). A bigger minimum difference is easier to detect, so the required sample size should change. Go back to the code cell above, change <code>delta</code> to <code>8</code>, and re-run. How many patients are needed in each group? Remember to round up.
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p5" value="a">17</label> <label><input type="radio" name="p5" value="b">42</label> <label><input type="radio" name="p5" value="c">113</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. With a larger delta, R reports about n = 16.7 per group, which rounds up to 17." data-incorrect="Not quite. With delta = 8, R reports about n = 16.7 per group. Round up to 17.">
-
-</div>
-</div>
-<div class="practice" data-answer="b">
 <div class="practice-title">
 Question 7
 </div>
 <p>
-The researchers want to increase the probability of detecting a real effect if one exists, so they raise their target power to 90%. Go back to the code cell above, set <code>delta</code> back to <code>5</code>, change <code>power</code> to <code>0.90</code>, and re-run. How many patients are needed in each group? Remember to round up.
+With only one predictor in <code>model2</code>, which SUNSHINE letter’s panel drops out of the plot?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p6" value="a">42</label> <label><input type="radio" name="p6" value="b">55</label> <label><input type="radio" name="p6" value="c">17</label>
+<label><input type="radio" name="p6" value="a">The first <strong>N</strong> — No multicollinearity.</label> <label><input type="radio" name="p6" value="b">The <strong>H</strong> — Homogeneity.</label> <label><input type="radio" name="p6" value="c">The second <strong>N</strong> — Normality.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Asking for 90% power raises n to about 54.8 per group, which rounds up to 55." data-incorrect="Not quite. With power = 0.90, R reports about n = 54.8 per group. Round up to 55.">
+<div class="practice-feedback" data-correct="Correct. Multicollinearity is about predictors relating to each other, so with one predictor that panel disappears." data-incorrect="Not quite. With a single predictor there is nothing to be collinear with, so the No-multicollinearity panel drops out.">
 
 </div>
 </div>
-<section class="panel">
-<h2 class="anchored">
-Exercise 1: weight-loss study
-</h2>
-<p>A team is testing a weight-loss drug against a placebo. They decide that only a weight loss of at least 3 kg would be worth acting on. Published weight-loss trials report a standard deviation of about 5 kg for weight change. The team will use a 5% significance level and wants an 80% chance of detecting a real effect if one exists.</p>
-<p>Replace each <code>____</code> with the right value, then run the cell.</p>
-</section>
-<div class="webr-wrap">
-<h3 class="anchored">
-R code for exercise 1 (fill in values)
-</h3>
-<div id="qwebr-insertion-location-2"></div>
-<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
-</div>
-<details class="answer">
-<summary>
-Show the answer
-</summary>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">power.t.test</span>(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">delta =</span> <span class="dv">3</span>,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd =</span> <span class="dv">5</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="practice" data-answer="a">
+<div class="practice" data-answer="c">
 <div class="practice-title">
 Question 8
 </div>
 <p>
-How many subjects are needed in <strong>each group</strong>? Remember to round up.
+A colleague says: “The <code>check_model()</code> plots all looked fine, so my predictor must be causing the outcome.” Which SUNSHINE letter shows why that reasoning is flawed?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p7" value="a">45</label> <label><input type="radio" name="p7" value="b">44</label> <label><input type="radio" name="p7" value="c">90</label>
+<label><input type="radio" name="p7" value="a"><strong>I</strong> — Influential points.</label> <label><input type="radio" name="p7" value="b"><strong>H</strong> — Homogeneity.</label> <label><input type="radio" name="p7" value="c"><strong>E</strong> — Exogeneity, which is about causal structure and cannot be read off any residual plot.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. R reports about n = 44.6 per group, which rounds up to 45." data-incorrect="Not quite. R reports about n = 44.6 per group. Round up to 45.">
+<div class="practice-feedback" data-correct="Correct. Exogeneity (a 'Think' letter) is about omitted causes and causal structure — clean plots cannot establish it." data-incorrect="Not quite. Clean plots cannot prove causation. Exogeneity (E) is a 'Think' letter about causal structure and omitted confounders.">
 
 </div>
 </div>
-<section class="panel">
-<h2 class="anchored">
-Exercise 2: pain relief study
-</h2>
-<p>A team is testing a new pain drug against a placebo. Pain is measured on a 0 to 10 scale. They want to detect a 1 point difference in average pain. A small pilot study measured pain in a handful of patients, and the standard deviation of pain scores was about 2 points. The team will use a 5% significance level and wants an 80% chance of detecting a real effect if one exists.</p>
-<p>Replace each <code>____</code> with the right value, then run the cell.</p>
-</section>
-<div class="webr-wrap">
-<h3 class="anchored">
-R code for exercise 2 (fill in values)
-</h3>
-<div id="qwebr-insertion-location-3"></div>
-<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
-</div>
-<details class="answer">
-<summary>
-Show the answer
-</summary>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">power.t.test</span>(</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">delta =</span> <span class="dv">1</span>,</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd =</span> <span class="dv">2</span>,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.80</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="practice" data-answer="a">
+<div class="practice" data-answer="b">
 <div class="practice-title">
 Question 9
 </div>
 <p>
-How many subjects are needed in <strong>each group</strong>? Remember to round up.
+Overall, how does the SUNSHINE checklist help you use <code>check_model()</code> well?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p8" value="a">64</label> <label><input type="radio" name="p8" value="b">63</label> <label><input type="radio" name="p8" value="c">128</label>
+<label><input type="radio" name="p8" value="a">It replaces <code>check_model()</code> entirely.</label> <label><input type="radio" name="p8" value="b">It tells you what to look for in each panel and reminds you of the three assumptions no plot can show.</label> <label><input type="radio" name="p8" value="c">It guarantees every assumption is satisfied.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. R reports about n = 63.8 per group, which rounds up to 64." data-incorrect="Not quite. R reports about n = 63.8 per group. Round up to 64.">
+<div class="practice-feedback" data-correct="Correct. SUNSHINE gives the plots names and adds the three reasoning letters the plots leave out. It does not guarantee anything." data-incorrect="Not quite. SUNSHINE structures how you read the plots and flags the 'Think' letters — it does not replace check_model() or guarantee the assumptions hold.">
 
 </div>
 </div>
@@ -2778,11 +2923,11 @@ Your completion code
 </div>
 </section>
 <p class="footer-note">
-GRAPH Courses practical | Power and sample size
+GRAPH Courses practical | The SUNSHINE checklist for performance::check_model()
 </p>
 </div>
 <script>
-const COMPLETION_CODE = "POWERFUL";
+const COMPLETION_CODE = "SUNSHINE";
 const COMPLETION_REQUIRED = 7;
 
 function shuffleArgSelectOptions() {
@@ -2819,10 +2964,10 @@ document.getElementById("arg-match-check")?.addEventListener("click", () => {
   feedback.classList.remove("is-correct", "is-incorrect");
   if (!allSelected) {
     feedback.classList.add("is-incorrect");
-    feedback.textContent = "Choose an argument for every row, then check again.";
+    feedback.textContent = "Choose a letter for every row, then check again.";
   } else if (allCorrect) {
     feedback.classList.add("is-correct");
-    feedback.textContent = "All four matches are correct.";
+    feedback.textContent = "All five matches are correct.";
   } else {
     feedback.classList.add("is-incorrect");
     feedback.textContent = "Not quite. Check the rows highlighted in red and try again.";

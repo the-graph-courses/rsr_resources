@@ -1,0 +1,1006 @@
+---
+title: "Reading check_model() with the SUNSHINE checklist"
+subtitle: "WebR practical using performance::check_model()"
+author: "GRAPH Courses"
+format:
+  html:
+    toc: false
+    number-sections: false
+    theme: cosmo
+    page-layout: full
+engine: knitr
+filters:
+  - webr
+webr:
+  show-startup-message: true
+  show-header-message: false
+  packages:
+    - performance
+    - see
+    - ggplot2
+    - patchwork
+    - qqplotr
+---
+
+<style>
+:root {
+  --dark-teal: #00565e;
+  --light-teal: #5fbfbf;
+  --light-teal-soft: #e3f4f4;
+  --gold: #f5c542;
+  --ink: #173234;
+  --muted: #5d7475;
+  --page: #f4f7f7;
+  --card: #ffffff;
+  --border: #d0dede;
+  --good: #287a4d;
+  --good-bg: #e8f8ef;
+  --bad: #b83b3b;
+  --bad-bg: #fdecea;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.quarto-title-block {
+  display: none;
+}
+
+.page-shell {
+  width: min(900px, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding: 1.25rem 0 3rem;
+}
+
+.masthead {
+  background: var(--dark-teal);
+  color: #fff;
+  border-radius: 8px;
+  border-left: 6px solid var(--gold);
+  padding: 1.4rem 1.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.eyebrow {
+  color: var(--gold);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+.masthead h1 {
+  color: #fff;
+  font-size: 1.6rem;
+  line-height: 1.15;
+  font-weight: 800;
+  margin: 0;
+}
+
+.masthead p {
+  max-width: 680px;
+  margin: 0.55rem 0 0;
+  color: #d3eded;
+  font-size: 0.98rem;
+}
+
+.panel,
+.practice,
+.callout,
+.webr-wrap,
+.svg-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.panel {
+  padding: 1.15rem 1.3rem;
+  margin-bottom: 1rem;
+}
+
+.panel h2 {
+  color: var(--dark-teal);
+  font-weight: 800;
+  margin-top: 0;
+  font-size: 1.3rem;
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 0.45rem;
+  margin-bottom: 0.8rem;
+}
+
+.panel p:last-child,
+.callout p:last-child {
+  margin-bottom: 0;
+}
+
+.tight-list {
+  padding-left: 1.15rem;
+  margin-bottom: 0;
+}
+
+.tight-list li {
+  margin-bottom: 0.35rem;
+}
+
+.svg-panel {
+  padding: 0.6rem;
+  margin: 0.85rem 0 0.4rem;
+  overflow-x: auto;
+}
+
+.svg-panel svg {
+  width: 100%;
+  min-width: 560px;
+  display: block;
+}
+
+svg text {
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+.svg-caption {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0.2rem 0.3rem 0;
+}
+
+.practice {
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  border-top: 4px solid var(--gold);
+}
+
+.practice .practice-title {
+  color: var(--dark-teal);
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+}
+
+.practice p {
+  margin-bottom: 0.7rem;
+}
+
+.choice-set {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.8rem 0;
+}
+
+.choice-set label {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 0.72rem 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.choice-set label:hover {
+  border-color: var(--light-teal);
+  background: #edf8f8;
+}
+
+.choice-set input {
+  appearance: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid #aacaca;
+  border-radius: 50%;
+  margin-top: 0.15rem;
+  flex: 0 0 auto;
+}
+
+.choice-set input:checked {
+  border-color: var(--dark-teal);
+  background:
+    radial-gradient(circle at center, #fff 0 34%, transparent 36%),
+    var(--dark-teal);
+}
+
+.practice button {
+  background: var(--dark-teal);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.55rem 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.practice button:hover {
+  background: #003f45;
+}
+
+.practice .practice-feedback {
+  display: none;
+  margin-top: 0.8rem;
+  border-radius: 8px;
+  padding: 0.75rem 0.85rem;
+}
+
+.practice.is-correct .practice-feedback {
+  display: block;
+  background: var(--good-bg);
+  color: #173a26;
+  border: 1px solid #a9dab9;
+}
+
+.practice.is-incorrect .practice-feedback {
+  display: block;
+  background: var(--bad-bg);
+  color: #4b1c1c;
+  border: 1px solid #e6b1b1;
+}
+
+.practice label.correct-choice {
+  border-color: var(--good);
+  background: var(--good-bg);
+}
+
+.practice label.incorrect-choice {
+  border-color: var(--bad);
+  background: var(--bad-bg);
+}
+
+.callout {
+  padding: 1rem 1.15rem;
+  border-left: 5px solid var(--light-teal);
+  margin: 1rem 0;
+}
+
+.callout.warning {
+  border-left-color: var(--gold);
+  background: #fffaf0;
+}
+
+.callout.try {
+  border-left-color: var(--dark-teal);
+  background: var(--light-teal-soft);
+}
+
+.callout > :first-child,
+.webr-wrap > h3 {
+  margin-top: 0;
+}
+
+.webr-wrap {
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  border-top: 4px solid var(--light-teal);
+}
+
+.webr-wrap h3 {
+  color: var(--dark-teal);
+  font-size: 1rem;
+}
+
+.answer {
+  margin-top: 0.7rem;
+}
+
+.answer summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--dark-teal);
+}
+
+.answer[open] summary {
+  margin-bottom: 0.4rem;
+}
+
+code {
+  background: rgba(0, 86, 94, 0.08);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  color: #123638;
+}
+
+.qwebr-output-code-stdout pre,
+.qwebr-output-code-stderr pre {
+  white-space: pre-wrap;
+}
+
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  margin: 0.8rem 0 0;
+}
+
+.summary-table th,
+.summary-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.6rem 0.5rem;
+  vertical-align: top;
+}
+
+.summary-table th {
+  text-align: left;
+  color: var(--dark-teal);
+  background: var(--light-teal-soft);
+}
+
+.arg-select {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.92rem;
+  padding: 0.35rem 0.45rem;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  min-width: 11rem;
+}
+
+.arg-select.correct-choice {
+  border-color: var(--good);
+  background: var(--good-bg);
+}
+
+.arg-select.incorrect-choice {
+  border-color: var(--bad);
+  background: var(--bad-bg);
+}
+
+.match-button {
+  background: var(--dark-teal);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  margin-top: 0.9rem;
+}
+
+.match-button:hover {
+  background: #003f45;
+}
+
+.match-feedback {
+  display: none;
+  margin-top: 0.7rem;
+  border-radius: 8px;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.95rem;
+}
+
+.match-feedback.is-correct {
+  display: block;
+  background: var(--good-bg);
+  color: #173a26;
+  border: 1px solid #a9dab9;
+}
+
+.match-feedback.is-incorrect {
+  display: block;
+  background: var(--bad-bg);
+  color: #4b1c1c;
+  border: 1px solid #e6b1b1;
+}
+
+.panel.completion {
+  border-top: 4px solid var(--gold);
+}
+
+.code-progress {
+  font-weight: 800;
+  color: var(--dark-teal);
+}
+
+.code-box {
+  display: none;
+  text-align: center;
+  background: var(--dark-teal);
+  color: #fff;
+  border-radius: 8px;
+  padding: 1.1rem;
+  margin-top: 0.6rem;
+}
+
+.code-box .code-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.code-box .code-value {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin-top: 0.3rem;
+}
+
+.footer-note {
+  color: var(--muted);
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.9rem;
+}
+
+/* SUNSHINE letter grid */
+.sun-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 0.6rem;
+  margin: 1rem 0 0.4rem;
+}
+
+.sun-card {
+  border-radius: 10px;
+  padding: 0.7rem 0.55rem;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+
+.sun-card .sun-letter {
+  font-size: 1.5rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.sun-card .sun-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-top: 0.3rem;
+  line-height: 1.2;
+}
+
+.sun-card .sun-tag {
+  display: inline-block;
+  margin-top: 0.4rem;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+}
+
+.sun-card.plot {
+  background: #e3f4f4;
+  border-color: var(--light-teal);
+}
+
+.sun-card.plot .sun-letter { color: var(--dark-teal); }
+.sun-card.plot .sun-tag { background: var(--dark-teal); color: #fff; }
+
+.sun-card.think {
+  background: #fff4cf;
+  border-color: var(--gold);
+}
+
+.sun-card.think .sun-letter { color: #8a6800; }
+.sun-card.think .sun-tag { background: #8a6800; color: #fff; }
+
+.legend {
+  display: flex;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend .swatch {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 3px;
+  display: inline-block;
+}
+</style>
+
+<div class="page-shell">
+
+<header class="masthead">
+  <div class="eyebrow">WebR practical</div>
+  <h1>Reading check_model() with the SUNSHINE checklist</h1>
+  <p>The <code>check_model()</code> function draws every regression diagnostic at once — which can feel like a wall of plots. The <strong>SUNSHINE</strong> checklist gives you eight things to look for, so you always know what each panel is for.</p>
+</header>
+
+<div class="callout warning">
+<strong>Heads up — first run is slow.</strong> The first time you run a cell, your browser downloads the R packages (<code>performance</code>, <code>see</code>, <code>ggplot2</code>, and friends) and compiles the plots. This can take <strong>30–90 seconds</strong>. After that it is fast. If a cell looks stuck, give it a moment before re-running.
+</div>
+
+<section class="panel">
+
+<h2>The SUNSHINE checklist</h2>
+
+Whenever you fit a linear regression, the same eight assumptions decide whether the results can be trusted. They spell **SUNSHINE**:
+
+<div class="sun-grid">
+  <div class="sun-card think"><div class="sun-letter">S</div><div class="sun-label">Sample size</div><div class="sun-tag">Think</div></div>
+  <div class="sun-card think"><div class="sun-letter">U</div><div class="sun-label">Uncorrelated errors</div><div class="sun-tag">Think</div></div>
+  <div class="sun-card plot"><div class="sun-letter">N</div><div class="sun-label">No multicollinearity</div><div class="sun-tag">Plot</div></div>
+  <div class="sun-card plot"><div class="sun-letter">S</div><div class="sun-label">Shape (linearity)</div><div class="sun-tag">Plot</div></div>
+  <div class="sun-card plot"><div class="sun-letter">H</div><div class="sun-label">Homogeneity of variance</div><div class="sun-tag">Plot</div></div>
+  <div class="sun-card plot"><div class="sun-letter">I</div><div class="sun-label">Influential points</div><div class="sun-tag">Plot</div></div>
+  <div class="sun-card plot"><div class="sun-letter">N</div><div class="sun-label">Normality of residuals</div><div class="sun-tag">Plot</div></div>
+  <div class="sun-card think"><div class="sun-letter">E</div><div class="sun-label">Exogeneity</div><div class="sun-tag">Think</div></div>
+</div>
+
+<div class="legend">
+  <span><span class="swatch" style="background:#5fbfbf"></span> <strong>Plot</strong> — <code>check_model()</code> draws a panel you can read directly.</span>
+  <span><span class="swatch" style="background:#f5c542"></span> <strong>Think</strong> — a design / reasoning question no plot can settle.</span>
+</div>
+
+<p style="margin-top:1rem">The key insight: <code>check_model()</code> handles the <strong>five "Plot" letters</strong> for you. The other three — <strong>S</strong>ample size, <strong>U</strong>ncorrelated errors, and <strong>E</strong>xogeneity — are about your study design and data collection, so you have to reason about them yourself.</p>
+
+After answering all questions, <strong>your completion code will be revealed.</strong> Enter it into the LMS to mark this practical complete.
+
+</section>
+
+<div class="practice" data-answer="c">
+  <div class="practice-title">Question 1</div>
+  <p>What is the SUNSHINE checklist a way of remembering?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p0" value="a">The steps for cleaning a dataset.</label>
+<label><input type="radio" name="p0" value="b">The arguments of the <code>lm()</code> function.</label>
+<label><input type="radio" name="p0" value="c">The assumptions behind a linear regression.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. SUNSHINE is a mnemonic for the regression assumptions you should check before trusting a model." data-incorrect="Not quite. SUNSHINE is a memory aid for the linear-regression assumptions you should check."></div>
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 2</div>
+  <p>Three SUNSHINE letters are marked <strong>"Think"</strong> rather than <strong>"Plot"</strong>. Why?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p1" value="a">They are less important than the others.</label>
+<label><input type="radio" name="p1" value="b">They depend on study design and data collection, so no diagnostic plot can settle them.</label>
+<label><input type="radio" name="p1" value="c">R has not implemented them yet.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Sample size, uncorrelated errors, and exogeneity are reasoning questions about how the data arose, not things a residual plot can prove." data-incorrect="Not quite. The 'Think' letters are not unimportant — they just can't be judged from a plot, because they depend on design and how the data were collected."></div>
+</div>
+
+<section class="panel">
+
+<h2>From model to checklist in two lines</h2>
+
+The workflow is the same as always: fit a model, then hand it to `check_model()`.
+
+```r
+library(performance)
+
+model <- lm(mpg ~ wt + hp, data = mtcars)
+
+check_model(model)
+```
+
+As the panel appears, walk the **five "Plot" letters** of SUNSHINE in order. Each one tells you exactly which panel to look at and what "good" looks like:
+
+<table class="summary-table">
+  <thead>
+    <tr><th>Letter</th><th>Panel to read</th><th>Good sign</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>N</strong> — No multicollinearity</td><td>Collinearity bars (VIF)</td><td>Bars stay low / in the green zone (needs 2+ predictors).</td></tr>
+    <tr><td><strong>S</strong> — Shape (linearity)</td><td>Residuals vs fitted</td><td>Green line stays roughly flat.</td></tr>
+    <tr><td><strong>H</strong> — Homogeneity</td><td>Scale–location spread</td><td>Green line roughly flat (constant spread).</td></tr>
+    <tr><td><strong>I</strong> — Influential points</td><td>Residuals vs leverage</td><td>No point sitting far outside the dashed contour.</td></tr>
+    <tr><td><strong>N</strong> — Normality</td><td>Q-Q style plot</td><td>Dots hug the reference line / stay in the band.</td></tr>
+  </tbody>
+</table>
+
+</section>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 3</div>
+  <p>How many of the eight SUNSHINE letters does <code>check_model()</code> draw a panel for?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p2" value="a">Five of them.</label>
+<label><input type="radio" name="p2" value="b">All eight.</label>
+<label><input type="radio" name="p2" value="c">Just one.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. check_model() covers the five 'Plot' letters: the two N's, S (shape), H, and I. The other three are reasoning questions." data-incorrect="Not quite. check_model() draws panels for five letters (No multicollinearity, Shape, Homogeneity, Influential points, Normality). The other three are 'Think' letters."></div>
+</div>
+
+<section class="panel">
+
+<h2>Worked example: fuel economy of cars</h2>
+
+We will use `mtcars`, a built-in dataset of 32 cars, and model fuel economy (`mpg`) from each car's **weight** (`wt`) and **horsepower** (`hp`). Run the cell to fit the model.
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>Step 1: fit the model</h3>
+
+```{webr-r}
+library(performance)
+
+model <- lm(mpg ~ wt + hp, data = mtcars)
+
+summary(model)
+```
+
+</div>
+
+<section class="panel">
+
+<h2>See the regression itself</h2>
+
+Before walking the SUNSHINE letters, it helps to *look* at the model. The cell below plots fuel economy against weight and draws the fitted straight line — the line whose assumptions the rest of the checklist interrogates.
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>The fitted regression line</h3>
+
+```{webr-r}
+#| fig-width: 8
+#| fig-height: 5
+plot(mpg ~ wt, data = mtcars,
+     pch = 19, col = "#00565e",
+     xlab = "Weight (1000 lbs)", ylab = "Miles per gallon",
+     main = "Fuel economy vs weight, with fitted line")
+abline(lm(mpg ~ wt, data = mtcars), col = "#f5c542", lwd = 3)
+```
+
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 4</div>
+  <p>The model has 32 cars and two predictors. Which SUNSHINE letter does that fact speak to most directly — and is it something a plot can verify?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p3" value="a"><strong>H</strong> (homogeneity), and yes a plot verifies it.</label>
+<label><input type="radio" name="p3" value="b"><strong>S</strong> (sample size), and no — it is a "Think" letter you judge yourself.</label>
+<label><input type="radio" name="p3" value="c"><strong>E</strong> (exogeneity), and yes a plot verifies it.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The number of observations relative to predictors is the Sample-size letter, and you judge it by thinking, not from a residual plot." data-incorrect="Not quite. 'How many observations do I have for this many predictors?' is the Sample-size (S) letter — a 'Think' letter, not something a plot settles."></div>
+</div>
+
+<div class="webr-wrap">
+
+<h3>Step 2: draw the full SUNSHINE panel</h3>
+
+```{webr-r}
+#| fig-width: 11
+#| fig-height: 13
+check_model(model)
+```
+
+</div>
+
+<div class="callout try">
+Walk the panel using the five Plot letters: <strong>N</strong>o multicollinearity, <strong>S</strong>hape, <strong>H</strong>omogeneity, <strong>I</strong>nfluential points, <strong>N</strong>ormality. Compare each panel's dots against its green reference line or band.
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 5</div>
+  <p>For the <strong>S</strong> (Shape / linearity) and <strong>H</strong> (Homogeneity) letters, the green reference line is reassuring when it is…</p>
+  <div class="choice-set">
+<label><input type="radio" name="p4" value="a">a steep diagonal.</label>
+<label><input type="radio" name="p4" value="b">roughly flat and horizontal.</label>
+<label><input type="radio" name="p4" value="c">a tight loop.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Both the Shape and Homogeneity panels want a flat, horizontal green line." data-incorrect="Not quite. For Shape and Homogeneity, a roughly flat horizontal green line is the good sign."></div>
+</div>
+
+<div class="practice" data-answer="c">
+  <div class="practice-title">Question 6</div>
+  <p>The second <strong>N</strong> in SUNSHINE — <strong>N</strong>ormality of residuals — is read from which panel?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p5" value="a">The collinearity bar chart.</label>
+<label><input type="radio" name="p5" value="b">The residuals-vs-leverage plot.</label>
+<label><input type="radio" name="p5" value="c">The Q-Q style plot, where dots should follow the reference line.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Normality is judged from the Q-Q style plot — dots tracking the reference line and staying in the band." data-incorrect="Not quite. Normality of residuals is the Q-Q style panel; the dots should follow the reference line and stay inside the band."></div>
+</div>
+
+<section class="panel">
+
+<h2>Match each letter to its panel</h2>
+
+Match each of the five "Plot" SUNSHINE letters to the panel it points you to, then check your answers.
+
+<div id="arg-match">
+<table class="summary-table">
+  <thead>
+    <tr>
+      <th>Panel description</th>
+      <th>SUNSHINE letter (pick from dropdown)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Bars (one per predictor) showing how inflated each coefficient's variance is; should stay low.</td>
+      <td>
+        <select class="arg-select" data-answer="N1">
+          <option value="">Select one</option>
+          <option value="N1">N — No multicollinearity</option>
+          <option value="S">S — Shape (linearity)</option>
+          <option value="H">H — Homogeneity</option>
+          <option value="I">I — Influential points</option>
+          <option value="N2">N — Normality</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td>Residuals vs fitted values; a flat green line means a straight line fits.</td>
+      <td>
+        <select class="arg-select" data-answer="S">
+          <option value="">--</option>
+          <option value="N1">N — No multicollinearity</option>
+          <option value="S">S — Shape (linearity)</option>
+          <option value="H">H — Homogeneity</option>
+          <option value="I">I — Influential points</option>
+          <option value="N2">N — Normality</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td>Spread of residuals across fitted values; a flat line means the noise is the same size everywhere.</td>
+      <td>
+        <select class="arg-select" data-answer="H">
+          <option value="">--</option>
+          <option value="N1">N — No multicollinearity</option>
+          <option value="S">S — Shape (linearity)</option>
+          <option value="H">H — Homogeneity</option>
+          <option value="I">I — Influential points</option>
+          <option value="N2">N — Normality</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td>Leverage vs residual size; flags a single point that may be dragging the line.</td>
+      <td>
+        <select class="arg-select" data-answer="I">
+          <option value="">--</option>
+          <option value="N1">N — No multicollinearity</option>
+          <option value="S">S — Shape (linearity)</option>
+          <option value="H">H — Homogeneity</option>
+          <option value="I">I — Influential points</option>
+          <option value="N2">N — Normality</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td>Q-Q style plot comparing residuals to a bell curve; dots should follow the reference line.</td>
+      <td>
+        <select class="arg-select" data-answer="N2">
+          <option value="">--</option>
+          <option value="N1">N — No multicollinearity</option>
+          <option value="S">S — Shape (linearity)</option>
+          <option value="H">H — Homogeneity</option>
+          <option value="I">I — Influential points</option>
+          <option value="N2">N — Normality</option>
+        </select>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<button type="button" class="match-button" id="arg-match-check">Check matches</button>
+<div class="match-feedback" id="arg-match-feedback"></div>
+</div>
+
+</section>
+
+<section class="panel">
+
+<h2>Exercise: drop a predictor and watch a letter disappear</h2>
+
+The first <strong>N</strong> (No multicollinearity) only makes sense when there are <strong>two or more</strong> predictors — one predictor cannot be collinear with itself. Fit a single-predictor model (just `wt`), save it as `model2`, and check it.
+
+Replace each `____` with the right piece, then run the cell.
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code for the exercise (fill in the blanks)</h3>
+
+```{webr-r}
+#| fig-width: 11
+#| fig-height: 13
+model2 <- lm(mpg ~ ____, data = mtcars)
+
+check_model(____)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+model2 <- lm(mpg ~ wt, data = mtcars)
+
+check_model(model2)
+```
+
+</details>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 7</div>
+  <p>With only one predictor in <code>model2</code>, which SUNSHINE letter's panel drops out of the plot?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p6" value="a">The first <strong>N</strong> — No multicollinearity.</label>
+<label><input type="radio" name="p6" value="b">The <strong>H</strong> — Homogeneity.</label>
+<label><input type="radio" name="p6" value="c">The second <strong>N</strong> — Normality.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Multicollinearity is about predictors relating to each other, so with one predictor that panel disappears." data-incorrect="Not quite. With a single predictor there is nothing to be collinear with, so the No-multicollinearity panel drops out."></div>
+</div>
+
+<div class="practice" data-answer="c">
+  <div class="practice-title">Question 8</div>
+  <p>A colleague says: "The <code>check_model()</code> plots all looked fine, so my predictor must be causing the outcome." Which SUNSHINE letter shows why that reasoning is flawed?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p7" value="a"><strong>I</strong> — Influential points.</label>
+<label><input type="radio" name="p7" value="b"><strong>H</strong> — Homogeneity.</label>
+<label><input type="radio" name="p7" value="c"><strong>E</strong> — Exogeneity, which is about causal structure and cannot be read off any residual plot.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Exogeneity (a 'Think' letter) is about omitted causes and causal structure — clean plots cannot establish it." data-incorrect="Not quite. Clean plots cannot prove causation. Exogeneity (E) is a 'Think' letter about causal structure and omitted confounders."></div>
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 9</div>
+  <p>Overall, how does the SUNSHINE checklist help you use <code>check_model()</code> well?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p8" value="a">It replaces <code>check_model()</code> entirely.</label>
+<label><input type="radio" name="p8" value="b">It tells you what to look for in each panel and reminds you of the three assumptions no plot can show.</label>
+<label><input type="radio" name="p8" value="c">It guarantees every assumption is satisfied.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. SUNSHINE gives the plots names and adds the three reasoning letters the plots leave out. It does not guarantee anything." data-incorrect="Not quite. SUNSHINE structures how you read the plots and flags the 'Think' letters — it does not replace check_model() or guarantee the assumptions hold."></div>
+</div>
+
+<section class="panel completion">
+
+<h2>Completion code</h2>
+
+<p>Answer at least 7 out of 9 questions correctly to reveal your completion code. Enter it into the LMS to mark this practical complete.</p>
+
+<p><span class="code-progress" id="code-progress">0 of 9 correct (need at least 7)</span></p>
+
+<div class="code-box" id="code-box">
+  <div class="code-label">Your completion code</div>
+  <div class="code-value" id="code-value"></div>
+</div>
+
+</section>
+
+<p class="footer-note">GRAPH Courses practical | The SUNSHINE checklist for performance::check_model()</p>
+
+</div>
+
+<script>
+const COMPLETION_CODE = "SUNSHINE";
+const COMPLETION_REQUIRED = 7;
+
+function shuffleArgSelectOptions() {
+  document.querySelectorAll("#arg-match .arg-select").forEach((sel) => {
+    const options = Array.from(sel.options);
+    const placeholder = options.shift();
+    options.sort(() => Math.random() - 0.5);
+    sel.replaceChildren(placeholder, ...options);
+    sel.selectedIndex = 0;
+  });
+}
+
+document.getElementById("arg-match-check")?.addEventListener("click", () => {
+  const selects = document.querySelectorAll("#arg-match .arg-select");
+  const feedback = document.getElementById("arg-match-feedback");
+  let allSelected = true;
+  let allCorrect = true;
+
+  selects.forEach((sel) => {
+    sel.classList.remove("correct-choice", "incorrect-choice");
+    if (!sel.value) {
+      allSelected = false;
+      sel.classList.add("incorrect-choice");
+      return;
+    }
+    if (sel.value === sel.dataset.answer) {
+      sel.classList.add("correct-choice");
+    } else {
+      allCorrect = false;
+      sel.classList.add("incorrect-choice");
+    }
+  });
+
+  feedback.classList.remove("is-correct", "is-incorrect");
+  if (!allSelected) {
+    feedback.classList.add("is-incorrect");
+    feedback.textContent = "Choose a letter for every row, then check again.";
+  } else if (allCorrect) {
+    feedback.classList.add("is-correct");
+    feedback.textContent = "All five matches are correct.";
+  } else {
+    feedback.classList.add("is-incorrect");
+    feedback.textContent = "Not quite. Check the rows highlighted in red and try again.";
+  }
+});
+
+shuffleArgSelectOptions();
+
+function updateCompletion() {
+  const cards = document.querySelectorAll(".practice");
+  const correct = document.querySelectorAll(".practice.is-correct").length;
+  const total = cards.length;
+  const progress = document.getElementById("code-progress");
+  const box = document.getElementById("code-box");
+  const value = document.getElementById("code-value");
+
+  if (progress) {
+    progress.textContent = correct + " of " + total + " correct (need at least " + COMPLETION_REQUIRED + ")";
+  }
+
+  if (box && value) {
+    if (correct >= COMPLETION_REQUIRED) {
+      value.textContent = COMPLETION_CODE;
+      box.style.display = "block";
+    } else {
+      box.style.display = "none";
+    }
+  }
+}
+
+document.querySelectorAll(".practice").forEach((card) => {
+  const button = card.querySelector("button");
+  const feedback = card.querySelector(".practice-feedback");
+  const answer = card.dataset.answer;
+
+  button.addEventListener("click", () => {
+    const selected = card.querySelector("input[type='radio']:checked");
+    card.classList.remove("is-correct", "is-incorrect");
+    card.querySelectorAll("label").forEach((label) => {
+      label.classList.remove("correct-choice", "incorrect-choice");
+    });
+
+    if (!selected) {
+      card.classList.add("is-incorrect");
+      feedback.textContent = "Choose an answer first, then check it.";
+      updateCompletion();
+      return;
+    }
+
+    const selectedLabel = selected.closest("label");
+    const correctInput = card.querySelector(`input[value="${answer}"]`);
+    const correctLabel = correctInput ? correctInput.closest("label") : null;
+
+    if (selected.value === answer) {
+      card.classList.add("is-correct");
+      selectedLabel.classList.add("correct-choice");
+      feedback.textContent = feedback.dataset.correct;
+    } else {
+      card.classList.add("is-incorrect");
+      selectedLabel.classList.add("incorrect-choice");
+      if (correctLabel) correctLabel.classList.add("correct-choice");
+      feedback.textContent = feedback.dataset.incorrect;
+    }
+
+    updateCompletion();
+  });
+});
+
+updateCompletion();
+</script>

@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<!-- active concept sheet: categorical (polytomous, K-level) predictor regression. build id: opus48_p4k9 -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Regression with a Polytomous Predictor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal: #0d7377; --teal-dark: #0a5d61; --gold: #f0c808;
+      --teal-soft: #eff7f7; --gold-soft: #fff9df; --rose-soft: #fdeef1; --blue-soft: #e7eef7;
+      --ink: #182326; --muted: #5d6d72; --line: #cfdcde; --soft: #eef6f6;
+      --cream: #fff9df; --rose: #b83b5e; --blue: #2f5f98; --green: #2c8a4a; --paper: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; background:#dfe8ea; color:var(--ink); font-family:Arial,Helvetica,sans-serif; font-size:9pt; line-height:1.3; }
+
+    .toolbar { width:210mm; max-width:calc(100vw - 24px); margin:18px auto 8px; display:flex; justify-content:space-between; align-items:flex-end; gap:16px; }
+    .toolbar-intro { flex:1; min-width:0; font-size:9pt; line-height:1.4; }
+    .toolbar-intro .title { font-weight:800; color:var(--teal); font-size:11pt; margin-bottom:2px; }
+    .toolbar-intro .descr { color:#3a4a4f; max-width:130mm; }
+    .toolbar-intro .descr b { color:var(--teal); }
+    .toolbar-actions { display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
+    button { border:1px solid #9bb4b7; background:var(--paper); color:var(--ink); border-radius:6px; padding:7px 11px; font:inherit; font-weight:700; cursor:pointer; }
+    button.primary { background:var(--teal); color:white; border-color:var(--teal); }
+    .print-button { display:inline-flex; align-items:center; gap:5px; }
+    .print-button svg { width:13px; height:13px; display:block; }
+    .zoom-group { display:inline-flex; align-items:stretch; border:1px solid #9bb4b7; border-radius:6px; overflow:hidden; background:var(--paper); }
+    .zoom-group button { border:0; border-radius:0; padding:6px 10px; background:transparent; font-weight:800; }
+    .zoom-group button + button { border-left:1px solid #cdd9dc; }
+    .zoom-group .zoom-label { display:inline-flex; align-items:center; justify-content:center; min-width:44px; padding:0 9px; border-left:1px solid #cdd9dc; color:var(--muted); font-size:9pt; font-weight:800; }
+
+    .page-wrap { display:flex; flex-direction:column; align-items:center; }
+    .page { width:210mm; min-height:297mm; margin:0 auto 18px; background:var(--paper); padding:5mm 9mm 3mm; box-shadow:0 8px 30px rgba(24,35,38,0.18); display:flex; flex-direction:column; gap:1.2mm; transform-origin:top center; }
+    header { border-bottom:1.5mm solid var(--gold); padding-bottom:1.2mm; }
+    h1 { margin:0; color:var(--teal); font-size:22pt; line-height:0.98; }
+    .subtitle { margin-top:1.4mm; color:var(--muted); font-weight:700; font-size:9.5pt; }
+
+    .group-label { display:flex; align-items:center; gap:3mm; color:var(--ink); font-size:8.5pt; font-weight:800; text-transform:uppercase; letter-spacing:0.14em; margin:0.4mm 0 0.2mm; }
+    .group-label::before, .group-label::after { content:""; flex:1; border-top:1px solid var(--line); height:0; }
+    .group-label span { white-space:nowrap; }
+
+    .box { border:1px solid var(--line); border-radius:6px; overflow:visible; background:white; display:flex; flex-direction:column; min-width:0; }
+    .box-tag { background:var(--teal); color:white; font-size:7.8pt; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; padding:1.3mm 2.8mm; }
+    .box-body { padding:1.7mm 2.6mm 1.9mm; flex:1; display:flex; flex-direction:column; gap:1.1mm; background:var(--teal-soft); min-width:0; overflow:visible; border-radius:0 0 5px 5px; }
+    .box-body p { margin:0; }
+    .box-body p.prelude { font-weight:700; }
+    .box-body ul { margin:0; padding-left:4mm; display:flex; flex-direction:column; gap:0.7mm; }
+    .box-body li { margin:0; }
+    .formula { font-family:Consolas,Menlo,monospace; padding-left:2mm; }
+
+    .box.tag-rose .box-tag { background:var(--rose); }
+    .box.tag-rose .box-body { background:var(--rose-soft); }
+    .box.tag-blue .box-tag { background:var(--blue); }
+    .box.tag-blue .box-body { background:var(--blue-soft); }
+    .box.tag-gold .box-tag { background:var(--gold); color:var(--ink); }
+    .box.tag-gold .box-body, .box.body-cream .box-body { background:var(--gold-soft); }
+    .box.body-cream .box-tag { background:var(--gold); color:var(--ink); }
+
+    .row { display:grid; gap:3mm; }
+    .row.cols-2 { grid-template-columns:1fr 1fr; }
+    .row.cols-3 { grid-template-columns:1fr 1fr 1fr; }
+    .row.cols-4 { grid-template-columns:1fr 1fr 1fr 1fr; }
+    .row.split-2-3 { grid-template-columns:2fr 3fr; }
+    .row.split-3-2 { grid-template-columns:3fr 2fr; }
+
+    .equation-formula { font-size:13pt; font-weight:800; text-align:center; }
+    .equation-formula .b0 { color:var(--blue); }
+    .equation-formula .b1 { color:var(--rose); }
+
+    .visual { border:1px solid var(--line); border-radius:6px; padding:1.5mm 1.5mm 1.8mm; background:linear-gradient(#fff,#fbfdfd); display:flex; flex-direction:column; gap:1mm; }
+    .visual svg { display:block; width:100%; height:auto; }
+    .visual-caption { font-size:8.5pt; color:var(--ink); text-align:center; line-height:1.5; padding:0 1mm; }
+
+    .worked { font-family:Consolas,Menlo,monospace; font-size:9pt; background:#fbfdfd; border:1px dashed var(--line); border-radius:5px; padding:1.6mm 2.4mm; line-height:2.2; }
+    .hints-hidden .worked { line-height:1.7; }
+
+    .r-code { border:1px solid #2a3a3d; border-radius:5px; padding:1.5mm 2.4mm; background:#1f2a2d; color:#e6f1f2; font-family:Consolas,Menlo,monospace; font-size:7.6pt; line-height:1.5; white-space:pre; overflow:hidden; }
+    .r-code .cm { color:#8aa3a8; font-style:italic; }
+    .r-code .fn { color:#6dd3c8; }
+    .r-code .hl-int { background:rgba(47,95,152,0.55); padding:0 2px; border-radius:3px; }
+    .r-code .hl-slope { background:rgba(184,59,94,0.55); padding:0 2px; border-radius:3px; }
+
+    .b { display:inline-flex; flex-direction:column; align-items:center; vertical-align:baseline; line-height:1; margin:0 0.2mm; text-align:center; max-width:100%; min-width:0; }
+    .fill { border:0; border-bottom:1.4px solid var(--teal); border-radius:0; padding:0 0.3mm 0.5px; color:var(--ink); background:transparent; font:inherit; font-weight:800; line-height:1; text-align:center; min-width:2mm; max-width:100%; transition:width 0.18s ease-out; }
+    .fill.code { font-family:Consolas,Menlo,monospace; }
+    .fill.align-left { text-align:left; }
+    .fill:focus { outline:none; border-bottom-color:var(--teal-dark); border-bottom-width:1.8px; }
+    .hint { font-size:4.7pt; color:#98a3a7; font-weight:700; font-family:inherit; line-height:1.05; margin-top:0.35mm; letter-spacing:0.02em; white-space:normal; overflow-wrap:anywhere; max-width:34mm; text-align:center; }
+    .b.solved .hint { display:none; }
+    .hints-hidden .hint { display:none; }
+
+    .fill.wrong-pick { border-bottom-color:var(--rose) !important; color:var(--rose); animation:shake 0.45s; }
+    .fill.correct-flash { animation:correctFlash 0.75s ease-out; }
+
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-2px)} 40%,80%{transform:translateX(2px)} }
+    @keyframes correctFlash { 0%{background-color:rgba(44,138,74,0);border-bottom-color:var(--teal)} 20%{background-color:rgba(44,138,74,0.28);border-bottom-color:var(--green)} 60%{background-color:rgba(44,138,74,0.18);border-bottom-color:var(--green)} 100%{background-color:rgba(44,138,74,0);border-bottom-color:var(--teal)} }
+
+    footer { border-top:1px solid var(--line); padding-top:2mm; display:flex; justify-content:center; color:var(--muted); font-size:8.5pt; font-weight:700; margin-top:auto; }
+    footer a { color:var(--teal); text-decoration:none; }
+    footer a:hover { text-decoration:underline; }
+
+    @page { size:A4; margin:0; }
+    @media print {
+      body { background:white; }
+      .toolbar { display:none; }
+      .page { width:210mm; min-height:297mm; margin:0; box-shadow:none; break-after:page; transform:none !important; }
+      button { display:none; }
+      .fill,.r-code,.worked,.box,.box-tag,.box-body,.visual,.equation-formula .b0,.equation-formula .b1 { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+      .hint { display:none !important; }
+      .worked { line-height:1.7 !important; }
+      .fill { transition:none; }
+      .fill.wrong-pick { color:var(--ink); border-bottom-color:var(--teal) !important; }
+    }
+    @media screen and (max-width:820px) {
+      .page,.toolbar { width:calc(100vw - 16px); }
+      .page { padding:16px; min-height:auto; transform:none !important; }
+      .row { grid-template-columns:1fr !important; }
+      .toolbar { flex-direction:column; align-items:stretch; }
+      .toolbar-intro .descr { max-width:none; }
+    }
+
+    /* Finalized aesthetic cascade (regression chapter, teal signature). */
+    :root {
+      --bg:#dfe8ea;
+      --paper:#f7f4ed;
+      --ink:#101418;
+      --muted:#665f51;
+      --line:#d6cfbd;
+      --teal:#0d7377;
+      --teal-dark:#0a5d61;
+      --teal-soft:#e3f3f3;
+      --gold:#f0c808;
+      --gold-soft:#fff3cc;
+      --rose:#b83b5e;
+      --rose-soft:#fdeef1;
+      --green:#2c8a4a;
+      --blue:#2f5f98;
+      --blue-soft:#e7eef7;
+      --white:#fffef9;
+      --border:#101418;
+      --shadow:rgba(16,20,24,0.42);
+    }
+
+    body { background:var(--bg); color:var(--ink); font-family:'Space Grotesk', Arial, Helvetica, sans-serif; font-size:8.55pt; line-height:1.24; }
+    .toolbar { color:var(--ink); margin-top:24px; }
+    .toolbar-intro .title { color:var(--teal); font-family:'JetBrains Mono', Consolas, Menlo, monospace; font-size:10pt; letter-spacing:0.12em; text-transform:uppercase; }
+    .toolbar-intro .descr { color:#3a4a4f; }
+    button, .zoom-group { border:2px solid var(--ink); border-radius:7px; background:var(--paper); box-shadow:3px 3px 0 var(--shadow); font-family:'Space Grotesk', Arial, Helvetica, sans-serif; }
+    .zoom-group { overflow:visible; }
+    .zoom-group button { box-shadow:none; border-radius:0; }
+    .zoom-group button + button, .zoom-group .zoom-label { border-left:2px solid var(--ink); }
+    .zoom-group .zoom-label { color:var(--muted); font-family:'JetBrains Mono', Consolas, Menlo, monospace; font-weight:800; }
+    button.primary { background:var(--teal); color:#fff; border-color:var(--ink); }
+    .page { background:var(--paper); border:2px solid var(--ink); border-radius:10px; padding:3.2mm 7mm 2.4mm; box-shadow:8px 8px 0 rgba(16,20,24,0.13), 0 14px 36px rgba(16,20,24,0.14); gap:2.4mm; }
+    .row { gap:3mm; }
+    header { border-bottom:1mm solid var(--gold); padding-bottom:0.85mm; margin-bottom:0.15mm; }
+    h1 { color:var(--teal); font-family:'Space Grotesk', Arial, Helvetica, sans-serif; font-size:21pt; font-weight:800; letter-spacing:-0.03em; }
+    .subtitle { color:var(--muted); font-family:'JetBrains Mono', Consolas, Menlo, monospace; font-size:7.45pt; letter-spacing:0.02em; }
+    .group-label { color:var(--ink); font-family:'Space Grotesk', Arial, Helvetica, sans-serif; font-size:8pt; font-weight:900; letter-spacing:0.02em; text-transform:none; margin:0.15mm 0; }
+    .group-label::before, .group-label::after { border-top:2px solid var(--ink); }
+    .group-label span { background:var(--paper); border:2px solid var(--ink); border-radius:5px; padding:0.45mm 1.8mm; }
+    .box { background:var(--white); border:2px solid var(--ink); border-radius:8px; box-shadow:4px 4px 0 var(--shadow); overflow:visible; }
+    .box-tag { border-bottom:2px solid var(--ink); border-radius:6px 6px 0 0; font-family:'Space Grotesk', Arial, Helvetica, sans-serif; font-size:8.2pt; font-weight:900; letter-spacing:0.02em; text-transform:none; padding:0.75mm 2.4mm 0.6mm; }
+    .box-body { background:var(--white); border-radius:0 0 6px 6px; padding:1mm 2mm 1.1mm; gap:0.45mm; }
+    .box:not(.tag-gold):not(.tag-rose):not(.tag-blue):not(.body-cream) .box-body { background:var(--teal-soft); }
+    .box.tag-gold .box-body, .box.body-cream .box-body { background:var(--gold-soft); }
+    .box.tag-rose .box-body { background:var(--rose-soft); }
+    .box.tag-blue .box-body { background:var(--blue-soft); }
+    .formula, .r-code, .worked, .fill.code, code { font-family:'JetBrains Mono', Consolas, Menlo, monospace !important; }
+    .equation-formula { font-family:'Space Grotesk', Arial, Helvetica, sans-serif; letter-spacing:-0.02em; }
+    .visual, .worked { border:2px solid var(--ink); border-radius:8px; background:var(--white); box-shadow:none; }
+    .visual { padding:0.85mm 1mm 0.95mm; }
+    .r-code { border:2px solid var(--ink); border-radius:7px; background:#1d2229; color:#f0ecdf; font-size:6.6pt; line-height:1.3; }
+    .r-code .cm { color:#a8b3b4; }
+    .r-code .fn { color:#8fd5d2; }
+    .r-code .hl-int, .r-code .hl-slope { border:1px solid rgba(240,200,8,0.55); border-radius:3px; }
+    .worked { background:var(--white); border-style:dashed; }
+    .fill { border-bottom:1.8px solid var(--teal); background:rgba(255,255,255,0.36); border-radius:3px 3px 0 0; }
+    .fill:focus { border-bottom-color:var(--teal-dark); box-shadow:0 3px 0 rgba(240,200,8,0.35); }
+    .hint { color:#8b897d; font-family:'JetBrains Mono', Consolas, Menlo, monospace; font-size:4.9pt; letter-spacing:0.03em; }
+    .b.solved .fill { background:rgba(255,255,255,0.36); border-bottom-color:var(--teal-dark); }
+    footer { background:var(--teal); border-top:0; border-radius:7px; color:#fff; margin-top:auto; padding:1mm 2mm; box-shadow:4px 4px 0 var(--shadow); font-family:'JetBrains Mono', Consolas, Menlo, monospace; font-size:7.3pt; letter-spacing:0.02em; }
+    footer a { color:#fff; font-weight:900; }
+
+    @media print {
+      body { background:white; font-size:7.75pt; line-height:1.13; }
+      .page { border:0; border-radius:0; box-shadow:none; padding:1.6mm 5mm 0.9mm; gap:2.2mm; background:white; }
+      header { border-bottom-color:var(--gold); border-bottom-width:0.8mm; padding-bottom:0.25mm; margin-bottom:0; }
+      h1 { font-size:16.8pt; }
+      .subtitle { font-size:6.6pt; line-height:1.04; margin-top:0.2mm; }
+      .box, .visual, .worked, button, .zoom-group, footer, .group-label span { box-shadow:none; }
+      .box, .visual, .worked, .group-label span { border-width:1.4px; border-radius:5px; }
+      .box-tag { border-bottom-width:1.4px; border-radius:4px 4px 0 0; font-size:7pt; font-weight:900; letter-spacing:0.015em; text-transform:none; padding:0.38mm 1.55mm 0.28mm; line-height:1.08; }
+      .box-body { padding:0.45mm 1.15mm 0.55mm; gap:0.2mm; }
+      .row { gap:3mm; }
+      .group-label { font-size:6.75pt; margin:0; }
+      .group-label span { padding:0.2mm 1mm; }
+      .visual { padding:0.25mm 0.45mm 0.35mm; }
+      .visual-caption { font-size:6.3pt; line-height:1.1; }
+      .r-code { font-size:5.95pt; line-height:1.1; padding:0.35mm 1.1mm; }
+      .worked { font-size:7.1pt; line-height:1.22 !important; padding:0.45mm 1mm; }
+      .hint { display:none !important; }
+      .fill { transition:none; }
+      .fill.wrong-pick { color:var(--ink); border-bottom-color:var(--teal) !important; }
+      .equation-formula { font-size:11.5pt; }
+      footer { border-radius:0; padding:0.22mm 0; font-size:6.25pt; }
+    }
+
+    @media screen and (max-width:820px) {
+      .toolbar { color:var(--ink); margin-top:12px; }
+      html, body { overflow-x:auto; }
+      .toolbar-actions { justify-content:flex-start; }
+      button { padding:6px 8px; }
+      .zoom-group button { padding:5px 7px; }
+      .zoom-group .zoom-label { min-width:38px; padding:0 6px; }
+      .page { border-radius:10px; padding:16px; overflow:visible; }
+      .box { box-shadow:3px 3px 0 var(--shadow); }
+      .visual, .worked { box-shadow:none; }
+      .box, .box-body, .visual, .worked { overflow:visible; }
+      .box-body p, .visual-caption { overflow-wrap:anywhere; }
+      .equation-formula, .formula { white-space:normal; }
+      .b { max-width:min(100%, 34vw); }
+      .fill { max-width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="toolbar-intro">
+      <div class="title">GRAPH Courses cheat sheet</div>
+      <div class="descr">Type your answers into the blanks. Hint options appear in small grey text below each blank. When finished, click Print / Save on the right.</div>
+    </div>
+    <div class="toolbar-actions">
+      <div class="zoom-group" role="group" aria-label="Zoom controls">
+        <button type="button" id="zoomOut" aria-label="Zoom out">Zoom -</button>
+        <button type="button" id="zoomIn" aria-label="Zoom in">Zoom +</button>
+        <span class="zoom-label" id="zoomLabel">100%</span>
+      </div>
+      <button type="button" id="toggleHints">Hide hints</button>
+      <button type="button" id="clearAnswers">Clear</button>
+      <button type="button" class="primary print-button" onclick="window.print()" aria-label="Print or save cheat sheet">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M7 3h10v5H7V3Zm10 14h2a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h2v4h10v-4Zm-8 2v-6h6v6H9Zm9-7.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/>
+        </svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+        </svg>
+        Print / Save
+      </button>
+    </div>
+  </div>
+
+  <div class="page-wrap" id="pageWrap">
+  <section class="page" id="sheet">
+    <header>
+      <h1>Regression with a Polytomous Predictor</h1>
+      <div class="subtitle">A categorical predictor with K &gt; 2 levels becomes K &minus; 1 dummy comparisons</div>
+    </header>
+
+    <div class="box">
+      <div class="box-tag">Big idea</div>
+      <div class="box-body">
+        <p>A <b>polytomous</b> predictor has more than <span class="b"><input class="fill" data-answer="two"><span class="hint">two / five / ten</span></span> categories (for example education: primary, lower secondary, higher secondary, university). We do <b>not</b> code it as a single 0,1,2,3 number, because that would force the jump between every neighbouring level to be exactly the <span class="b"><input class="fill" data-answer="same" data-alt="equal"><span class="hint">same / largest / smallest</span></span>. Instead R picks one <b>reference</b> level and creates <span class="b"><input class="fill code" data-answer="K-1" data-alt="k-1|k minus 1"><span class="hint">K-1 / K / K+1</span></span> dummy variables, one for each remaining level.</p>
+      </div>
+    </div>
+
+    <div class="box body-cream">
+      <div class="box-tag">The equation (education, primary = reference)</div>
+      <div class="box-body">
+        <div class="equation-formula">&#375; = <span class="b0">b<sub>0</sub></span> + <span class="b1">b<sub>1</sub></span>&middot;lower + <span class="b1">b<sub>2</sub></span>&middot;higher + <span class="b1">b<sub>3</sub></span>&middot;university</div>
+        <p style="text-align:center;">Each dummy is <span class="b"><input class="fill code" data-answer="1"><span class="hint">1 / 10 / 0</span></span> only for its own level and <span class="b"><input class="fill code" data-answer="0"><span class="hint">0 / 1 / 2</span></span> otherwise, so only one term is ever switched on. The intercept b<sub>0</sub> is the mean of the <span class="b"><input class="fill" data-answer="reference"><span class="hint">reference / highest / average</span></span> group, and each slope is that group's mean <b>difference</b> versus the reference.</p>
+      </div>
+    </div>
+
+    <div class="group-label"><span>Worked example: RFFT cognitive score by education</span></div>
+    <div class="row split-3-2">
+      <div class="box"><div class="box-tag">Each estimate is a difference vs the reference</div><div class="box-body">
+<div class="r-code"><span class="cm"># primary is the reference level</span>
+mod &lt;- <span class="fn">lm</span>(rfft ~ education, data = prevent)
+<span class="fn">summary</span>(mod)
+                       Estimate
+<span class="hl-int">(Intercept)</span>             40.94
+<span class="hl-slope">educationLowerSecondary</span> 14.78
+<span class="hl-slope">educationHigherSecondary</span> 32.13
+<span class="hl-slope">educationUniversity</span>     44.96</div>
+        <p>The intercept 40.94 is the mean for <b>primary</b>. To get any other group's mean, <b>add</b> its estimate to the intercept. Lower secondary = 40.94 + <span class="b"><input class="fill code" data-answer="14.78"><span class="hint">14.78 / 55.72 / 40.94</span></span> = 55.72; higher secondary = 40.94 + <span class="b"><input class="fill code" data-answer="32.13"><span class="hint">32.13 / 73.07 / 40.94</span></span> = 73.07; university = 40.94 + <span class="b"><input class="fill code" data-answer="44.96"><span class="hint">44.96 / 85.9 / 40.94</span></span> = 85.9. So 44.96 means university scores 44.96 points <b>above</b> <span class="b"><input class="fill" data-answer="primary"><span class="hint">primary / university / the mean</span></span>, not 44.96 in total.</p>
+      </div></div>
+
+      <div class="visual" aria-label="Four education group means with differences from the reference">
+        <!-- SVG MATH: viewBox 360x190. x: primary90 lower160 higher230 university300.
+             y scale 30..90 -> svg_y = 165 - (y-30)*1.7
+             primary 40.94->146, lower 55.72->121, higher 73.07->92, university 85.9->70.
+             reference baseline at 146; rose verticals show each +difference. -->
+        <svg viewBox="0 0 360 190" role="img">
+          <rect width="360" height="190" rx="6" fill="#fff"/>
+          <line x1="50" y1="18" x2="50" y2="165" stroke="#5d6d72" stroke-width="1.2"/>
+          <line x1="50" y1="165" x2="345" y2="165" stroke="#5d6d72" stroke-width="1.2"/>
+          <g font-size="8" fill="#5d6d72" font-weight="700" text-anchor="end"><text x="45" y="149">41</text><text x="45" y="95">73</text><text x="45" y="73">86</text></g>
+          <text x="13" y="92" text-anchor="middle" font-size="8" font-weight="700" fill="#5d6d72" transform="rotate(-90,13,92)">RFFT score</text>
+          <!-- reference baseline -->
+          <line x1="50" y1="146" x2="345" y2="146" stroke="#2f5f98" stroke-width="1" stroke-dasharray="3,2"/>
+          <!-- difference bars (rose) from baseline to each mean -->
+          <line x1="160" y1="146" x2="160" y2="121" stroke="#b83b5e" stroke-width="2"/>
+          <line x1="230" y1="146" x2="230" y2="92" stroke="#b83b5e" stroke-width="2"/>
+          <line x1="300" y1="146" x2="300" y2="70" stroke="#b83b5e" stroke-width="2"/>
+          <!-- mean markers -->
+          <circle cx="90" cy="146" r="5" fill="#2f5f98" stroke="#1d4275" stroke-width="1.1"/>
+          <circle cx="160" cy="121" r="5" fill="#0d7377" stroke="#0a5d61" stroke-width="1.1"/>
+          <circle cx="230" cy="92" r="5" fill="#0d7377" stroke="#0a5d61" stroke-width="1.1"/>
+          <circle cx="300" cy="70" r="5" fill="#0d7377" stroke="#0a5d61" stroke-width="1.1"/>
+          <!-- reference mean (blue) -->
+          <text x="90" y="138" text-anchor="middle" font-size="7.5" font-weight="800" fill="#2f5f98">b&#8320; = 40.9</text>
+          <!-- group means (green points) -->
+          <text x="160" y="114" text-anchor="middle" font-size="7" font-weight="800" fill="#0d7377">55.7</text>
+          <text x="230" y="85" text-anchor="middle" font-size="7" font-weight="800" fill="#0d7377">73.1</text>
+          <text x="300" y="63" text-anchor="middle" font-size="7" font-weight="800" fill="#0d7377">85.9</text>
+          <!-- differences from reference (red lines) -->
+          <text x="167" y="137" font-size="7" font-weight="800" fill="#b83b5e">+14.8</text>
+          <text x="237" y="122" font-size="7" font-weight="800" fill="#b83b5e">+32.1</text>
+          <text x="307" y="112" font-size="7" font-weight="800" fill="#b83b5e">+45.0</text>
+          <g font-size="6.5" fill="#182326" font-weight="700" text-anchor="middle"><text x="90" y="178">primary</text><text x="160" y="178">lower</text><text x="230" y="178">higher</text><text x="300" y="178">univ.</text></g>
+        </svg>
+        <div class="visual-caption">Each <b style="color:#b83b5e">red line</b> is an estimate (mean vs primary); each <b style="color:#0d7377">point</b> is a group mean.</div>
+      </div>
+    </div>
+
+    <div class="group-label"><span>Choosing the reference category</span></div>
+    <div class="row cols-4">
+      <div class="box tag-blue"><div class="box-tag">Clinical control</div><div class="box-body">
+        <p>Sometimes the comparison you care about is "versus the control". In a drug trial, set the reference to the <span class="b"><input class="fill" data-answer="placebo" data-alt="control"><span class="hint">placebo / strongest / random</span></span> or standard-of-care group, so every estimate directly reports the <b>treatment effect</b>.</p>
+      </div></div>
+      <div class="box tag-blue"><div class="box-tag">Natural order</div><div class="box-body">
+        <p>Sometimes the categories have a built-in order. Then pick the natural first or last level, like <span class="b"><input class="fill" data-answer="primary"><span class="hint">primary / university / lower</span></span> education, so the comparisons climb an <b>intuitive ladder</b> from one end.</p>
+      </div></div>
+      <div class="box tag-blue"><div class="box-tag">Extreme outcome</div><div class="box-body">
+        <p>Sometimes you want every estimate to point the same way. Pick the group with the highest or lowest <span class="b"><input class="fill" data-answer="outcome" data-alt="mean"><span class="hint">outcome / sample / label</span></span>, so each effect reads cleanly as a <b>gain over the worst</b> or a deficit from the best.</p>
+      </div></div>
+      <div class="box tag-blue"><div class="box-tag">Largest group</div><div class="box-body">
+        <p>Sometimes precision matters most. Pick the group with the most <b>observations</b>, since every slope borrows the reference group's sample size, giving you <span class="b"><input class="fill" data-answer="tighter" data-alt="smaller|narrower"><span class="hint">tighter / wider / equal</span></span> confidence intervals.</p>
+      </div></div>
+    </div>
+
+    <div class="group-label"><span>Quick practice</span></div>
+    <div class="row split-3-2">
+      <div class="box"><div class="box-tag">Predict a level</div><div class="box-body">
+        <p>A model predicts resting heart rate (bpm) from weekly exercise, a 3-level predictor (sedentary, light, vigorous). N = 240.</p>
+<div class="r-code"><span class="cm"># sedentary is the reference level</span>
+mod &lt;- <span class="fn">lm</span>(hr ~ exercise, data = fitness)
+<span class="fn">summary</span>(mod)
+                   Estimate  Std.Error
+<span class="hl-int">(Intercept)</span>         78.0     ...
+<span class="hl-slope">exerciseLight</span>       -5.2     ...
+<span class="hl-slope">exerciseVigorous</span>    -9.8     ...</div>
+        <p>&#375; = 78.0 &minus; 5.2&middot;light &minus; 9.8&middot;vigorous. From this output, the predicted heart rate for a <b>sedentary</b> person is <span class="b"><input class="fill code" data-answer="78" data-alt="78.0"><span class="hint">78 / 72.8 / 68.2</span></span> bpm; for a <b>vigorous</b> person it is 78.0 &minus; 9.8 = <span class="b"><input class="fill code" data-answer="68.2"><span class="hint">68.2 / 72.8 / 78.0</span></span> bpm.</p>
+      </div></div>
+      <div class="box"><div class="box-tag">Read a coefficient</div><div class="box-body">
+        <p>The light coefficient of &minus;5.2 means light exercisers average 5.2 bpm lower than the <span class="b"><input class="fill" data-answer="sedentary" data-alt="reference"><span class="hint">sedentary / vigorous / average</span></span> group, because that is the omitted <b>reference</b> level, not lower than the vigorous group.</p>
+        <p>Each row also has its own SE, t, p, and 95% CI, read just like the binary case: it compares that level <b>against the reference</b>.</p>
+      </div></div>
+    </div>
+
+    <footer><a href="https://thegraphcourses.org" target="_blank" rel="noopener">thegraphcourses.org</a></footer>
+  </section>
+  </div>
+
+  <script>
+    const sheet = document.getElementById("sheet"),
+          pageWrap = document.getElementById("pageWrap"),
+          blanks = Array.from(document.querySelectorAll(".b"));
+
+    function fingerprint(str) {
+      let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+      for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      return (h2 >>> 0).toString(36) + (h1 >>> 0).toString(36);
+    }
+    const fp = fingerprint(
+      blanks.map(b => {
+        const inp = b.querySelector(".fill");
+        return (inp.dataset.answer || "") + "|" + (inp.dataset.alt || "");
+      }).join("\n")
+    );
+    const storageKey = "poly-predictor-cheatsheet-" + fp;
+
+    blanks.forEach(b => {
+      const hint = b.querySelector(".hint");
+      if (!hint) return;
+      const opts = hint.textContent.split(/\s*\/\s*/).filter(s => s.length > 0);
+      if (opts.length < 2) return;
+      for (let i = opts.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [opts[i], opts[j]] = [opts[j], opts[i]];
+      }
+      hint.textContent = opts.join(" / ");
+    });
+
+    const measureCanvas = document.createElement("canvas");
+    const measureCtx = measureCanvas.getContext("2d");
+    function getFontShorthand(el) {
+      const s = getComputedStyle(el);
+      return `${s.fontStyle || "normal"} ${s.fontWeight || "400"} ${s.fontSize} ${s.fontFamily}`;
+    }
+    function measureTextWidth(text, inp) {
+      measureCtx.font = getFontShorthand(inp);
+      return measureCtx.measureText(text).width;
+    }
+    function getDefaultWidth(inp) {
+      const answers = [inp.dataset.answer || "", ...(inp.dataset.alt ? inp.dataset.alt.split("|") : [])];
+      let maxW = 0;
+      answers.forEach(ans => {
+        const w = measureTextWidth(ans, inp);
+        if (w > maxW) maxW = w;
+      });
+      return Math.max(maxW + 12, 22);
+    }
+    function getSolvedWidth(inp) {
+      const w = measureTextWidth(inp.value, inp);
+      return Math.max(w + 6, 12);
+    }
+    function applyWidth(inp, solved) {
+      const w = solved ? getSolvedWidth(inp) : getDefaultWidth(inp);
+      inp.style.width = `${w}px`;
+    }
+
+    blanks.forEach(b => applyWidth(b.querySelector(".fill"), false));
+
+    const norm = s => String(s)
+      .replace(/[−–]/g, "-")
+      .replace(/₀/g, "0").replace(/₁/g, "1").replace(/₂/g, "2").replace(/₃/g, "3").replace(/₄/g, "4")
+      .replace(/β/g, "beta")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+    const answersFor = input => [input.dataset.answer || "", ...(input.dataset.alt ? input.dataset.alt.split("|") : [])].map(norm);
+    const match = (value, input) => answersFor(input).includes(norm(value));
+
+    function flashCorrect(i) { i.classList.remove("correct-flash"); void i.offsetWidth; i.classList.add("correct-flash"); setTimeout(() => i.classList.remove("correct-flash"), 800); }
+    function flashWrong(i) { i.classList.remove("wrong-pick"); void i.offsetWidth; i.classList.add("wrong-pick"); }
+    function save() { localStorage.setItem(storageKey, JSON.stringify(blanks.map(b => b.querySelector(".fill").value))); }
+    function restore() {
+      try {
+        const d = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        blanks.forEach((b, i) => {
+          const inp = b.querySelector(".fill");
+          if (d[i]) {
+            inp.value = d[i];
+            if (match(d[i], inp)) {
+              b.classList.add("solved");
+              applyWidth(inp, true);
+            } else {
+              inp.classList.add("wrong-pick");
+            }
+          }
+        });
+      } catch { localStorage.removeItem(storageKey); }
+    }
+
+    blanks.forEach(blank => {
+      const inp = blank.querySelector(".fill");
+      inp.addEventListener("input", () => {
+        const was = blank.classList.contains("solved");
+        inp.classList.remove("wrong-pick");
+        const ok = inp.value !== "" && match(inp.value, inp);
+        if (ok && !was) {
+          blank.classList.add("solved");
+          applyWidth(inp, true);
+          flashCorrect(inp);
+        } else if (ok && was) {
+          applyWidth(inp, true);
+        } else if (!ok && was) {
+          blank.classList.remove("solved");
+          applyWidth(inp, false);
+        }
+        save();
+      });
+      inp.addEventListener("blur", () => {
+        const v = inp.value.trim();
+        if (v && !match(v, inp)) flashWrong(inp);
+      });
+    });
+    restore();
+
+    document.getElementById("toggleHints").addEventListener("click", e => {
+      sheet.classList.toggle("hints-hidden");
+      e.currentTarget.textContent = sheet.classList.contains("hints-hidden") ? "Show hints" : "Hide hints";
+    });
+    document.getElementById("clearAnswers").addEventListener("click", () => {
+      blanks.forEach(b => {
+        const i = b.querySelector(".fill");
+        i.value = "";
+        i.classList.remove("wrong-pick", "correct-flash");
+        b.classList.remove("solved");
+        applyWidth(i, false);
+      });
+      save();
+    });
+
+    const zoomLevels = [0.1, 0.25, 0.5, 0.75, 0.85, 1.0, 1.15, 1.3, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
+    const zoomKey = "poly-predictor-cheatsheet-zoom";
+    const defaultZoomIdx = zoomLevels.indexOf(1.0);
+    let zoomIdx = parseInt(localStorage.getItem(zoomKey) || String(defaultZoomIdx), 10);
+    if (isNaN(zoomIdx) || zoomIdx < 0 || zoomIdx >= zoomLevels.length) zoomIdx = defaultZoomIdx;
+    const zoomLabel = document.getElementById("zoomLabel");
+    function applyZoom() {
+      const z = zoomLevels[zoomIdx];
+      sheet.style.transform = z === 1 ? "" : `scale(${z})`;
+      pageWrap.style.minHeight = z === 1 ? "" : `${297 * z + 20}mm`;
+      zoomLabel.textContent = Math.round(z * 100) + "%";
+      localStorage.setItem(zoomKey, String(zoomIdx));
+    }
+    document.getElementById("zoomOut").addEventListener("click", () => {
+      if (zoomIdx > 0) { zoomIdx--; applyZoom(); }
+    });
+    document.getElementById("zoomIn").addEventListener("click", () => {
+      if (zoomIdx < zoomLevels.length - 1) { zoomIdx++; applyZoom(); }
+    });
+    applyZoom();
+  </script>
+</body>
+</html>
