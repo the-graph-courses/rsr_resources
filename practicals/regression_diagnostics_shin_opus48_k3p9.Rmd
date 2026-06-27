@@ -341,3 +341,135 @@ check_model(norm_good_model)
 
 The Q-Q points sit on (or very near) the diagonal across the whole range, and inside the shaded band.
 That is what approximately normal residuals look like.
+
+# Practice
+
+For each of the following, we fit a simple linear regression, show the scatter plot, and produce the `check_model()` diagnostics.
+
+For each one, decide whether the assumption being asked about is satisfied. Choose one of:
+
+- **It is satisfied** (the model passes the check)
+- **It is not satisfied** (the model fails the check)
+- **I am not sure**
+
+There is not always a clear-cut answer, and "I am not sure" is sometimes the most honest response. The point is to practise reading the plots and forming a judgment.
+
+## Question 1: Shape (linearity)
+
+Fertilizer applied (kg per plot) vs. crop yield (kg).
+
+Fit the model, look at the scatter plot, then read the **Linearity** panel of the diagnostics. Does the relationship satisfy the linearity assumption?
+
+```{r practice-1-data}
+practice_1 <- data.frame(
+  fertilizer = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 5, 11, 17, 23, 29, 35, 7, 15, 25, 33),
+  yield      = c(13.9, 20.2, 32.7, 35, 42.6, 43.2, 50.9, 50.5, 56.6, 53.3, 58.1, 54.7, 60.6, 57.7, 62.3, 58.2, 61.6, 58.4, 63.1, 59.8, 26.9, 44.7, 51.1, 59.2, 57.5, 62.2, 32.5, 52.3, 56.6, 61.4)
+)
+```
+
+```{r practice-1-scatter}
+ggplot(practice_1, aes(fertilizer, yield)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "lm", se = FALSE, colour = "#C83B3B") +
+  labs(title = "Fertilizer vs crop yield") +
+  theme_minimal(base_size = 14)
+```
+
+```{r practice-1-fit}
+practice_1_model <- lm(yield ~ fertilizer, data = practice_1)
+summary(practice_1_model)
+```
+
+```{r practice-1-check}
+check_model(practice_1_model)
+```
+
+## Question 2: Homoscedasticity (equal variance)
+
+Daily patient volume at a clinic vs. patient waiting time (minutes).
+
+Fit the model, look at the scatter plot, then read the **Homogeneity of variance** panel. Does the relationship satisfy the equal-variance assumption?
+
+```{r practice-2-data}
+practice_2 <- data.frame(
+  patient_volume = c(10, 14, 18, 22, 26, 30, 34, 38, 42, 46, 50, 54, 58, 62, 66, 70, 74, 78, 82, 90, 12, 28, 44, 60, 76, 86, 16, 36, 56, 72),
+  wait_time      = c(23, 31, 28, 41, 33, 47, 35, 63, 41, 71, 40, 78, 93, 48, 42, 116, 52, 131, 52, 39, 28, 31, 74, 39, 131, 46, 33, 33, 96, 38)
+)
+```
+
+```{r practice-2-scatter}
+ggplot(practice_2, aes(patient_volume, wait_time)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "lm", se = FALSE, colour = "#C83B3B") +
+  labs(title = "Patient volume vs waiting time") +
+  theme_minimal(base_size = 14)
+```
+
+```{r practice-2-fit}
+practice_2_model <- lm(wait_time ~ patient_volume, data = practice_2)
+summary(practice_2_model)
+```
+
+```{r practice-2-check}
+check_model(practice_2_model)
+```
+
+## Question 3: Overall judgment
+
+Blood lead level (µg/dL) vs. reaction time on a cognitive test (milliseconds).
+
+Fit the model, look at the scatter plot, then read the full set of diagnostics. Taking all the panels together, does this model pass the checks, or is there a problem you would want to address before reporting it?
+
+```{r practice-3-data}
+practice_3 <- data.frame(
+  lead_level    = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 3, 9, 15, 21, 27, 5, 11, 17, 23, 29, 7, 13, 19, 25, 45),
+  reaction_time = c(208, 208, 219, 217, 227, 226, 238, 239, 250, 247, 257, 256, 268, 268, 279, 205, 225, 234, 256, 267, 218, 225, 245, 254, 276, 216, 237, 245, 265, 215)
+)
+```
+
+```{r practice-3-scatter}
+ggplot(practice_3, aes(lead_level, reaction_time)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "lm", se = FALSE, colour = "#C83B3B") +
+  labs(title = "Blood lead level vs reaction time") +
+  theme_minimal(base_size = 14)
+```
+
+```{r practice-3-fit}
+practice_3_model <- lm(reaction_time ~ lead_level, data = practice_3)
+summary(practice_3_model)
+```
+
+```{r practice-3-check}
+check_model(practice_3_model)
+```
+
+## Question 4: Overall judgment
+
+Gestational age at delivery (weeks) vs. birth weight (grams).
+
+Fit the model, look at the scatter plot, then read the full set of diagnostics. Taking all the panels together, does this model pass the checks?
+
+```{r practice-4-data}
+practice_4 <- data.frame(
+  gestational_age = c(35, 35.5, 36, 36.5, 37, 37.5, 38, 38.5, 39, 39.5, 40, 40.5, 41, 41.5, 42, 35.2, 36.8, 37.6, 38.4, 39.2, 40.2, 41.2, 36.2, 37.2, 38.2, 39.6, 40.6, 37.8, 39.8, 41.6),
+  birth_weight    = c(2730, 2506, 2639, 2903, 2674, 3008, 3016, 3212, 3240, 3326, 3469, 3667, 3713, 3836, 3789, 2633, 2775, 2915, 3121, 3525, 3463, 3791, 2765, 2975, 3157, 3531, 3676, 3009, 3538, 3816)
+)
+```
+
+```{r practice-4-scatter}
+ggplot(practice_4, aes(gestational_age, birth_weight)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "lm", se = FALSE, colour = "#C83B3B") +
+  labs(title = "Gestational age vs birth weight") +
+  theme_minimal(base_size = 14)
+```
+
+```{r practice-4-fit}
+practice_4_model <- lm(birth_weight ~ gestational_age, data = practice_4)
+summary(practice_4_model)
+```
+
+```{r practice-4-check}
+check_model(practice_4_model)
+```

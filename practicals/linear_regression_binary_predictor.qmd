@@ -1,6 +1,6 @@
 ---
 title: "Simple linear regression with a binary predictor"
-subtitle: "WebR practical — dummy coding, group means, and releveling"
+subtitle: "WebR practical: dummy coding, group means, and releveling"
 author: "GRAPH Courses"
 format:
   html:
@@ -14,6 +14,7 @@ filters:
 webr:
   show-startup-message: false
   show-header-message: false
+  packages: ['dplyr', 'MASS', 'openintro', 'DAAG']
 ---
 
 <style>
@@ -297,9 +298,9 @@ R turns the group into a <strong>dummy variable</strong>: 0 for the <strong>refe
 This practical uses teaching datasets from common R packages:
 
 <ul class="tight-list">
-  <li><code>openintro::births14</code> — US live births (birth weight by sex)</li>
-  <li><code>MASS::birthwt</code> — Baystate birth weights (birth weight by smoking status)</li>
-  <li><code>DAAG::ais</code> — Australian Institute of Sport athletes (serum ferritin by sex)</li>
+  <li><code>openintro::births14</code>: US live births (birth weight by sex)</li>
+  <li><code>MASS::birthwt</code>: Baystate birth weights (birth weight by smoking status)</li>
+  <li><code>DAAG::ais</code>: Australian Institute of Sport athletes (serum ferritin by sex)</li>
 </ul>
 
 After answering the questions, <strong>your completion code will be revealed.</strong>
@@ -382,13 +383,15 @@ First, load the data and set <strong>female</strong> as the reference level. The
 
 <div class="webr-wrap">
 
-<h3>R code — births14, female reference</h3>
+<h3>R code: births14, female reference</h3>
 
 ```{webr-r}
 library(openintro)
+library(dplyr)
 data(births14)
 
-births14$sex <- factor(births14$sex, levels = c("female", "male"))
+births14 <- births14 |>
+  mutate(sex = factor(sex, levels = c("female", "male")))
 
 mod_sex <- lm(weight ~ sex, data = births14)
 summary(mod_sex)
@@ -444,11 +447,11 @@ Re-run the model below with <strong>male</strong> as the reference. Compare the 
 
 <div class="webr-wrap">
 
-<h3>R code — relevel sex to male reference</h3>
+<h3>R code: relevel sex to male reference</h3>
 
 ```{webr-r}
-births14_m <- births14
-births14_m$sex <- factor(births14_m$sex, levels = c("male", "female"))
+births14_m <- births14 |>
+  mutate(sex = factor(sex, levels = c("male", "female")))
 
 mod_sex_male_ref <- lm(weight ~ sex, data = births14_m)
 summary(mod_sex_male_ref)
@@ -490,14 +493,16 @@ The classic <code>birthwt</code> data record birth weight in grams (<code>bwt</c
 
 <div class="webr-wrap">
 
-<h3>R code — birthwt, nonsmoker reference</h3>
+<h3>R code: birthwt, nonsmoker reference</h3>
 
 ```{webr-r}
 library(MASS)
+library(dplyr)
 data(birthwt)
 
-birthwt$smoke <- factor(birthwt$smoke, levels = c(0, 1),
-                        labels = c("nonsmoker", "smoker"))
+birthwt <- birthwt |>
+  mutate(smoke = factor(smoke, levels = c(0, 1),
+                        labels = c("nonsmoker", "smoker")))
 
 mod_smoke <- lm(bwt ~ smoke, data = birthwt)
 summary(mod_smoke)
@@ -527,6 +532,18 @@ summary(mod_smoke)
   </div>
   <button type="button">Check</button>
   <div class="practice-feedback" data-correct="Correct. Smoker mean = intercept + slope ≈ 3056 − 284 ≈ 2772 g." data-incorrect="Not quite. Add the smoker coefficient to the intercept. The negative slope means smokers are lower."></div>
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 10</div>
+  <p>Suppose you relevel so <strong>smoker</strong> is the reference in <code>birthwt</code>. The coefficient for <code>nonsmoker</code> would be about:</p>
+  <div class="choice-set">
+<label><input type="radio" name="p11" value="a">−284 g</label>
+<label><input type="radio" name="p11" value="b">+284 g</label>
+<label><input type="radio" name="p11" value="c">3056 g</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Nonsmokers weigh about 284 g more than smokers; the sign flips when smoker becomes reference." data-incorrect="Not quite. When smoker is reference, nonsmoker is above smoker by about 284 g, so the coefficient is positive."></div>
 </div>
 
 ```{=html}
@@ -566,7 +583,7 @@ Replace each `____` with the correct variable name, then run the cell.
 
 <div class="webr-wrap">
 
-<h3>R code — exercise 1 (fill in blanks)</h3>
+<h3>R code: exercise 1 (fill in blanks)</h3>
 
 ```{webr-r}
 library(DAAG)
@@ -590,7 +607,7 @@ The intercept (about 57) is the mean ferritin for females (<code>f</code> is the
 </details>
 
 <div class="practice" data-answer="c">
-  <div class="practice-title">Question 10</div>
+  <div class="practice-title">Question 11</div>
   <p>From the filled-in model, the predicted mean ferritin for <strong>male</strong> athletes is approximately:</p>
   <div class="choice-set">
 <label><input type="radio" name="p9" value="a">39 ng/mL</label>
@@ -611,13 +628,15 @@ Complete the code below to set <strong>female</strong> as the reference level fo
 
 <div class="webr-wrap">
 
-<h3>R code — exercise 2 (fill in blanks)</h3>
+<h3>R code: exercise 2 (fill in blanks)</h3>
 
 ```{webr-r}
 library(openintro)
+library(dplyr)
 data(births14)
 
-births14$sex <- factor(____, levels = c("____", "male"))
+births14 <- births14 |>
+  mutate(sex = factor(____, levels = c("____", "male")))
 
 mod_fill <- lm(____ ~ ____, data = births14)
 summary(mod_fill)
@@ -629,7 +648,8 @@ summary(mod_fill)
 <summary>Show the answer</summary>
 
 ```r
-births14$sex <- factor(births14$sex, levels = c("female", "male"))
+births14 <- births14 |>
+  mutate(sex = factor(sex, levels = c("female", "male")))
 
 mod_fill <- lm(weight ~ sex, data = births14)
 ```
@@ -637,7 +657,7 @@ mod_fill <- lm(weight ~ sex, data = births14)
 </details>
 
 <div class="practice" data-answer="a">
-  <div class="practice-title">Question 11</div>
+  <div class="practice-title">Question 12</div>
   <p>In your completed model, which row in <code>summary()</code> tells you how much heavier male babies are than female babies?</p>
   <div class="choice-set">
 <label><input type="radio" name="p10" value="a"><code>sexmale</code></label>
@@ -646,18 +666,6 @@ mod_fill <- lm(weight ~ sex, data = births14)
   </div>
   <button type="button">Check</button>
   <div class="practice-feedback" data-correct="Correct. The non-reference level gets its own coefficient row." data-incorrect="Not quite. The intercept is the reference mean. The other level's row is the difference."></div>
-</div>
-
-<div class="practice" data-answer="b">
-  <div class="practice-title">Question 12</div>
-  <p>Suppose you relevel so <strong>smoker</strong> is the reference in <code>birthwt</code>. The coefficient for <code>nonsmoker</code> would be about:</p>
-  <div class="choice-set">
-<label><input type="radio" name="p11" value="a">−284 g</label>
-<label><input type="radio" name="p11" value="b">+284 g</label>
-<label><input type="radio" name="p11" value="c">3056 g</label>
-  </div>
-  <button type="button">Check</button>
-  <div class="practice-feedback" data-correct="Correct. Nonsmokers weigh about 284 g more than smokers; the sign flips when smoker becomes reference." data-incorrect="Not quite. When smoker is reference, nonsmoker is above smoker by about 284 g, so the coefficient is positive."></div>
 </div>
 
 <section class="panel completion">

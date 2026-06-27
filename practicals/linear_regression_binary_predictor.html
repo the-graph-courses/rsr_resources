@@ -8,7 +8,7 @@
 
 <meta name="author" content="GRAPH Courses">
 
-<title>Simple linear regression with a polytomous predictor</title>
+<title>Simple linear regression with a binary predictor</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -58,16 +58,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/clipboard/clipboard.min.js"></script>
-<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/quarto.js"></script>
-<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/popper.min.js"></script>
-<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/anchor.min.js"></script>
-<link href="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="linear_regression_polytomous_predictor_composer25_p6m4_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="linear_regression_binary_predictor_composer25_n2v8_files/libs/clipboard/clipboard.min.js"></script>
+<script src="linear_regression_binary_predictor_composer25_n2v8_files/libs/quarto-html/quarto.js"></script>
+<script src="linear_regression_binary_predictor_composer25_n2v8_files/libs/quarto-html/popper.min.js"></script>
+<script src="linear_regression_binary_predictor_composer25_n2v8_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="linear_regression_binary_predictor_composer25_n2v8_files/libs/quarto-html/anchor.min.js"></script>
+<link href="linear_regression_binary_predictor_composer25_n2v8_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="linear_regression_binary_predictor_composer25_n2v8_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="linear_regression_binary_predictor_composer25_n2v8_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="linear_regression_binary_predictor_composer25_n2v8_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="linear_regression_binary_predictor_composer25_n2v8_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.47.0/min/vs/editor/editor.main.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   
@@ -346,7 +346,7 @@ iframe.qwebr-output-code-browse {
 // Document level settings ----
 
 // Determine if we need to install R packages
-globalThis.qwebrInstallRPackagesList = [''];
+globalThis.qwebrInstallRPackagesList = ['dplyr', 'MASS', 'openintro', 'DAAG'];
 
 // Specify possible locations to search for the repository
 globalThis.qwebrPackageRepoURLS = ['https://repo.r-wasm.org/'];
@@ -368,7 +368,7 @@ globalThis.qwebrCustomizedWebROptions = {
 };
 
 // Store cell data
-globalThis.qwebrCellDetails = [{"options":{"classes":"","read-only":"false","message":"true","results":"markup","out-height":"","comment":"","warning":"true","label":"unnamed-chunk-1","editor-font-scale":"1","context":"interactive","editor-quick-suggestions":"false","fig-cap":"","output":"true","dpi":72,"autorun":"false","fig-width":7,"fig-height":5,"out-width":"700px","editor-max-height":"","editor-word-wrap":"true"},"id":1,"code":"library(oibiostat)\ndata(prevend.samp)\n\nprevend <- prevend.samp\nprevend$education <- factor(\n  prevend$Education,\n  levels = 0:3,\n  labels = c(\"primary\", \"lower_secondary\", \"higher_secondary\", \"university\")\n)\n\nmod_edu <- lm(RFFT ~ education, data = prevend)\nsummary(mod_edu)"},{"options":{"classes":"","read-only":"false","message":"true","results":"markup","out-height":"","comment":"","warning":"true","label":"unnamed-chunk-2","editor-font-scale":"1","context":"interactive","editor-quick-suggestions":"false","fig-cap":"","output":"true","dpi":72,"autorun":"false","fig-width":7,"fig-height":5,"out-width":"700px","editor-max-height":"","editor-word-wrap":"true"},"id":2,"code":"library(MASS)\ndata(birthwt)\n\nbirthwt$race <- factor(birthwt$race, levels = c(1, 2, 3),\n                       labels = c(\"white\", \"black\", \"other\"))\n\nmod_race <- lm(bwt ~ race, data = birthwt)\nsummary(mod_race)"},{"options":{"classes":"","read-only":"false","message":"true","results":"markup","out-height":"","comment":"","warning":"true","label":"unnamed-chunk-3","editor-font-scale":"1","context":"interactive","editor-quick-suggestions":"false","fig-cap":"","output":"true","dpi":72,"autorun":"false","fig-width":7,"fig-height":5,"out-width":"700px","editor-max-height":"","editor-word-wrap":"true"},"id":3,"code":"birthwt_black_ref <- birthwt\nbirthwt_black_ref$race <- factor(birthwt_black_ref$race,\n                                 levels = c(\"black\", \"white\", \"other\"))\n\nmod_race_black <- lm(bwt ~ race, data = birthwt_black_ref)\nsummary(mod_race_black)"},{"options":{"classes":"","read-only":"false","message":"true","results":"markup","out-height":"","comment":"","warning":"true","label":"unnamed-chunk-4","editor-font-scale":"1","context":"interactive","editor-quick-suggestions":"false","fig-cap":"","output":"true","dpi":72,"autorun":"false","fig-width":7,"fig-height":5,"out-width":"700px","editor-max-height":"","editor-word-wrap":"true"},"id":4,"code":"library(oibiostat)\ndata(prevend.samp)\n\nprevend <- prevend.samp\nprevend$education <- factor(\n  ____,\n  levels = ____,\n  labels = c(\"primary\", \"lower_secondary\", \"higher_secondary\", \"university\")\n)\n\nmod_fill <- lm(____ ~ ____, data = prevend)\nsummary(mod_fill)"},{"options":{"classes":"","read-only":"false","message":"true","results":"markup","out-height":"","comment":"","warning":"true","label":"unnamed-chunk-5","editor-font-scale":"1","context":"interactive","editor-quick-suggestions":"false","fig-cap":"","output":"true","dpi":72,"autorun":"false","fig-width":7,"fig-height":5,"out-width":"700px","editor-max-height":"","editor-word-wrap":"true"},"id":5,"code":"library(oibiostat)\ndata(famuss)\n\nmod_actn3 <- lm(____ ~ ____, data = famuss)\nsummary(mod_actn3)"}];
+globalThis.qwebrCellDetails = [{"code":"library(openintro)\nlibrary(dplyr)\ndata(births14)\n\nbirths14 <- births14 |>\n  mutate(sex = factor(sex, levels = c(\"female\", \"male\")))\n\nmod_sex <- lm(weight ~ sex, data = births14)\nsummary(mod_sex)","id":1,"options":{"editor-max-height":"","fig-cap":"","out-width":"700px","label":"unnamed-chunk-1","editor-font-scale":"1","context":"interactive","comment":"","editor-quick-suggestions":"false","message":"true","classes":"","read-only":"false","warning":"true","fig-height":5,"output":"true","results":"markup","out-height":"","editor-word-wrap":"true","autorun":"false","fig-width":7,"dpi":72}},{"code":"births14_m <- births14 |>\n  mutate(sex = factor(sex, levels = c(\"male\", \"female\")))\n\nmod_sex_male_ref <- lm(weight ~ sex, data = births14_m)\nsummary(mod_sex_male_ref)","id":2,"options":{"editor-max-height":"","fig-cap":"","out-width":"700px","label":"unnamed-chunk-2","editor-font-scale":"1","context":"interactive","comment":"","editor-quick-suggestions":"false","message":"true","classes":"","read-only":"false","warning":"true","fig-height":5,"output":"true","results":"markup","out-height":"","editor-word-wrap":"true","autorun":"false","fig-width":7,"dpi":72}},{"code":"library(MASS)\nlibrary(dplyr)\ndata(birthwt)\n\nbirthwt <- birthwt |>\n  mutate(smoke = factor(smoke, levels = c(0, 1),\n                        labels = c(\"nonsmoker\", \"smoker\")))\n\nmod_smoke <- lm(bwt ~ smoke, data = birthwt)\nsummary(mod_smoke)","id":3,"options":{"editor-max-height":"","fig-cap":"","out-width":"700px","label":"unnamed-chunk-3","editor-font-scale":"1","context":"interactive","comment":"","editor-quick-suggestions":"false","message":"true","classes":"","read-only":"false","warning":"true","fig-height":5,"output":"true","results":"markup","out-height":"","editor-word-wrap":"true","autorun":"false","fig-width":7,"dpi":72}},{"code":"library(DAAG)\ndata(ais)\n\nmod_ferr <- lm(____ ~ ____, data = ais)\nsummary(mod_ferr)","id":4,"options":{"editor-max-height":"","fig-cap":"","out-width":"700px","label":"unnamed-chunk-4","editor-font-scale":"1","context":"interactive","comment":"","editor-quick-suggestions":"false","message":"true","classes":"","read-only":"false","warning":"true","fig-height":5,"output":"true","results":"markup","out-height":"","editor-word-wrap":"true","autorun":"false","fig-width":7,"dpi":72}},{"code":"library(openintro)\nlibrary(dplyr)\ndata(births14)\n\nbirths14 <- births14 |>\n  mutate(sex = factor(____, levels = c(\"____\", \"male\")))\n\nmod_fill <- lm(____ ~ ____, data = births14)\nsummary(mod_fill)","id":5,"options":{"editor-max-height":"","fig-cap":"","out-width":"700px","label":"unnamed-chunk-5","editor-font-scale":"1","context":"interactive","comment":"","editor-quick-suggestions":"false","message":"true","classes":"","read-only":"false","warning":"true","fig-height":5,"output":"true","results":"markup","out-height":"","editor-word-wrap":"true","autorun":"false","fig-width":7,"dpi":72}}];
 
 </script>
 <script type="module">
@@ -1946,8 +1946,8 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Simple linear regression with a polytomous predictor</h1>
-<p class="subtitle lead">WebR practical — K−1 dummy variables, reference levels, and group means</p>
+<h1 class="title">Simple linear regression with a binary predictor</h1>
+<p class="subtitle lead">WebR practical: dummy coding, group means, and releveling</p>
 </div>
 
 
@@ -2166,6 +2166,14 @@ body {
 .practice label.correct-choice { border-color: var(--good); background: var(--good-bg); }
 .practice label.incorrect-choice { border-color: var(--bad); background: var(--bad-bg); }
 
+.callout {
+  padding: 1rem 1.15rem;
+  border-left: 5px solid var(--light-teal);
+  margin: 1rem 0;
+}
+
+.callout.warning { border-left-color: var(--gold); background: #fffaf0; }
+
 .webr-wrap {
   padding: 1rem 1.15rem;
   margin: 1rem 0;
@@ -2225,28 +2233,29 @@ code {
 WebR practical
 </div>
 <h1>
-Simple linear regression with a polytomous predictor
+Simple linear regression with a binary predictor
 </h1>
 <p>
-When a categorical predictor has more than two levels, R creates <strong>K − 1</strong> dummy variables. You will fit models, recover group means from the output, and practice choosing a sensible reference level.
+When a predictor has exactly two groups, <code>lm()</code> draws a line between two group means. You will fit models, read coefficients as differences, and see how changing the reference level relabels (but does not change) the underlying relationship.
 </p>
 </header>
 <section class="panel">
 <h2 class="anchored">
 Overview
 </h2>
-<p>A <strong>polytomous</strong> predictor has <span class="math inline">\(K &gt; 2\)</span> categories (for example race with three groups, or education with four levels). Do <strong>not</strong> code these as a single numeric variable 0, 1, 2, 3 unless you truly want to force equal steps between every level.</p>
-<p>Instead, R picks one <strong>reference</strong> level and creates one dummy variable for each of the other <span class="math inline">\(K - 1\)</span> levels. Each coefficient is that level’s mean <strong>difference vs the reference</strong>.</p>
-<p>This practical uses datasets from common R packages:</p>
+<p>A <strong>binary predictor</strong> takes only two values, such as female vs male or smoker vs nonsmoker. In R you still write a familiar formula:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(outcome <span class="sc">~</span> group, <span class="at">data =</span> my_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>R turns the group into a <strong>dummy variable</strong>: 0 for the <strong>reference</strong> level and 1 for the other level. The intercept is the mean of the reference group; the slope is the <strong>difference in means</strong> between the two groups.</p>
+<p>This practical uses teaching datasets from common R packages:</p>
 <ul class="tight-list">
 <li>
-<code>oibiostat::prevend.samp</code> — cognitive test score (<code>RFFT</code>) by education (4 levels)
+<code>openintro::births14</code>: US live births (birth weight by sex)
 </li>
 <li>
-<code>MASS::birthwt</code> — birth weight (<code>bwt</code>) by mother’s race (3 levels)
+<code>MASS::birthwt</code>: Baystate birth weights (birth weight by smoking status)
 </li>
 <li>
-<code>oibiostat::famuss</code> — strength gain (<code>ndrm.ch</code>) by ACTN3 genotype (3 levels)
+<code>DAAG::ais</code>: Australian Institute of Sport athletes (serum ferritin by sex)
 </li>
 </ul>
 <p>After answering the questions, <strong>your completion code will be revealed.</strong></p>
@@ -2256,13 +2265,13 @@ Overview
 Question 1
 </div>
 <p>
-A categorical predictor with <span class="math inline">\(K = 4\)</span> levels produces how many dummy coefficients (plus the intercept) in a simple regression?
+In a regression with a binary predictor, the intercept <span class="math inline">\(b_0\)</span> equals:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p0" value="a">4 coefficients plus intercept (one per level).</label> <label><input type="radio" name="p0" value="b">3 coefficients plus intercept (<span class="math inline">\(K - 1\)</span> dummies).</label> <label><input type="radio" name="p0" value="c">1 coefficient plus intercept.</label>
+<label><input type="radio" name="p0" value="a">The overall mean of the outcome, pooling both groups.</label> <label><input type="radio" name="p0" value="b">The mean of the outcome in the <strong>reference</strong> group.</label> <label><input type="radio" name="p0" value="c">The difference in means between the two groups.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. One level is absorbed into the intercept; the other K−1 levels each get a dummy." data-incorrect="Not quite. With K levels, R uses K−1 dummy variables because one level is the reference.">
+<div class="practice-feedback" data-correct="Correct. When every dummy is 0, you are in the reference group, so the intercept is that group's mean." data-incorrect="Not quite. The intercept is the predicted outcome when the dummy equals 0, which is the reference group's mean.">
 
 </div>
 </div>
@@ -2271,47 +2280,66 @@ A categorical predictor with <span class="math inline">\(K = 4\)</span> levels p
 Question 2
 </div>
 <p>
-Why should you avoid coding education as 0, 1, 2, 3 in a single numeric column?
+The slope <span class="math inline">\(b_1\)</span> for the non-reference level tells you:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p1" value="a">It forces every step between neighbouring levels to have the same effect size.</label> <label><input type="radio" name="p1" value="b">R cannot read numeric columns.</label> <label><input type="radio" name="p1" value="c">It removes the intercept from the model.</label>
+<label><input type="radio" name="p1" value="a">How much higher (or lower) the other group’s mean is compared with the reference group.</label> <label><input type="radio" name="p1" value="b">The mean of the non-reference group on its own.</label> <label><input type="radio" name="p1" value="c">Whether the relationship is linear.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Numeric coding assumes equal gaps; dummy coding lets each level have its own mean shift vs reference." data-incorrect="Not quite. The problem is the equal-step assumption, not R's ability to fit the model.">
+<div class="practice-feedback" data-correct="Correct. The slope is a difference in means, not a standalone mean." data-incorrect="Not quite. The slope is the gap between group means. To get the other group's mean, add the slope to the intercept.">
 
 </div>
 </div>
 <section class="panel">
 <h2 class="anchored">
-The equation (four education levels, primary reference)
+The equation
 </h2>
 <div class="formula-panel">
-<p><span class="math display">\[\hat{y} = b_0 + b_1 \cdot \text{lower} + b_2 \cdot \text{higher} + b_3 \cdot \text{university}\]</span></p>
+<p><span class="math display">\[\hat{y} = b_0 + b_1 \cdot x\]</span></p>
+<p>
+<strong>Reading the pieces for a binary predictor:</strong>
+</p>
 <ul class="tight-list">
 <li>
-Each dummy equals 1 only for its own level and 0 otherwise.
+<span class="math inline">\(x = 0\)</span> for the reference group; <span class="math inline">\(x = 1\)</span> for the other group.
 </li>
 <li>
-<span class="math inline">\(b_0\)</span> = mean of the <strong>reference</strong> group (primary education).
+<span class="math inline">\(b_0\)</span> = mean of <span class="math inline">\(y\)</span> in the reference group.
 </li>
 <li>
-Each <span class="math inline">\(b_j\)</span> = that level’s mean minus the reference mean.
-</li>
-<li>
-To recover a group’s mean: add its coefficient to the intercept (reference groups add 0).
+<span class="math inline">\(b_1\)</span> = difference in means (other group minus reference group).
 </li>
 </ul>
+</div>
+<div class="svg-panel" aria-label="Two group means connected by a regression line">
+<svg viewbox="0 0 760 260" role="img">
+  <rect width="760" height="260" rx="8" fill="#fff"></rect>
+  <line x1="70" y1="30" x2="70" y2="210" stroke="#5d7475" stroke-width="1.4"></line>
+  <line x1="70" y1="210" x2="700" y2="210" stroke="#5d7475" stroke-width="1.4"></line>
+  <text x="24" y="125" text-anchor="middle" font-size="12" font-weight="700" fill="#5d7475" transform="rotate(-90,24,125)">Outcome (y)</text>
+  <line x1="220" y1="130" x2="560" y2="95" stroke="#00565e" stroke-width="3"></line>
+  <circle cx="220" cy="130" r="7" fill="#2f5f98" stroke="#1d4275" stroke-width="1.2"></circle>
+  <circle cx="560" cy="95" r="7" fill="#00565e" stroke="#003f45" stroke-width="1.2"></circle>
+  <line x1="220" y1="130" x2="560" y2="130" stroke="#b83b5e" stroke-width="1.6" stroke-dasharray="5,3"></line>
+  <line x1="560" y1="130" x2="560" y2="95" stroke="#b83b5e" stroke-width="2.2"></line>
+  <text x="220" y="118" text-anchor="middle" font-size="11" font-weight="800" fill="#2f5f98">b₀ = ref. mean</text>
+  <text x="575" y="118" font-size="11" font-weight="800" fill="#b83b5e">b₁ = difference</text>
+  <text x="220" y="235" text-anchor="middle" font-size="12" font-weight="800" fill="#173234">Reference (x = 0)</text>
+  <text x="560" y="235" text-anchor="middle" font-size="12" font-weight="800" fill="#173234">Other group (x = 1)</text>
+</svg>
+<p class="svg-caption">With a binary predictor, the fitted line is just the segment joining the two group means.</p>
 </div>
 </section>
 <section class="panel">
 <h2 class="anchored">
-Worked example 1: RFFT score by education (<code>oibiostat::prevend.samp</code>)
+Worked example 1: birth weight by sex (<code>openintro::births14</code>)
 </h2>
-<p>The PREVEND sample includes the Ruff Figural Fluency Test score (<code>RFFT</code>), a measure of executive function, and education coded 0–3. We relabel those codes and set <strong>primary</strong> as the reference.</p>
+<p>The <code>births14</code> dataset is a random sample of US live births in 2014. We will model birth weight in pounds (<code>weight</code>) from the baby’s sex (<code>sex</code>: female or male).</p>
+<p>First, load the data and set <strong>female</strong> as the reference level. Then fit the model and inspect the output.</p>
 </section>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code — prevend, primary reference
+R code: births14, female reference
 </h3>
 <div id="qwebr-insertion-location-1"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
@@ -2321,13 +2349,13 @@ R code — prevend, primary reference
 Question 3
 </div>
 <p>
-The intercept is about 40.9. This is the mean RFFT score for which education group?
+With <strong>female</strong> as the reference level, what is the predicted birth weight for a <strong>female</strong> baby (in pounds, to two decimal places)?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p2" value="a">Primary education (the reference level).</label> <label><input type="radio" name="p2" value="b">University education.</label> <label><input type="radio" name="p2" value="c">The average across all four groups.</label>
+<label><input type="radio" name="p2" value="a">7.02</label> <label><input type="radio" name="p2" value="b">0.36</label> <label><input type="radio" name="p2" value="c">7.38</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The intercept is always the reference group mean." data-incorrect="Not quite. Look at which level was set as reference when creating the factor.">
+<div class="practice-feedback" data-correct="Correct. The intercept (about 7.02 lb) is the female mean." data-incorrect="Not quite. Look at the (Intercept) row. That is the female mean because female is the reference level.">
 
 </div>
 </div>
@@ -2336,13 +2364,13 @@ The intercept is about 40.9. This is the mean RFFT score for which education gro
 Question 4
 </div>
 <p>
-The predicted mean RFFT score for participants with <strong>university</strong> education is approximately:
+What is the predicted birth weight for a <strong>male</strong> baby?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p3" value="a">44.96 points (the coefficient alone).</label> <label><input type="radio" name="p3" value="b">55.7 points (40.9 + 14.8).</label> <label><input type="radio" name="p3" value="c">85.9 points (40.9 + 45.0).</label>
+<label><input type="radio" name="p3" value="a">7.02 lb</label> <label><input type="radio" name="p3" value="b">0.36 lb</label> <label><input type="radio" name="p3" value="c">7.38 lb (about 7.02 + 0.36)</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. University mean = intercept + educationuniversity ≈ 40.9 + 45.0 ≈ 85.9." data-incorrect="Not quite. Add the university coefficient to the intercept. The coefficient is a difference, not the full mean.">
+<div class="practice-feedback" data-correct="Correct. Add the sexmale slope to the intercept: about 7.02 + 0.36 ≈ 7.38 lb." data-incorrect="Not quite. Male mean = intercept + sexmale coefficient ≈ 7.02 + 0.36.">
 
 </div>
 </div>
@@ -2351,50 +2379,26 @@ The predicted mean RFFT score for participants with <strong>university</strong> 
 Question 5
 </div>
 <p>
-The coefficient for <code>educationlower_secondary</code> (about +14.8) means:
+The coefficient on <code>sexmale</code> is about +0.36. In plain language, this means male babies weigh on average:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p4" value="a">Lower secondary participants score 14.8 points in total.</label> <label><input type="radio" name="p4" value="b">Lower secondary participants score about 14.8 points <strong>above</strong> the primary group.</label> <label><input type="radio" name="p4" value="c">Lower secondary participants score about 14.8 points above the university group.</label>
+<label><input type="radio" name="p4" value="a">0.36 lb in total.</label> <label><input type="radio" name="p4" value="b">About 0.36 lb <strong>more</strong> than female babies.</label> <label><input type="radio" name="p4" value="c">About 0.36 lb less than female babies.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Every dummy coefficient is vs the reference, not vs other non-reference levels." data-incorrect="Not quite. Each row compares that level to the omitted reference (primary), not to another non-reference level.">
+<div class="practice-feedback" data-correct="Correct. The slope is a difference vs the reference group, not a standalone mean." data-incorrect="Not quite. A positive slope means the non-reference group is higher than the reference group by that amount.">
 
 </div>
 </div>
-<div class="svg-panel" aria-label="Four education group means relative to primary reference">
-<svg viewbox="0 0 760 260" role="img">
-  <rect width="760" height="260" rx="8" fill="#fff"></rect>
-  <text x="380" y="24" text-anchor="middle" font-size="13" font-weight="800" fill="#173234">RFFT means by education (schematic, primary = reference)</text>
-  <line x1="50" y1="210" x2="710" y2="210" stroke="#5d7475" stroke-width="1.2"></line>
-  <line x1="50" y1="185" x2="710" y2="185" stroke="#2f5f98" stroke-width="1" stroke-dasharray="4,3"></line>
-  <text x="56" y="180" font-size="10" font-weight="700" fill="#2f5f98">primary ≈ 40.9</text>
-  <line x1="200" y1="185" x2="200" y2="155" stroke="#b83b5e" stroke-width="2.2"></line>
-  <circle cx="200" cy="155" r="6" fill="#00565e"></circle>
-  <text x="200" y="148" text-anchor="middle" font-size="10" font-weight="800" fill="#00565e">55.7</text>
-  <text x="200" y="228" text-anchor="middle" font-size="11" font-weight="700">lower sec.</text>
-  <line x1="380" y1="185" x2="380" y2="115" stroke="#b83b5e" stroke-width="2.2"></line>
-  <circle cx="380" cy="115" r="6" fill="#00565e"></circle>
-  <text x="380" y="108" text-anchor="middle" font-size="10" font-weight="800" fill="#00565e">73.1</text>
-  <text x="380" y="228" text-anchor="middle" font-size="11" font-weight="700">higher sec.</text>
-  <line x1="560" y1="185" x2="560" y2="75" stroke="#b83b5e" stroke-width="2.2"></line>
-  <circle cx="560" cy="75" r="6" fill="#00565e"></circle>
-  <text x="560" y="68" text-anchor="middle" font-size="10" font-weight="800" fill="#00565e">85.9</text>
-  <text x="560" y="228" text-anchor="middle" font-size="11" font-weight="700">university</text>
-  <circle cx="80" cy="185" r="6" fill="#2f5f98"></circle>
-  <text x="80" y="228" text-anchor="middle" font-size="11" font-weight="700">primary</text>
-  <text x="650" y="100" font-size="11" font-weight="800" fill="#b83b5e">Each red bar = coefficient</text>
-</svg>
-<p class="svg-caption">Each rose line is an estimated difference from the primary (reference) mean.</p>
-</div>
 <section class="panel">
 <h2 class="anchored">
-Worked example 2: birth weight by race (<code>MASS::birthwt</code>)
+Switching the reference level
 </h2>
-<p>The <code>birthwt</code> data record infant birth weight in grams and mother’s race (white, black, other). We label the numeric race codes and set <strong>white</strong> as reference.</p>
+<p>The reference level is a <strong>labeling choice</strong>. The gap between group means stays the same; only the intercept and the sign of the slope change.</p>
+<p>Re-run the model below with <strong>male</strong> as the reference. Compare the output to the previous cell.</p>
 </section>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code — birthwt, white reference
+R code: relevel sex to male reference
 </h3>
 <div id="qwebr-insertion-location-2"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
@@ -2404,13 +2408,13 @@ R code — birthwt, white reference
 Question 6
 </div>
 <p>
-With white as reference, the intercept (about 3103 g) is the mean birth weight for:
+When male is the reference level, the coefficient on <code>sexfemale</code> is about −0.36. Why is it negative?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p5" value="a">White mothers’ babies.</label> <label><input type="radio" name="p5" value="b">Black mothers’ babies.</label> <label><input type="radio" name="p5" value="c">All babies combined.</label>
+<label><input type="radio" name="p5" value="a">Female babies weigh less than male babies, and female is now compared with male as reference.</label> <label><input type="radio" name="p5" value="b">The relationship reversed; males now weigh less than females.</label> <label><input type="radio" name="p5" value="c">R made a mistake when releveling.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. White is the reference level." data-incorrect="Not quite. The intercept is the reference group mean.">
+<div class="practice-feedback" data-correct="Correct. The underlying means are unchanged; the sign flips because the reference group flipped." data-incorrect="Not quite. Releveling changes labels, not the data. Females are still lighter on average; the slope now measures female minus male.">
 
 </div>
 </div>
@@ -2419,37 +2423,25 @@ With white as reference, the intercept (about 3103 g) is the mean birth weight f
 Question 7
 </div>
 <p>
-The <code>raceblack</code> coefficient is about −383 g. The predicted mean birth weight for black mothers’ babies is approximately:
+Comparing the two models (female reference vs male reference), the <strong>magnitude</strong> of the sex difference is:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p6" value="a">383 g</label> <label><input type="radio" name="p6" value="b">2720 g (3103 − 383)</label> <label><input type="radio" name="p6" value="c">3486 g (3103 + 383)</label>
+<label><input type="radio" name="p6" value="a">Larger when male is reference.</label> <label><input type="radio" name="p6" value="b">The same (about 0.36 lb).</label> <label><input type="radio" name="p6" value="c">Impossible to compare.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Black mean = intercept + raceblack ≈ 3103 − 383 ≈ 2720 g." data-incorrect="Not quite. Add the black coefficient to the intercept. The negative sign means lower than white.">
+<div class="practice-feedback" data-correct="Correct. |+0.36| = |−0.36|; only the sign and intercept changed." data-incorrect="Not quite. The absolute difference in group means is unchanged.">
 
 </div>
 </div>
 <section class="panel">
 <h2 class="anchored">
-Choosing and changing the reference level
+Worked example 2: birth weight by smoking (<code>MASS::birthwt</code>)
 </h2>
-<p>Which reference you pick is a <strong>reporting choice</strong>. Common strategies:</p>
-<ul class="tight-list">
-<li>
-<strong>Natural order</strong> — lowest education level, so effects read as gains up a ladder.
-</li>
-<li>
-<strong>Clinical control</strong> — placebo or standard care, so every coefficient is a treatment effect.
-</li>
-<li>
-<strong>Largest group</strong> — can yield tighter confidence intervals because the reference mean is estimated precisely.
-</li>
-</ul>
-<p>Relevel <code>birthwt</code> so <strong>black</strong> is the reference and compare the output.</p>
+<p>The classic <code>birthwt</code> data record birth weight in grams (<code>bwt</code>) and whether the mother smoked during pregnancy (<code>smoke</code>: 0 = no, 1 = yes). We treat nonsmokers as the reference group.</p>
 </section>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code — relevel race to black reference
+R code: birthwt, nonsmoker reference
 </h3>
 <div id="qwebr-insertion-location-3"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
@@ -2459,40 +2451,78 @@ R code — relevel race to black reference
 Question 8
 </div>
 <p>
-With black as reference, the coefficient on <code>racewhite</code> is about +383 g. This means:
+The intercept is about 3056 g. Whose mean birth weight does that represent?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p7" value="a">White babies weigh about 383 g more than black babies, on average.</label> <label><input type="radio" name="p7" value="b">White babies weigh 383 g in total.</label> <label><input type="radio" name="p7" value="c">The race difference disappeared after releveling.</label>
+<label><input type="radio" name="p7" value="a">Babies whose mothers did <strong>not</strong> smoke during pregnancy.</label> <label><input type="radio" name="p7" value="b">Babies whose mothers smoked during pregnancy.</label> <label><input type="radio" name="p7" value="c">All babies in the dataset combined.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Same underlying gap, new reference: white vs black instead of black vs white." data-incorrect="Not quite. Releveling relabels comparisons; it does not change the data or erase differences.">
+<div class="practice-feedback" data-correct="Correct. Nonsmoker is the reference level (smoke = 0)." data-incorrect="Not quite. The intercept is always the reference group mean. Here nonsmoker is reference.">
 
 </div>
 </div>
-<div class="practice" data-answer="c">
+<div class="practice" data-answer="b">
 <div class="practice-title">
 Question 9
 </div>
 <p>
-With black as reference, the intercept (about 2720 g) represents:
+The <code>smokesmoker</code> coefficient is about −284 g. The predicted mean birth weight for smokers is approximately:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p8" value="a">The grand mean across all races.</label> <label><input type="radio" name="p8" value="b">The white group mean.</label> <label><input type="radio" name="p8" value="c">The black group mean.</label>
+<label><input type="radio" name="p8" value="a">284 g</label> <label><input type="radio" name="p8" value="b">2772 g (3056 − 284)</label> <label><input type="radio" name="p8" value="c">3340 g (3056 + 284)</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The intercept always tracks the reference group." data-incorrect="Not quite. After releveling, black is reference, so the intercept is the black mean.">
+<div class="practice-feedback" data-correct="Correct. Smoker mean = intercept + slope ≈ 3056 − 284 ≈ 2772 g." data-incorrect="Not quite. Add the smoker coefficient to the intercept. The negative slope means smokers are lower.">
 
 </div>
 </div>
+<div class="practice" data-answer="b">
+<div class="practice-title">
+Question 10
+</div>
+<p>
+Suppose you relevel so <strong>smoker</strong> is the reference in <code>birthwt</code>. The coefficient for <code>nonsmoker</code> would be about:
+</p>
+<div class="choice-set">
+<label><input type="radio" name="p11" value="a">−284 g</label> <label><input type="radio" name="p11" value="b">+284 g</label> <label><input type="radio" name="p11" value="c">3056 g</label>
+</div>
+<button type="button">Check</button>
+<div class="practice-feedback" data-correct="Correct. Nonsmokers weigh about 284 g more than smokers; the sign flips when smoker becomes reference." data-incorrect="Not quite. When smoker is reference, nonsmoker is above smoker by about 284 g, so the coefficient is positive.">
+
+</div>
+</div>
+<div class="svg-panel" aria-label="Side-by-side boxplots of birth weight by smoking status">
+<svg viewbox="0 0 760 260" role="img">
+  <rect width="760" height="260" rx="8" fill="#fff"></rect>
+  <text x="380" y="24" text-anchor="middle" font-size="13" font-weight="800" fill="#173234">Birth weight by smoking status (schematic)</text>
+  <line x1="60" y1="220" x2="700" y2="220" stroke="#5d7475" stroke-width="1.2"></line>
+  <line x1="60" y1="50" x2="60" y2="220" stroke="#5d7475" stroke-width="1.2"></line>
+  <rect x="180" y="95" width="120" height="90" fill="#e3f4f4" stroke="#00565e" stroke-width="2" rx="4"></rect>
+  <line x1="240" y1="80" x2="240" y2="200" stroke="#00565e" stroke-width="2"></line>
+  <line x1="200" y1="140" x2="280" y2="140" stroke="#00565e" stroke-width="3"></line>
+  <text x="240" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#173234">Nonsmoker</text>
+  <text x="240" y="72" text-anchor="middle" font-size="11" font-weight="800" fill="#2f5f98">≈ 3056 g</text>
+  <rect x="460" y="115" width="120" height="75" fill="#fdecea" stroke="#b83b3b" stroke-width="2" rx="4"></rect>
+  <line x1="520" y1="100" x2="520" y2="205" stroke="#b83b3b" stroke-width="2"></line>
+  <line x1="480" y1="155" x2="560" y2="155" stroke="#b83b3b" stroke-width="3"></line>
+  <text x="520" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#173234">Smoker</text>
+  <text x="520" y="92" text-anchor="middle" font-size="11" font-weight="800" fill="#b83b3b">≈ 2772 g</text>
+  <line x1="360" y1="140" x2="360" y2="155" stroke="#b83b5e" stroke-width="2" marker-end="url(#arrowhead)"></line>
+  <text x="380" y="132" font-size="11" font-weight="800" fill="#b83b5e">≈ −284 g</text>
+  <defs><marker id="arrowhead" markerwidth="6" markerheight="6" refx="5" refy="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#b83b5e"></polygon></marker></defs>
+</svg>
+<p class="svg-caption">The regression slope is the vertical shift between the two group means.</p>
+</div>
 <section class="panel">
 <h2 class="anchored">
-Exercise 1: fill in the education model (<code>prevend.samp</code>)
+Exercise 1: fill in the model formula (<code>DAAG::ais</code>)
 </h2>
-<p>Replace each <code>____</code> to build the factor, set primary as the first level, and fit the model.</p>
+<p>The <code>ais</code> dataset contains physiological measurements on elite athletes. Fit a model predicting serum ferritin (<code>ferr</code>, ng/mL) from sex (<code>sex</code>: <code>f</code> or <code>m</code>).</p>
+<p>Replace each <code>____</code> with the correct variable name, then run the cell.</p>
 </section>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code — exercise 1 (fill in blanks)
+R code: exercise 1 (fill in blanks)
 </h3>
 <div id="qwebr-insertion-location-4"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
@@ -2501,39 +2531,33 @@ R code — exercise 1 (fill in blanks)
 <summary>
 Show the answer
 </summary>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>prevend <span class="ot">&lt;-</span> prevend.samp</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>prevend<span class="sc">$</span>education <span class="ot">&lt;-</span> <span class="fu">factor</span>(</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  prevend<span class="sc">$</span>Education,</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">levels =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">3</span>,</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"primary"</span>, <span class="st">"lower_secondary"</span>, <span class="st">"higher_secondary"</span>, <span class="st">"university"</span>)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>mod_fill <span class="ot">&lt;-</span> <span class="fu">lm</span>(RFFT <span class="sc">~</span> education, <span class="at">data =</span> prevend)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>mod_ferr <span class="ot">&lt;-</span> <span class="fu">lm</span>(ferr <span class="sc">~</span> sex, <span class="at">data =</span> ais)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The intercept (about 57) is the mean ferritin for females (<code>f</code> is the default reference). The <code>sexm</code> row (about +39) says males average about 39 ng/mL higher.</p>
 </details>
-<div class="practice" data-answer="b">
+<div class="practice" data-answer="c">
 <div class="practice-title">
-Question 10
+Question 11
 </div>
 <p>
-From your completed model, the predicted mean RFFT for <strong>higher secondary</strong> education is approximately:
+From the filled-in model, the predicted mean ferritin for <strong>male</strong> athletes is approximately:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p9" value="a">32.1 points (coefficient only).</label> <label><input type="radio" name="p9" value="b">73.1 points (40.9 + 32.1).</label> <label><input type="radio" name="p9" value="c">55.7 points (40.9 + 14.8).</label>
+<label><input type="radio" name="p9" value="a">39 ng/mL</label> <label><input type="radio" name="p9" value="b">57 ng/mL</label> <label><input type="radio" name="p9" value="c">96 ng/mL (about 57 + 39)</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Higher secondary mean = intercept + educationhigher_secondary ≈ 40.9 + 32.1." data-incorrect="Not quite. Use the higher_secondary row, not lower_secondary.">
+<div class="practice-feedback" data-correct="Correct. Male mean ≈ intercept + sexm ≈ 57 + 39 ≈ 96 ng/mL." data-incorrect="Not quite. Add the sexm coefficient to the intercept.">
 
 </div>
 </div>
 <section class="panel">
 <h2 class="anchored">
-Exercise 2: three-level genotype predictor (<code>oibiostat::famuss</code>)
+Exercise 2: relevel and refit (<code>births14</code>)
 </h2>
-<p>The FAMuSS study measured percent change in non-dominant arm strength (<code>ndrm.ch</code>) after resistance training, by ACTN3 genotype (<code>actn3.r577x</code>: CC, CT, or TT). Fill in the blanks and run the cell.</p>
+<p>Complete the code below to set <strong>female</strong> as the reference level for <code>sex</code>, then fit <code>weight ~ sex</code>. Replace each <code>____</code>.</p>
 </section>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code — exercise 2 (fill in blanks)
+R code: exercise 2 (fill in blanks)
 </h3>
 <div id="qwebr-insertion-location-5"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
@@ -2542,36 +2566,23 @@ R code — exercise 2 (fill in blanks)
 <summary>
 Show the answer
 </summary>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>mod_actn3 <span class="ot">&lt;-</span> <span class="fu">lm</span>(ndrm.ch <span class="sc">~</span> actn3.r577x, <span class="at">data =</span> famuss)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>With CC as the default reference, the intercept is the mean change for CC genotype. Each other row is the difference vs CC.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>births14 <span class="ot">&lt;-</span> births14 <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sex =</span> <span class="fu">factor</span>(sex, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"female"</span>, <span class="st">"male"</span>)))</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>mod_fill <span class="ot">&lt;-</span> <span class="fu">lm</span>(weight <span class="sc">~</span> sex, <span class="at">data =</span> births14)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="practice" data-answer="a">
-<div class="practice-title">
-Question 11
-</div>
-<p>
-In the FAMuSS model, how many genotype coefficients appear below the intercept (excluding the intercept itself)?
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p10" value="a">2 (for CT and TT; CC is reference).</label> <label><input type="radio" name="p10" value="b">3 (one per genotype).</label> <label><input type="radio" name="p10" value="c">1 (genotype is binary).</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Three levels → two dummy variables (K − 1)." data-incorrect="Not quite. With K = 3 levels, expect K − 1 = 2 slope rows.">
-
-</div>
-</div>
-<div class="practice" data-answer="b">
 <div class="practice-title">
 Question 12
 </div>
 <p>
-The TT coefficient (about +9.2) tells you that TT participants’ mean strength gain is about 9.2 percentage points:
+In your completed model, which row in <code>summary()</code> tells you how much heavier male babies are than female babies?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p11" value="a">In total, regardless of genotype.</label> <label><input type="radio" name="p11" value="b">Higher than the CC reference group.</label> <label><input type="radio" name="p11" value="c">Higher than the CT group specifically.</label>
+<label><input type="radio" name="p10" value="a"><code>sexmale</code></label> <label><input type="radio" name="p10" value="b"><code>(Intercept)</code></label> <label><input type="radio" name="p10" value="c"><code>Residual standard error</code></label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Each dummy compares its level to the reference (CC), not to another non-reference level." data-incorrect="Not quite. The TT row is TT vs CC (reference), not TT vs CT.">
+<div class="practice-feedback" data-correct="Correct. The non-reference level gets its own coefficient row." data-incorrect="Not quite. The intercept is the reference mean. The other level's row is the difference.">
 
 </div>
 </div>
@@ -2595,11 +2606,11 @@ Your completion code
 </div>
 </section>
 <p class="footer-note">
-GRAPH Courses practical | Polytomous categorical predictors
+GRAPH Courses practical | Binary categorical predictors
 </p>
 </div>
 <script>
-const COMPLETION_CODE = "POLYKM1";
+const COMPLETION_CODE = "BINREF25";
 const COMPLETION_REQUIRED = 10;
 
 function updateCompletion() {
