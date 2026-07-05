@@ -14,7 +14,7 @@ filters:
 webr:
   show-startup-message: false
   show-header-message: false
-  packages: ['dplyr', 'ggplot2', 'broom']
+  packages: ['dplyr', 'ggplot2']
 ---
 
 <style>
@@ -367,7 +367,6 @@ Run the cell to read the data from GitHub and plot the two groups.
 ```{webr-r}
 library(dplyr)
 library(ggplot2)
-library(broom)
 
 fram <- read.csv("https://raw.githubusercontent.com/the-graph-courses/rsr_resources/main/data/LSTbook_Framingham.csv")
 
@@ -635,9 +634,9 @@ Chicks gain weight over time on every diet, but they grow fastest on Diet 3 (11.
 
 <h2>A note on interactions between two continuous variables</h2>
 
-Every interaction in this practical involves one continuous variable and one categorical variable. You can also fit an interaction between two continuous variables, for example `lm(sysBP ~ BMI + age + BMI:age, data = fram)`. This is uncommon in public health and health statistics, where interactions are usually examined across categorical groups such as treatment arm, sex, or age bands.
+Every interaction in this practical involves one continuous variable and one categorical variable. You can also fit an interaction between two continuous variables, for example `lm(sysBP ~ BMI + age + BMI:age, data = fram)`. This is because such continuous-continuous interactions are uncommon in public health and health statistics, where interactions are usually examined across categorical groups such as treatment arm, sex, or age bands.
 
-When you do fit one, there is no small set of groups to tabulate. Instead, the slope of one variable becomes a straight-line function of the other, and a common way to interpret it is to read that slope at a few chosen values of the second variable (for example a low, middle, and high value).
+If you are interested, here is a write-up on continuous-continuous interactions: [Continuous-continuous interactions](https://stats.oarc.ucla.edu/r/faq/how-can-i-explain-a-continuous-by-continuous-interaction/).
 
 </section>
 
