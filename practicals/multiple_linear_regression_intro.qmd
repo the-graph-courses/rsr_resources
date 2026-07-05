@@ -1,0 +1,725 @@
+---
+title: "Introduction to multiple linear regression"
+subtitle: "WebR practical: confounding, adjusted slopes, and prediction"
+author: "GRAPH Courses"
+format:
+  html:
+    toc: false
+    number-sections: false
+    theme: cosmo
+    page-layout: full
+engine: knitr
+filters:
+  - webr
+webr:
+  show-startup-message: false
+  show-header-message: false
+  packages: ['dplyr', 'ggplot2', 'broom', 'MASS']
+---
+
+<style>
+:root {
+  --dark-teal: #00565e;
+  --light-teal: #5fbfbf;
+  --light-teal-soft: #e3f4f4;
+  --gold: #f5c542;
+  --rose: #b83b5e;
+  --ink: #173234;
+  --muted: #5d7475;
+  --page: #f4f7f7;
+  --card: #ffffff;
+  --border: #d0dede;
+  --good: #287a4d;
+  --good-bg: #e8f8ef;
+  --bad: #b83b3b;
+  --bad-bg: #fdecea;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.quarto-title-block { display: none; }
+
+.page-shell {
+  width: min(900px, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding: 1.25rem 0 3rem;
+}
+
+.masthead {
+  background: var(--dark-teal);
+  color: #fff;
+  border-radius: 8px;
+  border-left: 6px solid var(--gold);
+  padding: 1.4rem 1.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.eyebrow {
+  color: var(--gold);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+.masthead h1 {
+  color: #fff;
+  font-size: 1.6rem;
+  line-height: 1.15;
+  font-weight: 800;
+  margin: 0;
+}
+
+.masthead p {
+  max-width: 700px;
+  margin: 0.55rem 0 0;
+  color: #d3eded;
+  font-size: 0.98rem;
+}
+
+.panel, .practice, .callout, .webr-wrap, .svg-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.panel {
+  padding: 1.15rem 1.3rem;
+  margin-bottom: 1rem;
+}
+
+.panel h2 {
+  color: var(--dark-teal);
+  font-weight: 800;
+  margin-top: 0;
+  font-size: 1.3rem;
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 0.45rem;
+  margin-bottom: 0.8rem;
+}
+
+.panel p:last-child, .callout p:last-child { margin-bottom: 0; }
+
+.tight-list { padding-left: 1.15rem; margin-bottom: 0; }
+.tight-list li { margin-bottom: 0.35rem; }
+
+.formula-panel {
+  background: var(--light-teal-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.svg-panel {
+  padding: 0.6rem;
+  margin: 0.85rem 0 0.4rem;
+  overflow-x: auto;
+}
+
+.svg-panel svg { width: 100%; min-width: 560px; display: block; }
+.svg-caption { color: var(--muted); font-size: 0.9rem; margin: 0.2rem 0.3rem 0; }
+
+.practice {
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  border-top: 4px solid var(--gold);
+}
+
+.practice .practice-title {
+  color: var(--dark-teal);
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+}
+
+.practice p { margin-bottom: 0.7rem; }
+
+.choice-set { display: grid; gap: 0.5rem; margin: 0.8rem 0; }
+
+.choice-set label {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 0.72rem 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.choice-set label:hover {
+  border-color: var(--light-teal);
+  background: #edf8f8;
+}
+
+.choice-set input {
+  appearance: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid #aacaca;
+  border-radius: 50%;
+  margin-top: 0.15rem;
+  flex: 0 0 auto;
+}
+
+.choice-set input:checked {
+  border-color: var(--dark-teal);
+  background:
+    radial-gradient(circle at center, #fff 0 34%, transparent 36%),
+    var(--dark-teal);
+}
+
+.practice button {
+  background: var(--dark-teal);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.55rem 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.practice button:hover { background: #003f45; }
+
+.practice .practice-feedback {
+  display: none;
+  margin-top: 0.8rem;
+  border-radius: 8px;
+  padding: 0.75rem 0.85rem;
+}
+
+.practice.is-correct .practice-feedback {
+  display: block;
+  background: var(--good-bg);
+  color: #173a26;
+  border: 1px solid #a9dab9;
+}
+
+.practice.is-incorrect .practice-feedback {
+  display: block;
+  background: var(--bad-bg);
+  color: #4b1c1c;
+  border: 1px solid #e6b1b1;
+}
+
+.practice label.correct-choice { border-color: var(--good); background: var(--good-bg); }
+.practice label.incorrect-choice { border-color: var(--bad); background: var(--bad-bg); }
+
+.callout {
+  padding: 1rem 1.15rem;
+  border-left: 5px solid var(--light-teal);
+  margin: 1rem 0;
+}
+
+.callout.warning { border-left-color: var(--gold); background: #fffaf0; }
+
+.webr-wrap {
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  border-top: 4px solid var(--light-teal);
+}
+
+.webr-wrap h3 { color: var(--dark-teal); font-size: 1rem; margin-top: 0; }
+
+.answer { margin-top: 0.7rem; }
+.answer summary { cursor: pointer; font-weight: 700; color: var(--dark-teal); }
+.answer[open] summary { margin-bottom: 0.4rem; }
+
+code {
+  background: rgba(0, 86, 94, 0.08);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  color: #123638;
+}
+
+.qwebr-output-code-stdout pre, .qwebr-output-code-stderr pre { white-space: pre-wrap; }
+
+.panel.completion { border-top: 4px solid var(--gold); }
+
+.code-progress { font-weight: 800; color: var(--dark-teal); }
+
+.code-box {
+  display: none;
+  text-align: center;
+  background: var(--dark-teal);
+  color: #fff;
+  border-radius: 8px;
+  padding: 1.1rem;
+  margin-top: 0.6rem;
+}
+
+.code-box .code-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.code-box .code-value {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin-top: 0.3rem;
+}
+
+.footer-note { color: var(--muted); text-align: center; margin-top: 2rem; font-size: 0.9rem; }
+</style>
+
+<div class="page-shell">
+
+<header class="masthead">
+  <div class="eyebrow">WebR practical</div>
+  <h1>Introduction to multiple linear regression</h1>
+  <p>Fit a model with more than one predictor, read adjusted coefficients, spot confounding, and use the fitted equation for prediction.</p>
+</header>
+
+<section class="panel">
+
+<h2>Overview</h2>
+
+Simple linear regression has one predictor:
+
+```r
+lm(outcome ~ predictor, data = my_data)
+```
+
+Multiple linear regression has two or more predictors:
+
+```r
+lm(outcome ~ predictor_1 + predictor_2, data = my_data)
+```
+
+The key change is interpretation. Each coefficient is read while <strong>holding the other predictors constant</strong>. This is also called <strong>adjusting for</strong> or <strong>controlling for</strong> the other variables.
+
+In this practical you will:
+
+<ul class="tight-list">
+  <li>Fit a naive one-predictor model.</li>
+  <li>Add a second predictor to adjust for confounding.</li>
+  <li>Use a two-predictor equation for prediction.</li>
+  <li>Extend the same syntax to three predictors.</li>
+</ul>
+
+After answering the questions, <strong>your completion code will be revealed.</strong>
+
+</section>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 1</div>
+  <p>Which R formula fits a multiple linear regression predicting <code>sick_days</code> from <code>washes</code> and <code>kids</code>?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p0" value="a"><code>lm(sick_days + washes ~ kids, data = handwashing)</code></label>
+<label><input type="radio" name="p0" value="b"><code>lm(sick_days ~ washes + kids, data = handwashing)</code></label>
+<label><input type="radio" name="p0" value="c"><code>lm(washes ~ sick_days + kids, data = handwashing)</code></label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The outcome goes on the left of the tilde; predictors are added on the right." data-incorrect="Not quite. Put the outcome on the left, then add both predictors on the right with +."></div>
+</div>
+
+<section class="panel">
+
+<h2>The handwashing question</h2>
+
+We will use a small mock dataset to ask: <strong>does handwashing reduce sick days?</strong>
+
+The variables are:
+
+<ul class="tight-list">
+  <li><code>washes</code>: typical hand washes per day.</li>
+  <li><code>kids</code>: number of children at home.</li>
+  <li><code>sick_days</code>: days off work with respiratory illness in the next year.</li>
+</ul>
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: create the data</h3>
+
+```{webr-r}
+library(dplyr)
+library(ggplot2)
+library(broom)
+
+handwashing <- data.frame(
+  person = 1:12,
+  washes = c(1, 2, 3, 4, 4, 5, 6, 7, 7, 8, 9, 10),
+  kids = c(0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2),
+  sick_days = c(11.2, 10.6, 9.3, 8.5, 14.5, 13.1, 12.4, 11.7, 17.1, 16.5, 15.1, 14.2)
+)
+
+handwashing
+```
+
+</div>
+
+<section class="panel">
+
+<h2>Start with a naive model</h2>
+
+First, look only at handwashing and sick days. This ignores how many children a person has at home.
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: plot and fit the one-predictor model</h3>
+
+```{webr-r}
+ggplot(handwashing, aes(x = washes, y = sick_days)) +
+  geom_point(size = 3, color = "#00565e") +
+  geom_smooth(method = "lm", se = FALSE, color = "#b83b5e", linewidth = 1) +
+  labs(
+    x = "Hand washes per day",
+    y = "Sick days per year"
+  ) +
+  theme_minimal(base_size = 14)
+
+mod_naive <- lm(sick_days ~ washes, data = handwashing)
+summary(mod_naive)
+```
+
+</div>
+
+<div class="practice" data-answer="c">
+  <div class="practice-title">Question 2</div>
+  <p>In the one-predictor model, the slope for <code>washes</code> is about <code>+0.64</code>. What does that say?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p1" value="a">Each extra wash predicts 0.64 fewer sick days.</label>
+<label><input type="radio" name="p1" value="b">People wash their hands 0.64 times per day on average.</label>
+<label><input type="radio" name="p1" value="c">Each extra wash predicts 0.64 more sick days in this naive model.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. A positive slope means the predicted outcome goes up as washes increases." data-incorrect="Not quite. The slope is positive, so the naive model predicts more sick days at higher washes."></div>
+</div>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 3</div>
+  <p>Why should we hesitate before saying that handwashing causes more sick days?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p2" value="a">Another variable might be related to both handwashing and sick days.</label>
+<label><input type="radio" name="p2" value="b">Regression slopes can only be interpreted when they are exactly zero.</label>
+<label><input type="radio" name="p2" value="c">A positive slope always means the model has been fit incorrectly.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. A third variable can create a misleading pooled slope." data-incorrect="Not quite. The concern is confounding: a third variable may connect to both predictor and outcome."></div>
+</div>
+
+<section class="panel">
+
+<h2>Reveal the hidden variable</h2>
+
+People with more children may wash their hands more often. They may also be exposed to more colds and flu. That means <code>kids</code> is a plausible confounder.
+
+<div class="formula-panel">
+
+$$
+\text{kids} \rightarrow \text{washes}
+$$
+
+$$
+\text{kids} \rightarrow \text{sick days}
+$$
+
+<p>If a variable points toward both the predictor and the outcome, a one-predictor slope can be misleading.</p>
+
+</div>
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: color points by number of kids</h3>
+
+```{webr-r}
+ggplot(handwashing, aes(x = washes, y = sick_days, color = factor(kids))) +
+  geom_point(size = 3) +
+  geom_smooth(aes(group = kids), method = "lm", se = FALSE, linewidth = 1) +
+  scale_color_manual(values = c("#b83b5e", "#287a4d", "#2f5f98")) +
+  labs(
+    x = "Hand washes per day",
+    y = "Sick days per year",
+    color = "Kids at home"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 4</div>
+  <p>In the colored plot, which pattern suggests confounding by <code>kids</code>?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p3" value="a">All points have exactly the same value of <code>kids</code>.</label>
+<label><input type="radio" name="p3" value="b">People with more kids tend to have both more washes and more sick days.</label>
+<label><input type="radio" name="p3" value="c">The outcome has no variation.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Kids is associated with both the predictor and the outcome." data-incorrect="Not quite. A confounder is connected to both the predictor and the outcome."></div>
+</div>
+
+<section class="panel">
+
+<h2>Add the second predictor</h2>
+
+Now fit a model with both <code>washes</code> and <code>kids</code>. Replace each `____` with the correct variable name, then run the cell.
+
+<div class="formula-panel">
+
+$$
+\widehat{\text{sick days}} = b_0 + b_1 \times \text{washes} + b_2 \times \text{kids}
+$$
+
+<p>Read <code>b1</code> as the wash slope <strong>holding kids constant</strong>. Read <code>b2</code> as the kids slope <strong>holding washes constant</strong>.</p>
+
+</div>
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: fit the adjusted model</h3>
+
+```{webr-r}
+mod_adjusted <- lm(____ ~ ____ + ____, data = handwashing)
+summary(mod_adjusted)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+mod_adjusted <- lm(sick_days ~ washes + kids, data = handwashing)
+```
+
+</details>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 5</div>
+  <p>After adjusting for <code>kids</code>, the <code>washes</code> slope is about <code>-0.95</code>. Which interpretation is best?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p4" value="a">Holding kids constant, each extra wash is associated with about 0.95 fewer sick days.</label>
+<label><input type="radio" name="p4" value="b">Holding washes constant, each extra kid is associated with 0.95 fewer sick days.</label>
+<label><input type="radio" name="p4" value="c">The model says handwashing has no relationship with sick days.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The wash coefficient is read at a fixed number of kids." data-incorrect="Not quite. The row for washes is the handwashing slope after adjusting for kids."></div>
+</div>
+
+<div class="practice" data-answer="c">
+  <div class="practice-title">Question 6</div>
+  <p>The <code>kids</code> slope is about <code>+5.77</code>. Which interpretation is best?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p5" value="a">Each extra wash is associated with 5.77 more kids.</label>
+<label><input type="radio" name="p5" value="b">Each person has 5.77 kids on average.</label>
+<label><input type="radio" name="p5" value="c">Holding washes constant, each extra child is associated with about 5.77 more sick days.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The kids coefficient is read at a fixed number of washes." data-incorrect="Not quite. The row for kids predicts sick days while holding washes constant."></div>
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 7</div>
+  <p>What happened to the wash slope when <code>kids</code> was added?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p6" value="a">It stayed positive and got larger.</label>
+<label><input type="radio" name="p6" value="b">It changed from positive to negative.</label>
+<label><input type="radio" name="p6" value="c">It became the intercept.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The sign reversal is the clue that the one-predictor slope was misleading." data-incorrect="Not quite. Compare the naive wash slope (+0.64) with the adjusted wash slope (-0.95)."></div>
+</div>
+
+<section class="panel">
+
+<h2>Use the fitted equation</h2>
+
+Rounded to two decimals, the adjusted model is:
+
+<div class="formula-panel">
+
+$$
+\widehat{\text{sick days}} = 12.32 - 0.95 \times \text{washes} + 5.77 \times \text{kids}
+$$
+
+</div>
+
+To predict, substitute values for the predictors and do the arithmetic.
+
+</section>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 8</div>
+  <p>Using the rounded equation, what is the predicted sick days for someone who washes 6 times per day and has 2 kids?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p7" value="a"><code>12.32 - 0.95 + 5.77 = 17.14</code></label>
+<label><input type="radio" name="p7" value="b"><code>12.32 - 0.95 * 6 + 5.77 * 2 = 18.16</code></label>
+<label><input type="radio" name="p7" value="c"><code>-0.95 * 6 + 5.77 * 2 = 5.84</code></label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Include the intercept and multiply each slope by its predictor value." data-incorrect="Not quite. Use intercept + wash slope times 6 + kids slope times 2."></div>
+</div>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 9</div>
+  <p>A common prediction mistake is to leave out the intercept. Why is option C in the previous question wrong?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p8" value="a">It omits the intercept.</label>
+<label><input type="radio" name="p8" value="b">It uses too many predictors.</label>
+<label><input type="radio" name="p8" value="c">It treats kids as a categorical variable.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Predictions from a regression equation include the intercept unless the model was fit without one." data-incorrect="Not quite. The formula needs the intercept as well as the predictor terms."></div>
+</div>
+
+<section class="panel">
+
+<h2>Extend to three predictors</h2>
+
+The same formula pattern works for three or more predictors. Next, use the <code>birthwt</code> dataset from the <code>MASS</code> package: 189 births at a Massachusetts hospital.
+
+<ul class="tight-list">
+  <li><strong>Outcome:</strong> <code>bwt</code> (baby birth weight in grams)</li>
+  <li><strong>Predictors:</strong> <code>age</code> (mother's age in years), <code>lwt</code> (mother's pre-pregnancy weight in pounds), and <code>smoke</code> (1 = smoked during pregnancy, 0 = did not)</li>
+</ul>
+
+Replace each `____` with the correct variable name, then run the cell.
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: exercise, fill in the blanks</h3>
+
+```{webr-r}
+library(MASS)
+data(birthwt)
+
+mod_bwt <- lm(____ ~ ____ + ____ + ____, data = birthwt)
+summary(mod_bwt)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+mod_bwt <- lm(bwt ~ age + lwt + smoke, data = birthwt)
+summary(mod_bwt)
+```
+
+This model predicts birth weight from the mother's age, pre-pregnancy weight, and smoking status.
+
+</details>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 10</div>
+  <p>In your fitted model, the <code>smoke</code> coefficient is about <code>-269</code>. How should it be read?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p9" value="a">Holding age and lwt constant, babies of smokers weigh on average about 269 g less than babies of nonsmokers.</label>
+<label><input type="radio" name="p9" value="b">Smokers in this sample weigh 269 g less than nonsmokers.</label>
+<label><input type="radio" name="p9" value="c">Each cigarette smoked reduces birth weight by 269 g.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The smoke slope compares smokers to nonsmokers while adjusting for the mother's age and weight." data-incorrect="Not quite. The coefficient describes babies' birth weight, comparing smokers to nonsmokers while holding the other predictors constant."></div>
+</div>
+
+<section class="panel completion">
+
+<h2>Completion code</h2>
+
+<p>Answer at least 8 out of 10 questions correctly to reveal your completion code.</p>
+
+<p><span class="code-progress" id="code-progress">0 of 10 correct (need at least 8)</span></p>
+
+<div class="code-box" id="code-box">
+  <div class="code-label">Your completion code</div>
+  <div class="code-value" id="code-value"></div>
+</div>
+
+</section>
+
+<p class="footer-note">GRAPH Courses practical | Multiple linear regression</p>
+
+</div>
+
+<script>
+const COMPLETION_CODE = "MLR2KIDS";
+const COMPLETION_REQUIRED = 8;
+
+function updateCompletion() {
+  const cards = document.querySelectorAll(".practice");
+  const correct = document.querySelectorAll(".practice.is-correct").length;
+  const total = cards.length;
+  const progress = document.getElementById("code-progress");
+  const box = document.getElementById("code-box");
+  const value = document.getElementById("code-value");
+
+  if (progress) {
+    progress.textContent = correct + " of " + total + " correct (need at least " + COMPLETION_REQUIRED + ")";
+  }
+
+  if (box && value) {
+    if (correct >= COMPLETION_REQUIRED) {
+      value.textContent = COMPLETION_CODE;
+      box.style.display = "block";
+    } else {
+      box.style.display = "none";
+    }
+  }
+}
+
+document.querySelectorAll(".practice").forEach((card) => {
+  const button = card.querySelector("button");
+  const feedback = card.querySelector(".practice-feedback");
+  const answer = card.dataset.answer;
+
+  button.addEventListener("click", () => {
+    const selected = card.querySelector("input[type='radio']:checked");
+    card.classList.remove("is-correct", "is-incorrect");
+    card.querySelectorAll("label").forEach((label) => {
+      label.classList.remove("correct-choice", "incorrect-choice");
+    });
+
+    if (!selected) {
+      card.classList.add("is-incorrect");
+      feedback.textContent = "Choose an answer first, then check it.";
+      updateCompletion();
+      return;
+    }
+
+    const selectedLabel = selected.closest("label");
+    const correctInput = card.querySelector(`input[value="${answer}"]`);
+    const correctLabel = correctInput ? correctInput.closest("label") : null;
+
+    if (selected.value === answer) {
+      card.classList.add("is-correct");
+      selectedLabel.classList.add("correct-choice");
+      feedback.textContent = feedback.dataset.correct;
+    } else {
+      card.classList.add("is-incorrect");
+      selectedLabel.classList.add("incorrect-choice");
+      if (correctLabel) correctLabel.classList.add("correct-choice");
+      feedback.textContent = feedback.dataset.incorrect;
+    }
+
+    updateCompletion();
+  });
+});
+
+updateCompletion();
+</script>

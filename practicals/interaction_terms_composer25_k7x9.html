@@ -8,7 +8,7 @@
 
 <meta name="author" content="GRAPH Courses">
 
-<title>Simple linear regression with a binary predictor</title>
+<title>Interaction terms in regression</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -58,16 +58,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="linear_regression_binary_predictor_files/libs/clipboard/clipboard.min.js"></script>
-<script src="linear_regression_binary_predictor_files/libs/quarto-html/quarto.js"></script>
-<script src="linear_regression_binary_predictor_files/libs/quarto-html/popper.min.js"></script>
-<script src="linear_regression_binary_predictor_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="linear_regression_binary_predictor_files/libs/quarto-html/anchor.min.js"></script>
-<link href="linear_regression_binary_predictor_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="linear_regression_binary_predictor_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="linear_regression_binary_predictor_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="linear_regression_binary_predictor_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="linear_regression_binary_predictor_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="interaction_terms_composer25_k7x9_files/libs/clipboard/clipboard.min.js"></script>
+<script src="interaction_terms_composer25_k7x9_files/libs/quarto-html/quarto.js"></script>
+<script src="interaction_terms_composer25_k7x9_files/libs/quarto-html/popper.min.js"></script>
+<script src="interaction_terms_composer25_k7x9_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="interaction_terms_composer25_k7x9_files/libs/quarto-html/anchor.min.js"></script>
+<link href="interaction_terms_composer25_k7x9_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="interaction_terms_composer25_k7x9_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="interaction_terms_composer25_k7x9_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="interaction_terms_composer25_k7x9_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="interaction_terms_composer25_k7x9_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.47.0/min/vs/editor/editor.main.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   
@@ -346,7 +346,7 @@ iframe.qwebr-output-code-browse {
 // Document level settings ----
 
 // Determine if we need to install R packages
-globalThis.qwebrInstallRPackagesList = ['dplyr', 'MASS', 'openintro', 'DAAG'];
+globalThis.qwebrInstallRPackagesList = ['dplyr', 'ggplot2', 'broom', 'MASS'];
 
 // Specify possible locations to search for the repository
 globalThis.qwebrPackageRepoURLS = ['https://repo.r-wasm.org/'];
@@ -368,7 +368,7 @@ globalThis.qwebrCustomizedWebROptions = {
 };
 
 // Store cell data
-globalThis.qwebrCellDetails = [{"options":{"autorun":"false","fig-cap":"","editor-word-wrap":"true","dpi":72,"context":"interactive","comment":"","classes":"","results":"markup","out-height":"","warning":"true","out-width":"700px","fig-width":7,"fig-height":5,"editor-max-height":"","editor-font-scale":"1","message":"true","read-only":"false","label":"unnamed-chunk-1","output":"true","editor-quick-suggestions":"false"},"code":"library(openintro)\nlibrary(dplyr)\ndata(births14)\n\nbirths14 <- births14 |>\n  mutate(sex = factor(sex, levels = c(\"female\", \"male\")))\n\nmod_sex <- lm(weight ~ sex, data = births14)\nsummary(mod_sex)","id":1},{"options":{"autorun":"false","fig-cap":"","editor-word-wrap":"true","dpi":72,"context":"interactive","comment":"","classes":"","results":"markup","out-height":"","warning":"true","out-width":"700px","fig-width":7,"fig-height":5,"editor-max-height":"","editor-font-scale":"1","message":"true","read-only":"false","label":"unnamed-chunk-2","output":"true","editor-quick-suggestions":"false"},"code":"births14_m <- births14 |>\n  mutate(sex = factor(sex, levels = c(\"male\", \"female\")))\n\nmod_sex_male_ref <- lm(weight ~ sex, data = births14_m)\nsummary(mod_sex_male_ref)","id":2},{"options":{"autorun":"false","fig-cap":"","editor-word-wrap":"true","dpi":72,"context":"interactive","comment":"","classes":"","results":"markup","out-height":"","warning":"true","out-width":"700px","fig-width":7,"fig-height":5,"editor-max-height":"","editor-font-scale":"1","message":"true","read-only":"false","label":"unnamed-chunk-3","output":"true","editor-quick-suggestions":"false"},"code":"library(MASS)\nlibrary(dplyr)\ndata(birthwt)\n\nbirthwt <- birthwt |>\n  mutate(smoke = factor(smoke, levels = c(0, 1),\n                        labels = c(\"nonsmoker\", \"smoker\")))\n\nmod_smoke <- lm(bwt ~ smoke, data = birthwt)\nsummary(mod_smoke)","id":3},{"options":{"autorun":"false","fig-cap":"","editor-word-wrap":"true","dpi":72,"context":"interactive","comment":"","classes":"","results":"markup","out-height":"","warning":"true","out-width":"700px","fig-width":7,"fig-height":5,"editor-max-height":"","editor-font-scale":"1","message":"true","read-only":"false","label":"unnamed-chunk-4","output":"true","editor-quick-suggestions":"false"},"code":"library(DAAG)\ndata(ais)\n\nmod_ferr <- lm(____ ~ ____, data = ais)\nsummary(mod_ferr)","id":4},{"options":{"autorun":"false","fig-cap":"","editor-word-wrap":"true","dpi":72,"context":"interactive","comment":"","classes":"","results":"markup","out-height":"","warning":"true","out-width":"700px","fig-width":7,"fig-height":5,"editor-max-height":"","editor-font-scale":"1","message":"true","read-only":"false","label":"unnamed-chunk-5","output":"true","editor-quick-suggestions":"false"},"code":"library(openintro)\nlibrary(dplyr)\ndata(births14)\n\nbirths14 <- births14 |>\n  mutate(sex = factor(____, levels = c(\"____\", \"male\")))\n\nmod_fill <- lm(____ ~ ____, data = births14)\nsummary(mod_fill)","id":5}];
+globalThis.qwebrCellDetails = [{"id":1,"code":"library(dplyr)\nlibrary(ggplot2)\n\nset.seed(7)\nn <- 180\nbp_dat <- data.frame(\n  BMI = runif(n, 20, 38),\n  BPmeds = sample(c(\"not_on_meds\", \"on_meds\"), n, replace = TRUE, prob = c(0.55, 0.45))\n)\nbp_dat$sysBP <- with(\n  bp_dat,\n  87.64 + 1.70 * BMI +\n    ifelse(BPmeds == \"on_meds\", 57.11 - 1.00 * BMI, 0) +\n    rnorm(n, 0, 4)\n)\nbp_dat$BPmeds <- factor(bp_dat$BPmeds, levels = c(\"not_on_meds\", \"on_meds\"))\n\nhead(bp_dat)","options":{"output":"true","fig-cap":"","warning":"true","context":"interactive","out-height":"","out-width":"700px","fig-height":5,"message":"true","editor-font-scale":"1","fig-width":7,"editor-word-wrap":"true","results":"markup","comment":"","autorun":"false","label":"unnamed-chunk-1","classes":"","dpi":72,"read-only":"false","editor-quick-suggestions":"false","editor-max-height":""}},{"id":2,"code":"mod_add <- lm(sysBP ~ BMI + BPmeds, data = bp_dat)\nmod_int <- lm(sysBP ~ BMI + BPmeds + BMI:BPmeds, data = bp_dat)\n\ncat(\"--- Additive model ---\\n\")\nsummary(mod_add)\n\ncat(\"\\n--- Interaction model ---\\n\")\nsummary(mod_int)","options":{"output":"true","fig-cap":"","warning":"true","context":"interactive","out-height":"","out-width":"700px","fig-height":5,"message":"true","editor-font-scale":"1","fig-width":7,"editor-word-wrap":"true","results":"markup","comment":"","autorun":"false","label":"unnamed-chunk-2","classes":"","dpi":72,"read-only":"false","editor-quick-suggestions":"false","editor-max-height":""}},{"id":3,"code":"b <- coef(mod_int)\nb0 <- b[\"(Intercept)\"]\nb1 <- b[\"BMI\"]\nb2 <- b[\"BPmedson_meds\"]\nb3 <- b[\"BMI:BPmedson_meds\"]\n\nslope_table <- data.frame(\n  group = c(\"Not on meds (ref)\", \"On meds\"),\n  intercept = c(b0, b0 + b2),\n  BMI_slope = c(b1, b1 + b3)\n)\n\nround(slope_table, 2)","options":{"output":"true","fig-cap":"","warning":"true","context":"interactive","out-height":"","out-width":"700px","fig-height":5,"message":"true","editor-font-scale":"1","fig-width":7,"editor-word-wrap":"true","results":"markup","comment":"","autorun":"false","label":"unnamed-chunk-3","classes":"","dpi":72,"read-only":"false","editor-quick-suggestions":"false","editor-max-height":""}},{"id":4,"code":"set.seed(11)\nwages <- data.frame(\n  educ = sample(10:18, 120, replace = TRUE),\n  sex = sample(c(\"female\", \"male\"), 120, replace = TRUE, prob = c(0.52, 0.48))\n)\nwages$wage <- with(\n  wages,\n  6.00 + 1.70 * educ + ifelse(sex == \"male\", 6.00 + 0.80 * educ, 0) + rnorm(120, 0, 2)\n)\nwages$sex <- factor(wages$sex, levels = c(\"female\", \"male\"))\n\nmod_wage <- lm(wage ~ educ + sex + educ:sex, data = wages)\nsummary(mod_wage)\n\nb <- coef(mod_wage)\nwage_table <- data.frame(\n  group = c(\"Female (ref)\", \"Male\"),\n  intercept = c(b[\"(Intercept)\"], b[\"(Intercept)\"] + b[\"sexmale\"]),\n  educ_slope = c(b[\"educ\"], b[\"educ\"] + b[\"educ:sexmale\"])\n)\nround(wage_table, 2)","options":{"output":"true","fig-cap":"","warning":"true","context":"interactive","out-height":"","out-width":"700px","fig-height":5,"message":"true","editor-font-scale":"1","fig-width":7,"editor-word-wrap":"true","results":"markup","comment":"","autorun":"false","label":"unnamed-chunk-4","classes":"","dpi":72,"read-only":"false","editor-quick-suggestions":"false","editor-max-height":""}},{"id":5,"code":"library(MASS)\ndata(birthwt)\n\nbwt_dat <- birthwt |>\n  mutate(race = factor(race,\n                       levels = c(1, 2, 3),\n                       labels = c(\"white\", \"black\", \"other\")))\n\nmod_race <- lm(bwt ~ lwt + race + lwt:race, data = bwt_dat)\nsummary(mod_race)\n\nb <- coef(mod_race)\nrace_table <- data.frame(\n  group = c(\"White (ref)\", \"Black\", \"Other\"),\n  intercept = c(\n    b[\"(Intercept)\"],\n    b[\"(Intercept)\"] + b[\"raceblack\"],\n    b[\"(Intercept)\"] + b[\"raceother\"]\n  ),\n  lwt_slope = c(\n    b[\"lwt\"],\n    b[\"lwt\"] + b[\"lwt:raceblack\"],\n    b[\"lwt\"] + b[\"lwt:raceother\"]\n  )\n)\n\nround(race_table, 2)","options":{"output":"true","fig-cap":"","warning":"true","context":"interactive","out-height":"","out-width":"700px","fig-height":5,"message":"true","editor-font-scale":"1","fig-width":7,"editor-word-wrap":"true","results":"markup","comment":"","autorun":"false","label":"unnamed-chunk-5","classes":"","dpi":72,"read-only":"false","editor-quick-suggestions":"false","editor-max-height":""}},{"id":6,"code":"mod_cont <- lm(bwt ~ ____ + ____ + ____:____, data = bwt_dat)\nsummary(mod_cont)\n\nb <- coef(mod_cont)\ncond_slopes <- data.frame(\n  age = c(20, 25, 30),\n  lwt_slope = b[\"lwt\"] + c(20, 25, 30) * b[\"lwt:age\"]\n)\nround(cond_slopes, 2)","options":{"output":"true","fig-cap":"","warning":"true","context":"interactive","out-height":"","out-width":"700px","fig-height":5,"message":"true","editor-font-scale":"1","fig-width":7,"editor-word-wrap":"true","results":"markup","comment":"","autorun":"false","label":"unnamed-chunk-6","classes":"","dpi":72,"read-only":"false","editor-quick-suggestions":"false","editor-max-height":""}}];
 
 </script>
 <script type="module">
@@ -1950,8 +1950,8 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Simple linear regression with a binary predictor</h1>
-<p class="subtitle lead">WebR practical: dummy coding, group means, and releveling</p>
+<h1 class="title">Interaction terms in regression</h1>
+<p class="subtitle lead">WebR practical: effect modification, group slopes, and prediction</p>
 </div>
 
 
@@ -1980,6 +1980,10 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
   --light-teal: #5fbfbf;
   --light-teal-soft: #e3f4f4;
   --gold: #f5c542;
+  --rose: #b83b5e;
+  --green: #287a4d;
+  --blue: #2f5f98;
+  --violet: #6b4f9a;
   --ink: #173234;
   --muted: #5d7475;
   --page: #f4f7f7;
@@ -2032,7 +2036,7 @@ body {
 }
 
 .masthead p {
-  max-width: 680px;
+  max-width: 720px;
   margin: 0.55rem 0 0;
   color: #d3eded;
   font-size: 0.98rem;
@@ -2064,6 +2068,15 @@ body {
 .tight-list { padding-left: 1.15rem; margin-bottom: 0; }
 .tight-list li { margin-bottom: 0.35rem; }
 
+.formula-panel {
+  background: var(--light-teal-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
 .svg-panel {
   padding: 0.6rem;
   margin: 0.85rem 0 0.4rem;
@@ -2073,13 +2086,33 @@ body {
 .svg-panel svg { width: 100%; min-width: 560px; display: block; }
 .svg-caption { color: var(--muted); font-size: 0.9rem; margin: 0.2rem 0.3rem 0; }
 
-.formula-panel {
-  background: var(--light-teal-soft);
+.coef-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  margin: 0.75rem 0;
+}
+
+.coef-table th, .coef-table td {
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1rem 1.15rem;
-  margin: 1rem 0;
-  overflow-x: auto;
+  padding: 0.45rem 0.65rem;
+  text-align: left;
+}
+
+.coef-table th {
+  background: var(--light-teal-soft);
+  font-weight: 800;
+}
+
+.coef-table .c0 { color: var(--blue); font-weight: 800; }
+.coef-table .c1 { color: var(--rose); font-weight: 800; }
+.coef-table .c2 { color: var(--green); font-weight: 800; }
+.coef-table .c3 { color: var(--violet); font-weight: 800; }
+
+.coef-key {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0.2rem 0 0.4rem;
 }
 
 .practice {
@@ -2237,29 +2270,35 @@ code {
 WebR practical
 </div>
 <h1>
-Simple linear regression with a binary predictor
+Interaction terms in regression
 </h1>
 <p>
-When a predictor has exactly two groups, <code>lm()</code> draws a line between two group means. You will fit models, read coefficients as differences, and see how changing the reference level relabels (but does not change) the underlying relationship.
+When the effect of one predictor depends on another, add an interaction. You will compare additive and interaction models, read group-specific slopes, and extend the idea to polytomous factors and two continuous predictors.
 </p>
 </header>
 <section class="panel">
 <h2 class="anchored">
 Overview
 </h2>
-<p>A <strong>binary predictor</strong> takes only two values, such as female vs male or smoker vs nonsmoker. In R you still write a familiar formula:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(outcome <span class="sc">~</span> group, <span class="at">data =</span> my_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>R turns the group into a <strong>dummy variable</strong>: 0 for the <strong>reference</strong> level and 1 for the other level. The intercept is the mean of the reference group; the slope is the <strong>difference in means</strong> between the two groups.</p>
-<p>This practical uses teaching datasets from common R packages:</p>
+<p>An <strong>interaction</strong> means the effect of one predictor on the outcome <strong>depends on</strong> the level of another predictor.</p>
+<p>Without an interaction, an <strong>additive</strong> model assumes that effect stays the same at every level of the other predictor. Fitted lines share the same slope and differ only in intercept.</p>
+<p>With an interaction, different levels can have their own slope. The lines are no longer parallel.</p>
+<p>In R, write an interaction with a colon:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(outcome <span class="sc">~</span> x <span class="sc">+</span> group <span class="sc">+</span> x<span class="sc">:</span>group, <span class="at">data =</span> my_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The shorthand <code>x * group</code> expands to <code>x + group + x:group</code>.</p>
+<p>In this practical you will:</p>
 <ul class="tight-list">
 <li>
-<code>openintro::births14</code>: US live births (birth weight by sex)
+Compare additive and interaction models with a binary predictor.
 </li>
 <li>
-<code>MASS::birthwt</code>: Baystate birth weights (birth weight by smoking status)
+Build slope-by-group tables from the coefficient output.
 </li>
 <li>
-<code>DAAG::ais</code>: Australian Institute of Sport athletes (serum ferritin by sex)
+Extend the same logic to a polytomous categorical predictor.
+</li>
+<li>
+Read a continuous-by-continuous interaction as a slope that changes with the second predictor.
 </li>
 </ul>
 <p>After answering the questions, <strong>your completion code will be revealed.</strong></p>
@@ -2269,97 +2308,208 @@ Overview
 Question 1
 </div>
 <p>
-In a regression with a binary predictor, the intercept <span class="math inline">\(b_0\)</span> equals:
+An interaction model allows different groups to have different what?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p0" value="a">The overall mean of the outcome, pooling both groups.</label> <label><input type="radio" name="p0" value="b">The mean of the outcome in the <strong>reference</strong> group.</label> <label><input type="radio" name="p0" value="c">The difference in means between the two groups.</label>
+<label><input type="radio" name="p0" value="a">Sample sizes only.</label> <label><input type="radio" name="p0" value="b">Slopes for the continuous predictor.</label> <label><input type="radio" name="p0" value="c">P-values for the intercept only.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. When every dummy is 0, you are in the reference group, so the intercept is that group's mean." data-incorrect="Not quite. The intercept is the predicted outcome when the dummy equals 0, which is the reference group's mean.">
+<div class="practice-feedback" data-correct="Correct. The interaction lets the continuous slope change by group." data-incorrect="Not quite. The key change is that each group can get its own slope for the continuous predictor.">
 
 </div>
+</div>
+<section class="panel">
+<h2 class="anchored">
+Part 1: Binary predictor and a continuous predictor
+</h2>
+<p>Question: does blood pressure medication change the BMI-to-systolic-BP relationship?</p>
+<ul class="tight-list">
+<li>
+<strong>Outcome:</strong> <code>sysBP</code> (systolic blood pressure, mmHg)
+</li>
+<li>
+<strong>Predictors:</strong> <code>BMI</code> and <code>BPmeds</code> (on medication or not; not on meds = reference)
+</li>
+</ul>
+<p>We will fit three models:</p>
+<table class="coef-table">
+<tbody><tr>
+<th>
+Model
+</th>
+<th>
+R formula
+</th>
+<th>
+What it allows
+</th>
+</tr>
+<tr>
+<td>
+<strong>m1</strong>
+</td>
+<td>
+<code>sysBP ~ BMI</code>
+</td>
+<td>
+One line for everyone
+</td>
+</tr>
+<tr>
+<td>
+<strong>m2</strong>
+</td>
+<td>
+<code>sysBP ~ BMI + BPmeds</code>
+</td>
+<td>
+Two parallel lines, same BMI slope
+</td>
+</tr>
+<tr>
+<td>
+<strong>m3</strong>
+</td>
+<td>
+<code>sysBP ~ BMI + BPmeds + BMI:BPmeds</code>
+</td>
+<td>
+Two lines, each with its own slope
+</td>
+</tr>
+</tbody></table>
+</section>
+<div class="webr-wrap">
+<h3 class="anchored">
+R code: create the blood pressure data
+</h3>
+<div id="qwebr-insertion-location-1"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<div class="webr-wrap">
+<h3 class="anchored">
+R code: additive model (m2) and interaction model (m3)
+</h3>
+<div id="qwebr-insertion-location-2"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<div class="svg-panel" aria-label="Parallel versus non-parallel group lines">
+<svg viewbox="0 0 760 220" role="img">
+  <rect width="760" height="220" rx="8" fill="#fff"></rect>
+  <text x="190" y="22" text-anchor="middle" font-size="12" font-weight="800" fill="#173234">Additive: parallel lines</text>
+  <line x1="30" y1="185" x2="350" y2="185" stroke="#5d7475" stroke-width="1.2"></line>
+  <line x1="30" y1="35" x2="30" y2="185" stroke="#5d7475" stroke-width="1.2"></line>
+  <line x1="45" y1="165" x2="335" y2="95" stroke="#2f5f98" stroke-width="2.2"></line>
+  <line x1="45" y1="125" x2="335" y2="55" stroke="#b83b5e" stroke-width="2.2"></line>
+  <text x="190" y="205" text-anchor="middle" font-size="10" font-weight="700" fill="#5d7475">BMI</text>
+  <text x="570" y="22" text-anchor="middle" font-size="12" font-weight="800" fill="#173234">Interaction: slopes differ</text>
+  <line x1="410" y1="185" x2="730" y2="185" stroke="#5d7475" stroke-width="1.2"></line>
+  <line x1="410" y1="35" x2="410" y2="185" stroke="#5d7475" stroke-width="1.2"></line>
+  <line x1="425" y1="170" x2="715" y2="70" stroke="#2f5f98" stroke-width="2.2"></line>
+  <line x1="425" y1="110" x2="715" y2="82" stroke="#b83b5e" stroke-width="2.2"></line>
+  <text x="570" y="205" text-anchor="middle" font-size="10" font-weight="700" fill="#5d7475">BMI</text>
+  <text x="500" y="145" font-size="9.5" font-weight="800" fill="#2f5f98">not on meds</text>
+  <text x="500" y="95" font-size="9.5" font-weight="800" fill="#b83b5e">on meds</text>
+</svg>
+<p class="svg-caption">Left: one shared BMI slope. Right: medication can change both the intercept gap and the BMI slope.</p>
 </div>
 <div class="practice" data-answer="a">
 <div class="practice-title">
 Question 2
 </div>
 <p>
-The slope <span class="math inline">\(b_1\)</span> for the non-reference level tells you:
+In the <strong>additive</strong> model, the BMI slope applies to:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p1" value="a">How much higher (or lower) the other group’s mean is compared with the reference group.</label> <label><input type="radio" name="p1" value="b">The mean of the non-reference group on its own.</label> <label><input type="radio" name="p1" value="c">Whether the relationship is linear.</label>
+<label><input type="radio" name="p1" value="a">Both medication groups (one shared slope).</label> <label><input type="radio" name="p1" value="b">Only people not on medication.</label> <label><input type="radio" name="p1" value="c">Only people on medication.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The slope is a difference in means, not a standalone mean." data-incorrect="Not quite. The slope is the gap between group means. To get the other group's mean, add the slope to the intercept.">
+<div class="practice-feedback" data-correct="Correct. Without an interaction, both groups share the same BMI coefficient." data-incorrect="Not quite. An additive model has a single BMI row that applies to everyone.">
 
 </div>
 </div>
 <section class="panel">
 <h2 class="anchored">
-The equation
+Slopes by group (interaction model)
 </h2>
-<div class="formula-panel">
-<p><span class="math display">\[\hat{y} = b_0 + b_1 \cdot x\]</span></p>
-<p>
-<strong>Reading the pieces for a binary predictor:</strong>
+<p>Round your fitted coefficients to two decimals if needed. The pattern is always the same.</p>
+<p class="coef-key">
+<span class="c0">intercept</span> · <span class="c1">BMI</span> · <span class="c2">BPmeds</span> · <span class="c3">interaction</span>
 </p>
+<table class="coef-table">
+<tbody><tr>
+<th>
+Group
+</th>
+<th>
+Intercept
+</th>
+<th>
+BMI slope
+</th>
+</tr>
+<tr>
+<td>
+Not on meds (reference)
+</td>
+<td>
+<span class="c0">b<sub>0</sub></span> from <code>(Intercept)</code>
+</td>
+<td>
+<span class="c1">b<sub>1</sub></span> from plain <code>BMI</code> row
+</td>
+</tr>
+<tr>
+<td>
+On meds
+</td>
+<td>
+<span class="c0">b<sub>0</sub></span> + <span class="c2">b<sub>2</sub></span>
+</td>
+<td>
+<span class="c1">b<sub>1</sub></span> + <span class="c3">b<sub>3</sub></span>
+</td>
+</tr>
+</tbody></table>
+<p>
+The reference group’s slope is the plain <code>BMI</code> row alone. For the non-reference group, add the <code>BMI:BPmedson_meds</code> interaction row to that slope.
+</p>
+<div class="formula-panel">
+<p><span class="math display">\[
+\hat{y} = b_0 + b_1 x + b_2 g + b_3 (x \cdot g)
+\]</span></p>
 <ul class="tight-list">
 <li>
-<span class="math inline">\(x = 0\)</span> for the reference group; <span class="math inline">\(x = 1\)</span> for the other group.
+<code>g = 0</code> for the reference group, <code>g = 1</code> for on meds.
 </li>
 <li>
-<span class="math inline">\(b_0\)</span> = mean of <span class="math inline">\(y\)</span> in the reference group.
+<strong>Reference BMI slope</strong> = <span class="math inline">\(b_1\)</span>.
 </li>
 <li>
-<span class="math inline">\(b_1\)</span> = difference in means (other group minus reference group).
+<strong>Non-reference BMI slope</strong> = <span class="math inline">\(b_1 + b_3\)</span>.
 </li>
 </ul>
 </div>
-<div class="svg-panel" aria-label="Two group means connected by a regression line">
-<svg viewbox="0 0 760 260" role="img">
-  <rect width="760" height="260" rx="8" fill="#fff"></rect>
-  <line x1="70" y1="30" x2="70" y2="210" stroke="#5d7475" stroke-width="1.4"></line>
-  <line x1="70" y1="210" x2="700" y2="210" stroke="#5d7475" stroke-width="1.4"></line>
-  <text x="24" y="125" text-anchor="middle" font-size="12" font-weight="700" fill="#5d7475" transform="rotate(-90,24,125)">Outcome (y)</text>
-  <line x1="220" y1="130" x2="560" y2="95" stroke="#00565e" stroke-width="3"></line>
-  <circle cx="220" cy="130" r="7" fill="#2f5f98" stroke="#1d4275" stroke-width="1.2"></circle>
-  <circle cx="560" cy="95" r="7" fill="#00565e" stroke="#003f45" stroke-width="1.2"></circle>
-  <line x1="220" y1="130" x2="560" y2="130" stroke="#b83b5e" stroke-width="1.6" stroke-dasharray="5,3"></line>
-  <line x1="560" y1="130" x2="560" y2="95" stroke="#b83b5e" stroke-width="2.2"></line>
-  <text x="220" y="118" text-anchor="middle" font-size="11" font-weight="800" fill="#2f5f98">b₀ = ref. mean</text>
-  <text x="575" y="118" font-size="11" font-weight="800" fill="#b83b5e">b₁ = difference</text>
-  <text x="220" y="235" text-anchor="middle" font-size="12" font-weight="800" fill="#173234">Reference (x = 0)</text>
-  <text x="560" y="235" text-anchor="middle" font-size="12" font-weight="800" fill="#173234">Other group (x = 1)</text>
-</svg>
-<p class="svg-caption">With a binary predictor, the fitted line is just the segment joining the two group means.</p>
-</div>
-</section>
-<section class="panel">
-<h2 class="anchored">
-Worked example 1: birth weight by sex (<code>openintro::births14</code>)
-</h2>
-<p>The <code>births14</code> dataset is a random sample of US live births in 2014. We will model birth weight in pounds (<code>weight</code>) from the baby’s sex (<code>sex</code>: female or male).</p>
-<p>First, load the data and set <strong>female</strong> as the reference level. Then fit the model and inspect the output.</p>
 </section>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code: births14, female reference
+R code: build the slope table from your model
 </h3>
-<div id="qwebr-insertion-location-1"></div>
+<div id="qwebr-insertion-location-3"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 </div>
-<div class="practice" data-answer="a">
+<div class="practice" data-answer="b">
 <div class="practice-title">
 Question 3
 </div>
 <p>
-With <strong>female</strong> as the reference level, what is the predicted birth weight for a <strong>female</strong> baby (in pounds, to two decimal places)?
+Using your interaction model, the on-meds BMI slope is approximately:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p2" value="a">7.02</label> <label><input type="radio" name="p2" value="b">0.36</label> <label><input type="radio" name="p2" value="c">7.38</label>
+<label><input type="radio" name="p2" value="a">The <code>BMI</code> row alone (about +1.7).</label> <label><input type="radio" name="p2" value="b"><code>BMI</code> + <code>BMI:BPmedson_meds</code> (about +0.7).</label> <label><input type="radio" name="p2" value="c">The <code>BPmedson_meds</code> row alone (about +57).</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The intercept (about 7.02 lb) is the female mean." data-incorrect="Not quite. Look at the (Intercept) row. That is the female mean because female is the reference level.">
+<div class="practice-feedback" data-correct="Correct. Add the interaction row to the reference BMI slope." data-incorrect="Not quite. Start with the plain BMI coefficient, then add the interaction term for on meds.">
 
 </div>
 </div>
@@ -2368,225 +2518,313 @@ With <strong>female</strong> as the reference level, what is the predicted birth
 Question 4
 </div>
 <p>
-What is the predicted birth weight for a <strong>male</strong> baby?
+Using rounded values from your slope table, predict sysBP for someone <strong>on meds</strong> with BMI = 30:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p3" value="a">7.02 lb</label> <label><input type="radio" name="p3" value="b">0.36 lb</label> <label><input type="radio" name="p3" value="c">7.38 lb (about 7.02 + 0.36)</label>
+<label><input type="radio" name="p3" value="a">Intercept for not on meds + 1.7 × 30</label> <label><input type="radio" name="p3" value="b">On-meds intercept + 1.7 × 30</label> <label><input type="radio" name="p3" value="c">On-meds intercept + on-meds BMI slope × 30</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Add the sexmale slope to the intercept: about 7.02 + 0.36 ≈ 7.38 lb." data-incorrect="Not quite. Male mean = intercept + sexmale coefficient ≈ 7.02 + 0.36.">
+<div class="practice-feedback" data-correct="Correct. Use that group's intercept and that group's BMI slope." data-incorrect="Not quite. Pick the on-meds row from the slope table, then multiply its BMI slope by 30.">
 
 </div>
 </div>
-<div class="practice" data-answer="b">
+<div class="practice" data-answer="a">
 <div class="practice-title">
 Question 5
 </div>
 <p>
-The coefficient on <code>sexmale</code> is about +0.36. In plain language, this means male babies weigh on average:
+Which R formula adds the interaction between <code>BMI</code> and <code>BPmeds</code>?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p4" value="a">0.36 lb in total.</label> <label><input type="radio" name="p4" value="b">About 0.36 lb <strong>more</strong> than female babies.</label> <label><input type="radio" name="p4" value="c">About 0.36 lb less than female babies.</label>
+<label><input type="radio" name="p4" value="a"><code>lm(sysBP ~ BMI + BPmeds + BMI:BPmeds, data = bp_dat)</code></label> <label><input type="radio" name="p4" value="b"><code>lm(sysBP ~ BMI + BPmeds - BMI:BPmeds, data = bp_dat)</code></label> <label><input type="radio" name="p4" value="c"><code>lm(sysBP ~ BMI * BPmeds - BMI, data = bp_dat)</code></label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The slope is a difference vs the reference group, not a standalone mean." data-incorrect="Not quite. A positive slope means the non-reference group is higher than the reference group by that amount.">
+<div class="practice-feedback" data-correct="Correct. The colon joins the two predictors into one interaction term." data-incorrect="Not quite. Write the two main effects plus BMI:BPmeds, or use BMI * BPmeds.">
 
 </div>
 </div>
 <section class="panel">
 <h2 class="anchored">
-Switching the reference level
+Part 2: Another binary example (education and sex)
 </h2>
-<p>The reference level is a <strong>labeling choice</strong>. The gap between group means stays the same; only the intercept and the sign of the slope change.</p>
-<p>Re-run the model below with <strong>male</strong> as the reference. Compare the output to the previous cell.</p>
+<p>Same pattern, different variables. Outcome: <code>wage</code> ($1000s per year). Predictors: <code>educ</code> (years) and <code>sex</code> (female = reference).</p>
 </section>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code: relevel sex to male reference
+R code: wage data and interaction model
 </h3>
-<div id="qwebr-insertion-location-2"></div>
+<div id="qwebr-insertion-location-4"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 </div>
-<div class="practice" data-answer="a">
+<div class="practice" data-answer="b">
 <div class="practice-title">
 Question 6
 </div>
 <p>
-When male is the reference level, the coefficient on <code>sexfemale</code> is about −0.36. Why is it negative?
+From the wage slope table, each extra year of education is associated with a wage gain of about:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p5" value="a">Female babies weigh less than male babies, and female is now compared with male as reference.</label> <label><input type="radio" name="p5" value="b">The relationship reversed; males now weigh less than females.</label> <label><input type="radio" name="p5" value="c">R made a mistake when releveling.</label>
+<label><input type="radio" name="p5" value="a">$1.7k for males and $1.7k for females (same slope).</label> <label><input type="radio" name="p5" value="b">$2.5k for males and $1.7k for females.</label> <label><input type="radio" name="p5" value="c">$0.8k for males and $1.7k for females.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The underlying means are unchanged; the sign flips because the reference group flipped." data-incorrect="Not quite. Releveling changes labels, not the data. Females are still lighter on average; the slope now measures female minus male.">
+<div class="practice-feedback" data-correct="Correct. Male educ slope = 1.70 + 0.80 ≈ 2.50; female stays at 1.70." data-incorrect="Not quite. The reference educ slope is 1.70; add educ:sexmale for males.">
 
 </div>
 </div>
-<div class="practice" data-answer="b">
+<div class="practice" data-answer="a">
 <div class="practice-title">
 Question 7
 </div>
 <p>
-Comparing the two models (female reference vs male reference), the <strong>magnitude</strong> of the sex difference is:
+Predict wage for a male with 16 years of education (use rounded slope-table values):
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p6" value="a">Larger when male is reference.</label> <label><input type="radio" name="p6" value="b">The same (about 0.36 lb).</label> <label><input type="radio" name="p6" value="c">Impossible to compare.</label>
+<label><input type="radio" name="p6" value="a">12.00 + 2.50 × 16 = 52</label> <label><input type="radio" name="p6" value="b">6.00 + 1.70 × 16 = 33.2</label> <label><input type="radio" name="p6" value="c">12.00 + 1.70 × 16 = 39.2</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. |+0.36| = |−0.36|; only the sign and intercept changed." data-incorrect="Not quite. The absolute difference in group means is unchanged.">
+<div class="practice-feedback" data-correct="Correct. Use the male row: intercept 12.00 and educ slope 2.50." data-incorrect="Not quite. Males use intercept + sex coefficient and educ slope + interaction.">
 
 </div>
 </div>
 <section class="panel">
 <h2 class="anchored">
-Worked example 2: birth weight by smoking (<code>MASS::birthwt</code>)
+Part 3: Polytomous categorical predictor
 </h2>
-<p>The classic <code>birthwt</code> data record birth weight in grams (<code>bwt</code>) and whether the mother smoked during pregnancy (<code>smoke</code>: 0 = no, 1 = yes). We treat nonsmokers as the reference group.</p>
+<p>With <strong>K</strong> levels, R still uses one reference level. You get <strong>K − 1</strong> dummy coefficients for the factor and <strong>K − 1</strong> interaction terms with the continuous predictor.</p>
+<p>Example: birth weight (<code>bwt</code>, grams) from mother’s pre-pregnancy weight (<code>lwt</code>, pounds) and race (<code>race</code>, three levels; white = reference).</p>
+<ul class="tight-list">
+<li>
+Reference group <strong>lwt slope</strong> = plain <code>lwt</code> row.
+</li>
+<li>
+Each non-reference level adds its own <code>lwt:race</code> row to that slope.
+</li>
+</ul>
+<table class="coef-table">
+<tbody><tr>
+<th>
+Group
+</th>
+<th>
+Intercept
+</th>
+<th>
+lwt slope
+</th>
+</tr>
+<tr>
+<td>
+White (reference)
+</td>
+<td>
+<span class="c0">b<sub>0</sub></span>
+</td>
+<td>
+<span class="c1">b<sub>lwt</sub></span>
+</td>
+</tr>
+<tr>
+<td>
+Black
+</td>
+<td>
+<span class="c0">b<sub>0</sub></span> + <span class="c2">b<sub>black</sub></span>
+</td>
+<td>
+<span class="c1">b<sub>lwt</sub></span> + <span class="c3">b<sub>lwt:black</sub></span>
+</td>
+</tr>
+<tr>
+<td>
+Other
+</td>
+<td>
+<span class="c0">b<sub>0</sub></span> + <span class="c2">b<sub>other</sub></span>
+</td>
+<td>
+<span class="c1">b<sub>lwt</sub></span> + <span class="c3">b<sub>lwt:other</sub></span>
+</td>
+</tr>
+</tbody></table>
+<p>There is no separate interaction row for the reference level because it is absorbed into the main <code>lwt</code> effect.</p>
 </section>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code: birthwt, nonsmoker reference
+R code: birth weight, race, and lwt interaction
 </h3>
-<div id="qwebr-insertion-location-3"></div>
+<div id="qwebr-insertion-location-5"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 </div>
-<div class="practice" data-answer="a">
+<div class="practice" data-answer="b">
 <div class="practice-title">
 Question 8
 </div>
 <p>
-The intercept is about 3056 g. Whose mean birth weight does that represent?
+A polytomous factor with <strong>3 levels</strong> paired with one continuous predictor produces how many <code>lwt:race</code> interaction coefficients?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p7" value="a">Babies whose mothers did <strong>not</strong> smoke during pregnancy.</label> <label><input type="radio" name="p7" value="b">Babies whose mothers smoked during pregnancy.</label> <label><input type="radio" name="p7" value="c">All babies in the dataset combined.</label>
+<label><input type="radio" name="p7" value="a">3 (one per level).</label> <label><input type="radio" name="p7" value="b">2 (K − 1, same as the factor dummies).</label> <label><input type="radio" name="p7" value="c">1 (always a single interaction).</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Nonsmoker is the reference level (smoke = 0)." data-incorrect="Not quite. The intercept is always the reference group mean. Here nonsmoker is reference.">
+<div class="practice-feedback" data-correct="Correct. The reference level has no interaction row; each other level gets one." data-incorrect="Not quite. With K levels you get K−1 interaction terms, matching the K−1 dummy coefficients.">
 
 </div>
 </div>
-<div class="practice" data-answer="b">
+<div class="practice" data-answer="c">
 <div class="practice-title">
 Question 9
 </div>
 <p>
-The <code>smokesmoker</code> coefficient is about −284 g. The predicted mean birth weight for smokers is approximately:
+In your fitted model, the <strong>black</strong> group’s lwt slope equals:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p8" value="a">284 g</label> <label><input type="radio" name="p8" value="b">2772 g (3056 − 284)</label> <label><input type="radio" name="p8" value="c">3340 g (3056 + 284)</label>
+<label><input type="radio" name="p8" value="a">The <code>raceblack</code> row alone.</label> <label><input type="radio" name="p8" value="b">The intercept plus <code>raceblack</code>.</label> <label><input type="radio" name="p8" value="c">The plain <code>lwt</code> row plus <code>lwt:raceblack</code>.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Smoker mean = intercept + slope ≈ 3056 − 284 ≈ 2772 g." data-incorrect="Not quite. Add the smoker coefficient to the intercept. The negative slope means smokers are lower.">
+<div class="practice-feedback" data-correct="Correct. Same rule as the binary case: reference slope plus that group's interaction row." data-incorrect="Not quite. The lwt slope for black mothers = lwt coefficient + lwt:raceblack.">
 
 </div>
 </div>
+<section class="panel">
+<h2 class="anchored">
+Part 4: Two continuous predictors
+</h2>
+<p>When both predictors are continuous, the interaction works the same algebraically:</p>
+<div class="formula-panel">
+<p><span class="math display">\[
+\hat{y} = b_0 + b_1 x + b_2 z + b_3 (x \cdot z)
+\]</span></p>
+<p>
+The slope of <strong>x</strong> depends on the value of <strong>z</strong>:
+</p>
+<p><span class="math display">\[
+\text{slope of } x \text{ at a fixed } z = b_1 + b_3 z
+\]</span></p>
+</div>
+<p>Instead of a group table, use a <strong>conditional slope table</strong> at chosen values of the second predictor:</p>
+<table class="coef-table">
+<tbody><tr>
+<th>
+Value of <code>age</code> (hold <code>lwt</code> in model)
+</th>
+<th>
+Slope of <code>lwt</code> on <code>bwt</code>
+</th>
+</tr>
+<tr>
+<td>
+20 years
+</td>
+<td>
+<span class="c1">b<sub>lwt</sub></span> + 20 × <span class="c3">b<sub>lwt:age</sub></span>
+</td>
+</tr>
+<tr>
+<td>
+25 years
+</td>
+<td>
+<span class="c1">b<sub>lwt</sub></span> + 25 × <span class="c3">b<sub>lwt:age</sub></span>
+</td>
+</tr>
+<tr>
+<td>
+30 years
+</td>
+<td>
+<span class="c1">b<sub>lwt</sub></span> + 30 × <span class="c3">b<sub>lwt:age</sub></span>
+</td>
+</tr>
+</tbody></table>
+<p>
+At <code>age = 0</code> (often outside the data), the slope of <code>lwt</code> would equal the plain <code>lwt</code> row alone. In practice, pick meaningful values of the moderator.
+</p>
+</section>
+<div class="webr-wrap">
+<h3 class="anchored">
+R code: continuous-by-continuous interaction
+</h3>
+<p>Replace each <code>____</code> with the correct variable name, then run the cell.</p>
+<div id="qwebr-insertion-location-6"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<details class="answer">
+<summary>
+Show the answer
+</summary>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>mod_cont <span class="ot">&lt;-</span> <span class="fu">lm</span>(bwt <span class="sc">~</span> lwt <span class="sc">+</span> age <span class="sc">+</span> lwt<span class="sc">:</span>age, <span class="at">data =</span> bwt_dat)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The plain <code>lwt</code> row is the lwt slope when age = 0. At age = 25, add 25 × <code>lwt:age</code>.</p>
+</details>
 <div class="practice" data-answer="b">
 <div class="practice-title">
 Question 10
 </div>
 <p>
-Suppose you relevel so <strong>smoker</strong> is the reference in <code>birthwt</code>. The coefficient for <code>nonsmoker</code> would be about:
+Using rounded coefficients from your fitted model (about <code>lwt</code> = +11.3 and <code>lwt:age</code> = −0.30), the slope of lwt on birth weight at age = 25 is about:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p11" value="a">−284 g</label> <label><input type="radio" name="p11" value="b">+284 g</label> <label><input type="radio" name="p11" value="c">3056 g</label>
+<label><input type="radio" name="p9" value="a">11.3 − 0.30 = 11.0</label> <label><input type="radio" name="p9" value="b">11.3 + 25 × (−0.30) = 3.8</label> <label><input type="radio" name="p9" value="c">11.3 + (−0.30) = 11.0</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Nonsmokers weigh about 284 g more than smokers; the sign flips when smoker becomes reference." data-incorrect="Not quite. When smoker is reference, nonsmoker is above smoker by about 284 g, so the coefficient is positive.">
+<div class="practice-feedback" data-correct="Correct. Multiply the interaction by the moderator value, then add to the main lwt slope." data-incorrect="Not quite. Use lwt coefficient + age × lwt:age = 11.3 + 25(−0.30).">
 
 </div>
 </div>
-<div class="svg-panel" aria-label="Side-by-side boxplots of birth weight by smoking status">
-<svg viewbox="0 0 760 260" role="img">
-  <rect width="760" height="260" rx="8" fill="#fff"></rect>
-  <text x="380" y="24" text-anchor="middle" font-size="13" font-weight="800" fill="#173234">Birth weight by smoking status (schematic)</text>
-  <line x1="60" y1="220" x2="700" y2="220" stroke="#5d7475" stroke-width="1.2"></line>
-  <line x1="60" y1="50" x2="60" y2="220" stroke="#5d7475" stroke-width="1.2"></line>
-  <rect x="180" y="95" width="120" height="90" fill="#e3f4f4" stroke="#00565e" stroke-width="2" rx="4"></rect>
-  <line x1="240" y1="80" x2="240" y2="200" stroke="#00565e" stroke-width="2"></line>
-  <line x1="200" y1="140" x2="280" y2="140" stroke="#00565e" stroke-width="3"></line>
-  <text x="240" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#173234">Nonsmoker</text>
-  <text x="240" y="72" text-anchor="middle" font-size="11" font-weight="800" fill="#2f5f98">≈ 3056 g</text>
-  <rect x="460" y="115" width="120" height="75" fill="#fdecea" stroke="#b83b3b" stroke-width="2" rx="4"></rect>
-  <line x1="520" y1="100" x2="520" y2="205" stroke="#b83b3b" stroke-width="2"></line>
-  <line x1="480" y1="155" x2="560" y2="155" stroke="#b83b3b" stroke-width="3"></line>
-  <text x="520" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#173234">Smoker</text>
-  <text x="520" y="92" text-anchor="middle" font-size="11" font-weight="800" fill="#b83b3b">≈ 2772 g</text>
-  <line x1="360" y1="140" x2="360" y2="155" stroke="#b83b5e" stroke-width="2" marker-end="url(#arrowhead)"></line>
-  <text x="380" y="132" font-size="11" font-weight="800" fill="#b83b5e">≈ −284 g</text>
-  <defs><marker id="arrowhead" markerwidth="6" markerheight="6" refx="5" refy="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#b83b5e"></polygon></marker></defs>
-</svg>
-<p class="svg-caption">The regression slope is the vertical shift between the two group means.</p>
-</div>
-<section class="panel">
-<h2 class="anchored">
-Exercise 1: fill in the model formula (<code>DAAG::ais</code>)
-</h2>
-<p>The <code>ais</code> dataset contains physiological measurements on elite athletes. Fit a model predicting serum ferritin (<code>ferr</code>, ng/mL) from sex (<code>sex</code>: <code>f</code> or <code>m</code>).</p>
-<p>Replace each <code>____</code> with the correct variable name, then run the cell.</p>
-</section>
-<div class="webr-wrap">
-<h3 class="anchored">
-R code: exercise 1 (fill in blanks)
-</h3>
-<div id="qwebr-insertion-location-4"></div>
-<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
-</div>
-<details class="answer">
-<summary>
-Show the answer
-</summary>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>mod_ferr <span class="ot">&lt;-</span> <span class="fu">lm</span>(ferr <span class="sc">~</span> sex, <span class="at">data =</span> ais)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>The intercept (about 57) is the mean ferritin for females (<code>f</code> is the default reference). The <code>sexm</code> row (about +39) says males average about 39 ng/mL higher.</p>
-</details>
-<div class="practice" data-answer="c">
+<div class="practice" data-answer="a">
 <div class="practice-title">
 Question 11
 </div>
 <p>
-From the filled-in model, the predicted mean ferritin for <strong>male</strong> athletes is approximately:
+A continuous-by-continuous interaction means:
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p9" value="a">39 ng/mL</label> <label><input type="radio" name="p9" value="b">57 ng/mL</label> <label><input type="radio" name="p9" value="c">96 ng/mL (about 57 + 39)</label>
+<label><input type="radio" name="p10" value="a">The effect of one continuous predictor changes across values of the other.</label> <label><input type="radio" name="p10" value="b">Both predictors must be converted to factors first.</label> <label><input type="radio" name="p10" value="c">The model cannot include an intercept.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Male mean ≈ intercept + sexm ≈ 57 + 39 ≈ 96 ng/mL." data-incorrect="Not quite. Add the sexm coefficient to the intercept.">
+<div class="practice-feedback" data-correct="Correct. The slope of x is a function of z." data-incorrect="Not quite. The interaction lets the x slope change as z changes.">
 
 </div>
 </div>
 <section class="panel">
 <h2 class="anchored">
-Exercise 2: relevel and refit (<code>births14</code>)
+When to fit an interaction
 </h2>
-<p>Complete the code below to set <strong>female</strong> as the reference level for <code>sex</code>, then fit <code>weight ~ sex</code>. Replace each <code>____</code>.</p>
-</section>
-<div class="webr-wrap">
-<h3 class="anchored">
-R code: exercise 2 (fill in blanks)
-</h3>
-<div id="qwebr-insertion-location-5"></div>
-<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+<div class="warning callout callout-style-simple callout-none no-icon">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
 </div>
-<details class="answer">
-<summary>
-Show the answer
-</summary>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>births14 <span class="ot">&lt;-</span> births14 <span class="sc">|&gt;</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sex =</span> <span class="fu">factor</span>(sex, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"female"</span>, <span class="st">"male"</span>)))</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>mod_fill <span class="ot">&lt;-</span> <span class="fu">lm</span>(weight <span class="sc">~</span> sex, <span class="at">data =</span> births14)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="practice" data-answer="a">
+<div class="callout-body-container">
+<ul class="tight-list">
+<li>
+Fit one when it is <strong>well established</strong> in the literature or is your <strong>research question</strong> (does X’s effect on Y depend on Z?).
+</li>
+<li>
+Biology or study design may strongly suggest <strong>effect modification</strong>.
+</li>
+<li>
+Otherwise default to an <strong>additive</strong> model: easier to read and often more stable.
+</li>
+<li>
+Do <strong>not</strong> fit all pairwise interactions and keep only significant ones. That is p-hacking and invalidates those p-values.
+</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<div class="practice" data-answer="c">
 <div class="practice-title">
 Question 12
 </div>
 <p>
-In your completed model, which row in <code>summary()</code> tells you how much heavier male babies are than female babies?
+Which is the best reason to include an interaction term?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p10" value="a"><code>sexmale</code></label> <label><input type="radio" name="p10" value="b"><code>(Intercept)</code></label> <label><input type="radio" name="p10" value="c"><code>Residual standard error</code></label>
+<label><input type="radio" name="p11" value="a">It makes every model R-squared as large as possible, regardless of theory.</label> <label><input type="radio" name="p11" value="b">You tried several interactions and kept only those with p &lt; 0.05.</label> <label><input type="radio" name="p11" value="c">You want to test whether the BMI effect on sysBP differs by medication status.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The non-reference level gets its own coefficient row." data-incorrect="Not quite. The intercept is the reference mean. The other level's row is the difference.">
+<div class="practice-feedback" data-correct="Correct. Interactions should be planned, not cherry-picked after screening many models." data-incorrect="Not quite. A pre-specified research question or known effect modification is the right motivation.">
 
 </div>
 </div>
@@ -2610,11 +2848,11 @@ Your completion code
 </div>
 </section>
 <p class="footer-note">
-GRAPH Courses practical | Binary categorical predictors
+GRAPH Courses practical | Interaction terms in regression
 </p>
 </div>
 <script>
-const COMPLETION_CODE = "BINREF25";
+const COMPLETION_CODE = "INTMOD7X";
 const COMPLETION_REQUIRED = 10;
 
 function updateCompletion() {

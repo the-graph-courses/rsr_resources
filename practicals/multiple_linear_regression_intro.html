@@ -8,7 +8,7 @@
 
 <meta name="author" content="GRAPH Courses">
 
-<title>Simple linear regression with a binary predictor</title>
+<title>Introduction to multiple linear regression</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -58,16 +58,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="linear_regression_binary_predictor_files/libs/clipboard/clipboard.min.js"></script>
-<script src="linear_regression_binary_predictor_files/libs/quarto-html/quarto.js"></script>
-<script src="linear_regression_binary_predictor_files/libs/quarto-html/popper.min.js"></script>
-<script src="linear_regression_binary_predictor_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="linear_regression_binary_predictor_files/libs/quarto-html/anchor.min.js"></script>
-<link href="linear_regression_binary_predictor_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="linear_regression_binary_predictor_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="linear_regression_binary_predictor_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="linear_regression_binary_predictor_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="linear_regression_binary_predictor_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="multiple_linear_regression_intro_files/libs/clipboard/clipboard.min.js"></script>
+<script src="multiple_linear_regression_intro_files/libs/quarto-html/quarto.js"></script>
+<script src="multiple_linear_regression_intro_files/libs/quarto-html/popper.min.js"></script>
+<script src="multiple_linear_regression_intro_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="multiple_linear_regression_intro_files/libs/quarto-html/anchor.min.js"></script>
+<link href="multiple_linear_regression_intro_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="multiple_linear_regression_intro_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="multiple_linear_regression_intro_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="multiple_linear_regression_intro_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="multiple_linear_regression_intro_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.47.0/min/vs/editor/editor.main.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   
@@ -346,7 +346,7 @@ iframe.qwebr-output-code-browse {
 // Document level settings ----
 
 // Determine if we need to install R packages
-globalThis.qwebrInstallRPackagesList = ['dplyr', 'MASS', 'openintro', 'DAAG'];
+globalThis.qwebrInstallRPackagesList = ['dplyr', 'ggplot2', 'broom', 'MASS'];
 
 // Specify possible locations to search for the repository
 globalThis.qwebrPackageRepoURLS = ['https://repo.r-wasm.org/'];
@@ -368,7 +368,7 @@ globalThis.qwebrCustomizedWebROptions = {
 };
 
 // Store cell data
-globalThis.qwebrCellDetails = [{"options":{"autorun":"false","fig-cap":"","editor-word-wrap":"true","dpi":72,"context":"interactive","comment":"","classes":"","results":"markup","out-height":"","warning":"true","out-width":"700px","fig-width":7,"fig-height":5,"editor-max-height":"","editor-font-scale":"1","message":"true","read-only":"false","label":"unnamed-chunk-1","output":"true","editor-quick-suggestions":"false"},"code":"library(openintro)\nlibrary(dplyr)\ndata(births14)\n\nbirths14 <- births14 |>\n  mutate(sex = factor(sex, levels = c(\"female\", \"male\")))\n\nmod_sex <- lm(weight ~ sex, data = births14)\nsummary(mod_sex)","id":1},{"options":{"autorun":"false","fig-cap":"","editor-word-wrap":"true","dpi":72,"context":"interactive","comment":"","classes":"","results":"markup","out-height":"","warning":"true","out-width":"700px","fig-width":7,"fig-height":5,"editor-max-height":"","editor-font-scale":"1","message":"true","read-only":"false","label":"unnamed-chunk-2","output":"true","editor-quick-suggestions":"false"},"code":"births14_m <- births14 |>\n  mutate(sex = factor(sex, levels = c(\"male\", \"female\")))\n\nmod_sex_male_ref <- lm(weight ~ sex, data = births14_m)\nsummary(mod_sex_male_ref)","id":2},{"options":{"autorun":"false","fig-cap":"","editor-word-wrap":"true","dpi":72,"context":"interactive","comment":"","classes":"","results":"markup","out-height":"","warning":"true","out-width":"700px","fig-width":7,"fig-height":5,"editor-max-height":"","editor-font-scale":"1","message":"true","read-only":"false","label":"unnamed-chunk-3","output":"true","editor-quick-suggestions":"false"},"code":"library(MASS)\nlibrary(dplyr)\ndata(birthwt)\n\nbirthwt <- birthwt |>\n  mutate(smoke = factor(smoke, levels = c(0, 1),\n                        labels = c(\"nonsmoker\", \"smoker\")))\n\nmod_smoke <- lm(bwt ~ smoke, data = birthwt)\nsummary(mod_smoke)","id":3},{"options":{"autorun":"false","fig-cap":"","editor-word-wrap":"true","dpi":72,"context":"interactive","comment":"","classes":"","results":"markup","out-height":"","warning":"true","out-width":"700px","fig-width":7,"fig-height":5,"editor-max-height":"","editor-font-scale":"1","message":"true","read-only":"false","label":"unnamed-chunk-4","output":"true","editor-quick-suggestions":"false"},"code":"library(DAAG)\ndata(ais)\n\nmod_ferr <- lm(____ ~ ____, data = ais)\nsummary(mod_ferr)","id":4},{"options":{"autorun":"false","fig-cap":"","editor-word-wrap":"true","dpi":72,"context":"interactive","comment":"","classes":"","results":"markup","out-height":"","warning":"true","out-width":"700px","fig-width":7,"fig-height":5,"editor-max-height":"","editor-font-scale":"1","message":"true","read-only":"false","label":"unnamed-chunk-5","output":"true","editor-quick-suggestions":"false"},"code":"library(openintro)\nlibrary(dplyr)\ndata(births14)\n\nbirths14 <- births14 |>\n  mutate(sex = factor(____, levels = c(\"____\", \"male\")))\n\nmod_fill <- lm(____ ~ ____, data = births14)\nsummary(mod_fill)","id":5}];
+globalThis.qwebrCellDetails = [{"id":1,"code":"library(dplyr)\nlibrary(ggplot2)\nlibrary(broom)\n\nhandwashing <- data.frame(\n  person = 1:12,\n  washes = c(1, 2, 3, 4, 4, 5, 6, 7, 7, 8, 9, 10),\n  kids = c(0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2),\n  sick_days = c(11.2, 10.6, 9.3, 8.5, 14.5, 13.1, 12.4, 11.7, 17.1, 16.5, 15.1, 14.2)\n)\n\nhandwashing","options":{"label":"unnamed-chunk-1","dpi":72,"fig-cap":"","context":"interactive","fig-height":5,"fig-width":7,"editor-quick-suggestions":"false","message":"true","out-width":"700px","out-height":"","output":"true","editor-font-scale":"1","read-only":"false","editor-word-wrap":"true","results":"markup","warning":"true","autorun":"false","editor-max-height":"","comment":"","classes":""}},{"id":2,"code":"ggplot(handwashing, aes(x = washes, y = sick_days)) +\n  geom_point(size = 3, color = \"#00565e\") +\n  geom_smooth(method = \"lm\", se = FALSE, color = \"#b83b5e\", linewidth = 1) +\n  labs(\n    x = \"Hand washes per day\",\n    y = \"Sick days per year\"\n  ) +\n  theme_minimal(base_size = 14)\n\nmod_naive <- lm(sick_days ~ washes, data = handwashing)\nsummary(mod_naive)","options":{"label":"unnamed-chunk-2","dpi":72,"fig-cap":"","context":"interactive","fig-height":5,"fig-width":7,"editor-quick-suggestions":"false","message":"true","out-width":"700px","out-height":"","output":"true","editor-font-scale":"1","read-only":"false","editor-word-wrap":"true","results":"markup","warning":"true","autorun":"false","editor-max-height":"","comment":"","classes":""}},{"id":3,"code":"ggplot(handwashing, aes(x = washes, y = sick_days, color = factor(kids))) +\n  geom_point(size = 3) +\n  geom_smooth(aes(group = kids), method = \"lm\", se = FALSE, linewidth = 1) +\n  scale_color_manual(values = c(\"#b83b5e\", \"#287a4d\", \"#2f5f98\")) +\n  labs(\n    x = \"Hand washes per day\",\n    y = \"Sick days per year\",\n    color = \"Kids at home\"\n  ) +\n  theme_minimal(base_size = 14)","options":{"label":"unnamed-chunk-3","dpi":72,"fig-cap":"","context":"interactive","fig-height":5,"fig-width":7,"editor-quick-suggestions":"false","message":"true","out-width":"700px","out-height":"","output":"true","editor-font-scale":"1","read-only":"false","editor-word-wrap":"true","results":"markup","warning":"true","autorun":"false","editor-max-height":"","comment":"","classes":""}},{"id":4,"code":"mod_adjusted <- lm(____ ~ ____ + ____, data = handwashing)\nsummary(mod_adjusted)","options":{"label":"unnamed-chunk-4","dpi":72,"fig-cap":"","context":"interactive","fig-height":5,"fig-width":7,"editor-quick-suggestions":"false","message":"true","out-width":"700px","out-height":"","output":"true","editor-font-scale":"1","read-only":"false","editor-word-wrap":"true","results":"markup","warning":"true","autorun":"false","editor-max-height":"","comment":"","classes":""}},{"id":5,"code":"library(MASS)\ndata(birthwt)\n\nmod_bwt <- lm(____ ~ ____ + ____ + ____, data = birthwt)\nsummary(mod_bwt)","options":{"label":"unnamed-chunk-5","dpi":72,"fig-cap":"","context":"interactive","fig-height":5,"fig-width":7,"editor-quick-suggestions":"false","message":"true","out-width":"700px","out-height":"","output":"true","editor-font-scale":"1","read-only":"false","editor-word-wrap":"true","results":"markup","warning":"true","autorun":"false","editor-max-height":"","comment":"","classes":""}}];
 
 </script>
 <script type="module">
@@ -1950,8 +1950,8 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Simple linear regression with a binary predictor</h1>
-<p class="subtitle lead">WebR practical: dummy coding, group means, and releveling</p>
+<h1 class="title">Introduction to multiple linear regression</h1>
+<p class="subtitle lead">WebR practical: confounding, adjusted slopes, and prediction</p>
 </div>
 
 
@@ -1980,6 +1980,7 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
   --light-teal: #5fbfbf;
   --light-teal-soft: #e3f4f4;
   --gold: #f5c542;
+  --rose: #b83b5e;
   --ink: #173234;
   --muted: #5d7475;
   --page: #f4f7f7;
@@ -2032,7 +2033,7 @@ body {
 }
 
 .masthead p {
-  max-width: 680px;
+  max-width: 700px;
   margin: 0.55rem 0 0;
   color: #d3eded;
   font-size: 0.98rem;
@@ -2064,15 +2065,6 @@ body {
 .tight-list { padding-left: 1.15rem; margin-bottom: 0; }
 .tight-list li { margin-bottom: 0.35rem; }
 
-.svg-panel {
-  padding: 0.6rem;
-  margin: 0.85rem 0 0.4rem;
-  overflow-x: auto;
-}
-
-.svg-panel svg { width: 100%; min-width: 560px; display: block; }
-.svg-caption { color: var(--muted); font-size: 0.9rem; margin: 0.2rem 0.3rem 0; }
-
 .formula-panel {
   background: var(--light-teal-soft);
   border: 1px solid var(--border);
@@ -2081,6 +2073,15 @@ body {
   margin: 1rem 0;
   overflow-x: auto;
 }
+
+.svg-panel {
+  padding: 0.6rem;
+  margin: 0.85rem 0 0.4rem;
+  overflow-x: auto;
+}
+
+.svg-panel svg { width: 100%; min-width: 560px; display: block; }
+.svg-caption { color: var(--muted); font-size: 0.9rem; margin: 0.2rem 0.3rem 0; }
 
 .practice {
   padding: 1rem 1.15rem;
@@ -2237,29 +2238,34 @@ code {
 WebR practical
 </div>
 <h1>
-Simple linear regression with a binary predictor
+Introduction to multiple linear regression
 </h1>
 <p>
-When a predictor has exactly two groups, <code>lm()</code> draws a line between two group means. You will fit models, read coefficients as differences, and see how changing the reference level relabels (but does not change) the underlying relationship.
+Fit a model with more than one predictor, read adjusted coefficients, spot confounding, and use the fitted equation for prediction.
 </p>
 </header>
 <section class="panel">
 <h2 class="anchored">
 Overview
 </h2>
-<p>A <strong>binary predictor</strong> takes only two values, such as female vs male or smoker vs nonsmoker. In R you still write a familiar formula:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(outcome <span class="sc">~</span> group, <span class="at">data =</span> my_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>R turns the group into a <strong>dummy variable</strong>: 0 for the <strong>reference</strong> level and 1 for the other level. The intercept is the mean of the reference group; the slope is the <strong>difference in means</strong> between the two groups.</p>
-<p>This practical uses teaching datasets from common R packages:</p>
+<p>Simple linear regression has one predictor:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(outcome <span class="sc">~</span> predictor, <span class="at">data =</span> my_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Multiple linear regression has two or more predictors:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(outcome <span class="sc">~</span> predictor_1 <span class="sc">+</span> predictor_2, <span class="at">data =</span> my_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The key change is interpretation. Each coefficient is read while <strong>holding the other predictors constant</strong>. This is also called <strong>adjusting for</strong> or <strong>controlling for</strong> the other variables.</p>
+<p>In this practical you will:</p>
 <ul class="tight-list">
 <li>
-<code>openintro::births14</code>: US live births (birth weight by sex)
+Fit a naive one-predictor model.
 </li>
 <li>
-<code>MASS::birthwt</code>: Baystate birth weights (birth weight by smoking status)
+Add a second predictor to adjust for confounding.
 </li>
 <li>
-<code>DAAG::ais</code>: Australian Institute of Sport athletes (serum ferritin by sex)
+Use a two-predictor equation for prediction.
+</li>
+<li>
+Extend the same syntax to three predictors.
 </li>
 </ul>
 <p>After answering the questions, <strong>your completion code will be revealed.</strong></p>
@@ -2269,264 +2275,140 @@ Overview
 Question 1
 </div>
 <p>
-In a regression with a binary predictor, the intercept <span class="math inline">\(b_0\)</span> equals:
+Which R formula fits a multiple linear regression predicting <code>sick_days</code> from <code>washes</code> and <code>kids</code>?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p0" value="a">The overall mean of the outcome, pooling both groups.</label> <label><input type="radio" name="p0" value="b">The mean of the outcome in the <strong>reference</strong> group.</label> <label><input type="radio" name="p0" value="c">The difference in means between the two groups.</label>
+<label><input type="radio" name="p0" value="a"><code>lm(sick_days + washes ~ kids, data = handwashing)</code></label> <label><input type="radio" name="p0" value="b"><code>lm(sick_days ~ washes + kids, data = handwashing)</code></label> <label><input type="radio" name="p0" value="c"><code>lm(washes ~ sick_days + kids, data = handwashing)</code></label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. When every dummy is 0, you are in the reference group, so the intercept is that group's mean." data-incorrect="Not quite. The intercept is the predicted outcome when the dummy equals 0, which is the reference group's mean.">
+<div class="practice-feedback" data-correct="Correct. The outcome goes on the left of the tilde; predictors are added on the right." data-incorrect="Not quite. Put the outcome on the left, then add both predictors on the right with +.">
 
 </div>
 </div>
-<div class="practice" data-answer="a">
+<section class="panel">
+<h2 class="anchored">
+The handwashing question
+</h2>
+<p>We will use a small mock dataset to ask: <strong>does handwashing reduce sick days?</strong></p>
+<p>The variables are:</p>
+<ul class="tight-list">
+<li>
+<code>washes</code>: typical hand washes per day.
+</li>
+<li>
+<code>kids</code>: number of children at home.
+</li>
+<li>
+<code>sick_days</code>: days off work with respiratory illness in the next year.
+</li>
+</ul>
+</section>
+<div class="webr-wrap">
+<h3 class="anchored">
+R code: create the data
+</h3>
+<div id="qwebr-insertion-location-1"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<section class="panel">
+<h2 class="anchored">
+Start with a naive model
+</h2>
+<p>First, look only at handwashing and sick days. This ignores how many children a person has at home.</p>
+</section>
+<div class="webr-wrap">
+<h3 class="anchored">
+R code: plot and fit the one-predictor model
+</h3>
+<div id="qwebr-insertion-location-2"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<div class="practice" data-answer="c">
 <div class="practice-title">
 Question 2
 </div>
 <p>
-The slope <span class="math inline">\(b_1\)</span> for the non-reference level tells you:
+In the one-predictor model, the slope for <code>washes</code> is about <code>+0.64</code>. What does that say?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p1" value="a">How much higher (or lower) the other group’s mean is compared with the reference group.</label> <label><input type="radio" name="p1" value="b">The mean of the non-reference group on its own.</label> <label><input type="radio" name="p1" value="c">Whether the relationship is linear.</label>
+<label><input type="radio" name="p1" value="a">Each extra wash predicts 0.64 fewer sick days.</label> <label><input type="radio" name="p1" value="b">People wash their hands 0.64 times per day on average.</label> <label><input type="radio" name="p1" value="c">Each extra wash predicts 0.64 more sick days in this naive model.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The slope is a difference in means, not a standalone mean." data-incorrect="Not quite. The slope is the gap between group means. To get the other group's mean, add the slope to the intercept.">
+<div class="practice-feedback" data-correct="Correct. A positive slope means the predicted outcome goes up as washes increases." data-incorrect="Not quite. The slope is positive, so the naive model predicts more sick days at higher washes.">
 
 </div>
-</div>
-<section class="panel">
-<h2 class="anchored">
-The equation
-</h2>
-<div class="formula-panel">
-<p><span class="math display">\[\hat{y} = b_0 + b_1 \cdot x\]</span></p>
-<p>
-<strong>Reading the pieces for a binary predictor:</strong>
-</p>
-<ul class="tight-list">
-<li>
-<span class="math inline">\(x = 0\)</span> for the reference group; <span class="math inline">\(x = 1\)</span> for the other group.
-</li>
-<li>
-<span class="math inline">\(b_0\)</span> = mean of <span class="math inline">\(y\)</span> in the reference group.
-</li>
-<li>
-<span class="math inline">\(b_1\)</span> = difference in means (other group minus reference group).
-</li>
-</ul>
-</div>
-<div class="svg-panel" aria-label="Two group means connected by a regression line">
-<svg viewbox="0 0 760 260" role="img">
-  <rect width="760" height="260" rx="8" fill="#fff"></rect>
-  <line x1="70" y1="30" x2="70" y2="210" stroke="#5d7475" stroke-width="1.4"></line>
-  <line x1="70" y1="210" x2="700" y2="210" stroke="#5d7475" stroke-width="1.4"></line>
-  <text x="24" y="125" text-anchor="middle" font-size="12" font-weight="700" fill="#5d7475" transform="rotate(-90,24,125)">Outcome (y)</text>
-  <line x1="220" y1="130" x2="560" y2="95" stroke="#00565e" stroke-width="3"></line>
-  <circle cx="220" cy="130" r="7" fill="#2f5f98" stroke="#1d4275" stroke-width="1.2"></circle>
-  <circle cx="560" cy="95" r="7" fill="#00565e" stroke="#003f45" stroke-width="1.2"></circle>
-  <line x1="220" y1="130" x2="560" y2="130" stroke="#b83b5e" stroke-width="1.6" stroke-dasharray="5,3"></line>
-  <line x1="560" y1="130" x2="560" y2="95" stroke="#b83b5e" stroke-width="2.2"></line>
-  <text x="220" y="118" text-anchor="middle" font-size="11" font-weight="800" fill="#2f5f98">b₀ = ref. mean</text>
-  <text x="575" y="118" font-size="11" font-weight="800" fill="#b83b5e">b₁ = difference</text>
-  <text x="220" y="235" text-anchor="middle" font-size="12" font-weight="800" fill="#173234">Reference (x = 0)</text>
-  <text x="560" y="235" text-anchor="middle" font-size="12" font-weight="800" fill="#173234">Other group (x = 1)</text>
-</svg>
-<p class="svg-caption">With a binary predictor, the fitted line is just the segment joining the two group means.</p>
-</div>
-</section>
-<section class="panel">
-<h2 class="anchored">
-Worked example 1: birth weight by sex (<code>openintro::births14</code>)
-</h2>
-<p>The <code>births14</code> dataset is a random sample of US live births in 2014. We will model birth weight in pounds (<code>weight</code>) from the baby’s sex (<code>sex</code>: female or male).</p>
-<p>First, load the data and set <strong>female</strong> as the reference level. Then fit the model and inspect the output.</p>
-</section>
-<div class="webr-wrap">
-<h3 class="anchored">
-R code: births14, female reference
-</h3>
-<div id="qwebr-insertion-location-1"></div>
-<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 </div>
 <div class="practice" data-answer="a">
 <div class="practice-title">
 Question 3
 </div>
 <p>
-With <strong>female</strong> as the reference level, what is the predicted birth weight for a <strong>female</strong> baby (in pounds, to two decimal places)?
+Why should we hesitate before saying that handwashing causes more sick days?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p2" value="a">7.02</label> <label><input type="radio" name="p2" value="b">0.36</label> <label><input type="radio" name="p2" value="c">7.38</label>
+<label><input type="radio" name="p2" value="a">Another variable might be related to both handwashing and sick days.</label> <label><input type="radio" name="p2" value="b">Regression slopes can only be interpreted when they are exactly zero.</label> <label><input type="radio" name="p2" value="c">A positive slope always means the model has been fit incorrectly.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The intercept (about 7.02 lb) is the female mean." data-incorrect="Not quite. Look at the (Intercept) row. That is the female mean because female is the reference level.">
-
-</div>
-</div>
-<div class="practice" data-answer="c">
-<div class="practice-title">
-Question 4
-</div>
-<p>
-What is the predicted birth weight for a <strong>male</strong> baby?
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p3" value="a">7.02 lb</label> <label><input type="radio" name="p3" value="b">0.36 lb</label> <label><input type="radio" name="p3" value="c">7.38 lb (about 7.02 + 0.36)</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Add the sexmale slope to the intercept: about 7.02 + 0.36 ≈ 7.38 lb." data-incorrect="Not quite. Male mean = intercept + sexmale coefficient ≈ 7.02 + 0.36.">
-
-</div>
-</div>
-<div class="practice" data-answer="b">
-<div class="practice-title">
-Question 5
-</div>
-<p>
-The coefficient on <code>sexmale</code> is about +0.36. In plain language, this means male babies weigh on average:
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p4" value="a">0.36 lb in total.</label> <label><input type="radio" name="p4" value="b">About 0.36 lb <strong>more</strong> than female babies.</label> <label><input type="radio" name="p4" value="c">About 0.36 lb less than female babies.</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The slope is a difference vs the reference group, not a standalone mean." data-incorrect="Not quite. A positive slope means the non-reference group is higher than the reference group by that amount.">
+<div class="practice-feedback" data-correct="Correct. A third variable can create a misleading pooled slope." data-incorrect="Not quite. The concern is confounding: a third variable may connect to both predictor and outcome.">
 
 </div>
 </div>
 <section class="panel">
 <h2 class="anchored">
-Switching the reference level
+Reveal the hidden variable
 </h2>
-<p>The reference level is a <strong>labeling choice</strong>. The gap between group means stays the same; only the intercept and the sign of the slope change.</p>
-<p>Re-run the model below with <strong>male</strong> as the reference. Compare the output to the previous cell.</p>
+<p>People with more children may wash their hands more often. They may also be exposed to more colds and flu. That means <code>kids</code> is a plausible confounder.</p>
+<div class="formula-panel">
+<p><span class="math display">\[
+\text{kids} \rightarrow \text{washes}
+\]</span></p>
+<p><span class="math display">\[
+\text{kids} \rightarrow \text{sick days}
+\]</span></p>
+<p>
+If a variable points toward both the predictor and the outcome, a one-predictor slope can be misleading.
+</p>
+</div>
 </section>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code: relevel sex to male reference
-</h3>
-<div id="qwebr-insertion-location-2"></div>
-<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
-</div>
-<div class="practice" data-answer="a">
-<div class="practice-title">
-Question 6
-</div>
-<p>
-When male is the reference level, the coefficient on <code>sexfemale</code> is about −0.36. Why is it negative?
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p5" value="a">Female babies weigh less than male babies, and female is now compared with male as reference.</label> <label><input type="radio" name="p5" value="b">The relationship reversed; males now weigh less than females.</label> <label><input type="radio" name="p5" value="c">R made a mistake when releveling.</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The underlying means are unchanged; the sign flips because the reference group flipped." data-incorrect="Not quite. Releveling changes labels, not the data. Females are still lighter on average; the slope now measures female minus male.">
-
-</div>
-</div>
-<div class="practice" data-answer="b">
-<div class="practice-title">
-Question 7
-</div>
-<p>
-Comparing the two models (female reference vs male reference), the <strong>magnitude</strong> of the sex difference is:
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p6" value="a">Larger when male is reference.</label> <label><input type="radio" name="p6" value="b">The same (about 0.36 lb).</label> <label><input type="radio" name="p6" value="c">Impossible to compare.</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. |+0.36| = |−0.36|; only the sign and intercept changed." data-incorrect="Not quite. The absolute difference in group means is unchanged.">
-
-</div>
-</div>
-<section class="panel">
-<h2 class="anchored">
-Worked example 2: birth weight by smoking (<code>MASS::birthwt</code>)
-</h2>
-<p>The classic <code>birthwt</code> data record birth weight in grams (<code>bwt</code>) and whether the mother smoked during pregnancy (<code>smoke</code>: 0 = no, 1 = yes). We treat nonsmokers as the reference group.</p>
-</section>
-<div class="webr-wrap">
-<h3 class="anchored">
-R code: birthwt, nonsmoker reference
+R code: color points by number of kids
 </h3>
 <div id="qwebr-insertion-location-3"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 </div>
-<div class="practice" data-answer="a">
-<div class="practice-title">
-Question 8
-</div>
-<p>
-The intercept is about 3056 g. Whose mean birth weight does that represent?
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p7" value="a">Babies whose mothers did <strong>not</strong> smoke during pregnancy.</label> <label><input type="radio" name="p7" value="b">Babies whose mothers smoked during pregnancy.</label> <label><input type="radio" name="p7" value="c">All babies in the dataset combined.</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Nonsmoker is the reference level (smoke = 0)." data-incorrect="Not quite. The intercept is always the reference group mean. Here nonsmoker is reference.">
-
-</div>
-</div>
 <div class="practice" data-answer="b">
 <div class="practice-title">
-Question 9
+Question 4
 </div>
 <p>
-The <code>smokesmoker</code> coefficient is about −284 g. The predicted mean birth weight for smokers is approximately:
+In the colored plot, which pattern suggests confounding by <code>kids</code>?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p8" value="a">284 g</label> <label><input type="radio" name="p8" value="b">2772 g (3056 − 284)</label> <label><input type="radio" name="p8" value="c">3340 g (3056 + 284)</label>
+<label><input type="radio" name="p3" value="a">All points have exactly the same value of <code>kids</code>.</label> <label><input type="radio" name="p3" value="b">People with more kids tend to have both more washes and more sick days.</label> <label><input type="radio" name="p3" value="c">The outcome has no variation.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Smoker mean = intercept + slope ≈ 3056 − 284 ≈ 2772 g." data-incorrect="Not quite. Add the smoker coefficient to the intercept. The negative slope means smokers are lower.">
+<div class="practice-feedback" data-correct="Correct. Kids is associated with both the predictor and the outcome." data-incorrect="Not quite. A confounder is connected to both the predictor and the outcome.">
 
 </div>
-</div>
-<div class="practice" data-answer="b">
-<div class="practice-title">
-Question 10
-</div>
-<p>
-Suppose you relevel so <strong>smoker</strong> is the reference in <code>birthwt</code>. The coefficient for <code>nonsmoker</code> would be about:
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p11" value="a">−284 g</label> <label><input type="radio" name="p11" value="b">+284 g</label> <label><input type="radio" name="p11" value="c">3056 g</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Nonsmokers weigh about 284 g more than smokers; the sign flips when smoker becomes reference." data-incorrect="Not quite. When smoker is reference, nonsmoker is above smoker by about 284 g, so the coefficient is positive.">
-
-</div>
-</div>
-<div class="svg-panel" aria-label="Side-by-side boxplots of birth weight by smoking status">
-<svg viewbox="0 0 760 260" role="img">
-  <rect width="760" height="260" rx="8" fill="#fff"></rect>
-  <text x="380" y="24" text-anchor="middle" font-size="13" font-weight="800" fill="#173234">Birth weight by smoking status (schematic)</text>
-  <line x1="60" y1="220" x2="700" y2="220" stroke="#5d7475" stroke-width="1.2"></line>
-  <line x1="60" y1="50" x2="60" y2="220" stroke="#5d7475" stroke-width="1.2"></line>
-  <rect x="180" y="95" width="120" height="90" fill="#e3f4f4" stroke="#00565e" stroke-width="2" rx="4"></rect>
-  <line x1="240" y1="80" x2="240" y2="200" stroke="#00565e" stroke-width="2"></line>
-  <line x1="200" y1="140" x2="280" y2="140" stroke="#00565e" stroke-width="3"></line>
-  <text x="240" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#173234">Nonsmoker</text>
-  <text x="240" y="72" text-anchor="middle" font-size="11" font-weight="800" fill="#2f5f98">≈ 3056 g</text>
-  <rect x="460" y="115" width="120" height="75" fill="#fdecea" stroke="#b83b3b" stroke-width="2" rx="4"></rect>
-  <line x1="520" y1="100" x2="520" y2="205" stroke="#b83b3b" stroke-width="2"></line>
-  <line x1="480" y1="155" x2="560" y2="155" stroke="#b83b3b" stroke-width="3"></line>
-  <text x="520" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#173234">Smoker</text>
-  <text x="520" y="92" text-anchor="middle" font-size="11" font-weight="800" fill="#b83b3b">≈ 2772 g</text>
-  <line x1="360" y1="140" x2="360" y2="155" stroke="#b83b5e" stroke-width="2" marker-end="url(#arrowhead)"></line>
-  <text x="380" y="132" font-size="11" font-weight="800" fill="#b83b5e">≈ −284 g</text>
-  <defs><marker id="arrowhead" markerwidth="6" markerheight="6" refx="5" refy="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#b83b5e"></polygon></marker></defs>
-</svg>
-<p class="svg-caption">The regression slope is the vertical shift between the two group means.</p>
 </div>
 <section class="panel">
 <h2 class="anchored">
-Exercise 1: fill in the model formula (<code>DAAG::ais</code>)
+Add the second predictor
 </h2>
-<p>The <code>ais</code> dataset contains physiological measurements on elite athletes. Fit a model predicting serum ferritin (<code>ferr</code>, ng/mL) from sex (<code>sex</code>: <code>f</code> or <code>m</code>).</p>
-<p>Replace each <code>____</code> with the correct variable name, then run the cell.</p>
+<p>Now fit a model with both <code>washes</code> and <code>kids</code>. Replace each <code>____</code> with the correct variable name, then run the cell.</p>
+<div class="formula-panel">
+<p><span class="math display">\[
+\widehat{\text{sick days}} = b_0 + b_1 \times \text{washes} + b_2 \times \text{kids}
+\]</span></p>
+<p>
+Read <code>b1</code> as the wash slope <strong>holding kids constant</strong>. Read <code>b2</code> as the kids slope <strong>holding washes constant</strong>.
+</p>
+</div>
 </section>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code: exercise 1 (fill in blanks)
+R code: fit the adjusted model
 </h3>
 <div id="qwebr-insertion-location-4"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
@@ -2535,33 +2417,113 @@ R code: exercise 1 (fill in blanks)
 <summary>
 Show the answer
 </summary>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>mod_ferr <span class="ot">&lt;-</span> <span class="fu">lm</span>(ferr <span class="sc">~</span> sex, <span class="at">data =</span> ais)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>The intercept (about 57) is the mean ferritin for females (<code>f</code> is the default reference). The <code>sexm</code> row (about +39) says males average about 39 ng/mL higher.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>mod_adjusted <span class="ot">&lt;-</span> <span class="fu">lm</span>(sick_days <span class="sc">~</span> washes <span class="sc">+</span> kids, <span class="at">data =</span> handwashing)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="practice" data-answer="c">
+<div class="practice" data-answer="a">
 <div class="practice-title">
-Question 11
+Question 5
 </div>
 <p>
-From the filled-in model, the predicted mean ferritin for <strong>male</strong> athletes is approximately:
+After adjusting for <code>kids</code>, the <code>washes</code> slope is about <code>-0.95</code>. Which interpretation is best?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p9" value="a">39 ng/mL</label> <label><input type="radio" name="p9" value="b">57 ng/mL</label> <label><input type="radio" name="p9" value="c">96 ng/mL (about 57 + 39)</label>
+<label><input type="radio" name="p4" value="a">Holding kids constant, each extra wash is associated with about 0.95 fewer sick days.</label> <label><input type="radio" name="p4" value="b">Holding washes constant, each extra kid is associated with 0.95 fewer sick days.</label> <label><input type="radio" name="p4" value="c">The model says handwashing has no relationship with sick days.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Male mean ≈ intercept + sexm ≈ 57 + 39 ≈ 96 ng/mL." data-incorrect="Not quite. Add the sexm coefficient to the intercept.">
+<div class="practice-feedback" data-correct="Correct. The wash coefficient is read at a fixed number of kids." data-incorrect="Not quite. The row for washes is the handwashing slope after adjusting for kids.">
+
+</div>
+</div>
+<div class="practice" data-answer="c">
+<div class="practice-title">
+Question 6
+</div>
+<p>
+The <code>kids</code> slope is about <code>+5.77</code>. Which interpretation is best?
+</p>
+<div class="choice-set">
+<label><input type="radio" name="p5" value="a">Each extra wash is associated with 5.77 more kids.</label> <label><input type="radio" name="p5" value="b">Each person has 5.77 kids on average.</label> <label><input type="radio" name="p5" value="c">Holding washes constant, each extra child is associated with about 5.77 more sick days.</label>
+</div>
+<button type="button">Check</button>
+<div class="practice-feedback" data-correct="Correct. The kids coefficient is read at a fixed number of washes." data-incorrect="Not quite. The row for kids predicts sick days while holding washes constant.">
+
+</div>
+</div>
+<div class="practice" data-answer="b">
+<div class="practice-title">
+Question 7
+</div>
+<p>
+What happened to the wash slope when <code>kids</code> was added?
+</p>
+<div class="choice-set">
+<label><input type="radio" name="p6" value="a">It stayed positive and got larger.</label> <label><input type="radio" name="p6" value="b">It changed from positive to negative.</label> <label><input type="radio" name="p6" value="c">It became the intercept.</label>
+</div>
+<button type="button">Check</button>
+<div class="practice-feedback" data-correct="Correct. The sign reversal is the clue that the one-predictor slope was misleading." data-incorrect="Not quite. Compare the naive wash slope (+0.64) with the adjusted wash slope (-0.95).">
 
 </div>
 </div>
 <section class="panel">
 <h2 class="anchored">
-Exercise 2: relevel and refit (<code>births14</code>)
+Use the fitted equation
 </h2>
-<p>Complete the code below to set <strong>female</strong> as the reference level for <code>sex</code>, then fit <code>weight ~ sex</code>. Replace each <code>____</code>.</p>
+<p>Rounded to two decimals, the adjusted model is:</p>
+<div class="formula-panel">
+<p><span class="math display">\[
+\widehat{\text{sick days}} = 12.32 - 0.95 \times \text{washes} + 5.77 \times \text{kids}
+\]</span></p>
+</div>
+<p>To predict, substitute values for the predictors and do the arithmetic.</p>
+</section>
+<div class="practice" data-answer="b">
+<div class="practice-title">
+Question 8
+</div>
+<p>
+Using the rounded equation, what is the predicted sick days for someone who washes 6 times per day and has 2 kids?
+</p>
+<div class="choice-set">
+<label><input type="radio" name="p7" value="a"><code>12.32 - 0.95 + 5.77 = 17.14</code></label> <label><input type="radio" name="p7" value="b"><code>12.32 - 0.95 * 6 + 5.77 * 2 = 18.16</code></label> <label><input type="radio" name="p7" value="c"><code>-0.95 * 6 + 5.77 * 2 = 5.84</code></label>
+</div>
+<button type="button">Check</button>
+<div class="practice-feedback" data-correct="Correct. Include the intercept and multiply each slope by its predictor value." data-incorrect="Not quite. Use intercept + wash slope times 6 + kids slope times 2.">
+
+</div>
+</div>
+<div class="practice" data-answer="a">
+<div class="practice-title">
+Question 9
+</div>
+<p>
+A common prediction mistake is to leave out the intercept. Why is option C in the previous question wrong?
+</p>
+<div class="choice-set">
+<label><input type="radio" name="p8" value="a">It omits the intercept.</label> <label><input type="radio" name="p8" value="b">It uses too many predictors.</label> <label><input type="radio" name="p8" value="c">It treats kids as a categorical variable.</label>
+</div>
+<button type="button">Check</button>
+<div class="practice-feedback" data-correct="Correct. Predictions from a regression equation include the intercept unless the model was fit without one." data-incorrect="Not quite. The formula needs the intercept as well as the predictor terms.">
+
+</div>
+</div>
+<section class="panel">
+<h2 class="anchored">
+Extend to three predictors
+</h2>
+<p>The same formula pattern works for three or more predictors. Next, use the <code>birthwt</code> dataset from the <code>MASS</code> package: 189 births at a Massachusetts hospital.</p>
+<ul class="tight-list">
+<li>
+<strong>Outcome:</strong> <code>bwt</code> (baby birth weight in grams)
+</li>
+<li>
+<strong>Predictors:</strong> <code>age</code> (mother’s age in years), <code>lwt</code> (mother’s pre-pregnancy weight in pounds), and <code>smoke</code> (1 = smoked during pregnancy, 0 = did not)
+</li>
+</ul>
+<p>Replace each <code>____</code> with the correct variable name, then run the cell.</p>
 </section>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code: exercise 2 (fill in blanks)
+R code: exercise, fill in the blanks
 </h3>
 <div id="qwebr-insertion-location-5"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
@@ -2570,23 +2532,22 @@ R code: exercise 2 (fill in blanks)
 <summary>
 Show the answer
 </summary>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>births14 <span class="ot">&lt;-</span> births14 <span class="sc">|&gt;</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sex =</span> <span class="fu">factor</span>(sex, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"female"</span>, <span class="st">"male"</span>)))</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>mod_fill <span class="ot">&lt;-</span> <span class="fu">lm</span>(weight <span class="sc">~</span> sex, <span class="at">data =</span> births14)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>mod_bwt <span class="ot">&lt;-</span> <span class="fu">lm</span>(bwt <span class="sc">~</span> age <span class="sc">+</span> lwt <span class="sc">+</span> smoke, <span class="at">data =</span> birthwt)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mod_bwt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This model predicts birth weight from the mother’s age, pre-pregnancy weight, and smoking status.</p>
 </details>
 <div class="practice" data-answer="a">
 <div class="practice-title">
-Question 12
+Question 10
 </div>
 <p>
-In your completed model, which row in <code>summary()</code> tells you how much heavier male babies are than female babies?
+In your fitted model, the <code>smoke</code> coefficient is about <code>-269</code>. How should it be read?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p10" value="a"><code>sexmale</code></label> <label><input type="radio" name="p10" value="b"><code>(Intercept)</code></label> <label><input type="radio" name="p10" value="c"><code>Residual standard error</code></label>
+<label><input type="radio" name="p9" value="a">Holding age and lwt constant, babies of smokers weigh on average about 269 g less than babies of nonsmokers.</label> <label><input type="radio" name="p9" value="b">Smokers in this sample weigh 269 g less than nonsmokers.</label> <label><input type="radio" name="p9" value="c">Each cigarette smoked reduces birth weight by 269 g.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The non-reference level gets its own coefficient row." data-incorrect="Not quite. The intercept is the reference mean. The other level's row is the difference.">
+<div class="practice-feedback" data-correct="Correct. The smoke slope compares smokers to nonsmokers while adjusting for the mother's age and weight." data-incorrect="Not quite. The coefficient describes babies' birth weight, comparing smokers to nonsmokers while holding the other predictors constant.">
 
 </div>
 </div>
@@ -2595,10 +2556,10 @@ In your completed model, which row in <code>summary()</code> tells you how much 
 Completion code
 </h2>
 <p>
-Answer at least 10 out of 12 questions correctly to reveal your completion code.
+Answer at least 8 out of 10 questions correctly to reveal your completion code.
 </p>
 <p>
-<span id="code-progress" class="code-progress">0 of 12 correct (need at least 10)</span>
+<span id="code-progress" class="code-progress">0 of 10 correct (need at least 8)</span>
 </p>
 <div id="code-box" class="code-box">
 <div class="code-label">
@@ -2610,12 +2571,12 @@ Your completion code
 </div>
 </section>
 <p class="footer-note">
-GRAPH Courses practical | Binary categorical predictors
+GRAPH Courses practical | Multiple linear regression
 </p>
 </div>
 <script>
-const COMPLETION_CODE = "BINREF25";
-const COMPLETION_REQUIRED = 10;
+const COMPLETION_CODE = "MLR2KIDS";
+const COMPLETION_REQUIRED = 8;
 
 function updateCompletion() {
   const cards = document.querySelectorAll(".practice");

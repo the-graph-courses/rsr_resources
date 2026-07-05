@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interaction Terms in Regression</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal: #0d7377; --teal-dark: #0a5d61; --gold: #f0c808;
+      --teal-soft: #eff7f7; --gold-soft: #fff9df; --rose-soft: #fdeef1; --blue-soft: #e7eef7;
+      --ink: #182326; --muted: #5d6d72; --line: #cfdcde;
+      --cream: #fff9df; --rose: #b83b5e; --blue: #2f5f98; --green: #2c8a4a; --paper: #ffffff;
+      --violet: #6b4f9a; --violet-soft: #f0ebf8;
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; background:#dfe8ea; color:var(--ink); font-family:Arial,Helvetica,sans-serif; font-size:9pt; line-height:1.3; }
+
+    .toolbar { width:210mm; max-width:calc(100vw - 24px); margin:18px auto 8px; display:flex; justify-content:space-between; align-items:flex-end; gap:16px; }
+    .toolbar-intro { flex:1; min-width:0; font-size:9pt; line-height:1.4; }
+    .toolbar-intro .title { font-weight:800; color:var(--teal); font-size:11pt; margin-bottom:2px; }
+    .toolbar-intro .descr { color:#3a4a4f; max-width:130mm; }
+    .toolbar-actions { display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
+    button { border:1px solid #9bb4b7; background:var(--paper); color:var(--ink); border-radius:6px; padding:7px 11px; font:inherit; font-weight:700; cursor:pointer; }
+    button.primary { background:var(--teal); color:white; border-color:var(--teal); }
+    .print-button { display:inline-flex; align-items:center; gap:5px; }
+    .print-button svg { width:13px; height:13px; display:block; }
+    .zoom-group { display:inline-flex; align-items:stretch; border:1px solid #9bb4b7; border-radius:6px; overflow:hidden; background:var(--paper); }
+    .zoom-group button { border:0; border-radius:0; padding:6px 10px; background:transparent; font-weight:800; }
+    .zoom-group button + button { border-left:1px solid #cdd9dc; }
+    .zoom-group .zoom-label { display:inline-flex; align-items:center; justify-content:center; min-width:44px; padding:0 9px; border-left:1px solid #cdd9dc; color:var(--muted); font-size:9pt; font-weight:800; }
+
+    .page-wrap { display:flex; flex-direction:column; align-items:center; }
+    .page { width:210mm; min-height:297mm; margin:0 auto 18px; background:var(--paper); padding:5mm 9mm 3mm; box-shadow:0 8px 30px rgba(24,35,38,0.18); display:flex; flex-direction:column; gap:1.2mm; transform-origin:top center; }
+    header { border-bottom:1.5mm solid var(--gold); padding-bottom:1.2mm; }
+    h1 { margin:0; color:var(--teal); font-size:22pt; line-height:0.98; }
+    .subtitle { margin-top:1.4mm; color:var(--muted); font-weight:700; font-size:9.5pt; }
+
+    .group-label { display:flex; align-items:center; gap:3mm; color:var(--ink); font-size:8.5pt; font-weight:800; text-transform:uppercase; letter-spacing:0.14em; margin:0.4mm 0 0.2mm; }
+    .group-label::before, .group-label::after { content:""; flex:1; border-top:1px solid var(--line); height:0; }
+    .group-label span { white-space:nowrap; }
+
+    .box { border:1px solid var(--line); border-radius:6px; overflow:visible; background:white; display:flex; flex-direction:column; min-width:0; }
+    .box-tag { background:var(--teal); color:white; font-size:7.8pt; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; padding:1.3mm 2.8mm; }
+    .box-body { padding:1.7mm 2.6mm 1.9mm; flex:1; display:flex; flex-direction:column; gap:1.1mm; background:var(--teal-soft); min-width:0; overflow:visible; border-radius:0 0 5px 5px; }
+    .box-body p { margin:0; }
+    .box-body ul { margin:0; padding-left:4mm; display:flex; flex-direction:column; gap:0.5mm; }
+    .box-body li { margin:0; }
+
+    .box.tag-rose .box-tag { background:var(--rose); }
+    .box.tag-rose .box-body { background:var(--rose-soft); }
+    .box.tag-blue .box-tag { background:var(--blue); }
+    .box.tag-blue .box-body { background:var(--blue-soft); }
+    .box.tag-gold .box-tag { background:var(--gold); color:var(--ink); }
+    .box.tag-gold .box-body, .box.body-cream .box-body { background:var(--gold-soft); }
+    .box.body-cream .box-tag { background:var(--gold); color:var(--ink); }
+    .box.tag-violet .box-tag { background:var(--violet); }
+    .box.tag-violet .box-body { background:var(--violet-soft); }
+
+    .row { display:grid; gap:3mm; }
+    .row.cols-2 { grid-template-columns:1fr 1fr; }
+    .row.cols-3 { grid-template-columns:1fr 1fr 1fr; }
+    .row.split-2-3 { grid-template-columns:2fr 3fr; }
+    .row.split-3-2 { grid-template-columns:3fr 2fr; }
+
+    .equation-layout { display:grid; grid-template-columns:auto 1fr; gap:3.5mm; align-items:center; }
+    .equation-formula { font-size:13.5pt; font-weight:800; white-space:nowrap; line-height:1.15; }
+    .equation-formula .b0 { color:var(--blue); }
+    .equation-formula .b1 { color:var(--rose); }
+    .equation-formula .b2 { color:var(--green); }
+    .equation-formula .b3 { color:var(--violet); }
+    .legend { display:grid; gap:0.85mm; font-size:8.2pt; }
+    .legend-row { display:grid; grid-template-columns:10mm 1fr; gap:1.2mm; align-items:baseline; }
+    .legend-key { font-weight:900; font-size:8.5pt; }
+    .legend-key.b0 { color:var(--blue); }
+    .legend-key.b1 { color:var(--rose); }
+    .legend-key.b2 { color:var(--green); }
+    .legend-key.b3 { color:var(--violet); }
+
+    .c0 { color:var(--blue); font-weight:800; }
+    .c1 { color:var(--rose); font-weight:800; }
+    .c2 { color:var(--green); font-weight:800; }
+    .c3 { color:var(--violet); font-weight:800; }
+    .coef-key { font-size:7pt; color:var(--muted); margin:0 0 0.5mm; text-align:center; }
+    .coef-key span { font-weight:800; }
+
+    .visual { border:1px solid var(--line); border-radius:6px; padding:1.2mm 1.2mm 1.4mm; background:linear-gradient(#fff,#fbfdfd); display:flex; flex-direction:column; gap:0.8mm; }
+    .visual svg { display:block; width:100%; height:auto; }
+    .visual-caption { font-size:8pt; color:var(--ink); text-align:center; line-height:1.35; padding:0 1mm; }
+
+    .worked { font-family:Consolas,Menlo,monospace; font-size:8.2pt; background:#fbfdfd; border:1px dashed var(--line); border-radius:5px; padding:1.2mm 1.8mm; line-height:1.85; }
+    .hints-hidden .worked { line-height:1.55; }
+
+    .r-code { border:1px solid #2a3a3d; border-radius:5px; padding:1.2mm 1.8mm; background:#1f2a2d; color:#e6f1f2; font-family:Consolas,Menlo,monospace; font-size:6.8pt; line-height:1.28; white-space:pre; overflow:hidden; }
+    .r-code .cm { color:#8aa3a8; font-style:italic; }
+    .r-code .fn { color:#6dd3c8; }
+    .r-code .hl-int { background:rgba(47,95,152,0.55); padding:0 2px; border-radius:3px; }
+    .r-code .hl-slope { background:rgba(184,59,94,0.55); padding:0 2px; border-radius:3px; }
+    .r-code .hl-slope2 { background:rgba(44,138,74,0.55); padding:0 2px; border-radius:3px; }
+    .r-code .hl-intx { background:rgba(107,79,154,0.55); padding:0 2px; border-radius:3px; }
+
+    .coef-table { font-family:Consolas,Menlo,monospace; font-size:7.8pt; border-collapse:collapse; width:100%; }
+    .coef-table th, .coef-table td { border:1px solid var(--line); padding:0.5mm 1.2mm; text-align:left; }
+    .coef-table th { background:#eef6f6; font-weight:800; }
+
+    .b { display:inline-flex; flex-direction:column; align-items:center; vertical-align:baseline; line-height:1; margin:0 0.2mm; text-align:center; max-width:100%; min-width:0; }
+    .fill { border:0; border-bottom:1.4px solid var(--teal); border-radius:0; padding:0 0.3mm 0.5px; color:var(--ink); background:transparent; font:inherit; font-weight:800; line-height:1; text-align:center; min-width:2mm; max-width:100%; transition:width 0.18s ease-out; }
+    .fill.code { font-family:Consolas,Menlo,monospace; }
+    .fill.align-left { text-align:left; }
+    .fill:focus { outline:none; border-bottom-color:var(--teal-dark); border-bottom-width:1.8px; }
+    .hint { font-size:4.7pt; color:#98a3a7; font-weight:700; font-family:inherit; line-height:1.05; margin-top:0.35mm; letter-spacing:0.02em; white-space:normal; overflow-wrap:anywhere; max-width:34mm; text-align:center; }
+    .b.solved .hint { display:none; }
+    .hints-hidden .hint { display:none; }
+
+    .fill.wrong-pick { border-bottom-color:var(--rose) !important; color:var(--rose); animation:shake 0.45s; }
+    .fill.correct-flash { animation:correctFlash 0.75s ease-out; }
+
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-2px)} 40%,80%{transform:translateX(2px)} }
+    @keyframes correctFlash { 0%{background-color:rgba(44,138,74,0);border-bottom-color:var(--teal)} 20%{background-color:rgba(44,138,74,0.28);border-bottom-color:var(--green)} 60%{background-color:rgba(44,138,74,0.18);border-bottom-color:var(--green)} 100%{background-color:rgba(44,138,74,0);border-bottom-color:var(--teal)} }
+
+    footer { border-top:1px solid var(--line); padding-top:2mm; display:flex; justify-content:center; color:var(--muted); font-size:8.5pt; font-weight:700; margin-top:auto; }
+    footer a { color:var(--teal); text-decoration:none; }
+
+    @page { size:A4; margin:0; }
+    @media print {
+      body { background:white; }
+      .toolbar { display:none; }
+      .page { width:210mm; height:297mm; max-height:297mm; overflow:hidden; margin:0; box-shadow:none; break-after:page; transform:none !important; }
+      button { display:none; }
+      .fill,.r-code,.worked,.box,.box-tag,.box-body,.visual,.equation-formula .b0,.equation-formula .b1,.equation-formula .b2,.equation-formula .b3,.legend-key.b0,.legend-key.b1,.legend-key.b2,.legend-key.b3,.c0,.c1,.c2,.c3 { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+      .hint { display:none !important; }
+      .worked { line-height:1.45 !important; }
+      .fill { transition:none; }
+      .fill.wrong-pick { color:var(--ink); border-bottom-color:var(--teal) !important; }
+    }
+    @media screen and (max-width:820px) {
+      .page,.toolbar { width:calc(100vw - 16px); }
+      .page { padding:16px; min-height:auto; transform:none !important; }
+      .row,.equation-layout { grid-template-columns:1fr !important; }
+      .toolbar { flex-direction:column; align-items:stretch; }
+      .toolbar-intro .descr { max-width:none; }
+    }
+
+    :root {
+      --bg:#dfe8ea; --paper:#f7f4ed; --ink:#101418; --muted:#665f51; --line:#d6cfbd;
+      --teal:#0d7377; --teal-dark:#0a5d61; --teal-soft:#e3f3f3; --gold:#f0c808; --gold-soft:#fff3cc;
+      --rose:#b83b5e; --rose-soft:#fdeef1; --green:#2c8a4a; --blue:#2f5f98; --blue-soft:#e7eef7;
+      --white:#fffef9; --border:#101418; --shadow:rgba(16,20,24,0.42);
+      --violet:#6b4f9a; --violet-soft:#f0ebf8;
+    }
+    body { background:var(--bg); color:var(--ink); font-family:'Space Grotesk', Arial, Helvetica, sans-serif; font-size:8.15pt; line-height:1.2; }
+    .toolbar { color:var(--ink); margin-top:24px; }
+    .toolbar-intro .title { color:var(--teal); font-family:'JetBrains Mono', Consolas, Menlo, monospace; font-size:10pt; letter-spacing:0.12em; text-transform:uppercase; }
+    button, .zoom-group { border:2px solid var(--ink); border-radius:7px; background:var(--paper); box-shadow:3px 3px 0 var(--shadow); font-family:'Space Grotesk', Arial, Helvetica, sans-serif; }
+    .zoom-group { overflow:visible; }
+    .zoom-group button { box-shadow:none; border-radius:0; }
+    .zoom-group button + button, .zoom-group .zoom-label { border-left:2px solid var(--ink); }
+    .zoom-group .zoom-label { color:var(--muted); font-family:'JetBrains Mono', Consolas, Menlo, monospace; font-weight:800; }
+    button.primary { background:var(--teal); color:#fff; border-color:var(--ink); }
+    .page { background:var(--paper); border:2px solid var(--ink); border-radius:10px; padding:2.8mm 6mm 1.8mm; box-shadow:8px 8px 0 rgba(16,20,24,0.13), 0 14px 36px rgba(16,20,24,0.14); gap:1.65mm; }
+    .row { gap:2.2mm; }
+    header { border-bottom:1mm solid var(--gold); padding-bottom:0.6mm; margin-bottom:0.05mm; }
+    h1 { color:var(--teal); font-family:'Space Grotesk', Arial, Helvetica, sans-serif; font-size:18.5pt; font-weight:800; letter-spacing:-0.03em; }
+    .subtitle { color:var(--muted); font-family:'JetBrains Mono', Consolas, Menlo, monospace; font-size:6.85pt; letter-spacing:0.02em; margin-top:0.5mm; }
+    .group-label { color:var(--ink); font-family:'Space Grotesk', Arial, Helvetica, sans-serif; font-size:7.35pt; font-weight:900; letter-spacing:0.02em; text-transform:none; margin:0.05mm 0; }
+    .group-label::before, .group-label::after { border-top:2px solid var(--ink); }
+    .group-label span { background:var(--paper); border:2px solid var(--ink); border-radius:5px; padding:0.3mm 1.35mm; }
+    .box { background:var(--white); border:2px solid var(--ink); border-radius:8px; box-shadow:4px 4px 0 var(--shadow); overflow:visible; }
+    .box-tag { border-bottom:2px solid var(--ink); border-radius:6px 6px 0 0; font-family:'Space Grotesk', Arial, Helvetica, sans-serif; font-size:7.35pt; font-weight:900; letter-spacing:0.02em; text-transform:none; padding:0.55mm 1.75mm 0.42mm; }
+    .box-body { background:var(--white); border-radius:0 0 6px 6px; padding:0.75mm 1.55mm 0.85mm; gap:0.28mm; }
+    .box:not(.tag-gold):not(.tag-rose):not(.tag-blue):not(.tag-violet):not(.body-cream) .box-body { background:var(--teal-soft); }
+    .box.tag-gold .box-body, .box.body-cream .box-body { background:var(--gold-soft); }
+    .box.tag-rose .box-body { background:var(--rose-soft); }
+    .box.tag-blue .box-body { background:var(--blue-soft); }
+    .box.tag-violet .box-body { background:var(--violet-soft); }
+    .formula, .r-code, .worked, .fill.code, code, .coef-table { font-family:'JetBrains Mono', Consolas, Menlo, monospace !important; }
+    .equation-formula { font-family:'Space Grotesk', Arial, Helvetica, sans-serif; letter-spacing:-0.035em; }
+    .visual, .worked { border:2px solid var(--ink); border-radius:8px; background:var(--white); box-shadow:none; }
+    .visual { padding:0.55mm 0.7mm 0.65mm; }
+    .r-code { border:2px solid var(--ink); border-radius:7px; background:#1d2229; color:#f0ecdf; font-size:6pt; line-height:1.15; }
+    .r-code .cm { color:#a8b3b4; }
+    .r-code .fn { color:#8fd5d2; }
+    .worked { background:var(--white); border-style:dashed; font-size:7.6pt; }
+    .fill { border-bottom:1.8px solid var(--teal); background:rgba(255,255,255,0.36); border-radius:3px 3px 0 0; }
+    .fill:focus { border-bottom-color:var(--teal-dark); box-shadow:0 3px 0 rgba(240,200,8,0.35); }
+    .hint { color:#8b897d; font-family:'JetBrains Mono', Consolas, Menlo, monospace; font-size:4.55pt; letter-spacing:0.03em; }
+    footer { background:var(--teal); border-top:0; border-radius:7px; color:#fff; margin-top:auto; padding:0.75mm 2mm; box-shadow:4px 4px 0 var(--shadow); font-family:'JetBrains Mono', Consolas, Menlo, monospace; font-size:6.85pt; letter-spacing:0.02em; }
+    footer a { color:#fff; font-weight:900; }
+
+    @media print {
+      body { background:white; font-size:7.1pt; line-height:1.08; }
+      .page { border:0; border-radius:0; box-shadow:none; padding:1.35mm 4.6mm 0.65mm; gap:1.25mm; background:white; height:297mm; max-height:297mm; overflow:hidden; }
+      header { border-bottom-width:0.75mm; padding-bottom:0.18mm; margin-bottom:0; }
+      h1 { font-size:14.5pt; }
+      .subtitle { font-size:5.95pt; line-height:1.02; margin-top:0.12mm; }
+      .box, .visual, .worked, button, .zoom-group, footer, .group-label span { box-shadow:none; }
+      .box, .visual, .worked, .group-label span { border-width:1.4px; border-radius:5px; }
+      .box-tag { border-bottom-width:1.4px; border-radius:4px 4px 0 0; font-size:6.25pt; padding:0.28mm 1.25mm 0.2mm; line-height:1.05; }
+      .box-body { padding:0.32mm 0.9mm 0.4mm; gap:0.12mm; }
+      .row { gap:1.35mm; }
+      .group-label { font-size:6.1pt; margin:0; }
+      .group-label span { padding:0.12mm 0.75mm; }
+      .visual { padding:0.15mm 0.28mm 0.22mm; }
+      .visual-caption { font-size:5.85pt; line-height:1.06; }
+      .r-code { font-size:5.35pt; line-height:1.02; padding:0.25mm 0.85mm; }
+      .worked { font-size:6.25pt; line-height:1.15 !important; padding:0.32mm 0.75mm; }
+      .coef-table { font-size:6.35pt; }
+      .equation-formula { font-size:11pt; }
+      .legend { font-size:7pt; gap:0.55mm; }
+      footer { border-radius:0; padding:0.15mm 0; font-size:5.85pt; }
+    }
+
+    @media screen and (max-width:820px) {
+      .toolbar { margin-top:12px; }
+      html, body { overflow-x:auto; }
+      .toolbar-actions { justify-content:flex-start; }
+      button { padding:6px 8px; }
+      .page { border-radius:10px; padding:16px; overflow:visible; height:auto; max-height:none; }
+      .box, .box-body, .visual, .worked { overflow:visible; }
+      .box-body p, .visual-caption { overflow-wrap:anywhere; }
+      .equation-formula { white-space:normal; }
+      .b { max-width:min(100%, 34vw); }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="toolbar-intro">
+      <div class="title">GRAPH Courses cheat sheet</div>
+      <div class="descr">Type your answers into the blanks. Hint options appear in small grey text below each blank. When finished, click Print / Save on the right.</div>
+    </div>
+    <div class="toolbar-actions">
+      <div class="zoom-group" role="group" aria-label="Zoom controls">
+        <button type="button" id="zoomOut" aria-label="Zoom out">Zoom -</button>
+        <button type="button" id="zoomIn" aria-label="Zoom in">Zoom +</button>
+        <span class="zoom-label" id="zoomLabel">100%</span>
+      </div>
+      <button type="button" id="toggleHints">Hide hints</button>
+      <button type="button" id="clearAnswers">Clear</button>
+      <button type="button" class="primary print-button" onclick="window.print()" aria-label="Print or save cheat sheet">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M7 3h10v5H7V3Zm10 14h2a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h2v4h10v-4Zm-8 2v-6h6v6H9Zm9-7.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/>
+        </svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+        </svg>
+        Print / Save
+      </button>
+    </div>
+  </div>
+
+  <div class="page-wrap" id="pageWrap">
+  <section class="page" id="sheet">
+    <header>
+      <h1>Interaction Terms in Regression</h1>
+      <div class="subtitle">When the effect of one predictor depends on another: non-parallel lines and harder interpretation</div>
+    </header>
+
+    <div class="box">
+      <div class="box-tag">Big idea</div>
+      <div class="box-body">
+        <p>An <b>interaction</b> means the effect of one predictor on the outcome
+          <span class="b"><input class="fill" data-answer="depends on"><span class="hint">depends on / equals / ignores</span></span>
+          the level of another predictor. A model without an interaction (an
+          <span class="b"><input class="fill" data-answer="additive"><span class="hint">additive / interactive / unsaturated</span></span>
+          model) assumes that effect stays the same at every level of the other predictor: that is, the fitted curves or lines are
+          <span class="b"><input class="fill" data-answer="parallel"><span class="hint">parallel / identical / vertical</span></span>
+          and can differ only in their
+          <span class="b"><input class="fill" data-answer="intercept"><span class="hint">intercept / slope / residual</span></span>.
+          A model with an interaction lets that effect change with the second predictor, so different levels of the second predictor can have their own
+          <span class="b"><input class="fill" data-answer="slope"><span class="hint">slope / intercept / mean</span></span>.</p>
+      </div>
+    </div>
+
+    <div class="group-label"><span>Three models for one question</span></div>
+    <div class="row split-3-2">
+      <div class="box tag-rose"><div class="box-tag">Building up: m1, m2, m3</div><div class="box-body">
+        <p>Question: does blood pressure (BP) medication change the BMI&#8594;sysBP relationship?</p>
+        <p>Outcome: <code>sysBP</code> (systolic BP). Predictors: <code>BMI</code> and <code>BPmeds</code> (on BP medication or not).</p>
+        <table class="coef-table">
+          <tr><th>Model</th><th>R formula</th><th>What it allows</th></tr>
+          <tr><td><b>m1</b></td><td>sysBP ~ BMI</td><td>one line for <span class="b"><input class="fill" data-answer="everyone" data-alt="all participants|the whole sample"><span class="hint">everyone / one group / outliers</span></span></td></tr>
+          <tr><td><b>m2</b></td><td>sysBP ~ BMI + BPmeds</td><td>two lines, <b>same</b> <span class="b"><input class="fill" data-answer="slope"><span class="hint">slope / intercept / p value</span></span>, different intercepts</td></tr>
+          <tr><td><b>m3</b></td><td>sysBP ~ BMI + BPmeds + <span class="b"><input class="fill code" data-answer="BMI:BPmeds"><span class="hint">BMI:BPmeds / BMI-BPmeds / BMI/BPmeds</span></span></td><td>two lines, each with its <b>own</b> slope and intercept</td></tr>
+        </table>
+        <p>The interaction term is written with a <span class="b"><input class="fill" data-answer="colon" data-alt=":"><span class="hint">colon / comma / caret</span></span> between the two variables. The shorthand <code>BMI*BPmeds</code> expands to BMI + BPmeds +
+          <span class="b"><input class="fill code" data-answer="BMI:BPmeds"><span class="hint">BMI:BPmeds / BMI^BPmeds / BMI+BPmeds</span></span>.</p>
+      </div></div>
+      <div class="visual" aria-label="Parallel versus non-parallel group lines">
+        <svg viewBox="0 0 360 132" role="img">
+          <rect width="360" height="132" rx="6" fill="#fff"/>
+          <text x="92" y="13" text-anchor="middle" font-size="8.5" font-weight="800" fill="#182326">No interaction: parallel</text>
+          <line x1="18" y1="108" x2="168" y2="108" stroke="#5d6d72" stroke-width="1"/>
+          <line x1="18" y1="22" x2="18" y2="108" stroke="#5d6d72" stroke-width="1"/>
+          <text x="8" y="65" text-anchor="middle" font-size="7.5" font-weight="700" fill="#5d6d72" transform="rotate(-90,8,65)">sysBP</text>
+          <line x1="26" y1="96" x2="160" y2="56" stroke="#2f5f98" stroke-width="2"/>
+          <line x1="26" y1="70" x2="160" y2="30" stroke="#b83b5e" stroke-width="2"/>
+          <text x="92" y="122" text-anchor="middle" font-size="7.5" font-weight="700" fill="#5d6d72">BMI</text>
+          <text x="192" y="13" text-anchor="start" font-size="8.5" font-weight="800" fill="#182326">Interaction: slopes differ</text>
+          <line x1="200" y1="108" x2="350" y2="108" stroke="#5d6d72" stroke-width="1"/>
+          <line x1="200" y1="22" x2="200" y2="108" stroke="#5d6d72" stroke-width="1"/>
+          <line x1="208" y1="98" x2="342" y2="42" stroke="#2f5f98" stroke-width="2"/>
+          <line x1="208" y1="60" x2="342" y2="44" stroke="#b83b5e" stroke-width="2"/>
+          <text x="275" y="122" text-anchor="middle" font-size="7.5" font-weight="700" fill="#5d6d72">BMI</text>
+          <text x="248" y="86" font-size="7.2" font-weight="800" fill="#2f5f98">not on meds</text>
+          <text x="248" y="47" font-size="7.2" font-weight="800" fill="#b83b5e">on meds</text>
+        </svg>
+        <div class="visual-caption">In the right panel the on-meds line starts higher but rises more
+          <span class="b"><input class="fill" data-answer="slowly" data-alt="gently|gradually"><span class="hint">slowly / steeply / randomly</span></span>: the lines are not
+          <span class="b"><input class="fill" data-answer="parallel"><span class="hint">parallel / positive / linear</span></span>.</div>
+      </div>
+    </div>
+
+    <div class="group-label"><span>Additive vs interaction (BMI and BP meds on systolic BP, not on meds = reference)</span></div>
+    <p class="coef-key"><span class="c0">intercept</span> · <span class="c1">BMI</span> · <span class="c2">BPmeds</span> · <span class="c3">interaction</span></p>
+    <div class="row split-2-3">
+      <div class="box tag-rose"><div class="box-tag">Additive model (m2): parallel lines</div><div class="box-body">
+        <p>Predicts systolic BP from BMI and BP medication, with one shared BMI slope for both groups (parallel lines).</p>
+<div class="r-code"><span class="fn">lm</span>(sysBP ~ BMI + BPmeds, data = dat)
+              Estimate
+<span class="hl-int">(Intercept)</span>      88.84
+<span class="hl-slope">BMI</span>               1.65
+<span class="hl-slope2">BPmedsonMeds</span>     29.24</div>
+        <p>The BMI slope 1.65 applies to <span class="b"><input class="fill" data-answer="both"><span class="hint">both / neither / only medicated</span></span> groups. The +29.24 gap is the same at every BMI.</p>
+        <p><b>Predict with the model.</b> A person who takes blood pressure medication and has BMI = 30:</p>
+        <div class="worked">&#375; = <span class="c0">88.84</span> + <span class="c1">1.65</span>&middot;30 + <span class="c2"><span class="b"><input class="fill code" data-answer="29.24" data-alt="29.2|1.65"><span class="hint">29.24 / 1.65 / 88.84</span></span></span> = 167.58</div>
+        <p>A person who is <b>not</b> on blood pressure medication and has BMI = 35:</p>
+        <div class="worked">&#375; = <span class="c0">88.84</span> + <span class="c1">1.65</span>&middot;35 = 146.59</div>
+      </div></div>
+      <div class="box"><div class="box-tag">Interaction model (m3): own slopes</div><div class="box-body">
+        <p>Same predictors, plus <code>BMI:BPmeds</code>, so medication can change both the intercept gap and the BMI slope.</p>
+<div class="r-code"><span class="fn">lm</span>(sysBP ~ BMI + BPmeds + BMI:BPmeds, data = dat)
+                  Estimate
+<span class="hl-int">(Intercept)</span>          87.64
+<span class="hl-slope">BMI</span>                   1.70
+<span class="hl-slope2">BPmedsonMeds</span>         57.11
+<span class="hl-intx">BMI:BPmedsonMeds</span>     -1.00</div>
+        <table class="coef-table">
+          <tr><th>Group</th><th>Intercept</th><th>BMI slope</th></tr>
+          <tr><td>Not on meds (ref)</td><td><span class="c0">87.64</span></td><td><span class="c1">1.70</span></td></tr>
+          <tr><td>On meds</td><td><span class="c0">87.64</span> + <span class="c2">57.11</span> = <b>144.75</b></td><td><span class="c1">1.70</span> + <span class="c3">(&minus;1.00)</span> = <b>0.70</b></td></tr>
+        </table>
+        <p>The reference group's slope is given by the plain <span class="b"><input class="fill code" data-answer="BMI"><span class="hint">BMI / BPmedsonMeds / (Intercept)</span></span> row alone. To get the other group's slope, add the
+          <span class="b"><input class="fill" data-answer="interaction" data-alt="interaction term"><span class="hint">interaction / intercept / p-value</span></span> row to it.</p>
+        <p><b>Predict with the model.</b> A person who takes blood pressure medication and has BMI = 30. Use the slope from the on-meds row above:</p>
+        <div class="worked">&#375; = <span class="c0">144.75</span> + <span class="c1"><span class="b"><input class="fill code" data-answer="0.70" data-alt="0.7|1.70"><span class="hint">0.70 / 1.70 / 57.11</span></span></span>&middot;30 = 165.75</div>
+        <p>A person who is <b>not</b> on blood pressure medication and has BMI = 35. Use the slope from the reference row above:</p>
+        <div class="worked">&#375; = <span class="c0">87.64</span> + <span class="c1"><span class="b"><input class="fill code" data-answer="1.70" data-alt="1.7|0.70"><span class="hint">1.70 / 0.70 / 57.11</span></span></span>&middot;35 = 147.14</div>
+      </div></div>
+    </div>
+
+    <div class="box body-cream">
+      <div class="box-tag">Interaction equation</div>
+      <div class="box-body">
+        <div class="equation-layout">
+          <div class="equation-formula">&#375; = <span class="b0">b<sub>0</sub></span> + <span class="b1">b<sub>1</sub></span>x + <span class="b2">b<sub>2</sub></span>g + <span class="b3">b<sub>3</sub></span>(x&middot;g)</div>
+          <div class="legend">
+            <div class="legend-row"><span class="legend-key">g</span><span><code>1</code> = on meds, <code>0</code> = not on meds (reference)</span></div>
+            <div class="legend-row"><span class="legend-key b1">b<sub>1</sub></span><span>slope of x for the <span class="b"><input class="fill" data-answer="reference"><span class="hint">reference / medicated / pooled</span></span> group only</span></div>
+            <div class="legend-row"><span class="legend-key b2">b<sub>2</sub></span><span>gap between the two lines at x = <span class="b"><input class="fill code" data-answer="0" data-alt="zero"><span class="hint">0 / 25 / 30</span></span> (difference in intercepts)</span></div>
+            <div class="legend-row"><span class="legend-key b3">b<sub>3</sub></span><span>how much the <span class="b"><input class="fill" data-answer="non-reference"><span class="hint">non-reference / reference / pooled</span></span> slope differs from the reference slope; non-ref slope = reference slope + b<sub>3</sub></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="group-label"><span>Another example: education &times; sex on wage (female = reference)</span></div>
+    <div class="row split-2-3">
+      <div class="box tag-violet"><div class="box-tag">R output</div><div class="box-body">
+        <p>Predicts wage from years of education and sex, with <code>educ:sex</code> so the education slope can differ for males and females.</p>
+<div class="r-code"><span class="fn">lm</span>(wage ~ educ + sex + educ:sex, data = wages)
+              Estimate
+<span class="hl-int">(Intercept)</span>       6.00
+<span class="hl-slope">educ</span>              1.70
+<span class="hl-slope2">sexmale</span>           6.00
+<span class="hl-intx">educ:sexmale</span>      0.80</div>
+        <p>wage in $1000s per year; educ in years of education.</p>
+      </div></div>
+      <div class="box tag-violet"><div class="box-tag">Slopes by group</div><div class="box-body">
+        <table class="coef-table">
+          <tr><th>Group</th><th>Intercept</th><th>educ slope</th></tr>
+          <tr><td>Female (ref)</td><td><span class="c0">6.00</span></td><td><span class="c1">1.70</span></td></tr>
+          <tr><td>Male</td><td><span class="c0">6.00</span> + <span class="c2">6.00</span> = <b>12.00</b></td><td><span class="c1">1.70</span> + <span class="c3">0.80</span> = <b>2.50</b></td></tr>
+        </table>
+        <p>The reference group's slope is given by the plain <span class="b"><input class="fill code" data-answer="educ"><span class="hint">educ / sexmale / (Intercept)</span></span> row alone. To get the other group's slope, add the
+          <span class="b"><input class="fill" data-answer="interaction" data-alt="interaction term"><span class="hint">interaction / intercept / p-value</span></span> row to it. Each extra year of education is associated with a <span class="b"><input class="fill" data-answer="larger"><span class="hint">larger / smaller / equal</span></span> wage gain for males.</p>
+        <p><b>Predict with the model.</b> A male with 16 years of education. Use the slope from the male row above:</p>
+        <div class="worked">&#375; = <span class="c0">12.00</span> + <span class="c1"><span class="b"><input class="fill code" data-answer="2.50" data-alt="2.5|1.70"><span class="hint">2.50 / 1.70 / 0.80</span></span></span>&middot;16 = 52</div>
+        <p>A female with 16 years of education. Use the slope from the reference row above:</p>
+        <div class="worked">&#375; = <span class="c0">6.00</span> + <span class="c1"><span class="b"><input class="fill code" data-answer="1.70" data-alt="1.7|2.50"><span class="hint">1.70 / 2.50 / 0.80</span></span></span>&middot;16 = 33.2</div>
+      </div></div>
+    </div>
+
+    <div class="row">
+      <div class="box tag-gold"><div class="box-tag">When to fit an interaction</div><div class="box-body">
+        <ul>
+          <li>It is <span class="b"><input class="fill align-left" data-answer="well established"><span class="hint">well established / randomly chosen / always required</span></span> in the literature (e.g. age &times; sex in growth charts).</li>
+          <li>It is your <span class="b"><input class="fill" data-answer="research question"><span class="hint">research question / residual / intercept</span></span>: you test whether X's effect on Y depends on Z.</li>
+          <li>Design or biology strongly suggests <span class="b"><input class="fill align-left" data-answer="effect modification"><span class="hint">effect modification / collinearity / extrapolation</span></span> (e.g. antibiotic dose &times; bacterial resistance).</li>
+          <li>Otherwise default to an <span class="b"><input class="fill" data-answer="additive"><span class="hint">additive / saturated / null</span></span> model: easier to read and more stable.</li>
+          <li>Do <b>not</b> fit all pairwise interactions and keep only significant ones: that is
+            <span class="b"><input class="fill align-left" data-answer="p-hacking" data-alt="p hacking"><span class="hint">p-hacking / standardization / extrapolation</span></span> and invalidates those p-values.</li>
+        </ul>
+      </div></div>
+    </div>
+
+    <footer><a href="https://thegraphcourses.org" target="_blank" rel="noopener">thegraphcourses.org</a></footer>
+  </section>
+  </div>
+
+  <script>
+    const sheet = document.getElementById("sheet"),
+          pageWrap = document.getElementById("pageWrap"),
+          blanks = Array.from(document.querySelectorAll(".b"));
+
+    function fingerprint(str) {
+      let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+      for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      return (h2 >>> 0).toString(36) + (h1 >>> 0).toString(36);
+    }
+    const fp = fingerprint(
+      blanks.map(b => {
+        const inp = b.querySelector(".fill");
+        return (inp.dataset.answer || "") + "|" + (inp.dataset.alt || "");
+      }).join("\n")
+    );
+    const storageKey = "interaction-terms-cheatsheet-" + fp;
+
+    blanks.forEach(b => {
+      const hint = b.querySelector(".hint");
+      if (!hint) return;
+      const opts = hint.textContent.split(/\s*\/\s*/).filter(s => s.length > 0);
+      if (opts.length < 2) return;
+      for (let i = opts.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [opts[i], opts[j]] = [opts[j], opts[i]];
+      }
+      hint.textContent = opts.join(" / ");
+    });
+
+    const measureCanvas = document.createElement("canvas");
+    const measureCtx = measureCanvas.getContext("2d");
+    function getFontShorthand(el) {
+      const s = getComputedStyle(el);
+      return `${s.fontStyle || "normal"} ${s.fontWeight || "400"} ${s.fontSize} ${s.fontFamily}`;
+    }
+    function measureTextWidth(text, inp) {
+      measureCtx.font = getFontShorthand(inp);
+      return measureCtx.measureText(text).width;
+    }
+    function getDefaultWidth(inp) {
+      const answers = [inp.dataset.answer || "", ...(inp.dataset.alt ? inp.dataset.alt.split("|") : [])];
+      let maxW = 0;
+      answers.forEach(ans => {
+        const w = measureTextWidth(ans, inp);
+        if (w > maxW) maxW = w;
+      });
+      return Math.max(maxW + 12, 22);
+    }
+    function getSolvedWidth(inp) {
+      const w = measureTextWidth(inp.value, inp);
+      return Math.max(w + 6, 12);
+    }
+    function applyWidth(inp, solved) {
+      const w = solved ? getSolvedWidth(inp) : getDefaultWidth(inp);
+      inp.style.width = `${w}px`;
+    }
+
+    blanks.forEach(b => applyWidth(b.querySelector(".fill"), false));
+
+    const norm = s => String(s)
+      .replace(/[−–]/g, "-")
+      .replace(/₀/g, "0").replace(/₁/g, "1").replace(/₂/g, "2").replace(/₃/g, "3").replace(/₄/g, "4")
+      .replace(/β/g, "beta")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+    const answersFor = input => [input.dataset.answer || "", ...(input.dataset.alt ? input.dataset.alt.split("|") : [])].map(norm);
+    const match = (value, input) => answersFor(input).includes(norm(value));
+
+    function flashCorrect(i) { i.classList.remove("correct-flash"); void i.offsetWidth; i.classList.add("correct-flash"); setTimeout(() => i.classList.remove("correct-flash"), 800); }
+    function flashWrong(i) { i.classList.remove("wrong-pick"); void i.offsetWidth; i.classList.add("wrong-pick"); }
+    function save() { localStorage.setItem(storageKey, JSON.stringify(blanks.map(b => b.querySelector(".fill").value))); }
+    function restore() {
+      try {
+        const d = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        blanks.forEach((b, i) => {
+          const inp = b.querySelector(".fill");
+          if (d[i]) {
+            inp.value = d[i];
+            if (match(d[i], inp)) {
+              b.classList.add("solved");
+              applyWidth(inp, true);
+            } else {
+              inp.classList.add("wrong-pick");
+            }
+          }
+        });
+      } catch { localStorage.removeItem(storageKey); }
+    }
+
+    blanks.forEach(blank => {
+      const inp = blank.querySelector(".fill");
+      inp.addEventListener("input", () => {
+        const was = blank.classList.contains("solved");
+        inp.classList.remove("wrong-pick");
+        const ok = inp.value !== "" && match(inp.value, inp);
+        if (ok && !was) {
+          blank.classList.add("solved");
+          applyWidth(inp, true);
+          flashCorrect(inp);
+        } else if (ok && was) {
+          applyWidth(inp, true);
+        } else if (!ok && was) {
+          blank.classList.remove("solved");
+          applyWidth(inp, false);
+        }
+        save();
+      });
+      inp.addEventListener("blur", () => {
+        const v = inp.value.trim();
+        if (v && !match(v, inp)) flashWrong(inp);
+      });
+    });
+    restore();
+
+    document.getElementById("toggleHints").addEventListener("click", e => {
+      sheet.classList.toggle("hints-hidden");
+      e.currentTarget.textContent = sheet.classList.contains("hints-hidden") ? "Show hints" : "Hide hints";
+    });
+    document.getElementById("clearAnswers").addEventListener("click", () => {
+      blanks.forEach(b => {
+        const i = b.querySelector(".fill");
+        i.value = "";
+        i.classList.remove("wrong-pick", "correct-flash");
+        b.classList.remove("solved");
+        applyWidth(i, false);
+      });
+      save();
+    });
+
+    const zoomLevels = [0.1, 0.25, 0.5, 0.75, 0.85, 1.0, 1.15, 1.3, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
+    const zoomKey = "interaction-terms-cheatsheet-zoom";
+    const defaultZoomIdx = zoomLevels.indexOf(1.0);
+    let zoomIdx = parseInt(localStorage.getItem(zoomKey) || String(defaultZoomIdx), 10);
+    if (isNaN(zoomIdx) || zoomIdx < 0 || zoomIdx >= zoomLevels.length) zoomIdx = defaultZoomIdx;
+    const zoomLabel = document.getElementById("zoomLabel");
+    function applyZoom() {
+      const z = zoomLevels[zoomIdx];
+      sheet.style.transform = z === 1 ? "" : `scale(${z})`;
+      pageWrap.style.minHeight = z === 1 ? "" : `${297 * z + 20}mm`;
+      zoomLabel.textContent = Math.round(z * 100) + "%";
+      localStorage.setItem(zoomKey, String(zoomIdx));
+    }
+    document.getElementById("zoomOut").addEventListener("click", () => {
+      if (zoomIdx > 0) { zoomIdx--; applyZoom(); }
+    });
+    document.getElementById("zoomIn").addEventListener("click", () => {
+      if (zoomIdx < zoomLevels.length - 1) { zoomIdx++; applyZoom(); }
+    });
+    applyZoom();
+  </script>
+</body>
+</html>
