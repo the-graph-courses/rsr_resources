@@ -368,7 +368,7 @@ globalThis.qwebrCustomizedWebROptions = {
 };
 
 // Store cell data
-globalThis.qwebrCellDetails = [{"id":1,"options":{"output":"true","out-height":"","comment":"","fig-height":5,"label":"unnamed-chunk-1","fig-width":7,"read-only":"false","editor-quick-suggestions":"false","message":"true","editor-word-wrap":"true","context":"interactive","fig-cap":"","results":"markup","editor-max-height":"","editor-font-scale":"1","warning":"true","autorun":"false","out-width":"700px","classes":"","dpi":72},"code":"library(dplyr)\nlibrary(ggplot2)\nlibrary(broom)\n\nset.seed(42)\nn <- 60\nbp <- data.frame(\n  bmi = round(runif(n, 20, 40), 1),\n  meds = factor(rep(c(\"noMeds\", \"onMeds\"), each = n / 2))\n)\nbp$sysbp <- with(bp, round(\n  88 + 1.7 * bmi + ifelse(meds == \"onMeds\", 57 - 1.0 * bmi, 0) + rnorm(n, 0, 4), 1\n))\n\nggplot(bp, aes(x = bmi, y = sysbp, color = meds)) +\n  geom_point(size = 3) +\n  geom_smooth(method = \"lm\", se = FALSE, linewidth = 1) +\n  scale_color_manual(values = c(\"#b83b5e\", \"#00565e\")) +\n  labs(x = \"BMI\", y = \"Systolic BP\", color = \"BP meds\") +\n  theme_minimal(base_size = 14)"},{"id":2,"options":{"output":"true","out-height":"","comment":"","fig-height":5,"label":"unnamed-chunk-2","fig-width":7,"read-only":"false","editor-quick-suggestions":"false","message":"true","editor-word-wrap":"true","context":"interactive","fig-cap":"","results":"markup","editor-max-height":"","editor-font-scale":"1","warning":"true","autorun":"false","out-width":"700px","classes":"","dpi":72},"code":"m_int <- lm(sysbp ~ bmi ____ meds, data = bp)\nround(coef(m_int), 2)"},{"id":3,"options":{"output":"true","out-height":"","comment":"","fig-height":5,"label":"unnamed-chunk-3","fig-width":7,"read-only":"false","editor-quick-suggestions":"false","message":"true","editor-word-wrap":"true","context":"interactive","fig-cap":"","results":"markup","editor-max-height":"","editor-font-scale":"1","warning":"true","autorun":"false","out-width":"700px","classes":"","dpi":72},"code":"set.seed(7)\nn2 <- 90\nlung <- data.frame(\n  age = round(runif(n2, 30, 70)),\n  smoking = factor(rep(c(\"never\", \"former\", \"current\"), each = 30),\n                   levels = c(\"never\", \"former\", \"current\"))\n)\nlung$fev <- with(lung, round(\n  5200 - 20 * age +\n    ifelse(smoking == \"former\",  -200 - 10 * age,\n    ifelse(smoking == \"current\", -300 - 25 * age, 0)) +\n    rnorm(n2, 0, 150)\n))\n\nggplot(lung, aes(x = age, y = fev, color = smoking)) +\n  geom_point(size = 2.5) +\n  geom_smooth(method = \"lm\", se = FALSE, linewidth = 1) +\n  scale_color_manual(values = c(\"#00565e\", \"#f5a742\", \"#b83b5e\")) +\n  labs(x = \"Age (years)\", y = \"FEV (mL)\", color = \"Smoking\") +\n  theme_minimal(base_size = 14)"},{"id":4,"options":{"output":"true","out-height":"","comment":"","fig-height":5,"label":"unnamed-chunk-4","fig-width":7,"read-only":"false","editor-quick-suggestions":"false","message":"true","editor-word-wrap":"true","context":"interactive","fig-cap":"","results":"markup","editor-max-height":"","editor-font-scale":"1","warning":"true","autorun":"false","out-width":"700px","classes":"","dpi":72},"code":"m_poly <- lm(fev ~ ____ ____ ____, data = lung)\nround(coef(m_poly), 1)"},{"id":5,"options":{"output":"true","out-height":"","comment":"","fig-height":5,"label":"unnamed-chunk-5","fig-width":7,"read-only":"false","editor-quick-suggestions":"false","message":"true","editor-word-wrap":"true","context":"interactive","fig-cap":"","results":"markup","editor-max-height":"","editor-font-scale":"1","warning":"true","autorun":"false","out-width":"700px","classes":"","dpi":72},"code":"set.seed(99)\nn3 <- 80\nsalt <- data.frame(\n  sodium = round(runif(n3, 1.5, 5), 1),\n  age = round(runif(n3, 25, 75))\n)\nsalt$sysbp <- with(salt, round(\n  95 + 2 * sodium + 0.3 * age + 0.10 * sodium * age + rnorm(n3, 0, 5), 1\n))\n\nm_cont <- lm(sysbp ~ sodium * age, data = salt)\nround(coef(m_cont), 3)"}];
+globalThis.qwebrCellDetails = [{"id":1,"code":"library(dplyr)\nlibrary(ggplot2)\nlibrary(broom)\n\nfram <- read.csv(\"https://raw.githubusercontent.com/the-graph-courses/rsr_resources/main/data/LSTbook_Framingham.csv\")\n\nfram <- fram %>%\n  filter(BPMeds %in% c(\"no\", \"yes\"), !is.na(BMI), !is.na(sysBP)) %>%\n  mutate(BPMeds = factor(BPMeds, levels = c(\"no\", \"yes\")))\n\nggplot(fram, aes(x = BMI, y = sysBP, color = BPMeds)) +\n  geom_point(size = 1.6, alpha = 0.4) +\n  geom_smooth(method = \"lm\", se = FALSE, linewidth = 1) +\n  scale_color_manual(values = c(\"#00565e\", \"#b83b5e\")) +\n  labs(x = \"BMI\", y = \"Systolic BP\", color = \"BP meds\") +\n  theme_minimal(base_size = 14)","options":{"comment":"","context":"interactive","read-only":"false","classes":"","label":"unnamed-chunk-1","out-width":"700px","fig-height":5,"warning":"true","editor-max-height":"","fig-width":7,"fig-cap":"","message":"true","results":"markup","output":"true","autorun":"false","dpi":72,"out-height":"","editor-font-scale":"1","editor-quick-suggestions":"false","editor-word-wrap":"true"}},{"id":2,"code":"m_int <- lm(sysBP ~ BMI + BPMeds + ____, data = fram)\nsummary(m_int)","options":{"comment":"","context":"interactive","read-only":"false","classes":"","label":"unnamed-chunk-2","out-width":"700px","fig-height":5,"warning":"true","editor-max-height":"","fig-width":7,"fig-cap":"","message":"true","results":"markup","output":"true","autorun":"false","dpi":72,"out-height":"","editor-font-scale":"1","editor-quick-suggestions":"false","editor-word-wrap":"true"}},{"id":3,"code":"data(ChickWeight)\nChickWeight$Diet <- factor(ChickWeight$Diet)\n\nggplot(ChickWeight, aes(x = Time, y = weight, color = Diet)) +\n  geom_point(size = 1.6, alpha = 0.5) +\n  geom_smooth(method = \"lm\", se = FALSE, linewidth = 1) +\n  scale_color_manual(values = c(\"#00565e\", \"#5fbfbf\", \"#f5a742\", \"#b83b5e\")) +\n  labs(x = \"Time (days)\", y = \"Weight (g)\", color = \"Diet\") +\n  theme_minimal(base_size = 14)","options":{"comment":"","context":"interactive","read-only":"false","classes":"","label":"unnamed-chunk-3","out-width":"700px","fig-height":5,"warning":"true","editor-max-height":"","fig-width":7,"fig-cap":"","message":"true","results":"markup","output":"true","autorun":"false","dpi":72,"out-height":"","editor-font-scale":"1","editor-quick-suggestions":"false","editor-word-wrap":"true"}},{"id":4,"code":"m_poly <- lm(weight ~ Time + Diet + ____, data = ChickWeight)\nsummary(m_poly)","options":{"comment":"","context":"interactive","read-only":"false","classes":"","label":"unnamed-chunk-4","out-width":"700px","fig-height":5,"warning":"true","editor-max-height":"","fig-width":7,"fig-cap":"","message":"true","results":"markup","output":"true","autorun":"false","dpi":72,"out-height":"","editor-font-scale":"1","editor-quick-suggestions":"false","editor-word-wrap":"true"}}];
 
 </script>
 <script type="module">
@@ -2272,53 +2272,50 @@ WebR practical
 Interaction terms in linear regression
 </h1>
 <p>
-An interaction lets the effect of one predictor depend on another. Start with a binary group, extend to a categorical predictor with several levels, and finish with two continuous predictors — reading each group’s own slope straight from the coefficient table.
+An interaction term lets the effect of one predictor depend on the value of another. This practical fits an interaction with a binary predictor and then with a categorical predictor that has several levels, and reads each group’s slope from the coefficient table.
 </p>
 </header>
 <section class="panel">
 <h2 class="anchored">
 Overview
 </h2>
-<p>An <strong>additive</strong> model assumes the slope of a predictor is the same at every level of the other predictors:</p>
+<p>An additive model assumes the slope of a predictor is the same at every level of the other predictors:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(outcome <span class="sc">~</span> x <span class="sc">+</span> group, <span class="at">data =</span> my_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>An <strong>interaction</strong> model lets that slope change with the other predictor. In R you write the interaction with a colon, or use <code>*</code> as shorthand for “both main effects plus their interaction”:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(outcome <span class="sc">~</span> x <span class="sc">+</span> group <span class="sc">+</span> x<span class="sc">:</span>group, <span class="at">data =</span> my_data)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(outcome <span class="sc">~</span> x <span class="sc">*</span> group, <span class="at">data =</span> my_data)          <span class="co"># identical to the line above</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>The whole practical rests on one skill: given the coefficient table, <strong>work out each group’s own slope</strong>. In this practical you will:</p>
+<p>An interaction model lets that slope change with the other predictor. In R you write the interaction with a colon, adding it to the two main effects:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(outcome <span class="sc">~</span> x <span class="sc">+</span> group <span class="sc">+</span> x<span class="sc">:</span>group, <span class="at">data =</span> my_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>R also has a shorthand, <code>x * group</code>, that expands to the same three terms. This practical uses the explicit form above so that every term you fit is visible.</p>
+<p>The main skill in this practical is reading each group’s own slope from the coefficient table. You will:</p>
 <ul class="tight-list">
 <li>
-Fit a binary interaction and read the reference and non-reference slopes.
+Fit an interaction with a binary predictor and read the reference and non-reference slopes.
 </li>
 <li>
-Extend to a <strong>polytomous</strong> categorical predictor with three levels.
-</li>
-<li>
-Handle two <strong>continuous</strong> predictors, where the “slope” becomes a moving target.
+Extend to a categorical predictor with more than two levels (a polytomous predictor).
 </li>
 </ul>
-<p>After answering the questions, <strong>your completion code will be revealed.</strong></p>
+<p>After answering the questions, your completion code will be revealed.</p>
 </section>
 <section class="panel">
 <h2 class="anchored">
-Part 1 — A binary interaction
+Part 1. A binary interaction
 </h2>
-<p>We ask: <strong>does blood pressure medication change the BMI → systolic BP relationship?</strong></p>
+<p>We use data from the Framingham Heart Study, a long-running study of cardiovascular risk. The question is whether blood pressure medication changes the relationship between BMI and systolic blood pressure.</p>
 <ul class="tight-list">
 <li>
-<strong>Outcome:</strong> <code>sysbp</code> (systolic blood pressure)
+<strong>Outcome:</strong> <code>sysBP</code> (systolic blood pressure)
 </li>
 <li>
-<strong>Continuous predictor:</strong> <code>bmi</code>
+<strong>Continuous predictor:</strong> <code>BMI</code>
 </li>
 <li>
-<strong>Binary predictor:</strong> <code>meds</code> (<code>noMeds</code> = reference, <code>onMeds</code>)
+<strong>Binary predictor:</strong> <code>BPMeds</code> (<code>no</code> = reference, <code>yes</code> = on medication)
 </li>
 </ul>
-<p>Run the cell to build the data and see the two groups.</p>
+<p>Run the cell to read the data from GitHub and plot the two groups.</p>
 </section>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code: create the data and plot
+R code: read the data and plot
 </h3>
 <div id="qwebr-insertion-location-1"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
@@ -2328,21 +2325,21 @@ R code: create the data and plot
 Question 1
 </div>
 <p>
-The two fitted lines in the plot are clearly <strong>not parallel</strong>. In regression language, what does non-parallel say?
+The two fitted lines in the plot are not parallel. What does that indicate?
 </p>
 <div class="choice-set">
 <label><input type="radio" name="p0" value="a">The two groups have different intercepts but the same slope.</label> <label><input type="radio" name="p0" value="b">BMI has no relationship with systolic BP.</label> <label><input type="radio" name="p0" value="c">The slope of BMI on systolic BP differs between the two medication groups.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Non-parallel lines mean the BMI slope itself depends on medication status — that is an interaction." data-incorrect="Not quite. Different slopes (not just different heights) is exactly what an interaction means.">
+<div class="practice-feedback" data-correct="Correct. Non-parallel lines mean the BMI slope depends on medication status, which is what an interaction describes." data-incorrect="Not quite. Different slopes, not just different heights, is what an interaction describes.">
 
 </div>
 </div>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code: fit the interaction model — fill in the blank
+R code: fit the interaction model, fill in the blank
 </h3>
-<p>Use <code>*</code> so R adds both main effects and the interaction. Replace <code>____</code> and run.</p>
+<p>Write the interaction with a colon. Replace <code>____</code> with <code>BMI:BPMeds</code> and run.</p>
 <div id="qwebr-insertion-location-2"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 </div>
@@ -2350,17 +2347,17 @@ R code: fit the interaction model — fill in the blank
 <summary>
 Show the answer
 </summary>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>m_int <span class="ot">&lt;-</span> <span class="fu">lm</span>(sysbp <span class="sc">~</span> bmi <span class="sc">*</span> meds, <span class="at">data =</span> bp)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">coef</span>(m_int), <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>You should get roughly:</p>
-<pre><code>   (Intercept)            bmi     medsonMeds  bmi:medsonMeds
-         83.08           1.84          61.62          -1.10</code></pre>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>m_int <span class="ot">&lt;-</span> <span class="fu">lm</span>(sysBP <span class="sc">~</span> BMI <span class="sc">+</span> BPMeds <span class="sc">+</span> BMI<span class="sc">:</span>BPMeds, <span class="at">data =</span> fram)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m_int)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>In the coefficients table of the summary you should see (rounded):</p>
+<pre><code>  (Intercept)           BMI     BPMedsyes  BMI:BPMedsyes
+        87.64          1.70         57.11          -0.99</code></pre>
 </details>
 <section class="panel">
 <h2 class="anchored">
 Reading the two slopes
 </h2>
-<p>The coefficient table does not hand you each group’s slope directly — you build them. The reference group (<code>noMeds</code>) uses the plain <code>bmi</code> row. The other group adds the interaction row on top.</p>
+<p>The coefficient table does not give each group’s slope directly. You build them. The reference group (<code>no</code>) uses the plain <code>BMI</code> row. The other group adds the interaction row to it.</p>
 <table class="slope-table">
 <caption>
 Building each group’s line from the four coefficients
@@ -2381,42 +2378,42 @@ BMI slope
 <tbody>
 <tr class="refrow">
 <td>
-noMeds <em>(reference)</em>
+no <em>(reference)</em>
 </td>
 <td>
-<code>83.08</code>
+<code>87.64</code>
 </td>
 <td>
-<code>1.84</code>
+<code>1.70</code>
 </td>
 </tr>
 <tr>
 <td>
-onMeds
+yes
 </td>
 <td>
-<code>83.08 + 61.62 = 144.70</code>
+<code>87.64 + 57.11 = 144.75</code>
 </td>
 <td>
-<code>1.84 + (−1.10) = 0.74</code>
+<code>1.70 + (−0.99) = 0.71</code>
 </td>
 </tr>
 </tbody>
 </table>
-<p>The <code>medsonMeds</code> coefficient (<code>+61.62</code>) shifts the <strong>intercept</strong>; the <code>bmi:medsonMeds</code> coefficient (<code>−1.10</code>) shifts the <strong>slope</strong>. So among people on medication, BMI is associated with a much flatter rise in systolic BP.</p>
+<p>The <code>BPMedsyes</code> coefficient (<code>57.11</code>) shifts the intercept. The <code>BMI:BPMedsyes</code> coefficient (<code>−0.99</code>) shifts the slope. Among people on medication, the association between BMI and systolic BP is much flatter.</p>
 </section>
 <div class="practice" data-answer="b">
 <div class="practice-title">
 Question 2
 </div>
 <p>
-What is the BMI slope for the <code>onMeds</code> group?
+What is the BMI slope for the group on medication (<code>yes</code>)?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p1" value="a"><code>1.84</code> — the <code>bmi</code> row applies to everyone.</label> <label><input type="radio" name="p1" value="b"><code>1.84 + (−1.10) = 0.74</code> — add the interaction row to the reference slope.</label> <label><input type="radio" name="p1" value="c"><code>−1.10</code> — the interaction row is the on-meds slope.</label>
+<label><input type="radio" name="p1" value="a"><code>1.70</code>, because the <code>BMI</code> row applies to everyone.</label> <label><input type="radio" name="p1" value="b"><code>1.70 + (−0.99) = 0.71</code>, adding the interaction row to the reference slope.</label> <label><input type="radio" name="p1" value="c"><code>−0.99</code>, because the interaction row is the slope for that group.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The non-reference slope is the reference slope plus the interaction coefficient." data-incorrect="Not quite. The interaction coefficient is not a slope by itself — you add it to the reference slope.">
+<div class="practice-feedback" data-correct="Correct. The non-reference slope is the reference slope plus the interaction coefficient." data-incorrect="Not quite. The interaction coefficient is not a slope by itself. Add it to the reference slope.">
 
 </div>
 </div>
@@ -2425,13 +2422,13 @@ What is the BMI slope for the <code>onMeds</code> group?
 Question 3
 </div>
 <p>
-Predict the systolic BP for a person <strong>on meds</strong> with BMI = 30. Use the on-meds intercept and slope from the table.
+Predict the systolic BP for a person on medication with BMI = 30. Use the intercept and slope for the medication group.
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p2" value="a"><code>144.70 + 0.74 * 30 = 166.90</code></label> <label><input type="radio" name="p2" value="b"><code>83.08 + 1.84 * 30 = 138.28</code></label> <label><input type="radio" name="p2" value="c"><code>144.70 + 1.84 * 30 = 199.90</code></label>
+<label><input type="radio" name="p2" value="a"><code>144.75 + 0.71 * 30 = 166.05</code></label> <label><input type="radio" name="p2" value="b"><code>87.64 + 1.70 * 30 = 138.64</code></label> <label><input type="radio" name="p2" value="c"><code>144.75 + 1.70 * 30 = 195.75</code></label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. For the on-meds group use its own intercept (144.70) and its own slope (0.74)." data-incorrect="Not quite. Use the on-meds row: intercept 144.70 and slope 0.74, not the reference numbers.">
+<div class="practice-feedback" data-correct="Correct. For the medication group use its own intercept (144.75) and its own slope (0.71)." data-incorrect="Not quite. Use the medication row: intercept 144.75 and slope 0.71, not the reference numbers.">
 
 </div>
 </div>
@@ -2442,46 +2439,47 @@ Predict the systolic BP for a person <strong>on meds</strong> with BMI = 30. Use
 </div>
 <div class="callout-body-container">
 <p>
-<strong>The interaction equation.</strong> With <code>g = 1</code> for on-meds and <code>0</code> for the reference group:
+The interaction equation. With <code>g = 1</code> for the medication group and <code>0</code> for the reference group:
 </p>
 <p><span class="math display">\[
-\widehat{\text{sysbp}} = b_0 + b_1\,\text{bmi} + b_2\,g + b_3\,(\text{bmi}\times g)
+\widehat{\text{sysBP}} = b_0 + b_1\,\text{BMI} + b_2\,g + b_3\,(\text{BMI}\times g)
 \]</span></p>
 <p>
-The reference slope is <code>b1</code>. The non-reference slope is <code>b1 + b3</code>. That single idea is all you need for the rest of the practical — the only thing that changes is how many groups (or values) there are.
+The reference slope is <code>b1</code>. The non-reference slope is <code>b1 + b3</code>. The next part applies the same rule to a predictor with more than two levels.
 </p>
 </div>
 </div>
 </div>
 <section class="panel">
 <h2 class="anchored">
-Part 2 — A polytomous categorical predictor
+Part 2. A polytomous categorical predictor
 </h2>
-<p>Now the grouping variable has <strong>more than two levels</strong>. Nothing new happens conceptually: R still picks one level as the reference and gives every other level its own main-effect row <strong>and</strong> its own interaction row.</p>
-<p>We ask: <strong>does the way lung function (FEV, in mL) declines with age depend on smoking history?</strong></p>
+<p>Now the grouping variable has more than two levels. The idea does not change. R picks one level as the reference and gives every other level its own main-effect row and its own interaction row.</p>
+<p>We use <code>ChickWeight</code>, a built-in R dataset from an experiment in which chicks were raised on four protein diets and weighed repeatedly over 21 days. The question is whether the growth rate depends on the diet.</p>
 <ul class="tight-list">
 <li>
-<strong>Outcome:</strong> <code>fev</code> (forced expiratory volume, mL)
+<strong>Outcome:</strong> <code>weight</code> (body weight, grams)
 </li>
 <li>
-<strong>Continuous predictor:</strong> <code>age</code> (years)
+<strong>Continuous predictor:</strong> <code>Time</code> (days since birth)
 </li>
 <li>
-<strong>Categorical predictor:</strong> <code>smoking</code> with three levels — <code>never</code> (reference), <code>former</code>, <code>current</code>
+<strong>Categorical predictor:</strong> <code>Diet</code> with four levels: <code>1</code> (reference), <code>2</code>, <code>3</code>, <code>4</code>
 </li>
 </ul>
 </section>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code: create the data and plot three groups
+R code: load the data and plot the four groups
 </h3>
 <div id="qwebr-insertion-location-3"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 </div>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code: fit the interaction — fill in the blanks
+R code: fit the interaction, fill in the blanks
 </h3>
+<p>Write the interaction with a colon, the same way as before. Replace the blanks and run.</p>
 <div id="qwebr-insertion-location-4"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 </div>
@@ -2489,22 +2487,22 @@ R code: fit the interaction — fill in the blanks
 <summary>
 Show the answer
 </summary>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>m_poly <span class="ot">&lt;-</span> <span class="fu">lm</span>(fev <span class="sc">~</span> age <span class="sc">*</span> smoking, <span class="at">data =</span> lung)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">coef</span>(m_poly), <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>You should get roughly:</p>
-<pre><code>       (Intercept)                age      smokingformer     smokingcurrent
-            5230.7              -19.9             -280.8             -390.3
- age:smokingformer age:smokingcurrent
-              -9.3              -22.9</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>m_poly <span class="ot">&lt;-</span> <span class="fu">lm</span>(weight <span class="sc">~</span> Time <span class="sc">+</span> Diet <span class="sc">+</span> Time<span class="sc">:</span>Diet, <span class="at">data =</span> ChickWeight)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m_poly)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>In the coefficients table of the summary you should see (rounded):</p>
+<pre><code>(Intercept)        Time       Diet2       Diet3       Diet4
+     30.931       6.842      -2.297     -12.681      -0.139
+ Time:Diet2  Time:Diet3  Time:Diet4
+      1.767       4.581       2.873</code></pre>
 </details>
 <section class="panel">
 <h2 class="anchored">
-Reading three slopes from one table
+Reading four slopes from one table
 </h2>
-<p>Same rule as before, just repeated for each non-reference level. The reference level (<code>never</code>) uses the plain <code>age</code> row. Each other level adds its own <code>age:smoking___</code> interaction row.</p>
+<p>Same rule as before, repeated for each non-reference level. The reference level (<code>Diet 1</code>) uses the plain <code>Time</code> row. Each other level adds its own <code>Time:Diet_</code> interaction row.</p>
 <table class="slope-table">
 <caption>
-Each smoking level gets its own intercept and its own age slope
+Each diet gets its own intercept and its own growth slope
 </caption>
 <thead>
 <tr>
@@ -2515,60 +2513,71 @@ Group
 Intercept
 </th>
 <th>
-Age slope (mL per year)
+Time slope (g per day)
 </th>
 </tr>
 </thead>
 <tbody>
 <tr class="refrow">
 <td>
-never <em>(reference)</em>
+Diet 1 <em>(reference)</em>
 </td>
 <td>
-<code>5230.7</code>
+<code>30.931</code>
 </td>
 <td>
-<code>−19.9</code>
-</td>
-</tr>
-<tr>
-<td>
-former
-</td>
-<td>
-<code>5230.7 + (−280.8) = 4949.9</code>
-</td>
-<td>
-<code>−19.9 + (−9.3) = −29.2</code>
+<code>6.842</code>
 </td>
 </tr>
 <tr>
 <td>
-current
+Diet 2
 </td>
 <td>
-<code>5230.7 + (−390.3) = 4840.4</code>
+<code>30.931 + (−2.297) = 28.634</code>
 </td>
 <td>
-<code>−19.9 + (−22.9) = −42.8</code>
+<code>6.842 + 1.767 = 8.609</code>
+</td>
+</tr>
+<tr>
+<td>
+Diet 3
+</td>
+<td>
+<code>30.931 + (−12.681) = 18.250</code>
+</td>
+<td>
+<code>6.842 + 4.581 = 11.423</code>
+</td>
+</tr>
+<tr>
+<td>
+Diet 4
+</td>
+<td>
+<code>30.931 + (−0.139) = 30.792</code>
+</td>
+<td>
+<code>6.842 + 2.873 = 9.715</code>
 </td>
 </tr>
 </tbody>
 </table>
-<p>Lung function falls with age for everyone, but it falls <strong>fastest for current smokers</strong> (−42.8 mL/year) and slowest for those who never smoked (−19.9 mL/year).</p>
+<p>Chicks gain weight over time on every diet, but they grow fastest on Diet 3 (11.42 g/day) and slowest on Diet 1 (6.84 g/day). The diets start at similar weights and the lines spread apart over time. That difference in slopes is the interaction.</p>
 </section>
 <div class="practice" data-answer="c">
 <div class="practice-title">
 Question 4
 </div>
 <p>
-A three-level categorical predictor in an interaction model produces how many interaction rows?
+A four-level categorical predictor in an interaction model produces how many interaction rows?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p3" value="a">Three — one per level.</label> <label><input type="radio" name="p3" value="b">One — a single interaction term covers the whole variable.</label> <label><input type="radio" name="p3" value="c">Two — one for each non-reference level.</label>
+<label><input type="radio" name="p3" value="a">Four, one per level.</label> <label><input type="radio" name="p3" value="b">One, a single interaction term covering the whole variable.</label> <label><input type="radio" name="p3" value="c">Three, one for each non-reference level.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The reference level is the baseline; each of the other two levels gets its own main-effect row and its own interaction row." data-incorrect="Not quite. The reference level has no rows of its own — the other two levels each contribute one interaction row.">
+<div class="practice-feedback" data-correct="Correct. The reference level is the baseline. Each of the other three levels gets its own main-effect row and its own interaction row." data-incorrect="Not quite. The reference level has no rows of its own. The other three levels each contribute one interaction row.">
 
 </div>
 </div>
@@ -2577,13 +2586,13 @@ A three-level categorical predictor in an interaction model produces how many in
 Question 5
 </div>
 <p>
-What is the age slope for <strong>former</strong> smokers?
+What is the growth slope for chicks on <strong>Diet 3</strong>?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p4" value="a"><code>−9.3</code> — read the <code>age:smokingformer</code> row directly.</label> <label><input type="radio" name="p4" value="b"><code>−19.9 + (−9.3) = −29.2</code> — reference slope plus the former interaction row.</label> <label><input type="radio" name="p4" value="c"><code>−280.8</code> — the <code>smokingformer</code> row is the slope.</label>
+<label><input type="radio" name="p4" value="a"><code>4.581</code>, reading the <code>Time:Diet3</code> row directly.</label> <label><input type="radio" name="p4" value="b"><code>6.842 + 4.581 = 11.423</code>, the reference slope plus the Diet 3 interaction row.</label> <label><input type="radio" name="p4" value="c"><code>−12.681</code>, treating the <code>Diet3</code> row as the slope.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Add the level's interaction coefficient to the reference age slope." data-incorrect="Not quite. The interaction row (−9.3) is only the *difference* in slope; add it to the reference slope −19.9.">
+<div class="practice-feedback" data-correct="Correct. Add the level's interaction coefficient to the reference Time slope." data-incorrect="Not quite. The interaction row (4.581) is only the difference in slope. Add it to the reference slope 6.842.">
 
 </div>
 </div>
@@ -2592,13 +2601,13 @@ What is the age slope for <strong>former</strong> smokers?
 Question 6
 </div>
 <p>
-The <code>smokingcurrent</code> coefficient is <code>−390.3</code>. What does it describe on its own?
+The <code>Diet3</code> coefficient is <code>−12.681</code>. What does it describe on its own?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p5" value="a">How much lower the current-smoker line sits at age = 0 (the intercept gap), not a slope.</label> <label><input type="radio" name="p5" value="b">The age slope for current smokers.</label> <label><input type="radio" name="p5" value="c">The predicted FEV for a current smoker of any age.</label>
+<label><input type="radio" name="p5" value="a">How much lower the Diet 3 line starts at Time = 0 (the intercept gap), not a slope.</label> <label><input type="radio" name="p5" value="b">The growth slope for Diet 3.</label> <label><input type="radio" name="p5" value="c">The predicted weight for a Diet 3 chick at any time.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. A level's main-effect row shifts the intercept; the matching age:smoking___ row shifts the slope." data-incorrect="Not quite. The main-effect row is an intercept shift (the gap at age 0); the slope change lives in the age:smoking___ row.">
+<div class="practice-feedback" data-correct="Correct. A level's main-effect row shifts the intercept. The matching Time:Diet_ row shifts the slope." data-incorrect="Not quite. The main-effect row is an intercept shift (the gap at Time 0). The slope change is in the Time:Diet_ row.">
 
 </div>
 </div>
@@ -2607,168 +2616,47 @@ The <code>smokingcurrent</code> coefficient is <code>−390.3</code>. What does 
 Question 7
 </div>
 <p>
-Predict FEV for a <strong>current</strong> smoker aged 60, using the current-smoker row of the table.
+Predict the weight of a <strong>Diet 3</strong> chick at Time = 10, using the Diet 3 row of the table.
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p6" value="a"><code>5230.7 + (−19.9) * 60 = 4036.7</code></label> <label><input type="radio" name="p6" value="b"><code>4840.4 + (−19.9) * 60 = 3646.4</code></label> <label><input type="radio" name="p6" value="c"><code>4840.4 + (−42.8) * 60 = 2272.4</code></label>
+<label><input type="radio" name="p6" value="a"><code>30.931 + 6.842 * 10 = 99.35</code></label> <label><input type="radio" name="p6" value="b"><code>18.250 + 6.842 * 10 = 86.67</code></label> <label><input type="radio" name="p6" value="c"><code>18.250 + 11.423 * 10 = 132.48</code></label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Use the current-smoker intercept (4840.4) with the current-smoker slope (−42.8)." data-incorrect="Not quite. For a current smoker use both current-smoker numbers: intercept 4840.4 and slope −42.8.">
-
-</div>
-</div>
-<section class="panel">
-<h2 class="anchored">
-Part 3 — Two continuous predictors
-</h2>
-<p>Now there are <strong>no groups at all</strong> — both predictors are continuous. The syntax is identical (<code>x * z</code>), but the interpretation gains one twist: the interaction coefficient is the change in one predictor’s slope <strong>for each one-unit increase in the other</strong>. There is no longer a small set of groups, so instead of a group-by-group table we tabulate the slope at a few chosen values.</p>
-<p>We ask: <strong>does the effect of dietary sodium on systolic BP depend on age?</strong></p>
-<ul class="tight-list">
-<li>
-<strong>Outcome:</strong> <code>sysbp</code> (systolic BP)
-</li>
-<li>
-<strong>Continuous predictor:</strong> <code>sodium</code> (g/day)
-</li>
-<li>
-<strong>Continuous predictor:</strong> <code>age</code> (years)
-</li>
-</ul>
-</section>
-<div class="webr-wrap">
-<h3 class="anchored">
-R code: create the data and fit
-</h3>
-<div id="qwebr-insertion-location-5"></div>
-<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
-</div>
-<details class="answer">
-<summary>
-Show the answer (expected coefficients)
-</summary>
-<pre><code>(Intercept)      sodium         age  sodium:age
-     96.621       0.957       0.308       0.111</code></pre>
-</details>
-<section class="panel">
-<h2 class="anchored">
-The slope is now a moving target
-</h2>
-<p>For the binary and polytomous cases, “the other group’s slope = reference slope + interaction row.” With two continuous predictors the same algebra holds, but “the other level” is replaced by a <strong>value</strong> of the second predictor. The sodium slope is:</p>
-<div class="formula-panel">
-<p><span class="math display">\[
-\text{slope of sodium} = b_{\text{sodium}} + b_{\text{sodium:age}} \times \text{age} = 0.957 + 0.111 \times \text{age}
-\]</span></p>
-</div>
-<p>Instead of one row per group, we read the slope off at chosen ages — the direct analogue of the group tables above:</p>
-<table class="slope-table">
-<caption>
-Sodium’s slope on systolic BP, evaluated at several ages
-</caption>
-<thead>
-<tr>
-<th>
-Age
-</th>
-<th>
-Sodium slope = <code>0.957 + 0.111 × age</code>
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-30
-</td>
-<td>
-<code>0.957 + 0.111 × 30 = 4.29</code>
-</td>
-</tr>
-<tr>
-<td>
-50
-</td>
-<td>
-<code>0.957 + 0.111 × 50 = 6.51</code>
-</td>
-</tr>
-<tr>
-<td>
-70
-</td>
-<td>
-<code>0.957 + 0.111 × 70 = 8.73</code>
-</td>
-</tr>
-</tbody>
-</table>
-<p>Salt matters more for blood pressure in older people: each extra gram of sodium is linked to a bigger BP rise as age goes up. (By symmetry, the age slope is likewise <code>0.308 + 0.111 × sodium</code> — either predictor can be read as moderating the other.)</p>
-</section>
-<div class="practice" data-answer="b">
-<div class="practice-title">
-Question 8
-</div>
-<p>
-With two continuous predictors, why can’t you report a single number as “the sodium slope”?
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p7" value="a">Because continuous predictors have no slope.</label> <label><input type="radio" name="p7" value="b">Because the sodium slope depends on age — it changes as age changes.</label> <label><input type="radio" name="p7" value="c">Because the model failed to converge.</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The interaction makes each predictor's slope a function of the other, so you must state at what value you are reading it." data-incorrect="Not quite. The interaction term means the sodium slope is 0.957 + 0.111 × age — a different number at every age.">
-
-</div>
-</div>
-<div class="practice" data-answer="a">
-<div class="practice-title">
-Question 9
-</div>
-<p>
-What is the sodium slope for a 40-year-old?
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p8" value="a"><code>0.957 + 0.111 * 40 = 5.40</code></label> <label><input type="radio" name="p8" value="b"><code>0.111 * 40 = 4.44</code></label> <label><input type="radio" name="p8" value="c"><code>0.957</code> — the <code>sodium</code> row is the slope at any age.</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Plug age = 40 into 0.957 + 0.111 × age." data-incorrect="Not quite. Use the full expression 0.957 + 0.111 × age with age = 40. The 0.957 row alone is the slope only at age 0.">
+<div class="practice-feedback" data-correct="Correct. Use the Diet 3 intercept (18.250) with the Diet 3 slope (11.423)." data-incorrect="Not quite. For a Diet 3 chick use both Diet 3 numbers: intercept 18.250 and slope 11.423.">
 
 </div>
 </div>
 <div class="practice" data-answer="c">
 <div class="practice-title">
-Question 10
+Question 8
 </div>
 <p>
-The <code>sodium</code> main-effect coefficient is <code>0.957</code>. At what value of age is that the actual sodium slope?
+An interaction adds terms to the model, so you should fit one only when there is a reason. Which of the following is <strong>not</strong> a valid reason to fit an interaction?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p9" value="a">At the average age in the data.</label> <label><input type="radio" name="p9" value="b">At every age — it is the slope everywhere.</label> <label><input type="radio" name="p9" value="c">At age = 0, where the interaction term drops out.</label>
+<label><input type="radio" name="p7" value="a">It answers the research question, for example whether the effect of BMI on blood pressure depends on medication.</label> <label><input type="radio" name="p7" value="b">Prior evidence or subject knowledge suggests the effect is modified by the other variable, for example age and sex in growth charts.</label> <label><input type="radio" name="p7" value="c">You fit every possible pairwise interaction and kept the ones that came out significant.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. A main effect in an interaction model is the slope when the other predictor is 0 — which is why centering predictors often makes it more meaningful." data-incorrect="Not quite. Set age = 0 in 0.957 + 0.111 × age and the interaction term vanishes, leaving 0.957.">
+<div class="practice-feedback" data-correct="Correct. Fitting all pairwise interactions and keeping only the significant ones is p-hacking, and it invalidates those p-values. Fit an interaction because it answers your question, or because prior knowledge or the study design points to effect modification. Otherwise the simpler additive model is easier to read and more stable." data-incorrect="Not quite. Options A and B are good reasons. Fitting every pairwise interaction and keeping the significant ones is p-hacking, which invalidates those p-values.">
 
 </div>
 </div>
-<div class="warning callout callout-style-simple callout-none no-icon">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-body-container">
-<p>
-<strong>When should you fit an interaction?</strong> Fit one when it is your research question (does X’s effect depend on Z?), when it is well established (e.g.&nbsp;age × sex in growth charts), or when design or biology suggests effect modification. Do <strong>not</strong> fit every pairwise interaction and keep only the significant ones — that is p-hacking and invalidates those p-values. Otherwise default to the simpler additive model: easier to read and more stable.
-</p>
-</div>
-</div>
-</div>
+<section class="panel">
+<h2 class="anchored">
+A note on interactions between two continuous variables
+</h2>
+<p>Every interaction in this practical involves one continuous variable and one categorical variable. You can also fit an interaction between two continuous variables, for example <code>lm(sysBP ~ BMI + age + BMI:age, data = fram)</code>. This is uncommon in public health and health statistics, where interactions are usually examined across categorical groups such as treatment arm, sex, or age bands.</p>
+<p>When you do fit one, there is no small set of groups to tabulate. Instead, the slope of one variable becomes a straight-line function of the other, and a common way to interpret it is to read that slope at a few chosen values of the second variable (for example a low, middle, and high value).</p>
+</section>
 <section class="panel completion">
 <h2 class="anchored">
 Completion code
 </h2>
 <p>
-Answer at least 8 out of 10 questions correctly to reveal your completion code.
+Answer at least 7 out of 8 questions correctly to reveal your completion code.
 </p>
 <p>
-<span id="code-progress" class="code-progress">0 of 10 correct (need at least 8)</span>
+<span id="code-progress" class="code-progress">0 of 8 correct (need at least 7)</span>
 </p>
 <div id="code-box" class="code-box">
 <div class="code-label">
@@ -2784,8 +2672,8 @@ GRAPH Courses practical | Interaction terms in linear regression
 </p>
 </div>
 <script>
-const COMPLETION_CODE = "INT3SLOPES";
-const COMPLETION_REQUIRED = 8;
+const COMPLETION_CODE = "INTSLOPES";
+const COMPLETION_REQUIRED = 7;
 
 function updateCompletion() {
   const cards = document.querySelectorAll(".practice");

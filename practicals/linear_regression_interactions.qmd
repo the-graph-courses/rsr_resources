@@ -1,0 +1,728 @@
+---
+title: "Interaction terms in linear regression"
+subtitle: "WebR practical: when the slope of one predictor depends on another"
+author: "GRAPH Courses"
+format:
+  html:
+    toc: false
+    number-sections: false
+    theme: cosmo
+    page-layout: full
+engine: knitr
+filters:
+  - webr
+webr:
+  show-startup-message: false
+  show-header-message: false
+  packages: ['dplyr', 'ggplot2', 'broom']
+---
+
+<style>
+:root {
+  --dark-teal: #00565e;
+  --light-teal: #5fbfbf;
+  --light-teal-soft: #e3f4f4;
+  --gold: #f5c542;
+  --rose: #b83b5e;
+  --ink: #173234;
+  --muted: #5d7475;
+  --page: #f4f7f7;
+  --card: #ffffff;
+  --border: #d0dede;
+  --good: #287a4d;
+  --good-bg: #e8f8ef;
+  --bad: #b83b3b;
+  --bad-bg: #fdecea;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.quarto-title-block { display: none; }
+
+.page-shell {
+  width: min(900px, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding: 1.25rem 0 3rem;
+}
+
+.masthead {
+  background: var(--dark-teal);
+  color: #fff;
+  border-radius: 8px;
+  border-left: 6px solid var(--gold);
+  padding: 1.4rem 1.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.eyebrow {
+  color: var(--gold);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+.masthead h1 {
+  color: #fff;
+  font-size: 1.6rem;
+  line-height: 1.15;
+  font-weight: 800;
+  margin: 0;
+}
+
+.masthead p {
+  max-width: 700px;
+  margin: 0.55rem 0 0;
+  color: #d3eded;
+  font-size: 0.98rem;
+}
+
+.panel, .practice, .callout, .webr-wrap, .svg-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.panel {
+  padding: 1.15rem 1.3rem;
+  margin-bottom: 1rem;
+}
+
+.panel h2 {
+  color: var(--dark-teal);
+  font-weight: 800;
+  margin-top: 0;
+  font-size: 1.3rem;
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 0.45rem;
+  margin-bottom: 0.8rem;
+}
+
+.panel p:last-child, .callout p:last-child { margin-bottom: 0; }
+
+.tight-list { padding-left: 1.15rem; margin-bottom: 0; }
+.tight-list li { margin-bottom: 0.35rem; }
+
+.formula-panel {
+  background: var(--light-teal-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.svg-panel {
+  padding: 0.6rem;
+  margin: 0.85rem 0 0.4rem;
+  overflow-x: auto;
+}
+
+.svg-panel svg { width: 100%; min-width: 560px; display: block; }
+.svg-caption { color: var(--muted); font-size: 0.9rem; margin: 0.2rem 0.3rem 0; }
+
+.practice {
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  border-top: 4px solid var(--gold);
+}
+
+.practice .practice-title {
+  color: var(--dark-teal);
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+}
+
+.practice p { margin-bottom: 0.7rem; }
+
+.choice-set { display: grid; gap: 0.5rem; margin: 0.8rem 0; }
+
+.choice-set label {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 0.72rem 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.choice-set label:hover {
+  border-color: var(--light-teal);
+  background: #edf8f8;
+}
+
+.choice-set input {
+  appearance: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid #aacaca;
+  border-radius: 50%;
+  margin-top: 0.15rem;
+  flex: 0 0 auto;
+}
+
+.choice-set input:checked {
+  border-color: var(--dark-teal);
+  background:
+    radial-gradient(circle at center, #fff 0 34%, transparent 36%),
+    var(--dark-teal);
+}
+
+.practice button {
+  background: var(--dark-teal);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.55rem 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.practice button:hover { background: #003f45; }
+
+.practice .practice-feedback {
+  display: none;
+  margin-top: 0.8rem;
+  border-radius: 8px;
+  padding: 0.75rem 0.85rem;
+}
+
+.practice.is-correct .practice-feedback {
+  display: block;
+  background: var(--good-bg);
+  color: #173a26;
+  border: 1px solid #a9dab9;
+}
+
+.practice.is-incorrect .practice-feedback {
+  display: block;
+  background: var(--bad-bg);
+  color: #4b1c1c;
+  border: 1px solid #e6b1b1;
+}
+
+.practice label.correct-choice { border-color: var(--good); background: var(--good-bg); }
+.practice label.incorrect-choice { border-color: var(--bad); background: var(--bad-bg); }
+
+.callout {
+  padding: 1rem 1.15rem;
+  border-left: 5px solid var(--light-teal);
+  margin: 1rem 0;
+}
+
+.callout.warning { border-left-color: var(--gold); background: #fffaf0; }
+
+.webr-wrap {
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  border-top: 4px solid var(--light-teal);
+}
+
+.webr-wrap h3 { color: var(--dark-teal); font-size: 1rem; margin-top: 0; }
+
+.answer { margin-top: 0.7rem; }
+.answer summary { cursor: pointer; font-weight: 700; color: var(--dark-teal); }
+.answer[open] summary { margin-bottom: 0.4rem; }
+
+code {
+  background: rgba(0, 86, 94, 0.08);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  color: #123638;
+}
+
+.qwebr-output-code-stdout pre, .qwebr-output-code-stderr pre { white-space: pre-wrap; }
+
+.panel.completion { border-top: 4px solid var(--gold); }
+
+.code-progress { font-weight: 800; color: var(--dark-teal); }
+
+.code-box {
+  display: none;
+  text-align: center;
+  background: var(--dark-teal);
+  color: #fff;
+  border-radius: 8px;
+  padding: 1.1rem;
+  margin-top: 0.6rem;
+}
+
+.code-box .code-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.code-box .code-value {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin-top: 0.3rem;
+}
+
+.footer-note { color: var(--muted); text-align: center; margin-top: 2rem; font-size: 0.9rem; }
+
+.slope-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.9rem 0 0.4rem;
+  font-size: 0.95rem;
+}
+
+.slope-table caption {
+  caption-side: top;
+  text-align: left;
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin-bottom: 0.4rem;
+}
+
+.slope-table th, .slope-table td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+}
+
+.slope-table thead th {
+  background: var(--dark-teal);
+  color: #fff;
+  font-weight: 700;
+}
+
+.slope-table tbody tr:nth-child(even) { background: #f2f9f9; }
+.slope-table .refrow td { background: var(--light-teal-soft); font-weight: 600; }
+.slope-table td code { background: transparent; padding: 0; }
+</style>
+
+<div class="page-shell">
+
+<header class="masthead">
+  <div class="eyebrow">WebR practical</div>
+  <h1>Interaction terms in linear regression</h1>
+  <p>An interaction term lets the effect of one predictor depend on the value of another. This practical fits an interaction with a binary predictor and then with a categorical predictor that has several levels, and reads each group's slope from the coefficient table.</p>
+</header>
+
+<section class="panel">
+
+<h2>Overview</h2>
+
+An additive model assumes the slope of a predictor is the same at every level of the other predictors:
+
+```r
+lm(outcome ~ x + group, data = my_data)
+```
+
+An interaction model lets that slope change with the other predictor. In R you write the interaction with a colon, adding it to the two main effects:
+
+```r
+lm(outcome ~ x + group + x:group, data = my_data)
+```
+
+R also has a shorthand, `x * group`, that expands to the same three terms. This practical uses the explicit form above so that every term you fit is visible.
+
+The main skill in this practical is reading each group's own slope from the coefficient table. You will:
+
+<ul class="tight-list">
+  <li>Fit an interaction with a binary predictor and read the reference and non-reference slopes.</li>
+  <li>Extend to a categorical predictor with more than two levels (a polytomous predictor).</li>
+</ul>
+
+After answering the questions, your completion code will be revealed.
+
+</section>
+
+<section class="panel">
+
+<h2>Part 1. A binary interaction</h2>
+
+We use data from the Framingham Heart Study, a long-running study of cardiovascular risk. The question is whether blood pressure medication changes the relationship between BMI and systolic blood pressure.
+
+<ul class="tight-list">
+  <li><strong>Outcome:</strong> <code>sysBP</code> (systolic blood pressure)</li>
+  <li><strong>Continuous predictor:</strong> <code>BMI</code></li>
+  <li><strong>Binary predictor:</strong> <code>BPMeds</code> (<code>no</code> = reference, <code>yes</code> = on medication)</li>
+</ul>
+
+Run the cell to read the data from GitHub and plot the two groups.
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: read the data and plot</h3>
+
+```{webr-r}
+library(dplyr)
+library(ggplot2)
+library(broom)
+
+fram <- read.csv("https://raw.githubusercontent.com/the-graph-courses/rsr_resources/main/data/LSTbook_Framingham.csv")
+
+fram <- fram %>%
+  filter(BPMeds %in% c("no", "yes"), !is.na(BMI), !is.na(sysBP)) %>%
+  mutate(BPMeds = factor(BPMeds, levels = c("no", "yes")))
+
+ggplot(fram, aes(x = BMI, y = sysBP, color = BPMeds)) +
+  geom_point(size = 1.6, alpha = 0.4) +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1) +
+  scale_color_manual(values = c("#00565e", "#b83b5e")) +
+  labs(x = "BMI", y = "Systolic BP", color = "BP meds") +
+  theme_minimal(base_size = 14)
+```
+
+</div>
+
+<div class="practice" data-answer="c">
+  <div class="practice-title">Question 1</div>
+  <p>The two fitted lines in the plot are not parallel. What does that indicate?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p0" value="a">The two groups have different intercepts but the same slope.</label>
+<label><input type="radio" name="p0" value="b">BMI has no relationship with systolic BP.</label>
+<label><input type="radio" name="p0" value="c">The slope of BMI on systolic BP differs between the two medication groups.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Non-parallel lines mean the BMI slope depends on medication status, which is what an interaction describes." data-incorrect="Not quite. Different slopes, not just different heights, is what an interaction describes."></div>
+</div>
+
+<div class="webr-wrap">
+
+<h3>R code: fit the interaction model, fill in the blank</h3>
+
+Write the interaction with a colon. Replace `____` with `BMI:BPMeds` and run.
+
+```{webr-r}
+m_int <- lm(sysBP ~ BMI + BPMeds + ____, data = fram)
+summary(m_int)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+m_int <- lm(sysBP ~ BMI + BPMeds + BMI:BPMeds, data = fram)
+summary(m_int)
+```
+
+In the coefficients table of the summary you should see (rounded):
+
+```
+  (Intercept)           BMI     BPMedsyes  BMI:BPMedsyes
+        87.64          1.70         57.11          -0.99
+```
+
+</details>
+
+<section class="panel">
+
+<h2>Reading the two slopes</h2>
+
+The coefficient table does not give each group's slope directly. You build them. The reference group (`no`) uses the plain `BMI` row. The other group adds the interaction row to it.
+
+<table class="slope-table">
+  <caption>Building each group's line from the four coefficients</caption>
+  <thead>
+    <tr><th>Group</th><th>Intercept</th><th>BMI slope</th></tr>
+  </thead>
+  <tbody>
+    <tr class="refrow"><td>no <em>(reference)</em></td><td><code>87.64</code></td><td><code>1.70</code></td></tr>
+    <tr><td>yes</td><td><code>87.64 + 57.11 = 144.75</code></td><td><code>1.70 + (−0.99) = 0.71</code></td></tr>
+  </tbody>
+</table>
+
+The `BPMedsyes` coefficient (`57.11`) shifts the intercept. The `BMI:BPMedsyes` coefficient (`−0.99`) shifts the slope. Among people on medication, the association between BMI and systolic BP is much flatter.
+
+</section>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 2</div>
+  <p>What is the BMI slope for the group on medication (<code>yes</code>)?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p1" value="a"><code>1.70</code>, because the <code>BMI</code> row applies to everyone.</label>
+<label><input type="radio" name="p1" value="b"><code>1.70 + (−0.99) = 0.71</code>, adding the interaction row to the reference slope.</label>
+<label><input type="radio" name="p1" value="c"><code>−0.99</code>, because the interaction row is the slope for that group.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The non-reference slope is the reference slope plus the interaction coefficient." data-incorrect="Not quite. The interaction coefficient is not a slope by itself. Add it to the reference slope."></div>
+</div>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 3</div>
+  <p>Predict the systolic BP for a person on medication with BMI = 30. Use the intercept and slope for the medication group.</p>
+  <div class="choice-set">
+<label><input type="radio" name="p2" value="a"><code>144.75 + 0.71 * 30 = 166.05</code></label>
+<label><input type="radio" name="p2" value="b"><code>87.64 + 1.70 * 30 = 138.64</code></label>
+<label><input type="radio" name="p2" value="c"><code>144.75 + 1.70 * 30 = 195.75</code></label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. For the medication group use its own intercept (144.75) and its own slope (0.71)." data-incorrect="Not quite. Use the medication row: intercept 144.75 and slope 0.71, not the reference numbers."></div>
+</div>
+
+<div class="callout">
+<p>The interaction equation. With <code>g = 1</code> for the medication group and <code>0</code> for the reference group:</p>
+
+$$
+\widehat{\text{sysBP}} = b_0 + b_1\,\text{BMI} + b_2\,g + b_3\,(\text{BMI}\times g)
+$$
+
+<p>The reference slope is <code>b1</code>. The non-reference slope is <code>b1 + b3</code>. The next part applies the same rule to a predictor with more than two levels.</p>
+</div>
+
+<section class="panel">
+
+<h2>Part 2. A polytomous categorical predictor</h2>
+
+Now the grouping variable has more than two levels. The idea does not change. R picks one level as the reference and gives every other level its own main-effect row and its own interaction row.
+
+We use <code>ChickWeight</code>, a built-in R dataset from an experiment in which chicks were raised on four protein diets and weighed repeatedly over 21 days. The question is whether the growth rate depends on the diet.
+
+<ul class="tight-list">
+  <li><strong>Outcome:</strong> <code>weight</code> (body weight, grams)</li>
+  <li><strong>Continuous predictor:</strong> <code>Time</code> (days since birth)</li>
+  <li><strong>Categorical predictor:</strong> <code>Diet</code> with four levels: <code>1</code> (reference), <code>2</code>, <code>3</code>, <code>4</code></li>
+</ul>
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: load the data and plot the four groups</h3>
+
+```{webr-r}
+data(ChickWeight)
+ChickWeight$Diet <- factor(ChickWeight$Diet)
+
+ggplot(ChickWeight, aes(x = Time, y = weight, color = Diet)) +
+  geom_point(size = 1.6, alpha = 0.5) +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1) +
+  scale_color_manual(values = c("#00565e", "#5fbfbf", "#f5a742", "#b83b5e")) +
+  labs(x = "Time (days)", y = "Weight (g)", color = "Diet") +
+  theme_minimal(base_size = 14)
+```
+
+</div>
+
+<div class="webr-wrap">
+
+<h3>R code: fit the interaction, fill in the blanks</h3>
+
+Write the interaction with a colon, the same way as before. Replace the blanks and run.
+
+```{webr-r}
+m_poly <- lm(weight ~ Time + Diet + ____, data = ChickWeight)
+summary(m_poly)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+m_poly <- lm(weight ~ Time + Diet + Time:Diet, data = ChickWeight)
+summary(m_poly)
+```
+
+In the coefficients table of the summary you should see (rounded):
+
+```
+(Intercept)        Time       Diet2       Diet3       Diet4
+     30.931       6.842      -2.297     -12.681      -0.139
+ Time:Diet2  Time:Diet3  Time:Diet4
+      1.767       4.581       2.873
+```
+
+</details>
+
+<section class="panel">
+
+<h2>Reading four slopes from one table</h2>
+
+Same rule as before, repeated for each non-reference level. The reference level (`Diet 1`) uses the plain `Time` row. Each other level adds its own `Time:Diet_` interaction row.
+
+<table class="slope-table">
+  <caption>Each diet gets its own intercept and its own growth slope</caption>
+  <thead>
+    <tr><th>Group</th><th>Intercept</th><th>Time slope (g per day)</th></tr>
+  </thead>
+  <tbody>
+    <tr class="refrow"><td>Diet 1 <em>(reference)</em></td><td><code>30.931</code></td><td><code>6.842</code></td></tr>
+    <tr><td>Diet 2</td><td><code>30.931 + (−2.297) = 28.634</code></td><td><code>6.842 + 1.767 = 8.609</code></td></tr>
+    <tr><td>Diet 3</td><td><code>30.931 + (−12.681) = 18.250</code></td><td><code>6.842 + 4.581 = 11.423</code></td></tr>
+    <tr><td>Diet 4</td><td><code>30.931 + (−0.139) = 30.792</code></td><td><code>6.842 + 2.873 = 9.715</code></td></tr>
+  </tbody>
+</table>
+
+Chicks gain weight over time on every diet, but they grow fastest on Diet 3 (11.42 g/day) and slowest on Diet 1 (6.84 g/day). The diets start at similar weights and the lines spread apart over time. That difference in slopes is the interaction.
+
+</section>
+
+<div class="practice" data-answer="c">
+  <div class="practice-title">Question 4</div>
+  <p>A four-level categorical predictor in an interaction model produces how many interaction rows?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p3" value="a">Four, one per level.</label>
+<label><input type="radio" name="p3" value="b">One, a single interaction term covering the whole variable.</label>
+<label><input type="radio" name="p3" value="c">Three, one for each non-reference level.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The reference level is the baseline. Each of the other three levels gets its own main-effect row and its own interaction row." data-incorrect="Not quite. The reference level has no rows of its own. The other three levels each contribute one interaction row."></div>
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 5</div>
+  <p>What is the growth slope for chicks on <strong>Diet 3</strong>?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p4" value="a"><code>4.581</code>, reading the <code>Time:Diet3</code> row directly.</label>
+<label><input type="radio" name="p4" value="b"><code>6.842 + 4.581 = 11.423</code>, the reference slope plus the Diet 3 interaction row.</label>
+<label><input type="radio" name="p4" value="c"><code>−12.681</code>, treating the <code>Diet3</code> row as the slope.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Add the level's interaction coefficient to the reference Time slope." data-incorrect="Not quite. The interaction row (4.581) is only the difference in slope. Add it to the reference slope 6.842."></div>
+</div>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 6</div>
+  <p>The <code>Diet3</code> coefficient is <code>−12.681</code>. What does it describe on its own?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p5" value="a">How much lower the Diet 3 line starts at Time = 0 (the intercept gap), not a slope.</label>
+<label><input type="radio" name="p5" value="b">The growth slope for Diet 3.</label>
+<label><input type="radio" name="p5" value="c">The predicted weight for a Diet 3 chick at any time.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. A level's main-effect row shifts the intercept. The matching Time:Diet_ row shifts the slope." data-incorrect="Not quite. The main-effect row is an intercept shift (the gap at Time 0). The slope change is in the Time:Diet_ row."></div>
+</div>
+
+<div class="practice" data-answer="c">
+  <div class="practice-title">Question 7</div>
+  <p>Predict the weight of a <strong>Diet 3</strong> chick at Time = 10, using the Diet 3 row of the table.</p>
+  <div class="choice-set">
+<label><input type="radio" name="p6" value="a"><code>30.931 + 6.842 * 10 = 99.35</code></label>
+<label><input type="radio" name="p6" value="b"><code>18.250 + 6.842 * 10 = 86.67</code></label>
+<label><input type="radio" name="p6" value="c"><code>18.250 + 11.423 * 10 = 132.48</code></label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Use the Diet 3 intercept (18.250) with the Diet 3 slope (11.423)." data-incorrect="Not quite. For a Diet 3 chick use both Diet 3 numbers: intercept 18.250 and slope 11.423."></div>
+</div>
+
+<div class="practice" data-answer="c">
+  <div class="practice-title">Question 8</div>
+  <p>An interaction adds terms to the model, so you should fit one only when there is a reason. Which of the following is <strong>not</strong> a valid reason to fit an interaction?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p7" value="a">It answers the research question, for example whether the effect of BMI on blood pressure depends on medication.</label>
+<label><input type="radio" name="p7" value="b">Prior evidence or subject knowledge suggests the effect is modified by the other variable, for example age and sex in growth charts.</label>
+<label><input type="radio" name="p7" value="c">You fit every possible pairwise interaction and kept the ones that came out significant.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Fitting all pairwise interactions and keeping only the significant ones is p-hacking, and it invalidates those p-values. Fit an interaction because it answers your question, or because prior knowledge or the study design points to effect modification. Otherwise the simpler additive model is easier to read and more stable." data-incorrect="Not quite. Options A and B are good reasons. Fitting every pairwise interaction and keeping the significant ones is p-hacking, which invalidates those p-values."></div>
+</div>
+
+<section class="panel">
+
+<h2>A note on interactions between two continuous variables</h2>
+
+Every interaction in this practical involves one continuous variable and one categorical variable. You can also fit an interaction between two continuous variables, for example `lm(sysBP ~ BMI + age + BMI:age, data = fram)`. This is uncommon in public health and health statistics, where interactions are usually examined across categorical groups such as treatment arm, sex, or age bands.
+
+When you do fit one, there is no small set of groups to tabulate. Instead, the slope of one variable becomes a straight-line function of the other, and a common way to interpret it is to read that slope at a few chosen values of the second variable (for example a low, middle, and high value).
+
+</section>
+
+<section class="panel completion">
+
+<h2>Completion code</h2>
+
+<p>Answer at least 7 out of 8 questions correctly to reveal your completion code.</p>
+
+<p><span class="code-progress" id="code-progress">0 of 8 correct (need at least 7)</span></p>
+
+<div class="code-box" id="code-box">
+  <div class="code-label">Your completion code</div>
+  <div class="code-value" id="code-value"></div>
+</div>
+
+</section>
+
+<p class="footer-note">GRAPH Courses practical | Interaction terms in linear regression</p>
+
+</div>
+
+<script>
+const COMPLETION_CODE = "INTSLOPES";
+const COMPLETION_REQUIRED = 7;
+
+function updateCompletion() {
+  const cards = document.querySelectorAll(".practice");
+  const correct = document.querySelectorAll(".practice.is-correct").length;
+  const total = cards.length;
+  const progress = document.getElementById("code-progress");
+  const box = document.getElementById("code-box");
+  const value = document.getElementById("code-value");
+
+  if (progress) {
+    progress.textContent = correct + " of " + total + " correct (need at least " + COMPLETION_REQUIRED + ")";
+  }
+
+  if (box && value) {
+    if (correct >= COMPLETION_REQUIRED) {
+      value.textContent = COMPLETION_CODE;
+      box.style.display = "block";
+    } else {
+      box.style.display = "none";
+    }
+  }
+}
+
+document.querySelectorAll(".practice").forEach((card) => {
+  const button = card.querySelector("button");
+  const feedback = card.querySelector(".practice-feedback");
+  const answer = card.dataset.answer;
+
+  button.addEventListener("click", () => {
+    const selected = card.querySelector("input[type='radio']:checked");
+    card.classList.remove("is-correct", "is-incorrect");
+    card.querySelectorAll("label").forEach((label) => {
+      label.classList.remove("correct-choice", "incorrect-choice");
+    });
+
+    if (!selected) {
+      card.classList.add("is-incorrect");
+      feedback.textContent = "Choose an answer first, then check it.";
+      updateCompletion();
+      return;
+    }
+
+    const selectedLabel = selected.closest("label");
+    const correctInput = card.querySelector(`input[value="${answer}"]`);
+    const correctLabel = correctInput ? correctInput.closest("label") : null;
+
+    if (selected.value === answer) {
+      card.classList.add("is-correct");
+      selectedLabel.classList.add("correct-choice");
+      feedback.textContent = feedback.dataset.correct;
+    } else {
+      card.classList.add("is-incorrect");
+      selectedLabel.classList.add("incorrect-choice");
+      if (correctLabel) correctLabel.classList.add("correct-choice");
+      feedback.textContent = feedback.dataset.incorrect;
+    }
+
+    updateCompletion();
+  });
+});
+
+updateCompletion();
+</script>
