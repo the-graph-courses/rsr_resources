@@ -1,0 +1,12 @@
+
+	Welch Two Sample t-test
+
+data:  len by supp
+t = 1.9153, df = 55.309, p-value = 0.06063
+alternative hypothesis: true difference in means between group OJ and group VC is not equal to 0
+95 percent confidence interval:
+ -0.1710156  7.5710156
+sample estimates:
+mean in group OJ mean in group VC
+        20.66333         16.96333
+

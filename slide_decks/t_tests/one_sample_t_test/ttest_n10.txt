@@ -1,0 +1,12 @@
+
+	One Sample t-test
+
+data:  sugar10
+t = 1.6972, df = 9, p-value = 0.06195
+alternative hypothesis: true mean is greater than 10
+95 percent confidence interval:
+ 9.888674      Inf
+sample estimates:
+mean of x
+    11.39
+

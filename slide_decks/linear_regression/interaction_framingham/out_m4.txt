@@ -1,0 +1,26 @@
+
+Call:
+lm(formula = sysBP ~ BMI * BPMeds + age + totChol + heartRate +
+    cigsPerDay, data = adjusted_dat)
+
+Residuals:
+    Min      1Q  Median      3Q     Max
+-63.638 -12.052  -2.126   9.717 128.471
+
+Coefficients:
+                   Estimate Std. Error t value Pr(>|t|)
+(Intercept)       25.925504   3.093539   8.381  < 2e-16 ***
+BMI                1.377657   0.073663  18.702  < 2e-16 ***
+BPMedsOn meds     50.558304   9.552374   5.293 1.27e-07 ***
+age                0.810041   0.035824  22.612  < 2e-16 ***
+totChol            0.033889   0.006757   5.016 5.51e-07 ***
+heartRate          0.290287   0.024035  12.078  < 2e-16 ***
+cigsPerDay        -0.009242   0.024695  -0.374  0.70825
+BMI:BPMedsOn meds -0.942363   0.334494  -2.817  0.00487 **
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 18.36 on 4080 degrees of freedom
+Multiple R-squared:  0.2989,	Adjusted R-squared:  0.2977
+F-statistic: 248.5 on 7 and 4080 DF,  p-value: < 2.2e-16
+

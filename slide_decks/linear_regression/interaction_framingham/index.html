@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Interaction terms in regression</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false});"></script>
+  <style>
+    :root {
+      --gold: #e5b44f;
+      --mist: #c4d8db;
+      --teal: #035f6c;
+      --alarm: #b5451f;
+      --brown: #7a6212;
+      --ink: #073b42;
+      --ink-2: #3a555a;
+      --stage: #0d2b30;
+      --paper: #ffffff;
+      --soft: #f2f7f7;
+      --warm: #fbeecb;
+      --coral: #e58b73;
+      --violet: #8c7ab8;
+      --sans: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+      --mono: "IBM Plex Mono", "SF Mono", Menlo, monospace;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: var(--stage);
+      color: var(--ink);
+      font-family: var(--sans);
+    }
+    #stage {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 10px 22px;
+      overflow: hidden;
+    }
+    #deck {
+      position: relative;
+      width: 1600px;
+      height: 900px;
+      flex: none;
+      container-type: size;
+      transform-origin: center center;
+      overflow: hidden;
+      border-radius: 2px;
+      background: var(--paper);
+      box-shadow: 0 18px 60px rgba(0,0,0,.55);
+    }
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      grid-template-rows: 8px auto 1fr 8px;
+      background: var(--paper);
+    }
+    .slide.active { display: grid; }
+    .chrome-top { background: var(--gold); }
+    .chrome-bottom { background: var(--teal); }
+    .slide.no-head {
+      grid-template-rows: 8px 1fr 8px;
+    }
+    .slide.compact-title {
+      grid-template-rows: 8px 1fr 8px;
+    }
+    .slide.compact-title .slide-head {
+      position: absolute;
+      top: 8px;
+      left: 0;
+      z-index: 3;
+      width: 520px;
+      padding: 8px 24px 4px;
+      pointer-events: none;
+    }
+    .slide.compact-title .slide-body {
+      grid-row: 2;
+      padding-top: 8px;
+    }
+    .slide.compact-title .col-story {
+      padding-top: 62px;
+    }
+    .slide-head {
+      padding: 8px 24px 4px;
+    }
+    .kicker {
+      margin-bottom: 4px;
+      color: var(--brown);
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.9px;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      color: var(--teal);
+      font-family: var(--sans);
+      font-size: clamp(22px, 2.1cqw, 32px);
+      line-height: 1.06;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .title-line {
+      width: min(420px, 38%);
+      height: 3px;
+      margin-top: 4px;
+      border-radius: 2px;
+      background: var(--gold);
+    }
+    .slide-body {
+      min-height: 0;
+      padding: 8px 24px 10px;
+      display: grid;
+      grid-template-columns: var(--cols, minmax(0, 1fr) minmax(0, 1fr));
+      gap: var(--gap, 14px);
+      align-items: stretch;
+    }
+    .col {
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--col-gap, 2px);
+    }
+    .col > .label:not(:first-child) { margin-top: 6px; }
+    .col hr.sep {
+      width: 100%;
+      height: 0;
+      margin: 5px 0 1px;
+      border: 0;
+      border-top: 1px solid var(--mist);
+    }
+    .row {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: var(--split, minmax(0, 1fr) minmax(0, 1fr));
+      gap: var(--gap, 14px);
+      align-items: stretch;
+    }
+    .pane, .stack {
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--stack-gap, 8px);
+    }
+    .pane {
+      padding: 0;
+    }
+    .pane.box {
+      padding: 14px 16px;
+      border: 1px solid var(--mist);
+      border-radius: 2px;
+      background: transparent;
+    }
+    .pane.soft { background: var(--soft); }
+    .pane.warm { background: var(--warm); }
+    .mini-grid {
+      display: grid;
+      grid-template-columns: var(--split, minmax(0, 1fr) minmax(0, 1fr));
+      gap: var(--gap, 12px);
+      align-items: stretch;
+    }
+    .fragment {
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity .24s ease, transform .24s ease;
+    }
+    .fragment.shown {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .label {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 4px 8px;
+      border-radius: 2px;
+      background: var(--teal);
+      color: #fff;
+      font-family: var(--sans);
+      font-size: clamp(13px, .9cqw, 16px);
+      line-height: 1.05;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      text-align: center;
+    }
+    .card .label {
+      width: auto;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--brown);
+      font-size: clamp(12px, .82cqw, 15px);
+      font-weight: 600;
+      text-align: center;
+    }
+    .eyebrow {
+      margin-bottom: 5px;
+      color: var(--brown);
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+    }
+    .text {
+      font-family: var(--sans);
+      font-size: clamp(12px, .86cqw, 15.5px);
+      line-height: 1.12;
+      font-weight: 400;
+      color: var(--ink-2);
+    }
+    .text strong { color: var(--teal); font-weight: 500; }
+    .tiny {
+      color: var(--ink-2);
+      font-family: var(--sans);
+      font-size: clamp(10px, .68cqw, 13px);
+      line-height: 1.2;
+      font-style: normal;
+      letter-spacing: .1px;
+    }
+    .card, .figure, .code {
+      border: 1px solid var(--mist);
+      border-radius: 2px;
+      background: transparent;
+    }
+    .card {
+      padding: 12px 13px;
+    }
+    .card.soft { background: var(--soft); }
+    .card.warm { background: var(--warm); }
+    .card.mcq { padding: 8px 10px; }
+    .card.mcq .mcq-q {
+      margin: 0 0 5px;
+      font-family: var(--sans);
+      font-size: clamp(11px, .8cqw, 14px);
+      line-height: 1.2;
+      font-weight: 600;
+      color: var(--teal);
+    }
+    .card.mcq .mcq-opts {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .card.mcq .mcq-opts.inline {
+      flex-direction: row;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .card.mcq .mcq-opts li {
+      font-family: var(--sans);
+      font-size: clamp(10px, .74cqw, 13px);
+      line-height: 1.22;
+      font-weight: 400;
+      color: var(--ink-2);
+    }
+    .card.mcq .mcq-ans {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 0 8px;
+      border-radius: 2px;
+      background: #d6ecdf;
+      font-family: var(--sans);
+      font-size: clamp(10px, .74cqw, 13px);
+      line-height: 1.4;
+      font-weight: 600;
+      color: #1f5c3d;
+      white-space: nowrap;
+      vertical-align: baseline;
+    }
+    .card.mcq .mcq-ans::before {
+      content: "✓ ";
+      color: #2e8b57;
+    }
+    .card.mcq .mcq-ans strong { color: #2e8b57; }
+    .card.mcq.fillin .fillin-blank {
+      display: inline-block;
+      min-width: 2.6em;
+      border-bottom: 2px solid var(--teal);
+      color: var(--teal);
+      font-weight: 600;
+      vertical-align: baseline;
+    }
+    .card.mcq.fillin .fillin-opts {
+      font-size: clamp(9px, .64cqw, 11px);
+      font-weight: 400;
+      color: var(--brown);
+      white-space: nowrap;
+    }
+    .card.mcq .match-grid {
+      display: grid;
+      grid-template-columns: max-content max-content 1fr;
+      column-gap: 14px;
+      row-gap: 6px;
+      margin-top: 6px;
+      font-family: var(--sans);
+      font-size: clamp(10px, .74cqw, 13px);
+      color: var(--ink-2);
+      align-items: baseline;
+    }
+    .card.mcq .match-grid .mh {
+      font-weight: 600;
+      color: var(--teal);
+      letter-spacing: .04em;
+      font-size: 0.86em;
+      text-transform: uppercase;
+    }
+    .card.mcq .match-grid > .term {
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .card.mcq .match-col {
+      display: grid;
+      grid-template-rows: subgrid;
+      grid-row: 2 / span 4;
+      row-gap: 6px;
+    }
+    .card.mcq .match-col.values { grid-column: 2; }
+    .card.mcq .match-col.meanings { grid-column: 3; }
+    .card.mcq .match-col > div {
+      align-self: baseline;
+      padding: 1px 6px;
+      border-radius: 2px;
+      background: #d6ecdf;
+      color: #1f5c3d;
+      font-weight: 500;
+      line-height: 1.22;
+    }
+    .card.mcq .match-scram {
+      grid-column: 1 / -1;
+      margin: 4px 0 0;
+      padding: 4px 6px;
+      border-radius: 2px;
+      background: #fbeecb;
+      font-size: clamp(9.5px, .7cqw, 12px);
+      color: var(--brown);
+      line-height: 1.4;
+    }
+    .card.mcq .match-scram strong { color: var(--teal); }
+    .sleep-intro-row {
+      --split: minmax(0, 2fr) minmax(0, 1fr);
+      align-items: start;
+    }
+    .sleep-intro-row .code {
+      width: 100%;
+      min-width: 0;
+      align-self: stretch;
+    }
+    .sleep-side {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+      width: 100%;
+    }
+    .sleep-intro-row .diagram.sleep-scene {
+      flex: 0 0 auto;
+      height: auto;
+      display: block;
+      border: 1px solid var(--mist);
+      border-radius: 2px;
+      background: #073b42;
+      padding: 4px;
+      overflow: hidden;
+    }
+    .sleep-intro-row .diagram.sleep-scene svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .sleep-side .card.mcq-side .mcq-opts.inline {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1px;
+    }
+    .card p {
+      margin: 0;
+      font-family: var(--sans);
+      font-size: clamp(11px, .82cqw, 15px);
+      line-height: 1.16;
+      font-weight: 400;
+      color: var(--ink-2);
+    }
+    .figure {
+      padding: 9px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .figure.grow { flex: 1; min-height: 0; }
+    .figure img {
+      width: 100%;
+      min-height: 0;
+      object-fit: contain;
+      display: block;
+    }
+    .figure.grow img { flex: 1; }
+    .caption {
+      margin-top: 6px;
+      padding-top: 5px;
+      border-top: 1px solid var(--mist);
+      color: var(--ink-2);
+      font-family: var(--sans);
+      font-size: clamp(10px, .68cqw, 13px);
+      line-height: 1.16;
+      font-style: normal;
+    }
+    .diagram {
+      min-height: 132px;
+      overflow: visible;
+    }
+    .diagram.tall { min-height: 210px; flex: 1; }
+    .col-story {
+      min-height: 0;
+    }
+    .col-story .diagram.story-scene {
+      flex: 1 1 230px;
+      min-height: 0;
+      max-height: 250px;
+    }
+    .col-story .story-tail {
+      flex: 0 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .col-story hr.sep { margin: 2px 0 1px; }
+    .col-story .plan-results {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 5fr);
+      gap: 10px;
+      align-items: start;
+    }
+    .col-story .plan-results .pr-plan,
+    .col-story .plan-results .pr-results {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .col-story .plan-results .pr-plan .text {
+      display: flex;
+      align-items: center;
+      min-height: 0;
+    }
+    .col-story .story-tail .text { font-size: clamp(12px, .82cqw, 15px); line-height: 1.12; }
+    .col-story .code:not(.chart-code) {
+      width: 100%;
+    }
+    .col-story .code:not(.chart-code) pre {
+      font-size: clamp(10px, .72cqw, 13px);
+      line-height: 1.28;
+    }
+    .col-story .chart-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .col-story .code.chart-code {
+      width: 100%;
+    }
+    .col-story .code.chart-code pre {
+      font-size: clamp(10px, .72cqw, 14px);
+      line-height: 1.3;
+    }
+    .col-story .figure.chart {
+      padding: 6px 7px;
+      display: flex;
+      flex-direction: column;
+    }
+    .col-story .figure.chart img {
+      width: 100%;
+      height: auto;
+      min-height: 90px;
+      max-height: 128px;
+      object-fit: contain;
+      display: block;
+    }
+    .col-story .figure.chart .caption {
+      margin-top: 3px;
+      font-size: clamp(10px, .66cqw, 12px);
+    }
+    .col-story .bubble { margin: 3px 0 4px 22px; padding: 6px 12px; }
+    .diagram.compact {
+      min-height: 0;
+      height: var(--diagram-h, 132px);
+      flex: 0 0 var(--diagram-h, 132px);
+    }
+    .diagram svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .stat {
+      padding: 9px 11px;
+      border: 0;
+      border-left: 2px solid var(--teal);
+      border-radius: 0;
+      background: transparent;
+    }
+    .stat-label {
+      color: var(--brown);
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+    .stat-value {
+      margin-top: 3px;
+      color: var(--teal);
+      font-family: var(--sans);
+      font-size: clamp(22px, 1.55cqw, 30px);
+      line-height: 1;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .stat.alarm { border-left-color: var(--alarm); }
+    .stat.alarm .stat-value { color: var(--alarm); }
+    .code {
+      position: relative;
+      overflow: hidden;
+      width: fit-content;
+      max-width: 100%;
+      border: 1px solid var(--mist);
+      background: var(--soft);
+    }
+    .code .tag {
+      position: absolute;
+      top: 0;
+      right: 0;
+      z-index: 1;
+      margin: 0;
+      padding: 3px 7px;
+      border: 0;
+      border-radius: 0 2px 0 2px;
+      background: var(--gold);
+      color: #fff;
+      font-family: var(--mono);
+      font-size: clamp(8.5px, .58cqw, 10.5px);
+      font-weight: 600;
+      letter-spacing: .4px;
+      line-height: 1.1;
+    }
+    .code pre {
+      margin: 0;
+      padding: 7px 34px 7px 9px;
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: clamp(11px, .78cqw, 15px);
+      line-height: 1.32;
+      white-space: pre-wrap;
+    }
+    .out { color: var(--alarm); font-weight: 750; }
+    .comment { color: var(--brown); font-style: italic; }
+    .equation {
+      box-sizing: border-box;
+      width: fit-content;
+      max-width: 100%;
+      align-self: center;
+      margin-inline: auto;
+      padding: 8px 10px;
+      border: 1px solid var(--mist);
+      border-left: 2px solid var(--gold);
+      border-radius: 2px;
+      background: var(--warm);
+      color: var(--teal);
+      font-family: var(--mono);
+      font-size: clamp(14px, 1.02cqw, 20px);
+      line-height: 1.3;
+      font-weight: 500;
+      text-align: center;
+    }
+    .equation .katex-display {
+      margin: 0 auto;
+      text-align: center;
+    }
+    .col-steps > .label:not(:first-child) { margin-top: 4px; }
+    .col-steps .label {
+      padding: 2px 8px;
+      line-height: 1;
+    }
+    .col-steps .inline-row {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      min-width: 0;
+      width: 100%;
+    }
+    .col-steps .inline-row .equation {
+      align-self: center;
+      margin-inline: 0;
+      flex: 0 1 auto;
+      max-width: 56%;
+    }
+    .col-steps .inline-row .diagram.compact {
+      flex: 1 1 0;
+      min-width: 0;
+      width: auto;
+      height: 68px;
+      --diagram-h: 68px;
+    }
+    .col-steps .inline-row .code {
+      flex: 0 1 auto;
+      min-width: 0;
+      max-width: 54%;
+    }
+    .col-steps .inline-row.diff-row .equation {
+      flex: 2 1 0;
+      max-width: 40%;
+    }
+    .col-steps .inline-row.diff-row .code {
+      flex: 1 1 100%;
+      width: 100%;
+      max-width: 100%;
+    }
+    .col-steps .inline-row.se-row .equation {
+      flex: 3 1 0;
+      max-width: 66%;
+    }
+    .col-steps .inline-row.se-row .code {
+      flex: 2 1 0;
+      max-width: 34%;
+    }
+    .col-steps .inline-row .code pre {
+      font-size: clamp(10px, .74cqw, 13px);
+      line-height: 1.3;
+    }
+    .col-steps .inline-row .figure.tdist + .code,
+    .col-steps .inline-row .code {
+      align-self: stretch;
+    }
+    .col-steps .inline-row .figure.tdist {
+      flex: 3 1 0;
+      min-width: 0;
+      padding: 4px 7px;
+    }
+    .col-steps .inline-row .figure.tdist + .code {
+      flex: 2 1 0;
+    }
+    .col-steps .figure.tdist img {
+      width: 100%;
+      min-height: 76px;
+      max-height: 104px;
+      object-fit: contain;
+      display: block;
+    }
+    .col-steps .figure.tdist .caption {
+      margin-top: 2px;
+      padding-top: 2px;
+      font-size: clamp(9px, .62cqw, 11px);
+    }
+    .col-steps > .code {
+      align-self: flex-end;
+    }
+    .col-steps .code.ttest-out {
+      width: 100%;
+    }
+    .col-steps .code.ttest-out pre {
+      font-size: clamp(10px, .74cqw, 13px);
+      line-height: 1.06;
+      padding-top: 5px;
+      padding-bottom: 5px;
+    }
+    .page2-practice .calc-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+      gap: 6px;
+      align-items: stretch;
+    }
+    .page2-practice .calc-row .equation {
+      width: 100%;
+      padding: 5px 7px;
+      font-size: clamp(11px, .78cqw, 14px);
+      line-height: 1.18;
+    }
+    .page2-practice .calc-row .code {
+      width: 100%;
+    }
+    .page2-practice .calc-row .code pre {
+      padding: 6px 28px 6px 8px;
+      font-size: clamp(10px, .72cqw, 12px);
+      line-height: 1.18;
+    }
+    .page2-practice .p-figure {
+      padding: 5px 6px;
+    }
+    .page2-practice .p-figure img {
+      max-height: 74px;
+    }
+    .page2-practice .figure img {
+      max-height: 126px;
+    }
+    .page2-practice .figure .caption {
+      margin-top: 3px;
+      padding-top: 3px;
+      font-size: clamp(9px, .62cqw, 11px);
+    }
+    .page2-practice .sleep-intro-row .diagram.sleep-scene {
+      padding: 3px;
+    }
+    .page2-practice .sleep-intro-row .diagram.sleep-scene svg {
+      max-height: 118px;
+    }
+    .page2-practice .sleep-side .card.mcq-side {
+      padding: 5px 7px;
+    }
+    .page2-practice .sleep-side .card.mcq-side .mcq-opts.inline {
+      flex-direction: column;
+      flex-wrap: nowrap;
+      gap: 1px;
+    }
+    .page2-practice .sleep-side .card.mcq-side .mcq-q,
+    .page2-practice .sleep-side .card.mcq-side .mcq-opts li {
+      font-size: clamp(9px, .62cqw, 11px);
+      line-height: 1.12;
+    }
+    .ci-compare {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--sans);
+      font-size: clamp(11px, .78cqw, 14px);
+      line-height: 1.18;
+      color: var(--ink-2);
+    }
+    .ci-compare th,
+    .ci-compare td {
+      padding: 6px 8px;
+      border: 1px solid var(--mist);
+      text-align: center;
+      vertical-align: middle;
+    }
+    .ci-compare th {
+      background: var(--teal);
+      color: #fff;
+      font-weight: 600;
+    }
+    .ci-compare td:first-child {
+      text-align: left;
+      color: var(--teal);
+      font-weight: 600;
+    }
+    .mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--sans);
+      font-size: clamp(9.5px, .68cqw, 12px);
+      line-height: 1.15;
+      color: var(--ink-2);
+    }
+    .mini-table th,
+    .mini-table td {
+      padding: 4px 6px;
+      border: 1px solid var(--mist);
+      vertical-align: top;
+    }
+    .mini-table th {
+      background: var(--soft);
+      color: var(--teal);
+      font-weight: 700;
+      text-align: left;
+    }
+    .mini-table.answer td {
+      background: #d6ecdf;
+      color: #1f5c3d;
+      font-weight: 500;
+    }
+    .pill-match {
+      display: grid;
+      grid-template-columns: minmax(0, .7fr) minmax(0, 1fr) minmax(0, 1.35fr);
+      gap: 6px;
+      margin-top: 5px;
+      font-family: var(--sans);
+      font-size: clamp(9.5px, .68cqw, 12px);
+      line-height: 1.15;
+    }
+    .pill-match .pill-head {
+      color: var(--teal);
+      font-size: .88em;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .pill-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .pill {
+      padding: 3px 6px;
+      border-radius: 2px;
+      background: var(--warm);
+      color: var(--brown);
+      font-weight: 500;
+    }
+    .pill.term {
+      background: var(--soft);
+      color: var(--teal);
+    }
+    .mini-axis {
+      width: 100%;
+      height: 34px;
+      display: block;
+    }
+    .visual-pq {
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+      gap: 8px;
+      align-items: center;
+    }
+    .answer-key {
+      border-left: 2px solid #2e8b57;
+      background: #eef8f2;
+    }
+    .alarm { color: var(--alarm); }
+    .eq-inline {
+      display: inline-block;
+      margin-left: 4px;
+      padding: 1px 8px;
+      border-radius: 2px;
+      background: var(--soft);
+      color: var(--teal);
+      font-weight: 600;
+      white-space: nowrap;
+      vertical-align: baseline;
+    }
+    .bubble {
+      position: relative;
+      margin: 4px 0 8px 18px;
+      padding: 7px 14px;
+      border: 0;
+      border-left: 2px solid var(--teal);
+      border-radius: 0;
+      background: var(--warm);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: clamp(12px, .86cqw, 15.5px);
+      line-height: 1.26;
+      font-weight: 400;
+      font-style: italic;
+      box-shadow: none;
+    }
+    .bubble::before, .bubble::after { content: none; }
+    .bubble strong { color: var(--brown); font-weight: 500; font-style: normal; }
+    .xbar {
+      position: relative;
+      display: inline-block;
+      line-height: .95;
+      vertical-align: baseline;
+    }
+    .xbar::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: -.08em;
+      border-top: .08em solid currentColor;
+    }
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+    .flow span {
+      padding: 4px 11px;
+      border: 1px solid var(--mist);
+      border-radius: 2px;
+      background: transparent;
+      font-family: var(--sans);
+      font-size: clamp(12px, .82cqw, 16px);
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .flow .arrow {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--brown);
+    }
+    .callout {
+      padding: 10px 14px;
+      border: 0;
+      border-left: 2px solid var(--gold);
+      border-radius: 0;
+      background: var(--soft);
+      font-family: var(--sans);
+      font-size: clamp(13px, .92cqw, 17px);
+      line-height: 1.2;
+      font-weight: 400;
+      color: var(--ink);
+    }
+    #dots {
+      display: none;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border: 0;
+      border-radius: 50%;
+      background: #3a5e64;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+    .dot.on { background: var(--gold); transform: scale(1.14); }
+    #tools {
+      position: fixed;
+      top: 14px;
+      right: 16px;
+      z-index: 22;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--mist);
+      font-family: var(--sans);
+      font-size: 13px;
+      letter-spacing: .3px;
+    }
+    #tools button {
+      border: 1px solid #4d747a;
+      border-radius: 2px;
+      padding: 6px 9px;
+      background: #153d43;
+      color: var(--mist);
+      font: inherit;
+      font-family: var(--sans);
+      cursor: pointer;
+    }
+    #tools button.on {
+      border-color: var(--gold);
+      background: var(--gold);
+      color: #0d2b30;
+    }
+    #hint {
+      position: fixed;
+      bottom: 12px;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      text-align: center;
+      color: var(--mist);
+      font-family: var(--sans);
+      font-size: 13px;
+      letter-spacing: .5px;
+      opacity: .72;
+    }
+    #counter {
+      position: fixed;
+      right: 16px;
+      bottom: 12px;
+      z-index: 20;
+      color: var(--mist);
+      font-family: var(--mono);
+      font-size: 13px;
+      letter-spacing: .5px;
+      opacity: .85;
+    }
+    #ink {
+      position: absolute;
+      inset: 0;
+      z-index: 15;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      touch-action: none;
+    }
+    #deck.drawing #ink {
+      pointer-events: auto;
+      cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 28 28'><path d='M4 24l1.2-4.4L18.9 5.9a2.5 2.5 0 0 1 3.5 3.5L8.7 23.1 4 24z' fill='%23e07a2f' stroke='%23073b42' stroke-width='1.4' stroke-linejoin='round'/><path d='M17.4 7.4l3.5 3.5' stroke='%23073b42' stroke-width='1.4'/></svg>") 3 19, crosshair;
+    }
+    /* directionality cards: compact, bulleted, full symbols */
+    .dir-card .h0 {
+      margin: 1px 0 4px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid #e7d6a6;
+    }
+    .dir-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .dir-list li {
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+      font-size: clamp(10px, .74cqw, 13px);
+      line-height: 1.16;
+      color: var(--ink-2);
+    }
+    .dir-list .tag {
+      flex: none;
+      width: 64px;
+      padding: 1px 0;
+      border-radius: 2px;
+      text-align: center;
+      font-weight: 700;
+      font-size: .8em;
+      letter-spacing: .02em;
+    }
+    .dir-list .tag.two { background: #d6ecdf; color: #1f5c3d; }
+    .dir-list .tag.one { background: #dce7ef; color: #2c5777; }
+    .dir-list .hyp { flex: none; font-weight: 500; color: var(--teal); }
+    .dir-list .when { color: var(--brown); }
+    .dir-list .alt { font-family: var(--mono); color: #5b6f73; font-size: .78em; white-space: nowrap; }
+    .dir-here {
+      margin: 4px 0 0;
+      padding-top: 3px;
+      border-top: 1px solid #e7d6a6;
+      font-size: clamp(10px, .76cqw, 13px);
+      line-height: 1.16;
+      color: var(--ink);
+    }
+    .dir-here strong { color: var(--brown); }
+    /* title box + concept SVG share a row */
+    .intro-row {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 10px;
+      align-items: stretch;
+    }
+    .intro-row .card {
+      padding: 6px 11px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .intro-row .scene {
+      min-width: 0;
+      border: 1px solid var(--mist);
+      border-radius: 2px;
+      background: #fff;
+      padding: 3px 6px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+    .intro-row .scene svg { width: 100%; height: 100%; display: block; }
+    /* column-3 capstone: name-the-test scenarios */
+    .scen { display: flex; flex-direction: column; gap: 5px; margin-top: 3px; }
+    .scen p { margin: 0; font-size: clamp(10px, .74cqw, 13px); line-height: 1.2; color: var(--ink-2); }
+    .scen .mcq-ans { white-space: normal; margin-left: 5px; }
+  </style>
+</head>
+<body>
+  <div id="dots"></div>
+  <div id="tools">
+    <button id="pencil" type="button">Pencil: off</button>
+    <button id="undo" type="button">Undo</button>
+    <button id="clear" type="button">Clear</button>
+  </div>
+
+  <div id="stage">
+    <main id="deck" aria-live="polite">
+      <!-- ================= SLIDE 1: interaction terms (Framingham) ================= -->
+      <section class="slide compact-title" data-slide>
+        <div class="chrome-top"></div>
+        <header class="slide-head">
+          <h1>Interaction terms in regression</h1>
+          <div class="title-line"></div>
+        </header>
+        <div class="slide-body" style="--cols: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); --gap:14px">
+
+          <!-- COLUMN 1: the study -->
+          <div class="col" style="--col-gap:5px; padding-top:62px">
+            <div class="label fragment">The study</div>
+            <div class="diagram compact fragment" style="--diagram-h:150px" aria-hidden="true">
+              <svg viewBox="0 0 440 156" preserveAspectRatio="xMidYMid meet">
+                <rect width="440" height="156" rx="6" fill="#073b42"/>
+                <text x="14" y="20" font-family="Space Grotesk, Arial" font-size="13" font-weight="800" fill="#e5b44f">Framingham Heart Study</text>
+                <text x="14" y="35" font-family="IBM Plex Mono, monospace" font-size="9.5" font-weight="600" fill="#c4d8db">n = 4,238 adults &middot; since 1948</text>
+
+                <!-- ====== USA MAP (left) ====== -->
+                <g transform="translate(4 26)">
+                  <polygon
+                    points="16,34 150,26 168,24 190,18 196,28 184,36 180,46 176,54 172,60 176,64 170,72 178,82 174,98 166,80 156,80 146,82 138,84 126,98 118,86 96,86 70,88 54,84 44,82 34,66 26,52 20,44"
+                    fill="#0e4a52" stroke="#3a8f9c" stroke-width="1.5" stroke-linejoin="round"/>
+                  <!-- Framingham / Massachusetts pin -->
+                  <g transform="translate(180 31)">
+                    <circle r="11" fill="#e5b44f" opacity="0.25"/>
+                    <path d="M0,-9 C5,-9 8,-5 8,-1 C8,5 0,12 0,12 C0,12 -8,5 -8,-1 C-8,-5 -5,-9 0,-9 Z" fill="#e5b44f" stroke="#fff" stroke-width="1"/>
+                    <circle cy="-1" r="3" fill="#073b42"/>
+                  </g>
+                  <text x="150" y="112" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="9" font-weight="800" fill="#e5b44f">Framingham, MA</text>
+                </g>
+
+                <!-- divider -->
+                <line x1="218" y1="44" x2="218" y2="146" stroke="#1c5860" stroke-width="1.5"/>
+
+                <!-- ====== MECHANISM (right) ====== -->
+                <text x="330" y="50" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="9.5" font-weight="700" fill="#c4d8db">Does the BMI &rarr; BP link change with meds?</text>
+
+                <!-- BMI scale icon -->
+                <g transform="translate(244 78)">
+                  <rect width="50" height="46" rx="7" fill="#eaf4f5" stroke="#3a8f9c" stroke-width="2"/>
+                  <rect x="9" y="7" width="32" height="13" rx="2" fill="#073b42"/>
+                  <text x="25" y="17" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8.5" font-weight="700" fill="#e5b44f">25.7</text>
+                  <path d="M14,36 A11,11 0 0,1 36,36" fill="none" stroke="#3a8f9c" stroke-width="2"/>
+                  <line x1="25" y1="36" x2="31" y2="29" stroke="#b5451f" stroke-width="2" stroke-linecap="round"/>
+                  <text x="25" y="60" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="10" font-weight="800" fill="#eaf4f5">BMI</text>
+                </g>
+
+                <!-- arrow -->
+                <defs>
+                  <marker id="ah" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                    <path d="M0,0 L6,3 L0,6 Z" fill="#e5b44f"/>
+                  </marker>
+                </defs>
+                <line x1="300" y1="101" x2="356" y2="101" stroke="#e5b44f" stroke-width="2.5" marker-end="url(#ah)"/>
+
+                <!-- pill (modifier) -->
+                <g transform="translate(318 64)">
+                  <g transform="rotate(35 11 6)">
+                    <rect width="22" height="12" rx="6" fill="#fdf3ef" stroke="#b5451f" stroke-width="1.6"/>
+                    <path d="M11,0 v12" stroke="#b5451f" stroke-width="1.6"/>
+                    <rect x="11" width="11" height="12" rx="6" fill="#b5451f" opacity="0.85"/>
+                  </g>
+                  <line x1="11" y1="16" x2="11" y2="32" stroke="#b5451f" stroke-width="1.4" stroke-dasharray="3 3"/>
+                  <text x="11" y="-3" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="8.5" font-weight="800" fill="#e58b73">BP meds</text>
+                </g>
+
+                <!-- heart + pulse (sysBP) -->
+                <g transform="translate(372 80)">
+                  <path d="M25,10 C25,3 33,1 38,6 C42,10 42,15 25,30 C8,15 8,10 12,6 C17,1 25,3 25,10 Z" fill="#b5451f" stroke="#fff" stroke-width="1"/>
+                  <polyline points="14,18 20,18 23,11 27,25 30,18 36,18" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+                  <text x="25" y="58" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="10" font-weight="800" fill="#fbeecb">sysBP</text>
+                </g>
+              </svg>
+            </div>
+            <div class="code fragment" style="width:100%;">
+              <div class="tag">R</div>
+              <pre style="font-size:clamp(8.8px,.6cqw,10.8px); line-height:1.08;"><span class="comment"># Framingham Heart Study, from LSTbook</span>
+dat &lt;- LSTbook::Framingham |&gt;
+  select(sysBP, BMI, BPMeds, age, totChol,
+         heartRate, cigsPerDay) |&gt;
+  mutate(BPMeds = factor(BPMeds,
+    labels = c("Not on meds", "On meds")))
+
+model_dat &lt;- dat |&gt;
+  filter(!is.na(sysBP), !is.na(BMI), !is.na(BPMeds))
+
+<span class="comment"># colour the points by med status</span>
+ggplot(model_dat, aes(BMI, sysBP, colour = BPMeds)) +
+  geom_point(alpha = .45)</pre>
+            </div>
+            <div class="figure fragment" style="padding:2px 3px;">
+              <img src="figures/fig_scatter.png" alt="Scatter of systolic BP versus BMI coloured by BP medication status" style="width:100%; max-height:178px; object-fit:contain;">
+            </div>
+            <div class="bubble fragment" style="text-align:center; font-size:clamp(11px,.78cqw,14px);">People on BP meds have higher systolic BP, but does the <strong>BMI slope</strong> look the same in both groups?</div>
+            <div class="label fragment">What is an interaction?</div>
+            <div class="text fragment">An <strong>interaction</strong> means the effect of one predictor on the outcome <strong>depends on</strong> the level of another predictor. Graphically: the lines are <strong>not parallel</strong>.</div>
+            <div class="mini-grid fragment" style="--gap:8px; --split:repeat(2,minmax(0,1fr));">
+              <div class="card soft" style="padding:7px 9px; border-left:2px solid #8895a0;">
+                <div class="eyebrow" style="color:#5b6970;">No interaction</div>
+                <p style="font-size:clamp(10px,.68cqw,12px);">Same BMI slope in both groups; lines differ only by height.</p>
+              </div>
+              <div class="card soft" style="padding:7px 9px; border-left:2px solid var(--teal);">
+                <div class="eyebrow" style="color:var(--teal);">Interaction</div>
+                <p style="font-size:clamp(10px,.68cqw,12px);">BMI slope differs by BP-med status; lines cross or diverge.</p>
+              </div>
+            </div>
+            <div class="equation fragment" style="width:100%; font-size:clamp(11px,.78cqw,14px);">
+              $\text{sysBP} = \beta_0 + \beta_1\,\text{BMI} + \beta_2\,\text{meds} + \color{#b5451f}{\beta_3\,(\text{BMI}\times\text{meds})}$
+            </div>
+          </div>
+
+          <!-- COLUMN 2: model 1 + model 2 -->
+          <div class="col" style="--col-gap:5px">
+
+            <!-- ===== MODEL 1 ===== -->
+            <div class="label fragment">Model 1 &middot; BMI only</div>
+            <div class="mini-grid fragment" style="--split:minmax(0,1.35fr) minmax(0,.65fr); --gap:6px; align-items:center;">
+              <div class="code" style="width:100%;">
+                <div class="tag">R</div>
+                <pre style="font-size:clamp(9px,.6cqw,10.8px); line-height:1.06;">m1 &lt;- lm(sysBP ~ BMI, data = model_dat)
+coef(summary(m1))[, c(1, 4)]
+<span class="out">#&gt;             Estimate  Pr(&gt;|t|)
+#&gt; (Intercept)  86.551    &lt;2e-16
+#&gt; BMI           1.772    &lt;2e-16</span></pre>
+              </div>
+              <div class="equation" style="width:100%; padding:5px 7px; font-size:clamp(9.5px,.68cqw,12px);">
+                $\widehat{\text{sysBP}} = 86.55 + 1.77(\text{BMI})$
+              </div>
+            </div>
+            <div class="figure fragment" style="padding:4px 6px;">
+              <pre style="margin:0 0 3px; font-family:var(--mono); font-size:clamp(8.4px,.56cqw,10.2px); line-height:1.2; color:var(--ink);">model_dat$fit &lt;- predict(m1)
+ggplot(model_dat, aes(BMI, sysBP)) +
+  geom_point(alpha=.45) + geom_line(aes(y=fit))</pre>
+              <img src="figures/fig_one_line.png" alt="Scatter of systolic BP versus BMI with a single fitted regression line" style="width:100%; max-height:188px; object-fit:contain;">
+            </div>
+
+            <!-- ===== PRACTICE (model 1) ===== -->
+            <div class="label fragment">Practice: Predict sysBP for someone on meds with BMI = 30</div>
+            <div class="card soft mcq fillin fragment" style="padding:5px 7px;">
+              <p style="margin:0; font-family:var(--mono); font-size:clamp(9px,.62cqw,11px); line-height:1.22; color:var(--ink-2);">
+                $86.55 + 1.77(30) =$ <span class="fillin-blank">____</span> mmHg <span class="fragment mcq-ans"><strong>139.7</strong> mmHg</span>
+              </p>
+              <p style="margin:3px 0 0; font-size:clamp(8.4px,.58cqw,10px); line-height:1.18; color:var(--ink-2);">Meds are not in this model, so being on meds does not change the prediction.</p>
+            </div>
+
+            <!-- ===== MODEL 2 ===== -->
+            <div class="label fragment">Model 2 &middot; add BP meds (parallel lines)</div>
+            <div class="code fragment" style="width:100%;">
+              <div class="tag">R</div>
+              <pre style="font-size:clamp(9px,.6cqw,10.8px); line-height:1.06;">m2 &lt;- lm(sysBP ~ BMI + BPMeds, data = model_dat)
+coef(summary(m2))[, c(1, 4)]
+<span class="out">#&gt;               Estimate  Pr(&gt;|t|)
+#&gt; (Intercept)    88.842    &lt;2e-16
+#&gt; BMI             1.650    &lt;2e-16
+#&gt; BPMedsOn meds  29.240    &lt;2e-16</span></pre>
+            </div>
+            <div class="equation fragment" style="width:100%; padding:5px 8px; font-size:clamp(11px,.76cqw,14px);">
+              $\widehat{\text{sysBP}} = 88.84 + 1.65(\text{BMI}) + 29.24(\text{meds})$
+            </div>
+            <div class="figure fragment" style="padding:4px 6px;">
+              <pre style="margin:0 0 3px; font-family:var(--mono); font-size:clamp(8.4px,.56cqw,10.2px); line-height:1.2; color:var(--ink);">model_dat$fit &lt;- predict(m2)
+ggplot(model_dat, aes(BMI, sysBP, colour=BPMeds)) +
+  geom_point(alpha=.45) + geom_line(aes(y=fit)) +
+  scale_x_continuous(limits = c(0, NA))</pre>
+              <img src="figures/fig_parallel.png" alt="Scatter with two parallel fitted lines, one per medication group" style="width:100%; max-height:184px; object-fit:contain;">
+            </div>
+
+            <!-- ===== PRACTICE (model 2) ===== -->
+            <div class="label fragment">Practice: Calculate the SysPB of a person A) On meds and B) Not on meds, with BMI 25</div>
+            <div class="card soft mcq fillin fragment" style="padding:5px 7px;">
+              <p style="margin:0 0 2px; font-size:clamp(9px,.64cqw,11.5px); line-height:1.22; color:var(--ink-2);">
+                A) On meds: $88.84 + 1.65(25) + 29.24 =$ <span class="fillin-blank">____</span> mmHg
+              </p>
+              <p style="margin:0; font-size:clamp(9px,.64cqw,11.5px); line-height:1.22; color:var(--ink-2);">
+                B) Not on meds: $88.84 + 1.65(25) =$ <span class="fillin-blank">____</span> mmHg <span class="fragment mcq-ans">A) <strong>159.3</strong> · B) <strong>130.1</strong></span>
+              </p>
+            </div>
+          </div>
+
+          <!-- COLUMN 3: model 3 + test + reporting -->
+          <div class="col" style="--col-gap:5px">
+
+            <!-- ===== MODEL 3 ===== -->
+            <div class="label fragment">Model 3 &middot; BMI x BP meds</div>
+            <div class="code fragment" style="width:100%;">
+              <div class="tag">R</div>
+              <pre style="font-size:clamp(8.6px,.58cqw,10.4px); line-height:1.06;">m3 &lt;- lm(sysBP ~ BMI + BPMeds + BMI:BPMeds, data = model_dat)
+<span class="comment"># Same as: lm(sysBP ~ BMI * BPMeds, data = model_dat)</span>
+coef(summary(m3))[, c(1, 4)]
+<span class="out">#&gt;                   Estimate  Pr(&gt;|t|)
+#&gt; (Intercept)        87.644    &lt;2e-16
+#&gt; BMI                 1.696    &lt;2e-16
+#&gt; BPMedsOn meds      57.106   3.7e-08
+#&gt; BMI:BPMedsOn meds  -0.994    0.0062</span></pre>
+            </div>
+            <div class="equation fragment" style="width:100%; padding:5px 8px; font-size:clamp(10.5px,.72cqw,13px);">
+              $\widehat{\text{sysBP}} = 87.64 + 1.70(\text{BMI}) + 57.11(\text{meds}) - \color{#b5451f}{0.99(\text{BMI}\times\text{meds})}$
+              <div style="margin-top:4px; padding-top:4px; border-top:1px solid #e7d6a6; text-align:left; font-family:var(--sans); font-size:clamp(8.4px,.58cqw,10px); line-height:1.16; color:var(--ink-2); font-weight:400; display:grid; grid-template-columns:max-content 1fr; column-gap:8px; row-gap:2px;">
+                <strong style="color:var(--teal);">Reference</strong><span>not on meds</span>
+                <strong style="color:var(--teal);">87.64</strong><span>intercept for not-on-meds group at BMI = 0</span>
+                <strong style="color:var(--teal);">1.70</strong><span>BMI slope for not-on-meds group</span>
+                <strong style="color:var(--teal);">57.11</strong><span>on-meds intercept shift at BMI = 0</span>
+                <strong style="color:var(--alarm);">-0.99</strong><span>on-meds BMI slope adjustment: $1.70 - 0.99 = 0.70$</span>
+              </div>
+            </div>
+            <div class="figure fragment" style="padding:4px 6px;">
+              <pre style="margin:0 0 3px; font-family:var(--mono); font-size:clamp(8.4px,.56cqw,10.2px); line-height:1.2; color:var(--ink);">model_dat$fit &lt;- predict(m3)
+ggplot(model_dat, aes(BMI, sysBP, colour=BPMeds)) +
+  geom_point(alpha=.45) + geom_line(aes(y=fit))</pre>
+              <div class="mini-grid" style="--split:minmax(0,1.25fr) minmax(0,.75fr); --gap:6px;">
+                <img src="figures/fig_interaction.png" alt="Scatter with fitted lines showing different BMI slopes by BP medication status" style="width:100%; max-height:132px; object-fit:contain;">
+                <div class="card warm" style="padding:5px 7px;">
+                  <div class="eyebrow" style="margin-bottom:3px;">Slopes by group</div>
+                  <p style="margin:0; font-family:var(--mono); font-size:clamp(8.4px,.58cqw,10px); line-height:1.2;">
+                    Not on meds:<br>$\beta_1 = 1.70$<br>mmHg/BMI<br>
+                    On meds:<br>$\beta_1 + \beta_3 = 0.70$<br>mmHg/BMI
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- ===== WORKED EXAMPLE (model 3) ===== -->
+            <div class="label fragment">Worked example &middot; Predict sysBP for someone on meds, BMI = 30</div>
+            <div class="card soft fragment" style="padding:5px 7px;">
+              <p style="margin:0 0 2px; font-family:var(--mono); font-size:clamp(8.6px,.6cqw,10.5px); line-height:1.22; color:var(--ink-2);">
+                $\widehat{\text{sysBP}} = 87.64 + 1.696(30) + 57.106(1) \color{#b5451f}{- 0.994(30 \times 1)}$
+              </p>
+              <p style="margin:0 0 2px; font-family:var(--mono); font-size:clamp(8.6px,.6cqw,10.5px); line-height:1.22; color:var(--ink-2);">
+                $= 87.64 + 50.88 + 57.11 - 29.82 = \color{#035f6c}{165.8}$ mmHg
+              </p>
+            </div>
+
+            <!-- ===== PRACTICE (model 3) ===== -->
+            <div class="label fragment">Practice: Predict sysBP for someone not on meds, BMI = 35</div>
+            <div class="card soft mcq fillin fragment" style="padding:5px 7px;">
+              <p style="margin:0; font-family:var(--mono); font-size:clamp(9px,.62cqw,11px); line-height:1.22; color:var(--ink-2);">
+                $87.64 + 1.696(35) =$ <span class="fillin-blank">____</span> mmHg <span class="fragment mcq-ans"><strong>147.0</strong> mmHg</span>
+              </p>
+            </div>
+
+            <!-- ===== NEW TOPIC: wage ~ educ + sex + educ:sex ===== -->
+            <div class="label fragment">Another example · wage ~ educ &times; sex</div>
+            <div class="mini-grid fragment" style="--split:minmax(0,1.25fr) minmax(0,.75fr); --gap:6px;">
+              <div class="code" style="width:100%;">
+                <div class="tag">R</div>
+                <pre style="font-size:clamp(7.8px,.54cqw,9.6px); line-height:1.04;">m &lt;- lm(wage ~ educ + sex + educ:sex, data = dat)
+coef(summary(m))[, c(1, 4)]
+<span class="out">#&gt;            Estimate  Pr(&gt;|t|)
+#&gt; (Intercept)    9.00    &lt;.001
+#&gt; educ           1.70    &lt;.001
+#&gt; sexMale        3.00     .010
+#&gt; educ:sexMale   0.80     .020</span></pre>
+              </div>
+              <div class="figure" style="padding:3px 5px;">
+                <svg viewBox="0 0 320 110" preserveAspectRatio="xMidYMid meet" style="width:100%; max-height:112px; display:block;">
+                  <line x1="30" y1="95" x2="310" y2="95" stroke="#3a555a" stroke-width="1.2"/>
+                  <line x1="30" y1="10" x2="30" y2="95" stroke="#3a555a" stroke-width="1.2"/>
+                  <text x="305" y="108" font-family="IBM Plex Mono, monospace" font-size="9" fill="#3a555a">educ</text>
+                  <text x="14" y="14" font-family="IBM Plex Mono, monospace" font-size="9" fill="#3a555a" transform="rotate(-90 14 14)">wage</text>
+                  <line x1="30" y1="78" x2="300" y2="20" stroke="#035f6c" stroke-width="2.2"/>
+                  <text x="200" y="24" font-family="Space Grotesk, Arial" font-size="10" font-weight="700" fill="#035f6c">Male: +2.5/yr</text>
+                  <line x1="30" y1="86" x2="300" y2="62" stroke="#b5451f" stroke-width="2.2"/>
+                  <text x="180" y="66" font-family="Space Grotesk, Arial" font-size="10" font-weight="700" fill="#b5451f">Female: +1.7/yr</text>
+                </svg>
+              </div>
+            </div>
+            <div class="equation fragment" style="width:100%; padding:4px 7px; font-size:clamp(9px,.62cqw,11px);">
+              $\widehat{\text{wage}} = 9.00 + 1.70(\text{educ}) + 3.00(\text{male}) + 0.80(\text{educ}\times\text{male})$
+            </div>
+
+            <!-- ===== SHORT PRACTICE (new topic) ===== -->
+            <div class="label fragment">Practice &middot; male, 16 years of education</div>
+            <div class="card soft mcq fillin fragment" style="padding:5px 7px;">
+              <p style="margin:0; font-family:var(--mono); font-size:clamp(8.4px,.6cqw,10.5px); line-height:1.22; color:var(--ink-2);">
+                $9.0 + 1.70(16) + 3.0 + 0.80(16) =$ <span class="fillin-blank">____</span> <span class="fragment mcq-ans"><strong>52.0</strong></span>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="chrome-bottom"></div>
+      </section>
+
+      <!-- ================= SLIDE 2: does it matter + when to fit ================= -->
+      <section class="slide compact-title" data-slide>
+        <div class="chrome-top"></div>
+        <header class="slide-head">
+          <h1>When to fit an interaction</h1>
+          <div class="title-line"></div>
+        </header>
+        <div class="slide-body" style="--cols: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); --gap:14px">
+
+          <!-- COLUMN 1: Model 4, additive -->
+          <div class="col" style="--col-gap:5px; padding-top:62px">
+            <div class="label fragment">Model 4 &middot; all predictors, additive</div>
+            <div class="code fragment" style="width:100%;">
+              <div class="tag">R</div>
+              <pre style="font-size:clamp(8.6px,.6cqw,10.4px); line-height:1.1;">m4 &lt;- lm(sysBP ~ BMI + BPMeds + age +
+            totChol + heartRate + cigsPerDay,
+            data = model_dat)
+<span class="out">#&gt;                 Estimate  Pr(&gt;|t|)
+#&gt; (Intercept)     26.923    &lt;2e-16
+#&gt; BMI              1.333    &lt;2e-16
+#&gt; BPMedsOn meds   24.086    &lt;2e-16
+#&gt; age              0.814    &lt;2e-16
+#&gt; totChol          0.034   4.7e-07
+#&gt; heartRate        0.289    &lt;2e-16
+#&gt; cigsPerDay      -0.011     0.665</span></pre>
+            </div>
+            <div class="equation fragment" style="width:100%; padding:4px 7px; font-size:clamp(8.6px,.6cqw,10px);">
+              $\widehat{\text{sysBP}} = 26.92 + 1.33(\text{BMI}) + 24.09(\text{meds}) + 0.81(\text{age}) + 0.03(\text{chol}) + 0.29(\text{heartRate}) - 0.01(\text{cigs})$
+            </div>
+            <div class="card soft fragment" style="padding:8px 10px;">
+              <div class="eyebrow">Interpret the BMI effect</div>
+              <p style="margin:0; font-size:clamp(10.5px,.74cqw,13px); line-height:1.22;">The BMI coefficient is <strong>1.333</strong>. Holding medication status, age, cholesterol, heart rate, and smoking constant, each additional BMI unit is associated with about <strong>1.33 mmHg higher</strong> systolic BP. This one slope applies to everyone.</p>
+            </div>
+          </div>
+
+          <!-- COLUMN 2: Model 5, every interaction -->
+          <div class="col" style="--col-gap:5px; padding-top:62px">
+            <div class="label fragment">Model 5 &middot; every pairwise interaction</div>
+            <div class="code fragment" style="width:100%;">
+              <div class="tag">R</div>
+              <pre style="font-size:clamp(8.4px,.58cqw,10.2px); line-height:1.02;">m5 &lt;- lm(sysBP ~ BMI + BPMeds + age + totChol + heartRate + cigsPerDay +
+  BMI:BPMeds + BMI:age + BMI:totChol + BMI:heartRate + BMI:cigsPerDay +
+  BPMeds:age + BPMeds:totChol + BPMeds:heartRate + BPMeds:cigsPerDay +
+  age:totChol + age:heartRate + age:cigsPerDay +
+  totChol:heartRate + totChol:cigsPerDay + heartRate:cigsPerDay,
+  data = model_dat)
+length(coef(m5))
+<span class="out">#&gt; [1] 22</span>
+coef(summary(m5))[, c(1, 4)]
+<span class="out">#&gt;                            Estimate  Pr(&gt;|t|)
+#&gt; (Intercept)                  81.650   0.0002
+#&gt; BMI                           0.570   0.3982
+#&gt; BPMedsOn meds                32.743   0.0896
+#&gt; age                           0.099   0.7740
+#&gt; totChol                      -0.042   0.5561
+#&gt; heartRate                    -0.228   0.2801
+#&gt; cigsPerDay                    0.251   0.3587
+#&gt; BMI:BPMedsOn meds            -1.054   0.0028
+#&gt; BMI:age                       0.008   0.3526
+#&gt; BMI:totChol                   0.000   0.8101
+#&gt; BMI:heartRate                 0.004   0.4790
+#&gt; BMI:cigsPerDay                0.001   0.8288
+#&gt; BPMedsOn meds:age             0.224   0.3343
+#&gt; BPMedsOn meds:totChol         0.044   0.2499
+#&gt; BPMedsOn meds:heartRate      -0.056   0.6440
+#&gt; BPMedsOn meds:cigsPerDay      0.220   0.2333
+#&gt; age:totChol                   0.000   0.6195
+#&gt; age:heartRate                 0.006   0.0529
+#&gt; age:cigsPerDay               -0.004   0.2445
+#&gt; totChol:heartRate             0.001   0.2693
+#&gt; totChol:cigsPerDay           -0.000   0.7089
+#&gt; heartRate:cigsPerDay         -0.001   0.6731</span></pre>
+            </div>
+            <div class="card warm fragment" style="padding:8px 10px;">
+              <div class="eyebrow">Interpret the BMI effect</div>
+              <p style="margin:0 0 4px; font-size:clamp(10.5px,.74cqw,13px); line-height:1.22;">There is no single BMI coefficient any more. The BMI slope is built from every row BMI appears in, and each interaction is <strong>multiplied by that person's own value</strong>:</p>
+              <p style="margin:0; font-family:var(--mono); font-size:clamp(8.6px,.6cqw,10.5px); line-height:1.26; color:var(--ink-2);">slope $= 0.570 - 1.054(\text{meds}) + 0.008(\text{age})$<br>$+\ 0.000(\text{chol}) + 0.004(\text{HR}) + 0.001(\text{cigs})$</p>
+            </div>
+            <div class="card soft fragment" style="padding:8px 10px;">
+              <div class="eyebrow">Worked slope: unmedicated, age 60, HR 75</div>
+              <p style="margin:0 0 4px; font-family:var(--mono); font-size:clamp(8.6px,.6cqw,10.5px); line-height:1.26; color:var(--ink-2);">$0.570 + 0.008(60) + 0.004(75) \approx \color{#035f6c}{1.35}$</p>
+              <p style="margin:0; font-size:clamp(10px,.7cqw,12.5px); line-height:1.22;">A different age or heart rate gives a different BMI slope, so every person effectively has their own. No single number answers "what does one more BMI unit do?"</p>
+            </div>
+          </div>
+
+          <!-- COLUMN 3: when to fit an interaction -->
+          <div class="col" style="--col-gap:5px; padding-top:62px">
+            <div class="label fragment">When should you fit an interaction?</div>
+            <div class="card soft fragment" style="padding:8px 10px; border-left:2px solid #2e8b57;">
+              <div class="eyebrow" style="color:#1f5c3d;">1 &middot; Established in the literature</div>
+              <p style="margin:0; font-size:clamp(11px,.76cqw,14px); line-height:1.22;">Other studies have reported this interaction as a stable finding, so you include it to match the standard model in your field. Example: age times sex in growth curves.</p>
+            </div>
+            <div class="card soft fragment" style="padding:8px 10px; border-left:2px solid #2c5777;">
+              <div class="eyebrow" style="color:#2c5777;">2 &middot; It is the research question</div>
+              <p style="margin:0; font-size:clamp(11px,.76cqw,14px); line-height:1.22;">You are running the study to ask whether the effect of X on Y depends on Z. The interaction coefficient is the estimate you care about, so you fit it and test it.</p>
+            </div>
+            <div class="card soft fragment" style="padding:8px 10px; border-left:2px solid var(--gold);">
+              <div class="eyebrow" style="color:var(--brown);">3 &middot; There is a design or mechanism reason</div>
+              <p style="margin:0; font-size:clamp(11px,.76cqw,14px); line-height:1.22;">The study design or biology strongly suggests that one effect should differ across groups. Example: an antibiotic lowers infection severity in non-resistant strains, but has little effect on resistant strains.</p>
+            </div>
+            <div class="card soft fragment" style="padding:8px 10px; border-left:2px solid var(--alarm);">
+              <div class="eyebrow" style="color:var(--alarm);">4 &middot; Otherwise, additive is often a reasonable default</div>
+              <p style="margin:0; font-size:clamp(11px,.76cqw,14px); line-height:1.22;">If there is no specific reason to expect effect modification, an additive model is often easier to interpret and more stable. .</p>
+            </div>
+          </div>
+        </div>
+        <div class="chrome-bottom"></div>
+      </section>
+
+      <canvas id="ink"></canvas>
+    </main>
+  </div>
+  <div id="hint">Left/right reveal | up/down slides | P pencil | U undo | C clear | [ ] pen | R reset</div>
+  <div id="counter"></div>
+
+  <script src="deck-config.js"></script>
+  <script>
+    const slides = [...document.querySelectorAll('.slide')];
+    const dots = document.getElementById('dots');
+    const deck = document.getElementById('deck');
+    const stage = document.getElementById('stage');
+
+    const DECK_W = 1600;
+    const DECK_H = 900;
+
+    function fitDeck() {
+      const styles = getComputedStyle(stage);
+      const padX = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
+      const padY = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
+      const availW = stage.clientWidth - padX;
+      const availH = stage.clientHeight - padY;
+      const scale = Math.min(availW / DECK_W, availH / DECK_H);
+      deck.style.transform = `scale(${scale})`;
+    }
+
+    window.addEventListener('resize', fitDeck);
+    fitDeck();
+    const counter = document.getElementById('counter');
+    const pencilButton = document.getElementById('pencil');
+    const undoButton = document.getElementById('undo');
+    const clearButton = document.getElementById('clear');
+    const canvas = document.getElementById('ink');
+    const ctx = canvas.getContext('2d');
+    const WIDTH = 1920;
+    const HEIGHT = 1080;
+    let slideIndex = 0;
+    let shown = 0;
+    let fragments = [];
+    let pencilMode = false;
+    let penWidth = 2.4;
+    let activeStroke = null;
+    const drawings = slides.map(() => []);
+
+    canvas.width = WIDTH;
+    canvas.height = HEIGHT;
+
+    slides.forEach((_, index) => {
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'dot';
+      dot.title = `Slide ${index + 1}`;
+      dot.addEventListener('click', event => {
+        event.stopPropagation();
+        showSlide(index);
+      });
+      dots.appendChild(dot);
+    });
+
+    function showSlide(index, revealAll = false) {
+      slideIndex = (index + slides.length) % slides.length;
+      shown = 0;
+      slides.forEach((slide, i) => slide.classList.toggle('active', i === slideIndex));
+      fragments = [...slides[slideIndex].querySelectorAll('.fragment')];
+      if (revealAll || window.DECK_REVEAL_ALL) shown = fragments.length;
+      render();
+      drawStrokes();
+    }
+
+    function render() {
+      fragments.forEach((fragment, index) => {
+        fragment.classList.toggle('shown', index < shown);
+      });
+      [...dots.children].forEach((dot, index) => dot.classList.toggle('on', index === slideIndex));
+      counter.textContent = `${slideIndex + 1} / ${slides.length} | ${shown} / ${fragments.length} | pen ${penWidth}px`;
+    }
+
+    function nextStep() {
+      if (!window.DECK_REVEAL_ALL && shown < fragments.length) {
+        shown += 1;
+        render();
+      } else {
+        showSlide(slideIndex + 1);
+      }
+    }
+
+    function prevStep() {
+      if (!window.DECK_REVEAL_ALL && shown > 0) {
+        shown -= 1;
+        render();
+      } else {
+        showSlide(slideIndex - 1, true);
+      }
+    }
+
+    function resetSlide() {
+      shown = 0;
+      render();
+    }
+
+    function setPencil(on) {
+      pencilMode = on;
+      deck.classList.toggle('drawing', pencilMode);
+      pencilButton.classList.toggle('on', pencilMode);
+      pencilButton.textContent = `Pencil: ${pencilMode ? 'on' : 'off'}`;
+    }
+
+    function pointFor(event) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (event.clientX - rect.left) * WIDTH / rect.width,
+        y: (event.clientY - rect.top) * HEIGHT / rect.height
+      };
+    }
+
+    function drawOne(stroke) {
+      if (stroke.points.length < 2) return;
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = stroke.color;
+      ctx.lineWidth = stroke.width;
+      ctx.beginPath();
+      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+      stroke.points.slice(1).forEach(pt => ctx.lineTo(pt.x, pt.y));
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawStrokes() {
+      ctx.clearRect(0, 0, WIDTH, HEIGHT);
+      drawings[slideIndex].forEach(drawOne);
+    }
+
+    canvas.addEventListener('click', event => event.stopPropagation());
+    canvas.addEventListener('pointerdown', event => {
+      if (!pencilMode) return;
+      event.preventDefault();
+      event.stopPropagation();
+      canvas.setPointerCapture(event.pointerId);
+      activeStroke = { color: '#e07a2f', width: penWidth, points: [pointFor(event)] };
+      drawings[slideIndex].push(activeStroke);
+    });
+    canvas.addEventListener('pointermove', event => {
+      if (!activeStroke || !pencilMode) return;
+      event.preventDefault();
+      event.stopPropagation();
+      activeStroke.points.push(pointFor(event));
+      drawStrokes();
+    });
+    function finishStroke(event) {
+      if (!activeStroke) return;
+      event.preventDefault();
+      event.stopPropagation();
+      activeStroke = null;
+      drawStrokes();
+    }
+    canvas.addEventListener('pointerup', finishStroke);
+    canvas.addEventListener('pointercancel', finishStroke);
+    canvas.addEventListener('lostpointercapture', () => { activeStroke = null; });
+
+    function undoStroke() {
+      drawings[slideIndex].pop();
+      drawStrokes();
+    }
+
+    function clearStrokes() {
+      drawings[slideIndex] = [];
+      drawStrokes();
+    }
+
+    pencilButton.addEventListener('click', event => {
+      event.stopPropagation();
+      setPencil(!pencilMode);
+    });
+    undoButton.addEventListener('click', event => {
+      event.stopPropagation();
+      undoStroke();
+    });
+    clearButton.addEventListener('click', event => {
+      event.stopPropagation();
+      clearStrokes();
+    });
+    window.addEventListener('resize', drawStrokes);
+
+    document.addEventListener('keydown', event => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        undoStroke();
+        return;
+      }
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (['ArrowRight', ' ', 'PageDown', 'Enter'].includes(event.key)) {
+        event.preventDefault();
+        nextStep();
+      } else if (['ArrowLeft', 'PageUp'].includes(event.key)) {
+        event.preventDefault();
+        prevStep();
+      } else if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        showSlide(slideIndex + 1);
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        showSlide(slideIndex - 1);
+      } else if (event.key.toLowerCase() === 'p') {
+        event.preventDefault();
+        setPencil(!pencilMode);
+      } else if (event.key.toLowerCase() === 'u') {
+        event.preventDefault();
+        undoStroke();
+      } else if (event.key.toLowerCase() === 'c') {
+        event.preventDefault();
+        clearStrokes();
+      } else if (event.key.toLowerCase() === 'e') {
+        event.preventDefault();
+        clearStrokes();
+      } else if (event.key === '[') {
+        event.preventDefault();
+        penWidth = Math.max(1, penWidth - 1);
+        render();
+      } else if (event.key === ']') {
+        event.preventDefault();
+        penWidth = Math.min(18, penWidth + 1);
+        render();
+      } else if (event.key.toLowerCase() === 'r') {
+        event.preventDefault();
+        resetSlide();
+      }
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    const initialSlide = Number.parseInt(params.get('slide') || '0', 10);
+    const revealAll = params.get('all') === '1';
+    showSlide(Number.isFinite(initialSlide) ? initialSlide : 0, revealAll);
+  </script>
+</body>
+</html>

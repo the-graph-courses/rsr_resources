@@ -1,0 +1,14 @@
+  Tukey multiple comparisons of means
+    95% family-wise confidence level
+
+Fit: aov(formula = rfft ~ education, data = prevend)
+
+$education
+                                     diff       lwr      upr     p adj
+lower_secondary-primary          14.77857  5.275987 24.28115 0.0004082
+higher_secondary-primary         32.13345 22.432970 41.83393 0.0000000
+university-primary               44.96389 35.468681 54.45909 0.0000000
+higher_secondary-lower_secondary 17.35488 10.420797 24.28897 0.0000000
+university-lower_secondary       30.18532 23.541438 36.82920 0.0000000
+university-higher_secondary      12.83044  5.906464 19.75441 0.0000140
+

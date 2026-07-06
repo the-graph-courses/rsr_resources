@@ -1,0 +1,12 @@
+
+	Welch Two Sample t-test
+
+data:  bwt by smoke
+t = 2.7299, df = 170.1, p-value = 0.007003
+alternative hypothesis: true difference in means between group non-smoker and group smoker is not equal to 0
+95 percent confidence interval:
+  78.57486 488.97860
+sample estimates:
+mean in group non-smoker     mean in group smoker
+                3055.696                 2771.919
+

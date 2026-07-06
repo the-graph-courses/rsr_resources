@@ -1,0 +1,21 @@
+
+Call:
+lm(formula = sysBP ~ BMI * BPMeds, data = model_dat)
+
+Residuals:
+    Min      1Q  Median      3Q     Max
+-54.450 -13.963  -3.353  10.198 141.513
+
+Coefficients:
+                  Estimate Std. Error t value Pr(>|t|)
+(Intercept)       87.64371    2.04741  42.807  < 2e-16 ***
+BMI                1.69611    0.07861  21.576  < 2e-16 ***
+BPMedsOn meds     57.10567   10.35043   5.517 3.65e-08 ***
+BMI:BPMedsOn meds -0.99366    0.36315  -2.736  0.00624 **
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 20.09 on 4162 degrees of freedom
+Multiple R-squared:  0.1606,	Adjusted R-squared:   0.16
+F-statistic: 265.4 on 3 and 4162 DF,  p-value: < 2.2e-16
+

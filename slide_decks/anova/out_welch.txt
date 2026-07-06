@@ -1,0 +1,6 @@
+
+	One-way analysis of means (not assuming equal variances)
+
+data:  rfft and education
+F = 77.692, num df = 3.00, denom df = 197.42, p-value < 2.2e-16
+

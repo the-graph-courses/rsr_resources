@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The two-sample t-test</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false});"></script>
+  <style>
+    :root {
+      --gold: #e5b44f;
+      --mist: #c4d8db;
+      --teal: #035f6c;
+      --alarm: #b5451f;
+      --brown: #7a6212;
+      --ink: #073b42;
+      --ink-2: #3a555a;
+      --stage: #0d2b30;
+      --paper: #ffffff;
+      --soft: #f2f7f7;
+      --warm: #fbeecb;
+      --coral: #e58b73;
+      --violet: #8c7ab8;
+      --sans: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+      --mono: "IBM Plex Mono", "SF Mono", Menlo, monospace;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: var(--stage);
+      color: var(--ink);
+      font-family: var(--sans);
+    }
+    #stage {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 10px 22px;
+      overflow: hidden;
+    }
+    #deck {
+      position: relative;
+      width: 1600px;
+      height: 900px;
+      flex: none;
+      container-type: size;
+      transform-origin: center center;
+      overflow: hidden;
+      border-radius: 2px;
+      background: var(--paper);
+      box-shadow: 0 18px 60px rgba(0,0,0,.55);
+    }
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      grid-template-rows: 8px auto 1fr 8px;
+      background: var(--paper);
+    }
+    .slide.active { display: grid; }
+    .chrome-top { background: var(--gold); }
+    .chrome-bottom { background: var(--teal); }
+    .slide.no-head {
+      grid-template-rows: 8px 1fr 8px;
+    }
+    .slide.compact-title {
+      grid-template-rows: 8px 1fr 8px;
+    }
+    .slide.compact-title .slide-head {
+      position: absolute;
+      top: 8px;
+      left: 0;
+      z-index: 3;
+      width: 520px;
+      padding: 8px 24px 4px;
+      pointer-events: none;
+    }
+    .slide.compact-title .slide-body {
+      grid-row: 2;
+      padding-top: 8px;
+    }
+    .slide.compact-title .col-story {
+      padding-top: 62px;
+    }
+    .slide-head {
+      padding: 8px 24px 4px;
+    }
+    .kicker {
+      margin-bottom: 4px;
+      color: var(--brown);
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.9px;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      color: var(--teal);
+      font-family: var(--sans);
+      font-size: clamp(22px, 2.1cqw, 32px);
+      line-height: 1.06;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .title-line {
+      width: min(420px, 38%);
+      height: 3px;
+      margin-top: 4px;
+      border-radius: 2px;
+      background: var(--gold);
+    }
+    .slide-body {
+      min-height: 0;
+      padding: 8px 24px 10px;
+      display: grid;
+      grid-template-columns: var(--cols, minmax(0, 1fr) minmax(0, 1fr));
+      gap: var(--gap, 14px);
+      align-items: stretch;
+    }
+    .col {
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--col-gap, 2px);
+    }
+    .col > .label:not(:first-child) { margin-top: 6px; }
+    .col hr.sep {
+      width: 100%;
+      height: 0;
+      margin: 5px 0 1px;
+      border: 0;
+      border-top: 1px solid var(--mist);
+    }
+    .row {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: var(--split, minmax(0, 1fr) minmax(0, 1fr));
+      gap: var(--gap, 14px);
+      align-items: stretch;
+    }
+    .pane, .stack {
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--stack-gap, 8px);
+    }
+    .pane {
+      padding: 0;
+    }
+    .pane.box {
+      padding: 14px 16px;
+      border: 1px solid var(--mist);
+      border-radius: 2px;
+      background: transparent;
+    }
+    .pane.soft { background: var(--soft); }
+    .pane.warm { background: var(--warm); }
+    .mini-grid {
+      display: grid;
+      grid-template-columns: var(--split, minmax(0, 1fr) minmax(0, 1fr));
+      gap: var(--gap, 12px);
+      align-items: stretch;
+    }
+    .fragment {
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity .24s ease, transform .24s ease;
+    }
+    .fragment.shown {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .label {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 4px 8px;
+      border-radius: 2px;
+      background: var(--teal);
+      color: #fff;
+      font-family: var(--sans);
+      font-size: clamp(13px, .9cqw, 16px);
+      line-height: 1.05;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      text-align: center;
+    }
+    .card .label {
+      width: auto;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--brown);
+      font-size: clamp(12px, .82cqw, 15px);
+      font-weight: 600;
+      text-align: center;
+    }
+    .eyebrow {
+      margin-bottom: 5px;
+      color: var(--brown);
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+    }
+    .text {
+      font-family: var(--sans);
+      font-size: clamp(12px, .86cqw, 15.5px);
+      line-height: 1.12;
+      font-weight: 400;
+      color: var(--ink-2);
+    }
+    .text strong { color: var(--teal); font-weight: 500; }
+    .tiny {
+      color: var(--ink-2);
+      font-family: var(--sans);
+      font-size: clamp(10px, .68cqw, 13px);
+      line-height: 1.2;
+      font-style: normal;
+      letter-spacing: .1px;
+    }
+    .card, .figure, .code {
+      border: 1px solid var(--mist);
+      border-radius: 2px;
+      background: transparent;
+    }
+    .card {
+      padding: 12px 13px;
+    }
+    .card.soft { background: var(--soft); }
+    .card.warm { background: var(--warm); }
+    .card.mcq { padding: 8px 10px; }
+    .card.mcq .mcq-q {
+      margin: 0 0 5px;
+      font-family: var(--sans);
+      font-size: clamp(11px, .8cqw, 14px);
+      line-height: 1.2;
+      font-weight: 600;
+      color: var(--teal);
+    }
+    .card.mcq .mcq-opts {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .card.mcq .mcq-opts.inline {
+      flex-direction: row;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .card.mcq .mcq-opts li {
+      font-family: var(--sans);
+      font-size: clamp(10px, .74cqw, 13px);
+      line-height: 1.22;
+      font-weight: 400;
+      color: var(--ink-2);
+    }
+    .card.mcq .mcq-ans {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 0 8px;
+      border-radius: 2px;
+      background: #d6ecdf;
+      font-family: var(--sans);
+      font-size: clamp(10px, .74cqw, 13px);
+      line-height: 1.4;
+      font-weight: 600;
+      color: #1f5c3d;
+      white-space: nowrap;
+      vertical-align: baseline;
+    }
+    .card.mcq .mcq-ans::before {
+      content: "✓ ";
+      color: #2e8b57;
+    }
+    .card.mcq .mcq-ans strong { color: #2e8b57; }
+    .card.mcq.fillin .fillin-blank {
+      display: inline-block;
+      min-width: 2.6em;
+      border-bottom: 2px solid var(--teal);
+      color: var(--teal);
+      font-weight: 600;
+      vertical-align: baseline;
+    }
+    .card.mcq.fillin .fillin-opts {
+      font-size: clamp(9px, .64cqw, 11px);
+      font-weight: 400;
+      color: var(--brown);
+      white-space: nowrap;
+    }
+    .card.mcq .match-grid {
+      display: grid;
+      grid-template-columns: max-content max-content 1fr;
+      column-gap: 14px;
+      row-gap: 6px;
+      margin-top: 6px;
+      font-family: var(--sans);
+      font-size: clamp(10px, .74cqw, 13px);
+      color: var(--ink-2);
+      align-items: baseline;
+    }
+    .card.mcq .match-grid .mh {
+      font-weight: 600;
+      color: var(--teal);
+      letter-spacing: .04em;
+      font-size: 0.86em;
+      text-transform: uppercase;
+    }
+    .card.mcq .match-grid > .term {
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .card.mcq .match-col {
+      display: grid;
+      grid-template-rows: subgrid;
+      grid-row: 2 / span 4;
+      row-gap: 6px;
+    }
+    .card.mcq .match-col.values { grid-column: 2; }
+    .card.mcq .match-col.meanings { grid-column: 3; }
+    .card.mcq .match-col > div {
+      align-self: baseline;
+      padding: 1px 6px;
+      border-radius: 2px;
+      background: #d6ecdf;
+      color: #1f5c3d;
+      font-weight: 500;
+      line-height: 1.22;
+    }
+    .card.mcq .match-scram {
+      grid-column: 1 / -1;
+      margin: 4px 0 0;
+      padding: 4px 6px;
+      border-radius: 2px;
+      background: #fbeecb;
+      font-size: clamp(9.5px, .7cqw, 12px);
+      color: var(--brown);
+      line-height: 1.4;
+    }
+    .card.mcq .match-scram strong { color: var(--teal); }
+    .sleep-intro-row {
+      --split: minmax(0, 2fr) minmax(0, 1fr);
+      align-items: start;
+    }
+    .sleep-intro-row .code {
+      width: 100%;
+      min-width: 0;
+      align-self: stretch;
+    }
+    .sleep-side {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+      width: 100%;
+    }
+    .sleep-intro-row .diagram.sleep-scene {
+      flex: 0 0 auto;
+      height: auto;
+      display: block;
+      border: 1px solid var(--mist);
+      border-radius: 2px;
+      background: #073b42;
+      padding: 4px;
+      overflow: hidden;
+    }
+    .sleep-intro-row .diagram.sleep-scene svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .sleep-side .card.mcq-side .mcq-opts.inline {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1px;
+    }
+    .card p {
+      margin: 0;
+      font-family: var(--sans);
+      font-size: clamp(11px, .82cqw, 15px);
+      line-height: 1.16;
+      font-weight: 400;
+      color: var(--ink-2);
+    }
+    .figure {
+      padding: 9px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .figure.grow { flex: 1; min-height: 0; }
+    .figure img {
+      width: 100%;
+      min-height: 0;
+      object-fit: contain;
+      display: block;
+    }
+    .figure.grow img { flex: 1; }
+    .caption {
+      margin-top: 6px;
+      padding-top: 5px;
+      border-top: 1px solid var(--mist);
+      color: var(--ink-2);
+      font-family: var(--sans);
+      font-size: clamp(10px, .68cqw, 13px);
+      line-height: 1.16;
+      font-style: normal;
+    }
+    .diagram {
+      min-height: 132px;
+      overflow: visible;
+    }
+    .diagram.tall { min-height: 210px; flex: 1; }
+    .col-story {
+      min-height: 0;
+    }
+    .col-story .diagram.story-scene {
+      flex: 1 1 230px;
+      min-height: 0;
+      max-height: 250px;
+    }
+    .col-story .story-tail {
+      flex: 0 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .col-story hr.sep { margin: 2px 0 1px; }
+    .col-story .plan-results {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 5fr);
+      gap: 10px;
+      align-items: start;
+    }
+    .col-story .plan-results .pr-plan,
+    .col-story .plan-results .pr-results {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .col-story .plan-results .pr-plan .text {
+      display: flex;
+      align-items: center;
+      min-height: 0;
+    }
+    .col-story .story-tail .text { font-size: clamp(12px, .82cqw, 15px); line-height: 1.12; }
+    .col-story .code:not(.chart-code) {
+      width: 100%;
+    }
+    .col-story .code:not(.chart-code) pre {
+      font-size: clamp(10px, .72cqw, 13px);
+      line-height: 1.28;
+    }
+    .col-story .chart-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .col-story .code.chart-code {
+      width: 100%;
+    }
+    .col-story .code.chart-code pre {
+      font-size: clamp(10px, .72cqw, 14px);
+      line-height: 1.3;
+    }
+    .col-story .figure.chart {
+      padding: 6px 7px;
+      display: flex;
+      flex-direction: column;
+    }
+    .col-story .figure.chart img {
+      width: 100%;
+      height: auto;
+      min-height: 90px;
+      max-height: 128px;
+      object-fit: contain;
+      display: block;
+    }
+    .col-story .figure.chart .caption {
+      margin-top: 3px;
+      font-size: clamp(10px, .66cqw, 12px);
+    }
+    .col-story .bubble { margin: 3px 0 4px 22px; padding: 6px 12px; }
+    .diagram.compact {
+      min-height: 0;
+      height: var(--diagram-h, 132px);
+      flex: 0 0 var(--diagram-h, 132px);
+    }
+    .diagram svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .stat {
+      padding: 9px 11px;
+      border: 0;
+      border-left: 2px solid var(--teal);
+      border-radius: 0;
+      background: transparent;
+    }
+    .stat-label {
+      color: var(--brown);
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+    .stat-value {
+      margin-top: 3px;
+      color: var(--teal);
+      font-family: var(--sans);
+      font-size: clamp(22px, 1.55cqw, 30px);
+      line-height: 1;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .stat.alarm { border-left-color: var(--alarm); }
+    .stat.alarm .stat-value { color: var(--alarm); }
+    .code {
+      position: relative;
+      overflow: hidden;
+      width: fit-content;
+      max-width: 100%;
+      border: 1px solid var(--mist);
+      background: var(--soft);
+    }
+    .code .tag {
+      position: absolute;
+      top: 0;
+      right: 0;
+      z-index: 1;
+      margin: 0;
+      padding: 3px 7px;
+      border: 0;
+      border-radius: 0 2px 0 2px;
+      background: var(--gold);
+      color: #fff;
+      font-family: var(--mono);
+      font-size: clamp(8.5px, .58cqw, 10.5px);
+      font-weight: 600;
+      letter-spacing: .4px;
+      line-height: 1.1;
+    }
+    .code pre {
+      margin: 0;
+      padding: 7px 34px 7px 9px;
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: clamp(11px, .78cqw, 15px);
+      line-height: 1.32;
+      white-space: pre-wrap;
+    }
+    .out { color: var(--alarm); font-weight: 750; }
+    .comment { color: var(--brown); font-style: italic; }
+    .equation {
+      box-sizing: border-box;
+      width: fit-content;
+      max-width: 100%;
+      align-self: center;
+      margin-inline: auto;
+      padding: 8px 10px;
+      border: 1px solid var(--mist);
+      border-left: 2px solid var(--gold);
+      border-radius: 2px;
+      background: var(--warm);
+      color: var(--teal);
+      font-family: var(--mono);
+      font-size: clamp(14px, 1.02cqw, 20px);
+      line-height: 1.3;
+      font-weight: 500;
+      text-align: center;
+    }
+    .equation .katex-display {
+      margin: 0 auto;
+      text-align: center;
+    }
+    .col-steps > .label:not(:first-child) { margin-top: 4px; }
+    .col-steps .label {
+      padding: 2px 8px;
+      line-height: 1;
+    }
+    .col-steps .inline-row {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      min-width: 0;
+      width: 100%;
+    }
+    .col-steps .inline-row .equation {
+      align-self: center;
+      margin-inline: 0;
+      flex: 0 1 auto;
+      max-width: 56%;
+    }
+    .col-steps .inline-row .diagram.compact {
+      flex: 1 1 0;
+      min-width: 0;
+      width: auto;
+      height: 68px;
+      --diagram-h: 68px;
+    }
+    .col-steps .inline-row .code {
+      flex: 0 1 auto;
+      min-width: 0;
+      max-width: 54%;
+    }
+    .col-steps .inline-row.diff-row .equation {
+      flex: 2 1 0;
+      max-width: 40%;
+    }
+    .col-steps .inline-row.diff-row .code {
+      flex: 1 1 100%;
+      width: 100%;
+      max-width: 100%;
+    }
+    .col-steps .inline-row.se-row .equation {
+      flex: 3 1 0;
+      max-width: 66%;
+    }
+    .col-steps .inline-row.se-row .code {
+      flex: 2 1 0;
+      max-width: 34%;
+    }
+    .col-steps .inline-row .code pre {
+      font-size: clamp(10px, .74cqw, 13px);
+      line-height: 1.3;
+    }
+    .col-steps .inline-row .figure.tdist + .code,
+    .col-steps .inline-row .code {
+      align-self: stretch;
+    }
+    .col-steps .inline-row .figure.tdist {
+      flex: 3 1 0;
+      min-width: 0;
+      padding: 4px 7px;
+    }
+    .col-steps .inline-row .figure.tdist + .code {
+      flex: 2 1 0;
+    }
+    .col-steps .figure.tdist img {
+      width: 100%;
+      min-height: 76px;
+      max-height: 104px;
+      object-fit: contain;
+      display: block;
+    }
+    .col-steps .figure.tdist .caption {
+      margin-top: 2px;
+      padding-top: 2px;
+      font-size: clamp(9px, .62cqw, 11px);
+    }
+    .col-steps > .code {
+      align-self: flex-end;
+    }
+    .col-steps .code.ttest-out {
+      width: 100%;
+    }
+    .col-steps .code.ttest-out pre {
+      font-size: clamp(10px, .74cqw, 13px);
+      line-height: 1.06;
+      padding-top: 5px;
+      padding-bottom: 5px;
+    }
+    .page2-practice .calc-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+      gap: 6px;
+      align-items: stretch;
+    }
+    .page2-practice .calc-row .equation {
+      width: 100%;
+      padding: 5px 7px;
+      font-size: clamp(11px, .78cqw, 14px);
+      line-height: 1.18;
+    }
+    .page2-practice .calc-row .code {
+      width: 100%;
+    }
+    .page2-practice .calc-row .code pre {
+      padding: 6px 28px 6px 8px;
+      font-size: clamp(10px, .72cqw, 12px);
+      line-height: 1.18;
+    }
+    .page2-practice .p-figure {
+      padding: 5px 6px;
+    }
+    .page2-practice .p-figure img {
+      max-height: 74px;
+    }
+    .page2-practice .figure img {
+      max-height: 126px;
+    }
+    .page2-practice .figure .caption {
+      margin-top: 3px;
+      padding-top: 3px;
+      font-size: clamp(9px, .62cqw, 11px);
+    }
+    .page2-practice .sleep-intro-row .diagram.sleep-scene {
+      padding: 3px;
+    }
+    .page2-practice .sleep-intro-row .diagram.sleep-scene svg {
+      max-height: 118px;
+    }
+    .page2-practice .sleep-side .card.mcq-side {
+      padding: 5px 7px;
+    }
+    .page2-practice .sleep-side .card.mcq-side .mcq-opts.inline {
+      flex-direction: column;
+      flex-wrap: nowrap;
+      gap: 1px;
+    }
+    .page2-practice .sleep-side .card.mcq-side .mcq-q,
+    .page2-practice .sleep-side .card.mcq-side .mcq-opts li {
+      font-size: clamp(9px, .62cqw, 11px);
+      line-height: 1.12;
+    }
+    .ci-compare {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--sans);
+      font-size: clamp(11px, .78cqw, 14px);
+      line-height: 1.18;
+      color: var(--ink-2);
+    }
+    .ci-compare th,
+    .ci-compare td {
+      padding: 6px 8px;
+      border: 1px solid var(--mist);
+      text-align: center;
+      vertical-align: middle;
+    }
+    .ci-compare th {
+      background: var(--teal);
+      color: #fff;
+      font-weight: 600;
+    }
+    .ci-compare td:first-child {
+      text-align: left;
+      color: var(--teal);
+      font-weight: 600;
+    }
+    .mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--sans);
+      font-size: clamp(9.5px, .68cqw, 12px);
+      line-height: 1.15;
+      color: var(--ink-2);
+    }
+    .mini-table th,
+    .mini-table td {
+      padding: 4px 6px;
+      border: 1px solid var(--mist);
+      vertical-align: top;
+    }
+    .mini-table th {
+      background: var(--soft);
+      color: var(--teal);
+      font-weight: 700;
+      text-align: left;
+    }
+    .mini-table.answer td {
+      background: #d6ecdf;
+      color: #1f5c3d;
+      font-weight: 500;
+    }
+    .pill-match {
+      display: grid;
+      grid-template-columns: minmax(0, .7fr) minmax(0, 1fr) minmax(0, 1.35fr);
+      gap: 6px;
+      margin-top: 5px;
+      font-family: var(--sans);
+      font-size: clamp(9.5px, .68cqw, 12px);
+      line-height: 1.15;
+    }
+    .pill-match .pill-head {
+      color: var(--teal);
+      font-size: .88em;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .pill-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .pill {
+      padding: 3px 6px;
+      border-radius: 2px;
+      background: var(--warm);
+      color: var(--brown);
+      font-weight: 500;
+    }
+    .pill.term {
+      background: var(--soft);
+      color: var(--teal);
+    }
+    .mini-axis {
+      width: 100%;
+      height: 34px;
+      display: block;
+    }
+    .visual-pq {
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+      gap: 8px;
+      align-items: center;
+    }
+    .answer-key {
+      border-left: 2px solid #2e8b57;
+      background: #eef8f2;
+    }
+    .alarm { color: var(--alarm); }
+    .eq-inline {
+      display: inline-block;
+      margin-left: 4px;
+      padding: 1px 8px;
+      border-radius: 2px;
+      background: var(--soft);
+      color: var(--teal);
+      font-weight: 600;
+      white-space: nowrap;
+      vertical-align: baseline;
+    }
+    .bubble {
+      position: relative;
+      margin: 4px 0 8px 18px;
+      padding: 7px 14px;
+      border: 0;
+      border-left: 2px solid var(--teal);
+      border-radius: 0;
+      background: var(--warm);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: clamp(12px, .86cqw, 15.5px);
+      line-height: 1.26;
+      font-weight: 400;
+      font-style: italic;
+      box-shadow: none;
+    }
+    .bubble::before, .bubble::after { content: none; }
+    .bubble strong { color: var(--brown); font-weight: 500; font-style: normal; }
+    .xbar {
+      position: relative;
+      display: inline-block;
+      line-height: .95;
+      vertical-align: baseline;
+    }
+    .xbar::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: -.08em;
+      border-top: .08em solid currentColor;
+    }
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+    .flow span {
+      padding: 4px 11px;
+      border: 1px solid var(--mist);
+      border-radius: 2px;
+      background: transparent;
+      font-family: var(--sans);
+      font-size: clamp(12px, .82cqw, 16px);
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .flow .arrow {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--brown);
+    }
+    .callout {
+      padding: 10px 14px;
+      border: 0;
+      border-left: 2px solid var(--gold);
+      border-radius: 0;
+      background: var(--soft);
+      font-family: var(--sans);
+      font-size: clamp(13px, .92cqw, 17px);
+      line-height: 1.2;
+      font-weight: 400;
+      color: var(--ink);
+    }
+    #dots {
+      display: none;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border: 0;
+      border-radius: 50%;
+      background: #3a5e64;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+    .dot.on { background: var(--gold); transform: scale(1.14); }
+    #tools {
+      position: fixed;
+      top: 14px;
+      right: 16px;
+      z-index: 22;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--mist);
+      font-family: var(--sans);
+      font-size: 13px;
+      letter-spacing: .3px;
+    }
+    #tools button {
+      border: 1px solid #4d747a;
+      border-radius: 2px;
+      padding: 6px 9px;
+      background: #153d43;
+      color: var(--mist);
+      font: inherit;
+      font-family: var(--sans);
+      cursor: pointer;
+    }
+    #tools button.on {
+      border-color: var(--gold);
+      background: var(--gold);
+      color: #0d2b30;
+    }
+    #hint {
+      position: fixed;
+      bottom: 12px;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      text-align: center;
+      color: var(--mist);
+      font-family: var(--sans);
+      font-size: 13px;
+      letter-spacing: .5px;
+      opacity: .72;
+    }
+    #counter {
+      position: fixed;
+      right: 16px;
+      bottom: 12px;
+      z-index: 20;
+      color: var(--mist);
+      font-family: var(--mono);
+      font-size: 13px;
+      letter-spacing: .5px;
+      opacity: .85;
+    }
+    #ink {
+      position: absolute;
+      inset: 0;
+      z-index: 15;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      touch-action: none;
+    }
+    #deck.drawing #ink {
+      pointer-events: auto;
+      cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 28 28'><path d='M4 24l1.2-4.4L18.9 5.9a2.5 2.5 0 0 1 3.5 3.5L8.7 23.1 4 24z' fill='%23e07a2f' stroke='%23073b42' stroke-width='1.4' stroke-linejoin='round'/><path d='M17.4 7.4l3.5 3.5' stroke='%23073b42' stroke-width='1.4'/></svg>") 3 19, crosshair;
+    }
+    /* directionality cards: compact, bulleted, full symbols */
+    .dir-card .h0 {
+      margin: 1px 0 4px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid #e7d6a6;
+    }
+    .dir-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .dir-list li {
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+      font-size: clamp(10px, .74cqw, 13px);
+      line-height: 1.16;
+      color: var(--ink-2);
+    }
+    .dir-list .tag {
+      flex: none;
+      width: 64px;
+      padding: 1px 0;
+      border-radius: 2px;
+      text-align: center;
+      font-weight: 700;
+      font-size: .8em;
+      letter-spacing: .02em;
+    }
+    .dir-list .tag.two { background: #d6ecdf; color: #1f5c3d; }
+    .dir-list .tag.one { background: #dce7ef; color: #2c5777; }
+    .dir-list .hyp { flex: none; font-weight: 500; color: var(--teal); }
+    .dir-list .when { color: var(--brown); }
+    .dir-list .alt { font-family: var(--mono); color: #5b6f73; font-size: .78em; white-space: nowrap; }
+    .dir-here {
+      margin: 4px 0 0;
+      padding-top: 3px;
+      border-top: 1px solid #e7d6a6;
+      font-size: clamp(10px, .76cqw, 13px);
+      line-height: 1.16;
+      color: var(--ink);
+    }
+    .dir-here strong { color: var(--brown); }
+    /* title box + concept SVG share a row */
+    .intro-row {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 10px;
+      align-items: stretch;
+    }
+    .intro-row .card {
+      padding: 6px 11px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .intro-row .scene {
+      min-width: 0;
+      border: 1px solid var(--mist);
+      border-radius: 2px;
+      background: #fff;
+      padding: 3px 6px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+    .intro-row .scene svg { width: 100%; height: 100%; display: block; }
+    /* column-3 capstone: name-the-test scenarios */
+    .scen { display: flex; flex-direction: column; gap: 5px; margin-top: 3px; }
+    .scen p { margin: 0; font-size: clamp(10px, .74cqw, 13px); line-height: 1.2; color: var(--ink-2); }
+    .scen .mcq-ans { white-space: normal; margin-left: 5px; }
+  </style>
+</head>
+<body>
+  <div id="dots"></div>
+  <div id="tools">
+    <button id="pencil" type="button">Pencil: off</button>
+    <button id="undo" type="button">Undo</button>
+    <button id="clear" type="button">Clear</button>
+  </div>
+
+  <div id="stage">
+    <main id="deck" aria-live="polite">
+      <!-- ================= SLIDE 1: intro to the two-sample t-test ================= -->
+      <section class="slide compact-title" data-slide>
+        <div class="chrome-top"></div>
+        <header class="slide-head">
+          <h1>Intro to the two-sample t-test</h1>
+          <div class="title-line"></div>
+        </header>
+        <div class="slide-body" style="--cols: 1.05fr 1fr 1.12fr; --gap:18px">
+
+          <!-- ===================== COLUMN 1: the story + the data ===================== -->
+          <div class="col col-story" style="--col-gap:4px">
+            <div class="diagram story-scene fragment">
+              <svg viewBox="0 0 360 360">
+                <!-- hospital name board -->
+                <rect x="58" y="12" width="244" height="32" rx="7" fill="#073b42"/>
+                <text x="180" y="34" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="15" font-weight="800" fill="#d4af33">Baystate Medical Center</text>
+                <text x="180" y="62" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="12" font-weight="700" fill="#3a555a">Birth weights of 189 newborns</text>
+
+                <!-- ===== Group 1: non-smoker ===== -->
+                <g transform="translate(34 84)">
+                  <path d="M6 44 a52 52 0 0 1 104 0 Z" fill="#c4d8db"/>
+                  <rect x="2" y="44" width="112" height="40" rx="10" fill="#f2f7f7" stroke="#3a6f78" stroke-width="3"/>
+                  <circle cx="58" cy="42" r="15" fill="#e7c9a9" stroke="#caa884" stroke-width="2.5"/>
+                  <circle cx="52" cy="40" r="2" fill="#073b42"/><circle cx="64" cy="40" r="2" fill="#073b42"/>
+                  <path d="M52 48 q6 5 12 0" stroke="#073b42" stroke-width="2" fill="none" stroke-linecap="round"/>
+                  <line x1="22" y1="84" x2="22" y2="100" stroke="#7a6212" stroke-width="3"/>
+                  <line x1="94" y1="84" x2="94" y2="100" stroke="#7a6212" stroke-width="3"/>
+                  <circle cx="22" cy="103" r="4" fill="#7a6212"/><circle cx="94" cy="103" r="4" fill="#7a6212"/>
+                  <text x="58" y="126" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="13" font-weight="800" fill="#3a6f78">mum did NOT smoke</text>
+                  <rect x="20" y="134" width="76" height="26" rx="6" fill="#fbeecb" stroke="#d4af33" stroke-width="2"/>
+                  <text x="58" y="152" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="14" font-weight="800" fill="#7a6212">avg 3056 g</text>
+                </g>
+
+                <text x="180" y="150" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="22" font-weight="800" fill="#073b42">vs</text>
+
+                <!-- ===== Group 2: smoker ===== -->
+                <g transform="translate(212 84)">
+                  <path d="M6 44 a52 52 0 0 1 104 0 Z" fill="#f0cabb"/>
+                  <rect x="2" y="44" width="112" height="40" rx="10" fill="#fdf3ef" stroke="#e58b73" stroke-width="3"/>
+                  <circle cx="58" cy="42" r="15" fill="#e7c9a9" stroke="#caa884" stroke-width="2.5"/>
+                  <circle cx="52" cy="40" r="2" fill="#073b42"/><circle cx="64" cy="40" r="2" fill="#073b42"/>
+                  <path d="M52 48 q6 5 12 0" stroke="#073b42" stroke-width="2" fill="none" stroke-linecap="round"/>
+                  <line x1="22" y1="84" x2="22" y2="100" stroke="#7a6212" stroke-width="3"/>
+                  <line x1="94" y1="84" x2="94" y2="100" stroke="#7a6212" stroke-width="3"/>
+                  <circle cx="22" cy="103" r="4" fill="#7a6212"/><circle cx="94" cy="103" r="4" fill="#7a6212"/>
+                  <!-- little cigarette -->
+                  <g transform="translate(78 6)"><rect x="0" y="0" width="22" height="6" rx="2" fill="#fff" stroke="#b5451f" stroke-width="1.4"/><rect x="18" y="0" width="6" height="6" rx="1" fill="#b5451f"/><line x1="-2" y1="-6" x2="-2" y2="-1" stroke="#b5451f" stroke-width="2" stroke-linecap="round"/></g>
+                  <text x="58" y="126" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="13" font-weight="800" fill="#b5451f">mum smoked</text>
+                  <rect x="20" y="134" width="76" height="26" rx="6" fill="#fbeecb" stroke="#d4af33" stroke-width="2"/>
+                  <text x="58" y="152" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="14" font-weight="800" fill="#7a6212">avg 2772 g</text>
+                </g>
+
+                <!-- thought bubble -->
+                <circle cx="70" cy="272" r="6" fill="#fbeecb" stroke="#e9d9a8" stroke-width="2"/>
+                <circle cx="84" cy="260" r="9" fill="#fbeecb" stroke="#e9d9a8" stroke-width="2"/>
+                <rect x="58" y="280" width="256" height="66" rx="20" fill="#fbeecb" stroke="#e9d9a8" stroke-width="2.5"/>
+                <text x="186" y="307" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="15" font-weight="800" fill="#7a6212">~284 g lighter on average.</text>
+                <text x="186" y="330" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="13" font-weight="700" fill="#073b42">Real effect, or just noisy samples?</text>
+              </svg>
+            </div>
+            <div class="story-tail">
+              <hr class="sep">
+              <div class="plan-results">
+                <div class="pr-plan">
+                  <div class="label fragment">The Data</div>
+                  <div class="text fragment">🏥 189 births at one US hospital.</div>
+                  <div class="text fragment">⚖️ Weigh each newborn.</div>
+                  <div class="text fragment">🚬 Split by whether mum smoked.</div>
+                </div>
+                <div class="pr-results">
+                  <div class="label fragment">Group means</div>
+                  <div class="code fragment">
+                    <div class="tag">R</div>
+                    <pre>library(dplyr)
+data(birthwt, package = "MASS")
+
+birthwt &lt;- birthwt |&gt;
+  mutate(smoke = factor(smoke,
+    labels = c("non-smoker", "smoker")))
+
+birthwt |&gt;
+  group_by(smoke) |&gt;
+  summarise(mean_bwt = mean(bwt))
+<span class="out">#&gt; smoke       mean_bwt
+#&gt; non-smoker     3056
+#&gt; smoker         2772</span></pre>
+                  </div>
+                </div>
+              </div>
+              <hr class="sep">
+              <div class="chart-row">
+                <div class="code chart-code fragment">
+                  <div class="tag">ggplot2</div>
+                  <pre>ggplot(birthwt, aes(smoke, bwt)) +
+  geom_jitter(width = .14, alpha = .5) +
+  stat_summary(fun = mean, geom = "crossbar")</pre>
+                </div>
+                <div class="figure chart fragment">
+                  <img src="figures/fig_birthwt_groups.png" alt="Birth weights for two independent groups, non-smoker vs smoker, with group means">
+                  <div class="caption">Two independent groups. Teal bars: group means (3056 g vs 2772 g).</div>
+                </div>
+              </div>
+              <div class="bubble fragment" style="text-align:center;">Smokers' babies look ~284 g lighter. Is that real, or just two noisy samples?</div>
+            </div>
+          </div>
+
+          <!-- ===================== COLUMN 2: hypotheses + the gap ===================== -->
+          <div class="col" style="--col-gap:4px">
+            <div class="label fragment">Hypothesis test framework</div>
+            <div class="text fragment">A two-sample test compares <strong>two group means</strong>. H<sub>0</sub> says they are equal.</div>
+            <div class="text fragment">H<sub>0</sub> is the status quo. H<sub>1</sub> is what the data would need to give evidence for.</div>
+            <div class="mini-grid fragment" style="--gap:10px;">
+              <div class="card soft" style="border-left: 2px solid #8895a0;">
+                <div class="eyebrow" style="color: #5b6970;">Null hypothesis</div>
+                <p><strong>$H_0:\ \mu_\text{non} = \mu_\text{smoke}$</strong><br><span class="tiny" style="font-style:normal;">the true group means are equal.</span></p>
+              </div>
+              <div class="card soft" style="border-left: 2px solid var(--teal);">
+                <div class="eyebrow" style="color: var(--teal);">Alternative hypothesis</div>
+                <p><strong>$H_1:\ \mu_\text{non} \ne \mu_\text{smoke}$</strong><br><span class="tiny" style="font-style:normal;">the true group means differ.</span></p>
+              </div>
+            </div>
+
+            <hr class="sep">
+            <div class="label fragment">Quick check: name the hypotheses</div>
+            <div class="mini-grid" style="--gap:10px;">
+              <div class="card soft mcq fragment">
+                <p class="mcq-q">Comparing mean cholesterol in two separate groups (drug vs placebo), what is H<sub>0</sub>?<span class="mcq-ans fragment"><strong>B</strong></span></p>
+                <ul class="mcq-opts">
+                  <li>A. $\mu_\text{drug} &lt; \mu_\text{placebo}$</li>
+                  <li>B. $\mu_\text{drug} = \mu_\text{placebo}$</li>
+                  <li>C. $\mu_\text{drug} \ne \mu_\text{placebo}$</li>
+                </ul>
+              </div>
+              <div class="card soft mcq fragment">
+                <p class="mcq-q">You want to detect any birth-weight difference, up or down. Which H<sub>1</sub>?<span class="mcq-ans fragment"><strong>C</strong></span></p>
+                <ul class="mcq-opts inline">
+                  <li>A. $\mu_\text{non} &gt; \mu_\text{smoke}$</li>
+                  <li>B. $\mu_\text{non} &lt; \mu_\text{smoke}$</li>
+                  <li>C. $\mu_\text{non} \ne \mu_\text{smoke}$</li>
+                </ul>
+              </div>
+            </div>
+
+            <hr class="sep">
+            <div class="label fragment">Measuring the gap: is 284 g a lot?</div>
+            <div class="text fragment">By itself, <strong>284 g is unclear</strong>. We weigh it against how much birth weights vary <strong>within</strong> each group, and how many babies are in <strong>each</strong> group.</div>
+            <div class="mini-grid fragment" style="--gap:10px;">
+              <div class="card soft" style="padding: 7px 9px;">
+                <div class="label" style="text-align:center; color: var(--brown); font-size: clamp(12px, .82cqw, 15px);">Spread within groups</div>
+                <div class="diagram compact" style="--diagram-h:112px" aria-hidden="true">
+                  <svg viewBox="0 0 360 170">
+                    <defs>
+                      <radialGradient id="gA1" cx="50%" cy="50%" r="50%">
+                        <stop offset="0" stop-color="#3a6f78" stop-opacity=".8"/><stop offset="60%" stop-color="#3a6f78" stop-opacity=".22"/><stop offset="100%" stop-color="#3a6f78" stop-opacity="0"/>
+                      </radialGradient>
+                      <radialGradient id="gB1" cx="50%" cy="50%" r="50%">
+                        <stop offset="0" stop-color="#e58b73" stop-opacity=".85"/><stop offset="60%" stop-color="#e58b73" stop-opacity=".22"/><stop offset="100%" stop-color="#e58b73" stop-opacity="0"/>
+                      </radialGradient>
+                    </defs>
+                    <text x="12" y="32" font-family="Space Grotesk, Arial" font-size="16" font-weight="800" fill="#073b42">Wide spread</text>
+                    <ellipse cx="150" cy="56" rx="120" ry="17" fill="url(#gA1)"/>
+                    <ellipse cx="214" cy="56" rx="120" ry="17" fill="url(#gB1)"/>
+                    <text x="300" y="38" text-anchor="end" font-family="Space Grotesk, Arial" font-size="14" font-weight="900" fill="#7a6212">gap unclear</text>
+                    <text x="12" y="118" font-family="Space Grotesk, Arial" font-size="16" font-weight="800" fill="#073b42">Tight spread</text>
+                    <ellipse cx="138" cy="142" rx="34" ry="16" fill="url(#gA1)"/>
+                    <ellipse cx="226" cy="142" rx="34" ry="16" fill="url(#gB1)"/>
+                    <text x="300" y="124" text-anchor="end" font-family="Space Grotesk, Arial" font-size="14" font-weight="900" fill="#b5451f">gap clear</text>
+                  </svg>
+                </div>
+              </div>
+              <div class="card soft" style="padding: 7px 9px;">
+                <div class="label" style="text-align:center; color: var(--brown); font-size: clamp(12px, .82cqw, 15px);">Two sample sizes</div>
+                <div class="diagram compact" style="--diagram-h:112px" aria-hidden="true">
+                  <svg viewBox="0 0 360 170">
+                    <g font-family="Space Grotesk, Arial" font-weight="800" fill="#073b42">
+                      <text x="14" y="36" font-size="17">few babies</text>
+                      <text x="14" y="58" font-size="13" fill="#7a6212">gap may be luck</text>
+                      <text x="14" y="116" font-size="17">many babies</text>
+                      <text x="14" y="138" font-size="13" fill="#7a6212">gap is trustworthy</text>
+                    </g>
+                    <g stroke="#3a6f78" stroke-width="1.5" fill="#3a6f78" fill-opacity=".55">
+                      <circle cx="214" cy="34" r="7"/><circle cx="234" cy="46" r="7"/><circle cx="220" cy="56" r="7"/>
+                    </g>
+                    <g stroke="#b5451f" stroke-width="1.5" fill="#e58b73" fill-opacity=".7">
+                      <circle cx="286" cy="34" r="7"/><circle cx="306" cy="46" r="7"/><circle cx="292" cy="56" r="7"/>
+                    </g>
+                    <g stroke="#3a6f78" stroke-width="1" fill="#3a6f78" fill-opacity=".5">
+                      <circle cx="206" cy="108" r="5"/><circle cx="222" cy="108" r="5"/><circle cx="238" cy="108" r="5"/>
+                      <circle cx="206" cy="122" r="5"/><circle cx="222" cy="122" r="5"/><circle cx="238" cy="122" r="5"/>
+                      <circle cx="206" cy="136" r="5"/><circle cx="222" cy="136" r="5"/><circle cx="238" cy="136" r="5"/>
+                      <circle cx="214" cy="150" r="5"/><circle cx="230" cy="150" r="5"/>
+                    </g>
+                    <g stroke="#b5451f" stroke-width="1" fill="#e58b73" fill-opacity=".65">
+                      <circle cx="286" cy="108" r="5"/><circle cx="302" cy="108" r="5"/><circle cx="318" cy="108" r="5"/>
+                      <circle cx="286" cy="122" r="5"/><circle cx="302" cy="122" r="5"/><circle cx="318" cy="122" r="5"/>
+                      <circle cx="286" cy="136" r="5"/><circle cx="302" cy="136" r="5"/><circle cx="318" cy="136" r="5"/>
+                      <circle cx="294" cy="150" r="5"/><circle cx="310" cy="150" r="5"/>
+                    </g>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div class="card soft mcq fillin fragment">
+              <p class="mcq-q">For the same gap between means, the evidence is stronger when the within-group spread is <span class="fillin-blank">____</span><span class="fillin-opts"> (smaller / larger)</span> and the group sizes are <span class="fillin-blank">____</span><span class="fillin-opts"> (larger / smaller)</span>.<span class="mcq-ans fragment"><strong>smaller</strong> · <strong>larger</strong></span></p>
+            </div>
+          </div>
+
+          <!-- ===================== COLUMN 3: the mechanics ===================== -->
+          <div class="col col-steps" style="--col-gap:2px">
+            <div class="label fragment">Step 1: spread and sample sizes</div>
+            <div class="text fragment">Mean gap already found: <strong>283.8 g</strong>. For Welch's test, collect each group's SD and $n$.</div>
+            <div class="inline-row diff-row fragment">
+              <div class="code">
+                <div class="tag">R</div>
+                <pre>s1 &lt;- sd(filter(birthwt, smoke == "non-smoker")$bwt)
+n1 &lt;- sum(birthwt$smoke == "non-smoker")
+s2 &lt;- sd(filter(birthwt, smoke == "smoker")$bwt)
+n2 &lt;- sum(birthwt$smoke == "smoker")
+<span class="out">#&gt; s1 = 752.7, n1 = 115
+#&gt; s2 = 659.6, n2 = 74</span></pre>
+              </div>
+            </div>
+
+            <div class="label fragment">Step 2: standard error of the difference</div>
+            <div class="text fragment">Combine each group's wobble. Welch uses separate variances, not a pooled variance.</div>
+            <div class="inline-row se-row fragment">
+              <div class="equation" style="font-size: clamp(11px, .82cqw, 15px); padding: 6px 10px;">
+                $\begin{aligned}
+                \mathrm{SE} &= \sqrt{\dfrac{s_1^2}{n_1} + \dfrac{s_2^2}{n_2}} \\
+                &= \sqrt{\dfrac{752.7^2}{115} + \dfrac{659.6^2}{74}} \\
+                &= \color{#b5451f}{104\text{ g}}
+                \end{aligned}$
+              </div>
+              <div class="code">
+                <div class="tag">R</div>
+                <pre>se &lt;- sqrt(s1^2/n1 + s2^2/n2)
+<span class="out">#&gt; 104.0</span></pre>
+              </div>
+            </div>
+
+            <div class="label fragment">Step 3: $t$ statistic</div>
+            <div class="text fragment">Standardised gap: how many SEs apart are the means?</div>
+            <div class="inline-row fragment">
+              <div class="equation" style="font-size: clamp(12px, .88cqw, 16px); padding: 6px 10px;">
+                $t = \dfrac{\bar{x}_1 - \bar{x}_2}{\mathrm{SE}} = \dfrac{283.8}{104} = \color{#b5451f}{2.73}$
+              </div>
+              <div class="code">
+                <div class="tag">R</div>
+                <pre>t  &lt;- 283.8 / se
+<span class="out">#&gt; t = 2.73</span></pre>
+              </div>
+            </div>
+
+            <div class="label fragment">Step 4: $p$-value</div>
+            <div class="text fragment">Compare $t$ to a $t$ curve, $df \approx 170$ (Welch). Two-sided $H_1$, so $p$ = <strong>both tails</strong>.</div>
+            <div class="inline-row fragment">
+              <div class="figure tdist">
+                <img src="figures/fig_tdist.png" alt="t distribution with t = 2.73 and both tails shaded">
+                <div class="caption">$t = 2.73$, two-sided $p = 0.007$.</div>
+              </div>
+              <div class="code">
+                <div class="tag">R</div>
+                <pre>2 * pt(-abs(t),
+       df = 170)
+<span class="out">#&gt; 0.007</span></pre>
+              </div>
+            </div>
+
+            <div class="label fragment">All-in-one in R</div>
+            <div class="code ttest-out fragment">
+              <div class="tag">R</div>
+              <pre>t.test(bwt ~ smoke, data = birthwt); t.test(birthwt$bwt ~ birthwt$smoke) # same
+<span class="out">	Welch Two Sample t-test</span>
+<span class="out">data:  bwt by smoke</span>
+<span class="out">t = 2.7299, df = 170.1, p-value = 0.007003</span>
+<span class="out">alternative hypothesis: true difference in means between group non-smoker and group smoker is not equal to 0</span>
+<span class="out">95 percent confidence interval:</span>
+<span class="out">  78.57486 488.97860</span>
+<span class="out">sample estimates:</span>
+<span class="out">mean in group non-smoker     mean in group smoker</span>
+<span class="out">                3055.696                 2771.919</span>
+<span class="comment">#&gt; p &lt; 0.05  ->  reject H0</span></pre>
+            </div>
+          </div>
+        </div>
+        <div class="chrome-bottom"></div>
+      </section>
+
+      <!-- ============ SLIDE 2: practice + interpret ============ -->
+      <section class="slide" data-slide>
+        <div class="chrome-top"></div>
+        <header class="slide-head">
+          <h1>Confidence intervals, p-values, and reading a two-sample t-test</h1>
+          <div class="title-line"></div>
+        </header>
+        <div class="slide-body page2-practice" style="--cols: 1fr 1.12fr; --gap:22px">
+
+          <!-- ===================== COLUMN 1: interpret birthwt ===================== -->
+          <div class="col" style="--col-gap:6px">
+            <div class="label fragment">Confidence interval for the birth-weight gap</div>
+            <div class="text fragment">The estimate was non-smoker mean minus smoker mean. Positive values mean the non-smoker group had heavier babies on average.</div>
+            <div class="figure fragment" style="padding:6px 7px;">
+              <img src="figures/fig_ci_diff.png" alt="95% confidence interval for the difference in mean birth weight, excluding zero">
+              <div class="caption">95% CI for the mean difference: about <strong>79 to 489 g</strong>. The whole interval is above 0.</div>
+            </div>
+            <div class="card warm fragment" style="padding:8px 10px;">
+              <table class="ci-compare" aria-label="p-value and confidence interval comparison">
+                <thead>
+                  <tr><th></th><th>p-value</th><th>95% confidence interval</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Question</td><td>Is 0 plausible?</td><td>Which values are plausible?</td></tr>
+                  <tr><td>Reject at .05</td><td>$p &lt; .05$</td><td>CI excludes 0</td></tr>
+                  <tr><td>Report</td><td>$p = .007$</td><td>mean diff = 284 g, 95% CI [79, 489]</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card soft mcq fragment">
+              <div class="visual-pq">
+                <p class="mcq-q">1. In a small clinic study, patients in a walking programme had mean resting heart rates 4 beats per minute lower than controls, with a 95% CI of [1, 7]. What decision matches at $\alpha = 0.05$?</p>
+                <svg class="mini-axis" viewBox="0 0 220 34" aria-hidden="true">
+                  <line x1="20" y1="20" x2="200" y2="20" stroke="#c4d8db" stroke-width="2"/>
+                  <line x1="70" y1="8" x2="70" y2="28" stroke="#e5b44f" stroke-width="3"/>
+                  <line x1="96" y1="20" x2="170" y2="20" stroke="#035f6c" stroke-width="4"/>
+                  <circle cx="130" cy="20" r="5" fill="#b5451f"/>
+                  <text x="70" y="32" text-anchor="middle" font-size="10" font-family="Space Grotesk, Arial" fill="#7a6212">0</text>
+                </svg>
+              </div>
+              <ul class="mcq-opts inline">
+                <li>A. We fail to reject H<sub>0</sub>.</li>
+                <li>B. We reject H<sub>0</sub>.</li>
+                <li>C. We have proven H<sub>0</sub> is false.</li>
+              </ul>
+            </div>
+            <div class="card soft mcq fragment">
+              <div class="visual-pq">
+                <p class="mcq-q">2. Reading two CI pictures: which interval gives stronger evidence of a difference?</p>
+                <svg class="mini-axis" viewBox="0 0 220 34" aria-hidden="true">
+                  <line x1="20" y1="12" x2="200" y2="12" stroke="#c4d8db" stroke-width="2"/>
+                  <line x1="100" y1="4" x2="100" y2="30" stroke="#e5b44f" stroke-width="3"/>
+                  <line x1="74" y1="12" x2="146" y2="12" stroke="#7a6212" stroke-width="4"/>
+                  <line x1="124" y1="26" x2="188" y2="26" stroke="#035f6c" stroke-width="4"/>
+                </svg>
+              </div>
+              <ul class="mcq-opts inline">
+                <li>A. The interval that crosses 0 gives stronger evidence.</li>
+                <li>B. The interval entirely above 0 gives stronger evidence.</li>
+                <li>C. The two intervals give identical evidence.</li>
+              </ul>
+            </div>
+            <div class="card soft mcq fragment">
+              <p class="mcq-q">3. Reading a paper: mean systolic blood pressure was 6 mmHg lower on a new drug, 95% CI [-1, 13], $p = .08$. What is the clean reading?</p>
+              <ul class="mcq-opts inline">
+                <li>A. The study gives clear evidence of a drug effect.</li>
+                <li>B. The result is still compatible with no true mean difference.</li>
+                <li>C. The study proves the drug has no effect.</li>
+              </ul>
+            </div>
+            <div class="card soft mcq fragment">
+              <p class="mcq-q">4. Writing a manuscript: "mean difference = 284 g" without a CI is missing what?</p>
+              <ul class="mcq-opts inline">
+                <li>A. The sentence is missing precision around the estimate.</li>
+                <li>B. The sentence is missing the group labels only.</li>
+                <li>C. The sentence is missing the sample mean.</li>
+              </ul>
+            </div>
+            <div class="card soft mcq answer-key fragment">
+              <p class="mcq-q">Answers 1-4</p>
+              <ul class="mcq-opts">
+                <li>1. B. The confidence interval excludes 0, so we reject $H_0$ at .05.</li>
+                <li>2. B. An interval entirely above 0 means every plausible value is a positive difference.</li>
+                <li>3. B. The confidence interval includes 0 and $p &gt; .05$, so the result is compatible with no true mean difference.</li>
+                <li>4. A. A confidence interval shows precision by showing how uncertain the 284 g estimate is.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- ===================== COLUMN 2: read a real output ===================== -->
+          <div class="col" style="--col-gap:6px">
+            <div class="label fragment">ToothGrowth data</div>
+            <div class="text fragment">The built-in <code>datasets::ToothGrowth</code> records tooth length in two separate supplement groups: 30 guinea pigs got orange juice (OJ), 30 got ascorbic acid (VC). This is not paired data.</div>
+            <div class="row sleep-intro-row fragment">
+              <div class="code">
+                <div class="tag">R</div>
+                <pre>t.test(len ~ supp, data = ToothGrowth); t.test(ToothGrowth$len ~ ToothGrowth$supp) # same
+
+<span class="out">	Welch Two Sample t-test</span>
+<span class="out">data:  len by supp</span>
+<span class="out">t = 1.9153, df = 55.309, p-value = 0.06063</span>
+<span class="out">alternative hypothesis: true difference</span>
+<span class="out"> in means is not equal to 0</span>
+<span class="out">95 percent confidence interval:</span>
+<span class="out"> -0.171  7.571</span>
+<span class="out">sample estimates:</span>
+<span class="out">mean in group OJ  mean in group VC</span>
+<span class="out">         20.66             16.96</span></pre>
+              </div>
+              <div class="sleep-side">
+                <div class="diagram sleep-scene" aria-hidden="true">
+                  <svg viewBox="0 0 220 132" preserveAspectRatio="xMidYMid meet">
+                    <rect width="220" height="132" fill="#073b42"/>
+                    <text x="110" y="20" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="12" font-weight="800" fill="#fbeecb">vitamin C, two ways</text>
+                    <!-- tooth -->
+                    <path d="M110 38 c14 0 22 10 22 24 c0 18 -8 42 -14 42 c-5 0 -4 -17 -8 -17 c-4 0 -3 17 -8 17 c-6 0 -14 -24 -14 -42 c0 -14 8 -24 22 -24 z" fill="#fbeecb" stroke="#c4d8db" stroke-width="1.5"/>
+                    <text x="110" y="122" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="11" font-weight="700" fill="#c4d8db">tooth length</text>
+                    <!-- OJ glass -->
+                    <rect x="20" y="44" width="30" height="44" rx="4" fill="#e5a92f" stroke="#fbeecb" stroke-width="1.5"/>
+                    <text x="35" y="104" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="12" font-weight="800" fill="#e5b44f">OJ</text>
+                    <!-- VC capsule -->
+                    <g transform="translate(166 54) rotate(-20)">
+                      <rect x="0" y="0" width="34" height="13" rx="6.5" fill="#e58b73" stroke="#fbeecb" stroke-width="1.4"/>
+                      <rect x="0" y="0" width="17" height="13" rx="6.5" fill="#8c7ab8" stroke="#fbeecb" stroke-width="1.4"/>
+                    </g>
+                    <text x="183" y="104" text-anchor="middle" font-family="Space Grotesk, Arial" font-size="12" font-weight="800" fill="#e58b73">VC</text>
+                  </svg>
+                </div>
+                <div class="card soft mcq mcq-side fragment">
+                  <p class="mcq-q">1. What is the null hypothesis for comparing the two separate supplement groups?</p>
+                  <ul class="mcq-opts inline">
+                    <li>A. $\mu_\text{OJ} = \mu_\text{VC}$</li>
+                    <li>B. $\mu_\text{OJ} \ne \mu_\text{VC}$</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="card soft mcq fragment">
+              <p class="mcq-q">2. According to the sample estimates, what is the mean tooth length in the OJ group?</p>
+              <ul class="mcq-opts inline">
+                <li>A. The OJ mean is 16.96.</li>
+                <li>B. The OJ mean is 20.66.</li>
+                <li>C. The OJ mean is 1.92.</li>
+              </ul>
+            </div>
+            <div class="card soft mcq fragment">
+              <p class="mcq-q">3. Match each term to its value, then to its plain-English meaning. Some values are rounded.</p>
+              <div class="pill-match" aria-label="Scrambled ToothGrowth matching choices">
+                <div class="pill-head">Terms</div>
+                <div class="pill-head">Values</div>
+                <div class="pill-head">Meanings</div>
+                <div class="pill-stack">
+                  <div class="pill term"><code>t</code></div>
+                  <div class="pill term"><code>df</code></div>
+                  <div class="pill term"><code>p-value</code></div>
+                  <div class="pill term">95% CI</div>
+                </div>
+                <div class="pill-stack">
+                  <div class="pill">a. 55.3</div>
+                  <div class="pill">b. 0.061</div>
+                  <div class="pill">c. [-0.17, 7.57]</div>
+                  <div class="pill">d. 1.92</div>
+                </div>
+                <div class="pill-stack">
+                  <div class="pill">a. # of SEs apart</div>
+                  <div class="pill">b. adjusted df</div>
+                  <div class="pill">c. plausible range</div>
+                  <div class="pill">d. P(t this extreme | H<sub>0</sub>)</div>
+                </div>
+              </div>
+            </div>
+            <div class="card soft mcq fragment">
+              <p class="mcq-q">4. At $\alpha = 0.05$, what decision should we make for the ToothGrowth test?</p>
+              <ul class="mcq-opts inline">
+                <li>A. We fail to reject H<sub>0</sub> because $p = 0.061$.</li>
+                <li>B. We reject H<sub>0</sub>.</li>
+                <li>C. We have proven H<sub>0</sub> is true.</li>
+              </ul>
+            </div>
+            <div class="card soft mcq answer-key fragment">
+              <p class="mcq-q">Answers 1-4</p>
+              <ul class="mcq-opts" style="margin-bottom:6px;">
+                <li>1. A. The null says the two true supplement means are equal.</li>
+                <li>2. B. The sample estimates show OJ mean = 20.66.</li>
+                <li>4. A. $p = 0.061 &gt; .05$, so fail to reject $H_0$.</li>
+              </ul>
+              <table class="mini-table answer" aria-label="Corrected ToothGrowth matching answers">
+                <thead><tr><th>Term</th><th>Value</th><th>Meaning</th></tr></thead>
+                <tbody>
+                  <tr><td><code>t</code></td><td>d. 1.92</td><td>a. # of SEs apart</td></tr>
+                  <tr><td><code>df</code></td><td>a. 55.3</td><td>b. adjusted df</td></tr>
+                  <tr><td><code>p-value</code></td><td>b. 0.061</td><td>d. P(t this extreme | H<sub>0</sub>)</td></tr>
+                  <tr><td>95% CI</td><td>c. [-0.17, 7.57]</td><td>c. plausible range</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="chrome-bottom"></div>
+      </section>
+      <canvas id="ink"></canvas>
+    </main>
+  </div>
+  <div id="hint">Left/right reveal | up/down slides | P pencil | U undo | C clear | [ ] pen | R reset</div>
+  <div id="counter"></div>
+
+  <script src="deck-config.js"></script>
+  <script>
+    const slides = [...document.querySelectorAll('.slide')];
+    const dots = document.getElementById('dots');
+    const deck = document.getElementById('deck');
+    const stage = document.getElementById('stage');
+
+    const DECK_W = 1600;
+    const DECK_H = 900;
+
+    function fitDeck() {
+      const styles = getComputedStyle(stage);
+      const padX = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
+      const padY = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
+      const availW = stage.clientWidth - padX;
+      const availH = stage.clientHeight - padY;
+      const scale = Math.min(availW / DECK_W, availH / DECK_H);
+      deck.style.transform = `scale(${scale})`;
+    }
+
+    window.addEventListener('resize', fitDeck);
+    fitDeck();
+    const counter = document.getElementById('counter');
+    const pencilButton = document.getElementById('pencil');
+    const undoButton = document.getElementById('undo');
+    const clearButton = document.getElementById('clear');
+    const canvas = document.getElementById('ink');
+    const ctx = canvas.getContext('2d');
+    const WIDTH = 1920;
+    const HEIGHT = 1080;
+    let slideIndex = 0;
+    let shown = 0;
+    let fragments = [];
+    let pencilMode = false;
+    let penWidth = 4;
+    let activeStroke = null;
+    const drawings = slides.map(() => []);
+
+    canvas.width = WIDTH;
+    canvas.height = HEIGHT;
+
+    slides.forEach((_, index) => {
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'dot';
+      dot.title = `Slide ${index + 1}`;
+      dot.addEventListener('click', event => {
+        event.stopPropagation();
+        showSlide(index);
+      });
+      dots.appendChild(dot);
+    });
+
+    function showSlide(index, revealAll = false) {
+      slideIndex = (index + slides.length) % slides.length;
+      shown = 0;
+      slides.forEach((slide, i) => slide.classList.toggle('active', i === slideIndex));
+      fragments = [...slides[slideIndex].querySelectorAll('.fragment')];
+      if (revealAll || window.DECK_REVEAL_ALL) shown = fragments.length;
+      render();
+      drawStrokes();
+    }
+
+    function render() {
+      fragments.forEach((fragment, index) => {
+        fragment.classList.toggle('shown', index < shown);
+      });
+      [...dots.children].forEach((dot, index) => dot.classList.toggle('on', index === slideIndex));
+      counter.textContent = `${slideIndex + 1} / ${slides.length} | ${shown} / ${fragments.length} | pen ${penWidth}px`;
+    }
+
+    function nextStep() {
+      if (!window.DECK_REVEAL_ALL && shown < fragments.length) {
+        shown += 1;
+        render();
+      } else {
+        showSlide(slideIndex + 1);
+      }
+    }
+
+    function prevStep() {
+      if (!window.DECK_REVEAL_ALL && shown > 0) {
+        shown -= 1;
+        render();
+      } else {
+        showSlide(slideIndex - 1, true);
+      }
+    }
+
+    function resetSlide() {
+      shown = 0;
+      render();
+    }
+
+    function setPencil(on) {
+      pencilMode = on;
+      deck.classList.toggle('drawing', pencilMode);
+      pencilButton.classList.toggle('on', pencilMode);
+      pencilButton.textContent = `Pencil: ${pencilMode ? 'on' : 'off'}`;
+    }
+
+    function pointFor(event) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (event.clientX - rect.left) * WIDTH / rect.width,
+        y: (event.clientY - rect.top) * HEIGHT / rect.height
+      };
+    }
+
+    function drawOne(stroke) {
+      if (stroke.points.length < 2) return;
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = stroke.color;
+      ctx.lineWidth = stroke.width;
+      ctx.beginPath();
+      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+      stroke.points.slice(1).forEach(pt => ctx.lineTo(pt.x, pt.y));
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawStrokes() {
+      ctx.clearRect(0, 0, WIDTH, HEIGHT);
+      drawings[slideIndex].forEach(drawOne);
+    }
+
+    canvas.addEventListener('click', event => event.stopPropagation());
+    canvas.addEventListener('pointerdown', event => {
+      if (!pencilMode) return;
+      event.preventDefault();
+      event.stopPropagation();
+      canvas.setPointerCapture(event.pointerId);
+      activeStroke = { color: '#e07a2f', width: penWidth, points: [pointFor(event)] };
+      drawings[slideIndex].push(activeStroke);
+    });
+    canvas.addEventListener('pointermove', event => {
+      if (!activeStroke || !pencilMode) return;
+      event.preventDefault();
+      event.stopPropagation();
+      activeStroke.points.push(pointFor(event));
+      drawStrokes();
+    });
+    function finishStroke(event) {
+      if (!activeStroke) return;
+      event.preventDefault();
+      event.stopPropagation();
+      activeStroke = null;
+      drawStrokes();
+    }
+    canvas.addEventListener('pointerup', finishStroke);
+    canvas.addEventListener('pointercancel', finishStroke);
+    canvas.addEventListener('lostpointercapture', () => { activeStroke = null; });
+
+    function undoStroke() {
+      drawings[slideIndex].pop();
+      drawStrokes();
+    }
+
+    function clearStrokes() {
+      drawings[slideIndex] = [];
+      drawStrokes();
+    }
+
+    pencilButton.addEventListener('click', event => {
+      event.stopPropagation();
+      setPencil(!pencilMode);
+    });
+    undoButton.addEventListener('click', event => {
+      event.stopPropagation();
+      undoStroke();
+    });
+    clearButton.addEventListener('click', event => {
+      event.stopPropagation();
+      clearStrokes();
+    });
+    window.addEventListener('resize', drawStrokes);
+
+    document.addEventListener('keydown', event => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        undoStroke();
+        return;
+      }
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (['ArrowRight', ' ', 'PageDown', 'Enter'].includes(event.key)) {
+        event.preventDefault();
+        nextStep();
+      } else if (['ArrowLeft', 'PageUp'].includes(event.key)) {
+        event.preventDefault();
+        prevStep();
+      } else if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        showSlide(slideIndex + 1);
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        showSlide(slideIndex - 1);
+      } else if (event.key.toLowerCase() === 'p') {
+        event.preventDefault();
+        setPencil(!pencilMode);
+      } else if (event.key.toLowerCase() === 'u') {
+        event.preventDefault();
+        undoStroke();
+      } else if (event.key.toLowerCase() === 'c') {
+        event.preventDefault();
+        clearStrokes();
+      } else if (event.key.toLowerCase() === 'e') {
+        event.preventDefault();
+        clearStrokes();
+      } else if (event.key === '[') {
+        event.preventDefault();
+        penWidth = Math.max(1, penWidth - 1);
+        render();
+      } else if (event.key === ']') {
+        event.preventDefault();
+        penWidth = Math.min(18, penWidth + 1);
+        render();
+      } else if (event.key.toLowerCase() === 'r') {
+        event.preventDefault();
+        resetSlide();
+      }
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    const initialSlide = Number.parseInt(params.get('slide') || '0', 10);
+    const revealAll = params.get('all') === '1';
+    showSlide(Number.isFinite(initialSlide) ? initialSlide : 0, revealAll);
+  </script>
+</body>
+</html>

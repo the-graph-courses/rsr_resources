@@ -1,0 +1,12 @@
+
+	Welch Two Sample t-test
+
+data:  relief_B and relief_A
+t = 7.0366, df = 17.88, p-value = 1.504e-06
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ 1.290363 2.389637
+sample estimates:
+mean of x mean of y
+     6.35      4.51
+

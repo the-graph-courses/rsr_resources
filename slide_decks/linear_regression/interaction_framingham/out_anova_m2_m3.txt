@@ -1,0 +1,9 @@
+Analysis of Variance Table
+
+Model 1: sysBP ~ BMI + BPMeds
+Model 2: sysBP ~ BMI * BPMeds
+  Res.Df     RSS Df Sum of Sq      F   Pr(>F)
+1   4163 1682710
+2   4162 1679688  1    3021.5 7.4869 0.006241 **
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
