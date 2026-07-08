@@ -152,7 +152,7 @@ const SUNSHINE=[
     {status:"bad",text:"**SEs, CIs, and p-values:** standard errors are often too small, so confidence intervals are too narrow and p-values too small."}
   ],bottomLine:"the slope estimate is usually still reasonable, but the standard errors are not."},
   formalTestList:[
-    {text:"**performance::check_heteroscedasticity(model)** — under the hood, this runs a **Breusch-Pagan test** for non-constant error variance.",
+    {text:"**performance::check_heteroscedasticity(model)**: under the hood, this runs a **Breusch-Pagan test** for non-constant error variance.",
       links:[{title:"performance::check_heteroscedasticity reference",short:"check_heteroscedasticity()",url:"https://easystats.github.io/performance/reference/check_heteroscedasticity.html"},{title:"lmtest::bptest reference (CRAN)",short:"bptest",url:"https://search.r-project.org/CRAN/refmans/lmtest/html/bptest.html"}]}
   ],
   howToFixList:[
@@ -171,7 +171,7 @@ const SUNSHINE=[
     {status:"bad",text:"**SEs, CIs, and p-values:** can also change, because they depend on that point."}
   ],bottomLine:"one observation may drive the reported result."},
   formalTestList:[
-    {text:"**performance::check_outliers(model)** — for a standard lm() model, this uses **Cook's distance** under the hood and names the observations that exceed the threshold.",
+    {text:"**performance::check_outliers(model)**: for a standard lm() model, this uses **Cook's distance** under the hood and names the observations that exceed the threshold.",
       links:[{title:"performance::check_outliers reference",short:"check_outliers()",url:"https://easystats.github.io/performance/reference/check_outliers.html"}]},
     {text:"**Cook's distance**: measures overall influence on fitted values. One common cutoff is F(0.5, p, n-p).",
       links:[{title:"RMPH §5.23: Influential observations",url:"https://bookdown.org/rwnahhas/RMPH/mlr-influence.html"}]},
@@ -195,7 +195,7 @@ const SUNSHINE=[
     {status:"warn",text:"**SEs, CIs, and p-values:** standard errors are often still reasonable, but confidence intervals and p-values may be wrong in small samples."}
   ],bottomLine:"with large samples, small departures from normality are often less of a problem."},
   formalTestList:[
-    {text:"**performance::check_normality(model)** — under the hood, this runs a **Shapiro-Wilk test** on the model residuals.",
+    {text:"**performance::check_normality(model)**: under the hood, this runs a **Shapiro-Wilk test** on the model residuals.",
       links:[{title:"performance::check_normality reference",short:"check_normality()",url:"https://easystats.github.io/performance/reference/check_normality.html"},{title:"STHDA: Normality test in R (Shapiro-Wilk, Q-Q)",short:"STHDA",url:"https://www.sthda.com/english/wiki/normality-test-in-r"}]}
   ],
   howToFixList:[
@@ -383,13 +383,15 @@ function QuizVisual({type,color="#2B6CB0"}){
     <text x="218" y="62" textAnchor="middle" fontSize="22" fill={BD} fontWeight="800">?</text>
   </svg>;
 
-  // vif: overlapping ellipses showing predictors share information
+  // vif: age and grade overlap; parent income stays separate
   if(type==="vif")return <svg viewBox="0 0 300 100" style={s}>
-    <ellipse cx="115" cy="50" rx="72" ry="32" fill={color} opacity=".22" stroke={color} strokeWidth="1.5"/>
-    <ellipse cx="195" cy="50" rx="72" ry="32" fill={RF} opacity=".18" stroke={RF} strokeWidth="1.5"/>
-    <text x="70" y="55" textAnchor="middle" fontSize="11" fill={color} fontWeight="700">education</text>
-    <text x="240" y="55" textAnchor="middle" fontSize="11" fill={RF} fontWeight="700">income</text>
-    <text x="155" y="92" textAnchor="middle" fontSize="9.5" fill={SB}>two predictors in the model</text>
+    <ellipse cx="102" cy="46" rx="56" ry="28" fill={color} opacity=".22" stroke={color} strokeWidth="1.5"/>
+    <ellipse cx="162" cy="46" rx="56" ry="28" fill="#B7791F" opacity=".18" stroke="#B7791F" strokeWidth="1.5"/>
+    <text x="70" y="50" textAnchor="middle" fontSize="11" fill={color} fontWeight="700">age</text>
+    <text x="194" y="50" textAnchor="middle" fontSize="11" fill="#B7791F" fontWeight="700">grade</text>
+    <text x="132" y="50" textAnchor="middle" fontSize="8.5" fill={SB}>overlap</text>
+    <circle cx="252" cy="46" r="20" fill="#3aaf85" opacity=".15" stroke="#3aaf85" strokeWidth="1.5"/>
+    <text x="252" y="50" textAnchor="middle" fontSize="8.5" fill="#3aaf85" fontWeight="700">income</text>
   </svg>;
 
   // coef_uncertain: two coefficients with very wide CIs crossing zero
@@ -1136,36 +1138,30 @@ const pa={margin:0,fontSize:14,lineHeight:1.75,color:C.text};
 function VifOutputCard(){
   const color="#6B6B6B";
   const rows=[
-    {term:"weight_kg",vif:"5.2",result:"High overlap"},
-    {term:"bmi",vif:"5.0",result:"High overlap"},
-    {term:"age_years",vif:"1.1",result:"Low overlap"}
+    {term:"age_years",vif:"8.0",result:"High overlap"},
+    {term:"grade",vif:"8.2",result:"High overlap"},
+    {term:"income_bracket",vif:"1.1",result:"Low overlap"}
   ];
   const cell={padding:"6px 8px",borderBottom:`1px solid ${C.border}`,fontSize:12.5,lineHeight:1.35};
-  return <div style={{display:"grid",gridTemplateColumns:"minmax(220px, .8fr) minmax(260px, 1.2fr)",gap:12,alignItems:"stretch",marginTop:10}}>
-    <div style={{background:C.bg,border:`1.5px solid ${C.border}`,borderRadius:12,padding:12}}>
-      <QuizVisual type="vif" color={color}/>
-      <p style={{...pa,fontSize:12.5,lineHeight:1.5}}>The issue is not that either predictor is bad. The issue is that the model has trouble separating their individual contributions.</p>
-    </div>
-    <div style={{background:C.bg,border:`1.5px solid ${C.border}`,borderRadius:12,padding:12}}>
-      <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,color:C.sub,marginBottom:8}}>performance::check_collinearity(model)</div>
-      <table style={{width:"100%",borderCollapse:"collapse",background:"#fff",borderRadius:8,overflow:"hidden"}}>
-        <thead>
-          <tr style={{background:"#F3F4F6",color:C.sub}}>
-            <th style={{...cell,textAlign:"left",fontWeight:800}}>Predictor</th>
-            <th style={{...cell,textAlign:"right",fontWeight:800}}>VIF</th>
-            <th style={{...cell,textAlign:"left",fontWeight:800}}>Meaning</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(r=><tr key={r.term}>
-            <td style={{...cell,fontFamily:"'JetBrains Mono',monospace"}}>{r.term}</td>
-            <td style={{...cell,textAlign:"right",fontWeight:800,color:r.vif==="1.1"?C.text:"#B7791F"}}>{r.vif}</td>
-            <td style={cell}>{r.result}</td>
-          </tr>)}
-        </tbody>
-      </table>
-      <p style={{...pa,fontSize:12.5,lineHeight:1.5,marginTop:8}}>VIF near 1 is fine. Values around 5 or higher suggest that predictor overlaps strongly with the other predictors.</p>
-    </div>
+  return <div style={{background:C.bg,border:`1.5px solid ${C.border}`,borderRadius:12,padding:12,marginTop:10}}>
+    <QuizVisual type="vif" color={color}/>
+    <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,color:C.sub,margin:"10px 0 8px"}}>performance::check_collinearity(model)</div>
+    <table style={{width:"100%",borderCollapse:"collapse",background:"#fff",borderRadius:8,overflow:"hidden"}}>
+      <thead>
+        <tr style={{background:"#F3F4F6",color:C.sub}}>
+          <th style={{...cell,textAlign:"left",fontWeight:800}}>Predictor</th>
+          <th style={{...cell,textAlign:"right",fontWeight:800}}>VIF</th>
+          <th style={{...cell,textAlign:"left",fontWeight:800}}>Meaning</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(r=><tr key={r.term}>
+          <td style={{...cell,fontFamily:"'JetBrains Mono',monospace"}}>{r.term}</td>
+          <td style={{...cell,textAlign:"right",fontWeight:800,color:r.vif==="1.1"?C.text:"#B7791F"}}>{r.vif}</td>
+          <td style={cell}>{r.result}</td>
+        </tr>)}
+      </tbody>
+    </table>
   </div>;
 }
 
@@ -1178,9 +1174,9 @@ function VifPlot(){
     {lo:10,hi:30,color:"#cd201f",label:"High (≥ 10)"}
   ];
   const pts=[
-    {term:"weight_kg",vif:5.2,lo:3.9,hi:7.2,band:1},
-    {term:"bmi",vif:5.0,lo:3.8,hi:6.9,band:1},
-    {term:"age_years",vif:1.1,lo:1.0,hi:1.6,band:0}
+    {term:"age_years",vif:8.0,lo:5.2,hi:12.8,band:1},
+    {term:"grade",vif:8.2,lo:5.3,hi:13.1,band:1},
+    {term:"income_bracket",vif:1.1,lo:1.0,hi:2.3,band:0}
   ];
   const w=560,h=300,P={top:16,right:16,bottom:52,left:56};
   const pw=w-P.left-P.right,ph=h-P.top-P.bottom;
@@ -1189,9 +1185,7 @@ function VifPlot(){
   const X=i=>((i+.5)/pts.length)*pw;
   const yTicks=[1,2,3,5,10,20,30];
   return <div style={{background:C.bg,border:`1.5px solid ${C.border}`,borderRadius:12,padding:12,marginTop:12}}>
-    <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,color:C.sub,marginBottom:2}}>plot(check_collinearity(model))</div>
-    <div style={{fontSize:13.5,fontWeight:700,color:C.text,margin:"4px 0 2px"}}>Collinearity</div>
-    <div style={{fontSize:12,color:C.sub,marginBottom:6}}>High collinearity (VIF) may inflate parameter uncertainty</div>
+    <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,color:C.sub,marginBottom:6}}>plot(check_collinearity(model))</div>
     <svg viewBox={`0 0 ${w} ${h}`} style={{width:"100%",height:"auto",display:"block"}}>
       <g transform={`translate(${P.left},${P.top})`}>
         {bands.map(b=><rect key={b.label} x={0} width={pw} y={Y(b.hi)} height={Y(b.lo)-Y(b.hi)} fill={b.color} opacity={.14}/>)}
@@ -1214,7 +1208,6 @@ function VifPlot(){
         <span style={{width:10,height:10,borderRadius:"50%",background:b.color,display:"inline-block"}}/>{b.label}
       </span>)}
     </div>
-    <p style={{...pa,fontSize:12.5,lineHeight:1.5,marginTop:8}}>Each dot is one predictor's VIF, with a whisker for its confidence interval. The shaded bands mark the conventional cutoffs: below 5 is low, 5 to 10 is moderate, and above 10 is high. Here weight_kg and bmi sit in the moderate band while age_years sits near 1.</p>
   </div>;
 }
 
@@ -1388,7 +1381,7 @@ uncorrelated:()=><div style={{display:"flex",flexDirection:"column",gap:18}}>
     <div><Hd>Formal test</Hd><FixList items={[
       {text:"**Plot residuals in collection order** (by time or sequence). Look for runs or waves.",
         links:[{title:"forecast::checkresiduals (acf + Ljung-Box)",short:"checkresiduals",url:"https://pkg.robjhyndman.com/forecast/reference/checkresiduals.html"}]},
-      {text:"**performance::check_autocorrelation(model)** \u2014 under the hood, this runs a **Durbin\u2013Watson test** for first-order autocorrelation.",
+      {text:"**performance::check_autocorrelation(model)**: under the hood, this runs a **Durbin\u2013Watson test** for first-order autocorrelation.",
         links:[{title:"performance::check_autocorrelation reference",short:"check_autocorrelation()",url:"https://easystats.github.io/performance/reference/check_autocorrelation.html"},{title:"lmtest::dwtest reference",short:"dwtest",url:"https://rdrr.io/cran/lmtest/man/dwtest.html"}]}
     ]}/></div>
     <div><Hd>How to fix</Hd><FixList items={[
@@ -1404,9 +1397,14 @@ multicollinearity:()=><div style={{display:"flex",flexDirection:"column",gap:14}
   <div style={{background:"#FFF8E1",border:"1.5px solid #E8D080",borderRadius:8,padding:"12px 16px",fontSize:14,color:"#6B5B1F",lineHeight:1.6}}>
     This applies when a model has two or more predictors. With only one predictor, there is no other predictor for it to overlap with.
   </div>
-  <div><Hd>What it means</Hd><p style={pa}>When two or more predictors measure much the same thing, the model cannot separate their individual effects. Coefficient estimates for those predictors become unstable.</p></div>
+  <div><Hd>What it means</Hd><p style={pa}>When predictors measure the same thing, the model cannot separate their slopes. <b>VIF</b> (variance inflation factor) measures how much that overlap inflates slope uncertainty.</p></div>
   <div><Hd>Reading the output</Hd>
-    <p style={pa}>Use <code style={{fontFamily:"'JetBrains Mono',monospace",fontSize:13,background:C.bg,padding:"1px 5px",borderRadius:4}}>check_collinearity(model)</code>. Read the VIF for each predictor. A VIF close to 1 means little overlap. A VIF around 5 or higher suggests enough overlap to worry about.</p>
+    <p style={pa}>Model: <code style={{fontFamily:"'JetBrains Mono',monospace",fontSize:13,background:C.bg,padding:"1px 5px",borderRadius:4}}>lm(bmi_pct ~ age_years + grade + income_bracket)</code> predicts BMI percentile from age, grade, and parent income bracket.</p>
+    <ul style={{...ul,marginTop:6,marginBottom:0}}>
+      <li>VIF near 1: little overlap (here, <code style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12}}>income_bracket</code>)</li>
+      <li>VIF ≥ 5: strong overlap (here, <code style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12}}>age_years</code> and <code style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12}}>grade</code>)</li>
+      <li>What VIF means in depth: <a href="https://www.youtube.com/watch?v=GMAp_tP1ZQ0" target="_blank" rel="noopener noreferrer" style={{color:"#006D77",textDecoration:"none",borderBottom:"1px dotted #83C5BE",fontWeight:700}}>VIF explanation video</a></li>
+    </ul>
     <VifOutputCard/>
     <VifPlot/>
   </div>
@@ -1415,10 +1413,10 @@ multicollinearity:()=><div style={{display:"flex",flexDirection:"column",gap:14}
     {status:"bad",text:"**SEs, CIs, and p-values:** standard errors become larger, confidence intervals become wider, and p-values become larger."}
   ],bottomLine:"the model can still predict well, but it may not estimate each predictor's separate effect well."}}/></div>
   <div><Hd>Formal test</Hd><FixList items={[
-    {text:"**performance::check_collinearity(model)** — under the hood, this computes the **VIF (variance inflation factor)** for each predictor.",
+    {text:"**performance::check_collinearity(model)**: under the hood, this computes the **VIF (variance inflation factor)** for each predictor.",
       links:[{title:"performance::check_collinearity reference",short:"check_collinearity()",url:"https://easystats.github.io/performance/reference/check_collinearity.html"}]},
     {text:"**VIF (variance inflation factor)**: values above 5 or 10 are often treated as a problem.",
-      links:[{title:"Statology: Calculate VIF in R",short:"Statology",url:"https://www.statology.org/variance-inflation-factor-r/"},{title:"STHDA: Multicollinearity essentials and VIF in R",short:"STHDA",url:"https://www.sthda.com/english/articles/39-regression-model-diagnostics/160-multicollinearity-essentials-and-vif-in-r/"}]},
+      links:[{title:"VIF explanation (YouTube)",short:"VIF video",url:"https://www.youtube.com/watch?v=GMAp_tP1ZQ0"},{title:"Statology: Calculate VIF in R",short:"Statology",url:"https://www.statology.org/variance-inflation-factor-r/"},{title:"STHDA: Multicollinearity essentials and VIF in R",short:"STHDA",url:"https://www.sthda.com/english/articles/39-regression-model-diagnostics/160-multicollinearity-essentials-and-vif-in-r/"}]},
     {text:"**Correlation matrix** (or heatmap) of the predictors.",
       links:[{title:"STHDA: Correlation matrix in R",short:"STHDA",url:"http://www.sthda.com/english/wiki/correlation-matrix-a-quick-start-guide-to-analyze-format-and-visualize-a-correlation-matrix-using-r-software"},{title:"corrplot package vignette (CRAN)",short:"corrplot",url:"https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html"}]}
   ]}/></div>
