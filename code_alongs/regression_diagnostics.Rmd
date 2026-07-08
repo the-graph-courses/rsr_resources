@@ -43,13 +43,106 @@ We created an acronym (SUNSHINE) to help you remember the eight checks you shoul
 - **N** (**Normality of residuals**): are the prediction errors roughly bell-shaped?
 - **E** (**Exogeneity**): are the predictors unrelated to anything the model left out?
 
-This script focuses on **SHIN** (Shape, Homoscedasticity, Influential points, and Normality), because those are the four assumptions you can check directly in R with `check_model()`.
+This script covers five checks you can run in R: **N** (no multicollinearity, via `check_collinearity()`) and the four **SHIN** checks (via `check_model()`).
 
-For **multiple linear regression** (two or more predictors), SHIN still applies, and you also need the other **N**: **No multicollinearity**. That check only matters when you have more than one predictor.
+## A note on statistical tests
 
-# Simple linear regression: one continuous predictor
+`check_heteroscedasticity()`, `check_outliers()`, and `check_normality()` are available, but we only run them when a plot already looks problematic. With moderate to large samples these tests flag trivial departures, so do not run them on every model. Each section also mentions one common fix for a violation.
 
-Each section below walks through one SHIN check with a single continuous predictor: a good example, a bad example, then a practice question.
+# Diagnostic checks
+
+Each section walks through one check: good example, bad example, practice question.
+
+## N: No multicollinearity
+
+**The question:** are the predictors free of strong correlations with each other?
+
+This check only applies when you have two or more predictors. Use `check_collinearity()`; VIF values close to 1 are fine, and values above about 5 suggest problematic overlap.
+
+### Resting heart rate from lifestyle factors (low multicollinearity)
+
+Predict **resting heart rate** (bpm) from weekly **exercise hours**, nightly **sleep hours**, and daily **caffeine intake** (mg). These predictors measure different aspects of lifestyle, so they should not overlap much.
+
+```{r mlr-col-good-data}
+mlr_col_good <- data.frame(
+  exercise_h = c(2.5, 8.3, 4.5, 3.9, 6.4, 6.4, 2.1, 3.7, 6.2, 6.7, 5.6, 5.5, 5.8, 6, 8.8, 8.5, 2, 7.3, 9.1, 3.5, 3.1, 1.1, 2.2, 1.8, 3.1, 8.1, 6.4, 9.2, 6, 7.8, 4.4, 4.4, 2.5, 5.1, 3.3, 4, 9, 2.8, 6.2, 2.9, 3.5, 8.1, 2.6, 6.1, 4.8, 3.4, 1.4, 1.9, 3.8, 8.2),
+  sleep_h = c(5.9, 5.9, 8.5, 9, 8.4, 8.6, 6.9, 5.9, 5.5, 6.1, 8.3, 5.2, 8.2, 5.4, 8.1, 6.2, 8.1, 7.2, 6.4, 5.4, 8, 8, 8.6, 8.9, 7.1, 7.2, 5.7, 5.7, 8.1, 8, 8.1, 7.6, 6.5, 5, 8.8, 8.4, 5.9, 7, 7.5, 8.7, 5, 6.1, 6.7, 8.3, 8.5, 6, 6.3, 6.2, 5.7, 7.7),
+  caffeine_mg = c(307, 273, 84, 285, 242, 136, 16, 161, 32, 125, 130, 31, 60, 61, 365, 281, 328, 266, 86, 185, 287, 329, 328, 80, 240, 172, 255, 168, 352, 128, 126, 197, 135, 89, 332, 215, 39, 44, 230, 215, 195, 128, 272, 345, 339, 107, 242, 332, 237, 80),
+  resting_hr = c(71, 65, 62, 61, 61, 65, 63, 67, 64, 63, 61, 62, 57, 63, 58, 58, 65, 60, 60, 65, 66, 68, 69, 67, 66, 61, 62, 62, 65, 61, 64, 64, 60, 61, 67, 62, 56, 62, 67, 63, 65, 59, 68, 64, 64, 60, 70, 71, 65, 59)
+)
+```
+
+```{r mlr-col-good-fit}
+mlr_col_good_model <- lm(resting_hr ~ exercise_h + sleep_h + caffeine_mg, data = mlr_col_good)
+summary(mlr_col_good_model)
+```
+
+```{r mlr-col-good-check}
+check_collinearity(mlr_col_good_model)
+```
+
+All VIF values are close to 1, which is what you want. Each predictor carries distinct information.
+
+### Fasting glucose from weight and BMI (multicollinearity)
+
+Predict **fasting glucose** (mg/dL) from **weight** (kg), **BMI**, and **age** (years).
+
+Weight and BMI overlap: BMI is calculated from weight and height, so it carries much of the same body-size information as weight. Including both in one model makes it hard to interpret their separate slopes.
+
+```{r mlr-col-bad-data}
+mlr_col_bad <- data.frame(
+  weight_kg = c(58.5, 95.9, 102.1, 68.5, 63.5, 56.7, 63.9, 87.1, 56.1, 55.4, 74.6, 95.7, 73.8, 74, 68.2, 77, 77.9, 82, 88.3, 60.6, 65.9, 94.4, 59.9, 90.5, 65.9, 68.4, 80.2, 64.4, 77, 88.5, 67, 99.7, 99.1, 95.7, 86.7, 102.1, 89.7, 97.2, 74.2, 74.6, 84.4, 81.5, 103.9, 64.9, 97.2, 59.8, 74.1, 57.3, 62.6, 93.7),
+  bmi = c(20.5, 34, 35.3, 24.9, 21, 15.9, 20.9, 28.4, 17.9, 16.4, 22.8, 33.1, 20.7, 24.4, 25.1, 29.7, 30.4, 25, 31.7, 18.3, 23.9, 29.1, 19.3, 32.1, 23.9, 19.4, 23.9, 19.9, 29.7, 26.1, 22.1, 28.8, 39.2, 36, 26.8, 38, 36.4, 28.1, 26.3, 29.5, 26.3, 31.8, 40.1, 23, 31.7, 20.2, 22.4, 20.3, 22.7, 33.6),
+  age_years = c(52, 64, 51, 65, 59, 60, 69, 42, 40, 52, 62, 45, 60, 38, 38, 56, 49, 58, 57, 67, 58, 66, 64, 68, 63, 58, 55, 58, 63, 55, 63, 43, 69, 41, 36, 66, 64, 57, 66, 56, 45, 64, 56, 60, 47, 55, 50, 65, 51, 50),
+  fasting_glucose = c(112, 130, 137, 127, 118, 114, 112, 128, 119, 113, 129, 134, 129, 119, 114, 130, 122, 133, 134, 124, 119, 138, 113, 134, 116, 131, 126, 129, 126, 131, 126, 132, 145, 129, 137, 143, 134, 131, 131, 120, 119, 130, 143, 122, 142, 116, 126, 120, 110, 127)
+)
+```
+
+```{r mlr-col-bad-fit}
+mlr_col_bad_model <- lm(fasting_glucose ~ weight_kg + bmi + age_years, data = mlr_col_bad)
+summary(mlr_col_bad_model)
+```
+
+```{r mlr-col-bad-check}
+check_collinearity(mlr_col_bad_model)
+```
+
+The VIF values for `weight_kg` and `bmi` are around 5, flagged as moderate overlap. Age is fine on its own.
+
+**One way to fix it:** drop one of the overlapping predictors (for example, keep BMI and drop weight).
+
+### Practice
+
+A researcher fits:
+
+`peak_flow ~ height_cm + weight_kg + age_years + bmi`
+
+Fit the model below and run `check_collinearity()`. Which predictors show problematic overlap?
+
+```{r practice-9-data}
+practice_9 <- data.frame(
+  height_cm = c(157, 175, 179, 162, 159, 156, 159, 171, 156, 155, 165, 175, 164, 165, 162, 166, 166, 169, 172, 158, 160, 175, 157, 173, 160, 162, 168, 160, 166, 172),
+  weight_kg = c(58, 81, 81, 78, 72, 83, 74, 80, 63, 64, 71, 69, 84, 57, 80, 53, 63, 52, 55, 77, 64, 63, 65, 61, 69, 84, 70, 70, 72, 79),
+  age_years = c(51, 40, 59, 44, 35, 31, 30, 51, 37, 52, 36, 50, 46, 38, 36, 58, 53, 50, 31, 54, 44, 56, 29, 33, 50, 34, 27, 56, 38, 29),
+  bmi = c(23.5, 26.4, 25.3, 29.7, 28.5, 34.1, 29.3, 27.4, 25.9, 26.6, 26.1, 22.5, 31.2, 20.9, 30.5, 19.2, 22.9, 18.2, 18.6, 30.8, 25, 20.6, 26.4, 20.4, 27, 32, 24.8, 27.3, 26.1, 26.7),
+  peak_flow = c(503, 529, 548, 528, 504, 512, 513, 539, 532, 480, 533, 543, 504, 510, 526, 514, 529, 528, 531, 519, 520, 559, 474, 547, 525, 516, 533, 500, 521, 539)
+)
+```
+
+```{r practice-9-fit}
+practice_9_model <- lm(peak_flow ~ height_cm + weight_kg + age_years + bmi, data = practice_9)
+summary(practice_9_model)
+```
+
+```{r practice-9-check}
+check_collinearity(practice_9_model)
+```
+
+**Your answer here:**
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
 
 ## S: Shape (Linearity)
 
@@ -127,7 +220,14 @@ The green line in the *Linearity* panel arches, indicating a non-linear relation
 
 So your model overestimates the quiz score for students who study for a few hours, and underestimates it for students who study for a lot of hours.
 
-In such cases, you may need to transform your data or use a different kind of model.
+**One way to fix it:** transform the predictor so the relationship becomes closer to a straight line. For a curve like this one, which rises quickly and then levels off, a log transformation of the predictor is a common choice:
+
+```{r shape-bad-fix}
+shape_bad_log_model <- lm(quiz_score ~ log(study_hours), data = shape_bad)
+check_model(shape_bad_log_model, check = "linearity")
+```
+
+The green line is now much flatter. Other options include adding a squared term (a polynomial) or using a non-linear model; a transformation is just the simplest first step. Note that there is no simple statistical test for linearity in the `performance` package, so this check stays visual.
 
 ### Multiple predictors: hospital recovery time
 
@@ -179,6 +279,8 @@ The green line in the *Linearity* panel is not flat. It dips in the middle and c
 That pattern is intuitive once you think about the scales: for **very severe injuries** (high severity scores) and **very low baseline mobility**, recovery time accelerates faster than a straight-line model predicts. The linear model works reasonably in the middle of the range but misses the extremes.
 
 You would not see that from one scatterplot of the outcome versus a single predictor. The diagnostic panel checks the fitted model as a whole.
+
+**One way to fix it:** the same approach applies as with a single predictor: transform the outcome or a predictor, or add a polynomial term for the predictor that drives the curvature. Which variable to transform takes some trial and error; refit and re-check the Linearity panel after each change.
 
 ### Practice
 
@@ -294,6 +396,23 @@ This is a sign of heteroscedasticity.
 
 It means that your model's standard errors are too large for high-income households, and too small for low-income households.
 
+Because the plot already suggests a problem, we can run the formal test to confirm:
+
+```{r hom-bad-test}
+check_heteroscedasticity(hom_bad_model)
+```
+
+The test agrees with the plot. Remember the guidance from the start of this script: run this test to confirm a pattern you have already seen in the plot, not as a routine screen on every model.
+
+**One way to fix it:** log-transform the outcome. Spread that grows with the fitted value is often roughly proportional spread, and taking the log makes it more even:
+
+```{r hom-bad-fix}
+hom_bad_log_model <- lm(log(medical_spend) ~ income_k, data = hom_bad)
+check_model(hom_bad_log_model, check = "homogeneity")
+```
+
+Other options include using robust (heteroscedasticity-consistent) standard errors, but the log transformation is the most common first step when the outcome is a positive, right-skewed quantity like spending.
+
 ### Practice
 
 Daily patient volume at a clinic vs. patient waiting time (minutes).
@@ -395,6 +514,16 @@ In the *Influential observations* panel, one point lies far to the right, outsid
 It has both high leverage (BMI 42 is well above the rest of the data) and a large residual (far from the fitted line).
 
 Removing it would noticeably change the fit.
+
+Because the plot already flags a point, we can run the formal check to confirm which observation it is:
+
+```{r inf-bad-test}
+check_outliers(inf_bad_model)
+```
+
+The function names the row so you can go back to the raw data and inspect it. As before, use this to follow up on a point you have already seen in the plot, not as a routine screen.
+
+**One way to fix it:** investigate the observation before doing anything else. If it is a data-entry error, correct it or remove it and say so in your report. If the value is genuine, the usual approach is to report the model both with and without the point, so readers can see how much it changes the results. Do not silently delete real observations just because they are inconvenient.
 
 ### Practice
 
@@ -508,6 +637,23 @@ In the *Normality* Q-Q panel, the points bend away from the reference line at th
 
 That is the long right tail of the skewed residuals.
 
+Because the Q-Q plot already shows a clear bend, we can run the formal test to confirm:
+
+```{r norm-bad-test}
+check_normality(norm_bad_model)
+```
+
+Again, this test belongs after a visual signal. On a model whose Q-Q plot looks fine, a significant result from `check_normality()` usually reflects a minor departure that does not matter.
+
+**One way to fix it:** log-transform the outcome. Right-skewed outcomes like counts or rates often give roughly normal residuals on the log scale:
+
+```{r norm-bad-fix}
+norm_bad_log_model <- lm(log(er_visits) ~ poverty_rate, data = norm_bad)
+check_model(norm_bad_log_model, check = "normality")
+```
+
+Other options exist (for example, a generalized linear model suited to the outcome type), but the log transformation is the most common first step.
+
 ### Practice
 
 Gestational age at delivery (weeks) vs. birth weight (grams).
@@ -536,105 +682,6 @@ summary(practice_4_model)
 
 ```{r practice-4-check}
 check_model(practice_4_model)
-```
-
-**Your answer here:**
-
-------------------------------------------------------------------------
-
-------------------------------------------------------------------------
-
-# Multiple linear regression: no multicollinearity
-
-When you have **two or more predictors**, check that they are not too strongly related to each other.
-
-**The question:** can each predictor's slope be estimated separately, or do the predictors overlap so much that the model cannot tell their individual effects apart?
-
-Use `check_collinearity()` from the `performance` package. It reports the **variance inflation factor (VIF)** for each predictor. As a rule of thumb, VIF above about 5 suggests problematic overlap. (Some sources use 10 as the cutoff.)
-
-The **SHIN** checks above still apply to multiple regression: `check_model()` works the same way for homoscedasticity, influential points, and normality. This section covers the extra check that only arises with multiple predictors.
-
-## N: No multicollinearity (low overlap among predictors)
-
-### Resting heart rate from lifestyle factors (low multicollinearity)
-
-Predict **resting heart rate** (bpm) from weekly **exercise hours**, nightly **sleep hours**, and daily **caffeine intake** (mg). These predictors measure different aspects of lifestyle, so they should not overlap much.
-
-```{r mlr-col-good-data}
-mlr_col_good <- data.frame(
-  exercise_h = c(2.5, 8.3, 4.5, 3.9, 6.4, 6.4, 2.1, 3.7, 6.2, 6.7, 5.6, 5.5, 5.8, 6, 8.8, 8.5, 2, 7.3, 9.1, 3.5, 3.1, 1.1, 2.2, 1.8, 3.1, 8.1, 6.4, 9.2, 6, 7.8, 4.4, 4.4, 2.5, 5.1, 3.3, 4, 9, 2.8, 6.2, 2.9, 3.5, 8.1, 2.6, 6.1, 4.8, 3.4, 1.4, 1.9, 3.8, 8.2),
-  sleep_h = c(5.9, 5.9, 8.5, 9, 8.4, 8.6, 6.9, 5.9, 5.5, 6.1, 8.3, 5.2, 8.2, 5.4, 8.1, 6.2, 8.1, 7.2, 6.4, 5.4, 8, 8, 8.6, 8.9, 7.1, 7.2, 5.7, 5.7, 8.1, 8, 8.1, 7.6, 6.5, 5, 8.8, 8.4, 5.9, 7, 7.5, 8.7, 5, 6.1, 6.7, 8.3, 8.5, 6, 6.3, 6.2, 5.7, 7.7),
-  caffeine_mg = c(307, 273, 84, 285, 242, 136, 16, 161, 32, 125, 130, 31, 60, 61, 365, 281, 328, 266, 86, 185, 287, 329, 328, 80, 240, 172, 255, 168, 352, 128, 126, 197, 135, 89, 332, 215, 39, 44, 230, 215, 195, 128, 272, 345, 339, 107, 242, 332, 237, 80),
-  resting_hr = c(71, 65, 62, 61, 61, 65, 63, 67, 64, 63, 61, 62, 57, 63, 58, 58, 65, 60, 60, 65, 66, 68, 69, 67, 66, 61, 62, 62, 65, 61, 64, 64, 60, 61, 67, 62, 56, 62, 67, 63, 65, 59, 68, 64, 64, 60, 70, 71, 65, 59)
-)
-```
-
-```{r mlr-col-good-fit}
-mlr_col_good_model <- lm(resting_hr ~ exercise_h + sleep_h + caffeine_mg, data = mlr_col_good)
-summary(mlr_col_good_model)
-```
-
-```{r mlr-col-good-check}
-check_collinearity(mlr_col_good_model)
-```
-
-All VIF values are close to 1, which is what you want. Each predictor carries distinct information.
-
-### Fasting glucose from weight and BMI (multicollinearity)
-
-Predict **fasting glucose** (mg/dL) from **weight** (kg), **BMI**, and **age** (years).
-
-Weight and BMI overlap: BMI is calculated from weight and height, so it carries much of the same body-size information as weight. Including both in one model makes it hard to interpret their separate slopes.
-
-```{r mlr-col-bad-data}
-mlr_col_bad <- data.frame(
-  weight_kg = c(58.5, 95.9, 102.1, 68.5, 63.5, 56.7, 63.9, 87.1, 56.1, 55.4, 74.6, 95.7, 73.8, 74, 68.2, 77, 77.9, 82, 88.3, 60.6, 65.9, 94.4, 59.9, 90.5, 65.9, 68.4, 80.2, 64.4, 77, 88.5, 67, 99.7, 99.1, 95.7, 86.7, 102.1, 89.7, 97.2, 74.2, 74.6, 84.4, 81.5, 103.9, 64.9, 97.2, 59.8, 74.1, 57.3, 62.6, 93.7),
-  bmi = c(20.5, 34, 35.3, 24.9, 21, 15.9, 20.9, 28.4, 17.9, 16.4, 22.8, 33.1, 20.7, 24.4, 25.1, 29.7, 30.4, 25, 31.7, 18.3, 23.9, 29.1, 19.3, 32.1, 23.9, 19.4, 23.9, 19.9, 29.7, 26.1, 22.1, 28.8, 39.2, 36, 26.8, 38, 36.4, 28.1, 26.3, 29.5, 26.3, 31.8, 40.1, 23, 31.7, 20.2, 22.4, 20.3, 22.7, 33.6),
-  age_years = c(52, 64, 51, 65, 59, 60, 69, 42, 40, 52, 62, 45, 60, 38, 38, 56, 49, 58, 57, 67, 58, 66, 64, 68, 63, 58, 55, 58, 63, 55, 63, 43, 69, 41, 36, 66, 64, 57, 66, 56, 45, 64, 56, 60, 47, 55, 50, 65, 51, 50),
-  fasting_glucose = c(112, 130, 137, 127, 118, 114, 112, 128, 119, 113, 129, 134, 129, 119, 114, 130, 122, 133, 134, 124, 119, 138, 113, 134, 116, 131, 126, 129, 126, 131, 126, 132, 145, 129, 137, 143, 134, 131, 131, 120, 119, 130, 143, 122, 142, 116, 126, 120, 110, 127)
-)
-```
-
-```{r mlr-col-bad-fit}
-mlr_col_bad_model <- lm(fasting_glucose ~ weight_kg + bmi + age_years, data = mlr_col_bad)
-summary(mlr_col_bad_model)
-```
-
-```{r mlr-col-bad-check}
-check_collinearity(mlr_col_bad_model)
-```
-
-The VIF values for `weight_kg` and `bmi` are around 5, flagged as moderate overlap. Age is fine on its own.
-
-When two predictors overlap like this, the model can still run, but the individual coefficients for weight and BMI are unstable and hard to interpret. Their standard errors are inflated, so tests and confidence intervals for those slopes are unreliable.
-
-The fix is usually to drop one of the overlapping predictors or combine them (for example, keep BMI and drop weight).
-
-### Practice
-
-A researcher fits:
-
-`peak_flow ~ height_cm + weight_kg + age_years + bmi`
-
-Fit the model below and run `check_collinearity()`. Which predictors show problematic overlap?
-
-```{r practice-9-data}
-practice_9 <- data.frame(
-  height_cm = c(157, 175, 179, 162, 159, 156, 159, 171, 156, 155, 165, 175, 164, 165, 162, 166, 166, 169, 172, 158, 160, 175, 157, 173, 160, 162, 168, 160, 166, 172),
-  weight_kg = c(58, 81, 81, 78, 72, 83, 74, 80, 63, 64, 71, 69, 84, 57, 80, 53, 63, 52, 55, 77, 64, 63, 65, 61, 69, 84, 70, 70, 72, 79),
-  age_years = c(51, 40, 59, 44, 35, 31, 30, 51, 37, 52, 36, 50, 46, 38, 36, 58, 53, 50, 31, 54, 44, 56, 29, 33, 50, 34, 27, 56, 38, 29),
-  bmi = c(23.5, 26.4, 25.3, 29.7, 28.5, 34.1, 29.3, 27.4, 25.9, 26.6, 26.1, 22.5, 31.2, 20.9, 30.5, 19.2, 22.9, 18.2, 18.6, 30.8, 25, 20.6, 26.4, 20.4, 27, 32, 24.8, 27.3, 26.1, 26.7),
-  peak_flow = c(503, 529, 548, 528, 504, 512, 513, 539, 532, 480, 533, 543, 504, 510, 526, 514, 529, 528, 531, 519, 520, 559, 474, 547, 525, 516, 533, 500, 521, 539)
-)
-```
-
-```{r practice-9-fit}
-practice_9_model <- lm(peak_flow ~ height_cm + weight_kg + age_years + bmi, data = practice_9)
-summary(practice_9_model)
-```
-
-```{r practice-9-check}
-check_collinearity(practice_9_model)
 ```
 
 **Your answer here:**
@@ -767,6 +814,14 @@ cat_poly_hom_bad %>%
 
 The ICU standard deviation is much larger than the others.
 
+Because the plot and the group standard deviations already point to a problem, we can run the formal test to confirm:
+
+```{r cat-poly-hom-bad-test}
+check_heteroscedasticity(cat_poly_hom_bad_model)
+```
+
+**One way to fix it:** for group comparisons, the most common approach is to use a method that does not assume equal variances, such as Welch's ANOVA (`oneway.test()` in base R, which relaxes the equal-variance assumption). Transforming the outcome can also help if the larger spread occurs in the group with the larger mean.
+
 ### Practice
 
 Pain score reduction (points) for patients on one of three analgesic regimens.
@@ -870,6 +925,14 @@ check_model(cat_poly_norm_bad_model, check = "normality")
 In the *Normality* Q-Q panel, the points bend away from the reference line at the upper end.
 
 That is the long right tail from the high CRP values.
+
+Because the Q-Q plot already shows the bend, we can confirm with the formal test:
+
+```{r cat-poly-norm-bad-test}
+check_normality(cat_poly_norm_bad_model)
+```
+
+**One way to fix it:** first inspect the extreme values; a value like CRP = 18.5 among values around 3 may be a recording error. If the values are genuine, a log transformation of the outcome is the usual first step for a right-skewed biomarker like CRP.
 
 ### Practice
 
@@ -1042,6 +1105,14 @@ The emergency strip is taller than the elective strip, and the standard deviatio
 
 The homogeneity assumption is violated.
 
+Because the plot and standard deviations already show the problem, we can confirm with the formal test:
+
+```{r cat-hom-bad-test}
+check_heteroscedasticity(cat_hom_bad_model)
+```
+
+**One way to fix it:** with two groups, the standard solution is Welch's t-test (`t.test()` in base R, which uses Welch's version by default). It compares the two means without assuming equal variances, so the unequal spread stops being a problem.
+
 ### Practice
 
 A clinical trial of a blood-pressure drug. Systolic blood pressure (mmHg) for patients on placebo vs. the active drug.
@@ -1141,6 +1212,14 @@ check_model(cat_bin_norm_bad_model, check = "normality")
 In the *Normality* Q-Q panel, the points bend away from the reference line at the upper end.
 
 That is the long right tail from the high charge values.
+
+Because the Q-Q plot already shows the bend, we can confirm with the formal test:
+
+```{r cat-bin-norm-bad-test}
+check_normality(cat_bin_norm_bad_model)
+```
+
+**One way to fix it:** inspect the extreme value first; a charge of 28,500 among values around 8,000 to 9,000 may be a data-entry error or a genuinely unusual patient. If it is genuine and skew is a general feature of the outcome (as it often is with costs), a log transformation of the outcome is the usual first step.
 
 ### Practice
 

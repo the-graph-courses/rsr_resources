@@ -1,0 +1,120 @@
+---
+title: "Regression tables with the PREVEND data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(openintro)
+library(dplyr)
+library(modelsummary)
+library(broom)
+library(ggplot2)
+library(gt)
+
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+
+prevend <- openintro::prevend |>
+  mutate(
+    Statin = factor(Statin, 0:1, c("No statin", "Statin")),
+    Gender = factor(Gender, 0:1, c("Men", "Women")),
+    Education = factor(
+      Education,
+      0:3,
+      c("Primary school", "Lower secondary", "Higher secondary", "University")
+    )
+  )
+
+models <- list(
+  "Crude" = lm(RFFT ~ Statin, data = prevend),
+  "Adjusted" = lm(RFFT ~ Statin + Age + Gender + Education, data = prevend)
+)
+
+coef_names <- c(
+  "StatinStatin" = "Statin use: yes",
+  "Age" = "Age, years",
+  "GenderWomen" = "Gender: women",
+  "EducationLower secondary" = "Education: lower secondary",
+  "EducationHigher secondary" = "Education: higher secondary",
+  "EducationUniversity" = "Education: university"
+)
+
+paper_table <- function(x) {
+  x |>
+    tab_options(
+      table.font.names = "Times New Roman",
+      table.font.size = px(13),
+      heading.title.font.size = px(15),
+      column_labels.font.weight = "bold",
+      table.border.top.width = px(2),
+      table.border.bottom.width = px(2)
+    )
+}
+
+category_means <- bind_rows(
+  prevend |> summarize(term = paste("Mean RFFT:", Statin), value = sprintf("%.1f (n = %s)", mean(RFFT), n()), .by = Statin),
+  prevend |> summarize(term = paste("Mean RFFT:", Gender), value = sprintf("%.1f (n = %s)", mean(RFFT), n()), .by = Gender),
+  prevend |> summarize(term = paste("Mean RFFT:", Education), value = sprintf("%.1f (n = %s)", mean(RFFT), n()), .by = Education)
+) |>
+  transmute(term, Crude = value, Adjusted = value)
+```
+
+## 1. Standard regression table
+
+```{r}
+modelsummary(
+  models,
+  coef_map = coef_names,
+  estimate = "{estimate}{stars}",
+  statistic = "({std.error})",
+  gof_map = c("nobs", "r.squared"),
+  output = "gt"
+) |>
+  tab_header(title = "OLS regression of RFFT score") |>
+  tab_source_note("Coefficients are changes in RFFT score. Standard errors are shown in parentheses.") |>
+  tab_source_note("Reference groups: no statin use, men, and primary school education.") |>
+  paper_table()
+```
+
+**Table 1. Standard regression table.** The adjusted model estimates the association between statin use and RFFT score after controlling for age, gender, and education.
+
+## 2. Regression table with category descriptives
+
+```{r}
+modelsummary(
+  models,
+  coef_map = coef_names,
+  estimate = "{estimate}{stars}",
+  statistic = "({std.error})",
+  gof_map = c("nobs", "r.squared"),
+  add_rows = category_means,
+  output = "gt"
+) |>
+  tab_header(title = "OLS regression with outcome means by category") |>
+  tab_source_note("Added rows show the mean RFFT score within each category, with group size in parentheses.") |>
+  tab_source_note("Reference groups: no statin use, men, and primary school education.") |>
+  paper_table()
+```
+
+**Table 2. Regression table with descriptives.** The lower panel gives the mean RFFT score for each statin, gender, and education category used in the regression model.
+
+## 3. Visual regression display
+
+```{r, fig.width=7, fig.height=4}
+tidy(models$Adjusted, conf.int = TRUE) |>
+  filter(term != "(Intercept)") |>
+  mutate(
+    term = recode(term, !!!coef_names),
+    term = factor(term, rev(coef_names)),
+    label = sprintf("%.1f [%.1f, %.1f]", estimate, conf.low, conf.high)
+  ) |>
+  ggplot(aes(x = estimate, y = term)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey60") +
+  geom_errorbar(aes(xmin = conf.low, xmax = conf.high), width = 0.15) +
+  geom_point(size = 2.4) +
+  geom_text(aes(label = label), hjust = 0, nudge_x = 1.5, size = 3.4) +
+  scale_x_continuous(limits = c(-8, 26)) +
+  labs(x = "Change in RFFT score", y = NULL) +
+  theme_classic(base_family = "Times New Roman")
+```
+
+**Figure 1. Regression estimates with confidence intervals.** Dots show adjusted regression coefficients and horizontal lines show 95% confidence intervals; the numeric estimate and interval are printed inside the figure.
