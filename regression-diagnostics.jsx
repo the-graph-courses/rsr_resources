@@ -1108,6 +1108,34 @@ function ExogeneityDiags(){
   </div>;
 }
 
+/* ── SAMPLE SIZE: summary() coefficient rows ─────────────────────────── */
+function SummaryCoefCard({formula,rows,minN}){
+  const color="#9B6B2F";
+  const mono={fontFamily:"'JetBrains Mono',monospace"};
+  return <div style={{background:C.bg,borderRadius:10,padding:12,border:`1.5px solid ${C.border}`,display:"flex",flexDirection:"column",gap:8}}>
+    <div style={{...mono,fontSize:11,color:C.sub}}>{formula}</div>
+    <div style={{...mono,fontSize:10.5,lineHeight:1.55}}>
+      <div style={{color:C.muted,marginBottom:4}}>Coefficients:</div>
+      {rows.map((r,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",gap:8,padding:"3px 6px",borderRadius:4,background:i%2?"#fff":"transparent"}}>
+        <span style={{color:C.text}}>{r.name}</span>
+        <span style={{color:C.muted}}>{r.val}</span>
+      </div>)}
+    </div>
+    <div style={{marginTop:"auto",padding:"8px 10px",background:"#F5E6D0",borderRadius:8,fontSize:12,fontWeight:700,color,lineHeight:1.45}}>
+      {rows.length} {rows.length===1?"row":"rows"} in coefficients table<br/>
+      <span style={{fontWeight:600}}>{rows.length} × 10 → aim for ≥{minN} observations</span>
+    </div>
+  </div>;
+}
+
+function SampleParamDiags(){
+  return <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(210px, 1fr))",gap:10,margin:"10px 0 4px"}}>
+    <SummaryCoefCard formula="lm(y ~ x)" rows={[{name:"(Intercept)",val:"12.34"},{name:"x",val:"2.56"}]} minN={20}/>
+    <SummaryCoefCard formula="lm(y ~ x1 + x2)" rows={[{name:"(Intercept)",val:"8.10"},{name:"x1",val:"1.20"},{name:"x2",val:"-0.45"}]} minN={30}/>
+    <SummaryCoefCard formula='lm(charges ~ dose)' rows={[{name:"(Intercept)",val:"4200"},{name:"dose1 mg",val:"2800"},{name:"dose2 mg",val:"4900"}]} minN={30}/>
+  </div>;
+}
+
 /* ── INFO PANELS ─────────────────────────────────────────────────────── */
 const ul={margin:0,paddingLeft:20,fontSize:14,lineHeight:1.75,color:C.text};
 const pa={margin:0,fontSize:14,lineHeight:1.75,color:C.text};
@@ -1232,14 +1260,14 @@ const INFO={
 sample:()=><div style={{display:"flex",flexDirection:"column",gap:16}}>
   <div><Hd>The key rule</Hd><p style={pa}>A common rule of thumb is to aim for at least <b>10 observations per parameter</b> you are estimating.</p></div>
   <div><Hd>What counts as a parameter?</Hd>
-    <p style={pa}>Each coefficient counts as a parameter. Simple linear regression has two (intercept and slope), so the rule suggests at least <b>20</b> observations.</p>
-    <p style={{...pa,marginTop:10}}>Add a second predictor and you have three parameters, pushing the minimum to <b>30</b>.</p>
+    <p style={pa}>Count the rows in the <b>coefficients table</b> of <code style={{fontFamily:"'JetBrains Mono',monospace",fontSize:13,background:C.bg,padding:"1px 5px",borderRadius:4}}>summary(model)</code>. Each row is one coefficient the model estimates: intercept, slopes, dummy variables for factor levels, interaction terms, and so on.</p>
+    <SampleParamDiags/>
   </div>
   <div><Hd>Why it matters</Hd>
-    <p style={pa}>Small samples produce noisier estimates and weaker diagnostics. Two issues come up again and again:</p>
+    <p style={pa}>With too few observations:</p>
     <ul style={ul}>
-      <li><b>You cannot really check your assumptions.</b> Residual plots need enough points to be interpretable.</li>
-      <li><b>Individual observations dominate.</b> One unusual point can drag the line, and with small <i>n</i> you may not notice.</li>
+      <li><b>Diagnostics are hard to read.</b> Residual plots need enough points to be trustworthy.</li>
+      <li><b>One point can move the line.</b> An unusual observation may not stand out when <i>n</i> is small.</li>
     </ul>
   </div>
 </div>,
