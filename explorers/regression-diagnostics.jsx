@@ -94,9 +94,9 @@ shape:[
 {q:"Looking at this residuals-vs-fitted plot, what reassures you that linearity holds?",v:"resid_good",opts:["The smoother stays close to zero across all fitted values","The positive and negative residuals balance out, summing to roughly zero"],ans:0,explain:"A flat smoother near zero means no systematic pattern is left in the residuals. Residuals summing to zero is automatic for any OLS fit, so it says nothing about linearity. A clear U-shape sums to zero just as easily."},
 ],
 homogeneity:[
-{q:"Three residual-vs-fitted patterns are shown. Which one most clearly indicates heteroscedasticity?",v:"het_pick",opts:["The middle panel","The left panel","The right panel"],ans:0,explain:"Heteroscedasticity means the spread of residuals changes with the fitted value. The middle panel shows residuals widening from left to right, the classic fan. The left panel has roughly constant spread (homoscedastic), and the right panel shows a U-shape, which is a linearity issue rather than a variance one."},
 {q:"When residual variance is clearly non-constant, why are the usual confidence intervals unreliable?",opts:["The standard formula assumes constant variance, so the resulting interval can be too narrow or too wide","The slope estimate itself becomes biased, so any interval centred on it lands in the wrong place"],ans:0,explain:"OLS standard errors are derived under the assumption of constant variance, and heteroscedasticity distorts that calculation. Robust (HC) standard errors recompute it without that assumption. The slope itself can still be unbiased."},
 {q:"Why might income vs. medical spending look like a fan-shaped scatter?",v:"income_fan",opts:["Higher-income households have more discretionary spending, so individual choices add more variability at the top","Higher-income households spend more on average, so the regression line is steeper at the high end"],ans:0,explain:"The fan is about variance, not the mean. At higher incomes, spending depends more on personal choice, which inflates the spread. A steeper average slope at the top would be a linearity issue, not heteroscedasticity."},
+{q:"Three residual-vs-fitted patterns are shown. Which one most clearly indicates heteroscedasticity?",v:"het_pick",opts:["The middle panel","The left panel","The right panel"],ans:0,explain:"Heteroscedasticity means the spread of residuals changes with the fitted value. The middle panel shows residuals widening from left to right, the classic fan. The left panel has roughly constant spread (homoscedastic). The right panel also has constant spread, but the average residual curves away from zero, which is a linearity issue rather than a variance one."},
 ],
 influential:[
 {q:"Three panels show different points marked in red. Which point is most influential on the fitted line?",v:"outlier_types",opts:["The low-leverage outlier (left panel)","The high-leverage point on the line (middle panel)","The off-trend point with high leverage (right panel)"],ans:2,explain:"Influence usually requires both ingredients: unusual x-position and a sizable residual. The right-panel point has both."},
@@ -111,10 +111,8 @@ normality:[
 {q:"What does non-normality of residuals primarily affect?",opts:["The reported confidence intervals and p-values","The fitted predictions, but not the standard errors"],ans:0,explain:"The fitted line can still be useful for prediction. The bigger concern is whether the usual uncertainty statements are trustworthy."},
 ],
 exogeneity:[
-{q:"A study reports that more physical therapy visits predict higher pain scores. The diagram suggests one reason this slope cannot be read as 'therapy causes more pain.' What is the issue?",v:"confound",opts:["An omitted common cause (injury severity) drives both variables","The sample size is too small"],ans:0,explain:"Injury severity can increase both the number of therapy visits and the pain score. The therapy-visits slope is therefore not a clean causal effect on pain."},
-{q:"All four standard residual plots look clean. Does this prove that exogeneity holds?",opts:["No; exogeneity is about causal structure, not about residual shapes","Yes; clean residual plots together with a normal Q-Q rule out omitted-variable bias"],ans:0,explain:"Clean diagnostic plots cannot prove that an omitted confounder is absent. Exogeneity is a design and causal reasoning issue, not a residual-shape one."},
-{q:"In the age-vs-cars diagram, what omitted background factor could create a misleading link?",v:"age_cars",opts:["Life stage and wealth","Random measurement error in the recorded age"],ans:0,explain:"Age may appear related to cars owned because life stage and wealth affect car ownership and are also related to age. The causal story is not simply 'age causes cars.'"},
-{q:"What is the best way to assess whether exogeneity is plausible?",opts:["Substantive domain knowledge to identify potential confounders","Inspecting all four standard residual plots together"],ans:0,explain:"No residual plot can certify exogeneity. You need theory, design knowledge, and a careful search for plausible omitted causes."},
+{q:"A study reports that more physical therapy visits predict higher pain scores. The diagram suggests one reason this slope cannot be read as 'therapy causes more pain.' What is the issue?",v:"confound",opts:["A common cause affects both therapy visits and pain","Too few observations make the slope estimate unstable"],ans:0,explain:"Injury severity can increase both the number of therapy visits and the pain score. The therapy-visits slope is therefore not a clean causal effect on pain."},
+{q:"What is the best way to assess whether exogeneity is plausible?",v:"domain_knowledge",opts:["Domain knowledge about plausible omitted causes","Standard residual diagnostic plots from the fit"],ans:0,explain:"No residual plot can certify exogeneity. You need theory, design knowledge, and a careful search for plausible omitted causes."},
 ],
 };
 
@@ -152,8 +150,10 @@ const SUNSHINE=[
     {status:"bad",text:"**SEs, CIs, and p-values:** standard errors are often too small, so confidence intervals are too narrow and p-values too small."}
   ],bottomLine:"the slope estimate is usually still reasonable, but the standard errors are not."},
   formalTestList:[
-    {text:"**performance::check_heteroscedasticity(model)**: under the hood, this runs a **Breusch-Pagan test** for non-constant error variance.",
-      links:[{title:"performance::check_heteroscedasticity reference",short:"check_heteroscedasticity()",url:"https://easystats.github.io/performance/reference/check_heteroscedasticity.html"},{title:"lmtest::bptest reference (CRAN)",short:"bptest",url:"https://search.r-project.org/CRAN/refmans/lmtest/html/bptest.html"}]}
+    {text:"**Breusch-Pagan test** for non-constant error variance.",
+      links:[{title:"lmtest::bptest reference (CRAN)",short:"bptest",url:"https://search.r-project.org/CRAN/refmans/lmtest/html/bptest.html"}]},
+    {text:"In R, **performance::check_heteroscedasticity(model)** is a convenience wrapper that runs the Breusch-Pagan test.",
+      links:[{title:"performance::check_heteroscedasticity reference",short:"check_heteroscedasticity()",url:"https://easystats.github.io/performance/reference/check_heteroscedasticity.html"}]}
   ],
   howToFixList:[
     {text:"Use **heteroscedasticity-robust standard errors** (for example HC3).",
@@ -171,12 +171,12 @@ const SUNSHINE=[
     {status:"bad",text:"**SEs, CIs, and p-values:** can also change, because they depend on that point."}
   ],bottomLine:"one observation may drive the reported result."},
   formalTestList:[
-    {text:"**performance::check_outliers(model)**: for a standard lm() model, this uses **Cook's distance** under the hood and names the observations that exceed the threshold.",
-      links:[{title:"performance::check_outliers reference",short:"check_outliers()",url:"https://easystats.github.io/performance/reference/check_outliers.html"}]},
     {text:"**Cook's distance**: measures overall influence on fitted values. One common cutoff is F(0.5, p, n-p).",
       links:[{title:"RMPH §5.23: Influential observations",url:"https://bookdown.org/rwnahhas/RMPH/mlr-influence.html"}]},
     {text:"**DFFITS and DFBETAS**: changes in fitted values and coefficients when observation i is removed.",
-      links:[{title:"UVA Library: Detecting influential points with DFBETAS",url:"https://library.virginia.edu/data/articles/detecting-influential-points-in-regression-with-dfbetas"},{title:"Statology: How to calculate DFBETAS in R",url:"https://www.statology.org/dfbetas-in-r/"}]}
+      links:[{title:"UVA Library: Detecting influential points with DFBETAS",url:"https://library.virginia.edu/data/articles/detecting-influential-points-in-regression-with-dfbetas"},{title:"Statology: How to calculate DFBETAS in R",url:"https://www.statology.org/dfbetas-in-r/"}]},
+    {text:"In R, **performance::check_outliers(model)** is a convenience wrapper that applies Cook's distance for a standard lm() model and names the flagged observations.",
+      links:[{title:"performance::check_outliers reference",short:"check_outliers()",url:"https://easystats.github.io/performance/reference/check_outliers.html"}]}
   ],
   howToFixList:[
     {text:"**Check flagged points** to see why they are unusual.",
@@ -195,8 +195,10 @@ const SUNSHINE=[
     {status:"warn",text:"**SEs, CIs, and p-values:** standard errors are often still reasonable, but confidence intervals and p-values may be wrong in small samples."}
   ],bottomLine:"with large samples, small departures from normality are often less of a problem."},
   formalTestList:[
-    {text:"**performance::check_normality(model)**: under the hood, this runs a **Shapiro-Wilk test** on the model residuals.",
-      links:[{title:"performance::check_normality reference",short:"check_normality()",url:"https://easystats.github.io/performance/reference/check_normality.html"},{title:"STHDA: Normality test in R (Shapiro-Wilk, Q-Q)",short:"STHDA",url:"https://www.sthda.com/english/wiki/normality-test-in-r"}]}
+    {text:"**Shapiro-Wilk test** on the residuals.",
+      links:[{title:"STHDA: Normality test in R (Shapiro-Wilk, Q-Q)",short:"STHDA",url:"https://www.sthda.com/english/wiki/normality-test-in-r"}]},
+    {text:"In R, **performance::check_normality(model)** is a convenience wrapper that runs the Shapiro-Wilk test on the model residuals.",
+      links:[{title:"performance::check_normality reference",short:"check_normality()",url:"https://easystats.github.io/performance/reference/check_normality.html"}]}
   ],
   howToFixList:[
     {text:"**Transform the outcome** (log, square root, or Box\u2013Cox).",
@@ -273,6 +275,7 @@ if(type==="linearity")return <svg viewBox="0 0 36 22" style={s}><line x1="2" x2=
 if(type==="homogeneity")return <svg viewBox="0 0 36 22" style={s}><path d="M3,14 Q18,8 33,6" fill="none" stroke="#2F855A" strokeWidth="1"/>{[[4,13],[8,12],[12,14],[16,10],[20,13],[24,8],[28,11],[32,5]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="1.8" fill="#2F855A" opacity=".6"/>)}</svg>;
 if(type==="influential")return <svg viewBox="0 0 36 22" style={s}><line x1="2" x2="34" y1="11" y2="11" stroke="#999" strokeWidth=".4" strokeDasharray="1.5,1.5"/><path d="M3,4 Q15,9 33,10" fill="none" stroke="#C53030" strokeWidth=".7" strokeDasharray="2,1.5"/><path d="M3,18 Q15,13 33,12" fill="none" stroke="#C53030" strokeWidth=".7" strokeDasharray="2,1.5"/>{[[7,12],[10,9],[13,13],[16,11],[19,10],[22,12],[25,11]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="1.4" fill="#3B7DD8" opacity=".6"/>)}<circle cx="31" cy="3.5" r="2" fill="#C53030"/></svg>;
 if(type==="normality")return <svg viewBox="0 0 36 22" style={s}><line x1="3" y1="11" x2="33" y2="11" stroke="#6B46C1" strokeWidth=".9"/>{[[5,14],[9,9],[13,12],[17,10],[21,11],[25,8],[29,13],[33,9]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="1.6" fill="#6B46C1" opacity=".65"/>)}</svg>;
+if(type==="multicollinearity")return <svg viewBox="0 0 36 22" style={s}><line x1="3" x2="33" y1="19" y2="3" stroke="#6B6B6B" strokeWidth=".7" strokeDasharray="2,1.5"/>{[[5,17],[8,17],[11,14],[14,14],[17,11],[20,12],[23,8],[26,9],[29,6],[32,5]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="1.7" fill="#6B6B6B" opacity=".6"/>)}</svg>;
 return null;}
 
 /* ── MCQ COMPONENT ───────────────────────────────────────────────────── */
@@ -422,12 +425,12 @@ function QuizVisual({type,color="#2B6CB0"}){
   </svg>;
 
   /* ── SHAPE / LINEARITY ─────────────────────────────────────── */
-  // curve: saturing curve with a straight OLS line cutting through. Average slope hides changing effect
+  // curve: strong saturating bend with a straight OLS line cutting through. Average slope hides changing effect
   if(type==="curve")return <svg viewBox="0 0 300 100" style={s}>
     <line x1="22" y1="84" x2="282" y2="84" stroke={BD}/>
     <line x1="22" y1="14" x2="22" y2="84" stroke={BD}/>
-    {Array.from({length:13},(_,i)=>{const t=i/12;const x=30+i*21;const yBase=74-62*(1-Math.exp(-4.2*t));const y=yBase+(i%2?1.8:-2.2);return <circle key={i} cx={x} cy={y} r="3.2" fill={color} opacity=".78"/>;})}
-    <line x1="24" y1="55" x2="282" y2="2" stroke={RF} strokeWidth="2.2"/>
+    {Array.from({length:13},(_,i)=>{const t=i/12;const x=30+i*21;const yBase=80-66*(1-Math.exp(-7.5*t));const y=yBase+(i%2?1.2:-1.4);return <circle key={i} cx={x} cy={y} r="3.2" fill={color} opacity=".78"/>;})}
+    <line x1="24" y1="68" x2="282" y2="8" stroke={RF} strokeWidth="2.2"/>
     <text x="152" y="98" textAnchor="middle" fontSize="9.5" fill={SB}>straight line cannot follow the bend</text>
   </svg>;
 
@@ -486,7 +489,7 @@ function QuizVisual({type,color="#2B6CB0"}){
     <text x="152" y="96" textAnchor="middle" fontSize="9.5" fill={SB}>fitted →</text>
   </svg>;
 
-  // het_pick: three small panels: homoscedastic, fan (heteroscedastic), curved (linearity issue)
+  // het_pick: three small panels: homoscedastic, fan (heteroscedastic), curved mean with constant spread (linearity issue)
   if(type==="het_pick")return <svg viewBox="0 0 300 132" style={s}>
     {[0,1,2].map(p=>{const x0=8+p*98;return <g key={p}>
       <text x={x0+44} y={14} textAnchor="middle" fontSize="10" fill={SB} fontWeight="700">{["left","middle","right"][p]}</text>
@@ -497,7 +500,8 @@ function QuizVisual({type,color="#2B6CB0"}){
     </g>;})}
     {[0,12,24,36,48,60,72].map((dx,i)=>{const x=14+dx;const y=55+([4,-5,3,-3,5,-2,4][i])*2.4;return <circle key={`a${i}`} cx={x} cy={y} r="2.5" fill={color} opacity=".78"/>;})}
     {[0,12,24,36,48,60,72].map((dx,i)=>{const x=112+dx;const sp=2+i*2.5;const j=([1,-1,1,-1,1,-1,1])[i];return <g key={`b${i}`}><circle cx={x} cy={55+sp*j} r="2.5" fill={color} opacity=".75"/><circle cx={x} cy={55-sp*j*0.7} r="2.5" fill={color} opacity=".75"/></g>;})}
-    {[0,12,24,36,48,60,72].map((dx,i)=>{const x=210+dx;const u=Math.cos((i/6)*Math.PI)*16;const y=55-u+([2,-2,1,-1,2,-1,1][i]);return <circle key={`c${i}`} cx={x} cy={y} r="2.5" fill={color} opacity=".8"/>;})}
+    {[0,12,24,36,48,60,72].map((dx,i)=>{const x=210+dx;const center=[56,54,52,47,52,54,56][i];const half=3;return <g key={`c${i}`}><circle cx={x} cy={center+half} r="2.5" fill={color} opacity=".75"/><circle cx={x} cy={center-half} r="2.5" fill={color} opacity=".75"/></g>;})}
+    <path d="M 218 56 Q 246 47 274 56" fill="none" stroke={SM} strokeWidth="1.8" opacity=".85"/>
   </svg>;
 
   // het_se_problem: naive (too narrow) vs robust (honest, wider) CI
@@ -740,8 +744,6 @@ function QuizVisual({type,color="#2B6CB0"}){
     <defs><marker id="arrDk" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill={SM}/></marker></defs>
     <rect x="20" y="32" width="56" height="44" rx="4" fill={color} opacity=".18" stroke={color}/>
     {[44,52,60,68].map(y=><line key={y} x1="30" y1={y} x2={y===68?60:64} y2={y} stroke={color} strokeWidth="1.6"/>)}
-    <text x="48" y="92" textAnchor="middle" fontSize="9.5" fill={color} fontWeight="700">domain</text>
-    <text x="48" y="103" textAnchor="middle" fontSize="9.5" fill={color} fontWeight="700">knowledge</text>
     <path d="M 84 54 L 122 54" stroke={SM} strokeWidth="2.2" markerEnd="url(#arrDk)"/>
     <circle cx="186" cy="32" r="16" fill="#F0E4C8" stroke={color}/>
     <text x="186" y="36" textAnchor="middle" fontSize="10" fill={color} fontWeight="700">Z?</text>
@@ -769,62 +771,75 @@ function QuizVisual({type,color="#2B6CB0"}){
 
   return null;
 }
-function Quiz({questions,color}){
+function Quiz({questions,color,printMode=false}){
   const[answers,setAnswers]=useState({});
-  const[open,setOpen]=useState(false);
+  const[open,setOpen]=useState(printMode);
   if(!questions||!questions.length) return null;
   const pick=(qi,oi)=>{setAnswers(a=>({...a,[qi]:oi}));};
   const mcqCount=questions.filter(q=>!q.prose).length;
   const score=Object.keys(answers).filter(k=>!questions[k].prose && answers[k]===questions[k].ans).length;
   const mcqAnswered=Object.keys(answers).filter(k=>!questions[k].prose).length;
   const c=color||C.sub;
-  return(<div style={{marginTop:18,borderTop:`1px solid ${C.border}`,paddingTop:14}}>
-    <button onClick={()=>setOpen(!open)} style={{display:"inline-flex",alignItems:"center",gap:9,padding:"12px 22px",borderRadius:999,border:`2px solid ${c}`,background:open?c:`${c}15`,fontSize:14,fontWeight:800,color:open?"#fff":c,cursor:"pointer",fontFamily:"inherit",boxShadow:open?`0 8px 20px ${c}30`:`0 3px 10px ${c}20`,letterSpacing:".2px",transition:"all .15s"}}>
+  const effectiveAnswers=printMode?{}:answers;
+  const effectiveOpen=printMode||open;
+  return(<div className={printMode?"print-quiz":""} style={{marginTop:printMode?6:18,borderTop:`1px solid ${C.border}`,paddingTop:printMode?6:14}}>
+    {!printMode&&<button onClick={()=>setOpen(!open)} style={{display:"inline-flex",alignItems:"center",gap:9,padding:"12px 22px",borderRadius:999,border:`2px solid ${c}`,background:open?c:`${c}15`,fontSize:14,fontWeight:800,color:open?"#fff":c,cursor:"pointer",fontFamily:"inherit",boxShadow:open?`0 8px 20px ${c}30`:`0 3px 10px ${c}20`,letterSpacing:".2px",transition:"all .15s"}}>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{flex:"0 0 auto"}}>
         <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-1.5 2-2.5 3v1"/>
         <circle cx="12" cy="17" r=".6" fill="currentColor"/>
         <circle cx="12" cy="12" r="9.5"/>
       </svg>
       <span>{open?"Hide":"Show"} Practice Questions{mcqAnswered>0?` · ${score}/${mcqCount}`:` · ${questions.length} Q`}</span>
-    </button>
-    {open&&<div style={{marginTop:12,display:"flex",flexDirection:"column",gap:16}}>
+    </button>}
+    {printMode&&<div style={{fontSize:11.5,fontWeight:800,color:c,marginBottom:3}}>Practice questions</div>}
+    {effectiveOpen&&<div style={{marginTop:printMode?0:12,display:"flex",flexDirection:"column",gap:printMode?5:16}}>
       {questions.map((q,qi)=>{
-        const picked=answers[qi];
+        const picked=effectiveAnswers[qi];
         const revealed=picked!=null;
         if(q.prose){
-          return(<div key={qi} style={{background:C.card,borderRadius:12,padding:"14px 16px",border:`1px solid ${C.border}`,boxShadow:"0 2px 10px rgba(0,0,0,.04)"}}>
+          return(<div key={qi} className={printMode?"print-quiz-q":""} style={{background:C.card,borderRadius:printMode?8:12,padding:printMode?"6px 8px":"14px 16px",border:`1px solid ${C.border}`,boxShadow:printMode?"none":"0 2px 10px rgba(0,0,0,.04)"}}>
             {q.v&&<QuizVisual type={q.v} color={color}/>}
-            <div style={{fontSize:13,fontWeight:600,color:C.text,marginBottom:10,lineHeight:1.5}}>{qi+1}. {q.q}</div>
-            {!revealed&&<button onClick={()=>pick(qi,"revealed")} style={{padding:"7px 14px",borderRadius:8,border:`1.5px solid ${c}`,background:`${c}15`,color:c,fontSize:12.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Show answer</button>}
-            {revealed&&<div style={{marginTop:4,background:`${color}10`,borderLeft:`4px solid ${color}`,borderRadius:8,padding:"10px 12px"}}>
+            <div style={{fontSize:printMode?11.5:13,fontWeight:600,color:C.text,marginBottom:printMode?3:10,lineHeight:printMode?1.2:1.5}}>{qi+1}. {q.q}</div>
+            {!printMode&&!revealed&&<button onClick={()=>pick(qi,"revealed")} style={{padding:"7px 14px",borderRadius:8,border:`1.5px solid ${c}`,background:`${c}15`,color:c,fontSize:12.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Show answer</button>}
+            {!printMode&&revealed&&<div style={{marginTop:4,background:`${color}10`,borderLeft:`4px solid ${color}`,borderRadius:8,padding:"10px 12px"}}>
               {q.ev&&<QuizVisual type={q.ev} color={color}/>}
               <div style={{fontSize:12.5,color:C.sub,lineHeight:1.55}}>{q.prose}</div>
+            </div>}
+            {printMode&&<div style={{marginTop:4,borderTop:`1px solid ${C.border}`,paddingTop:4}}>
+              {q.ev&&<QuizVisual type={q.ev} color={color}/>}
+              <div style={{fontSize:11,color:C.sub,lineHeight:1.2}}><b>Answer.</b> {q.prose}</div>
             </div>}
           </div>);
         }
         const correctText=q.opts[q.ans];
-        return(<div key={qi} style={{background:C.card,borderRadius:12,padding:"14px 16px",border:`1px solid ${C.border}`,boxShadow:"0 2px 10px rgba(0,0,0,.04)"}}>
+        return(<div key={qi} className={printMode?"print-quiz-q":""} style={{background:C.card,borderRadius:printMode?8:12,padding:printMode?"6px 8px":"14px 16px",border:`1px solid ${C.border}`,boxShadow:printMode?"none":"0 2px 10px rgba(0,0,0,.04)"}}>
         {q.v&&<QuizVisual type={q.v} color={color}/>}
-        <div style={{fontSize:13,fontWeight:600,color:C.text,marginBottom:8,lineHeight:1.5}}>{qi+1}. {q.q}</div>
-        <div style={{display:"flex",flexDirection:"column",gap:5}}>
+        <div style={{fontSize:printMode?11.5:13,fontWeight:600,color:C.text,marginBottom:printMode?3:8,lineHeight:printMode?1.2:1.5}}>{qi+1}. {q.q}</div>
+        <div style={{display:"flex",flexDirection:"column",gap:printMode?2:5}}>
           {q.opts.map((o,oi)=>{
             const chosen=picked===oi;
             const correct=oi===q.ans;
             let bg2="transparent",brd=`1.5px solid ${C.border}`,col=C.text;
-            if(revealed&&correct){bg2="#E7F5EF";brd="1.5px solid #2F855A";col="#236B45";}
-            else if(chosen&&!correct){bg2="#FDECEC";brd="1.5px solid #C53030";col="#A62626";}
+            if(!printMode&&revealed&&correct){bg2="#E7F5EF";brd="1.5px solid #2F855A";col="#236B45";}
+            else if(!printMode&&chosen&&!correct){bg2="#FDECEC";brd="1.5px solid #C53030";col="#A62626";}
+            if(printMode)return <div key={oi} style={{textAlign:"left",padding:"3px 7px",borderRadius:5,border:brd,background:"transparent",fontSize:11,color:C.text,lineHeight:1.15}}>{String.fromCharCode(65+oi)}) {o}</div>;
             return(<button key={oi} onClick={()=>{if(picked==null)pick(qi,oi);}} disabled={picked!=null} style={{textAlign:"left",padding:"8px 12px",borderRadius:8,border:brd,background:bg2,fontSize:13,color:col,cursor:picked!=null?"default":"pointer",fontFamily:"inherit",lineHeight:1.4,fontWeight:chosen||(revealed&&correct)?700:500,opacity:revealed&&!correct&&!chosen ? .55 : 1}}>
               {String.fromCharCode(65+oi)}) {o}
             </button>);
           })}
         </div>
-        {revealed&&<div style={{marginTop:10,background:`${color}10`,borderLeft:`4px solid ${picked===q.ans?"#2F855A":"#C53030"}`,borderRadius:8,padding:"10px 12px"}}>
+        {printMode&&<div style={{marginTop:4,borderTop:`1px solid ${C.border}`,paddingTop:4}}>
+          <div style={{fontSize:11,fontWeight:700,color:C.text,marginBottom:2,lineHeight:1.15}}>Answer: {String.fromCharCode(65+q.ans)}) {correctText}</div>
+          {q.ev&&<QuizVisual type={q.ev} color={color}/>}
+          <div style={{fontSize:11,color:C.sub,lineHeight:1.2}}>{q.explain}</div>
+        </div>}
+        {!printMode&&revealed&&<div style={{marginTop:10,background:`${color}10`,borderLeft:`4px solid ${picked===q.ans?"#2F855A":"#C53030"}`,borderRadius:8,padding:"10px 12px"}}>
           <div style={{fontSize:12,fontWeight:800,color:picked===q.ans?"#236B45":"#A62626",marginBottom:4}}>{picked===q.ans?"Correct":"Not quite"} · Answer: {correctText}</div>
           {q.ev&&<QuizVisual type={q.ev} color={color}/>}
           <div style={{fontSize:12.5,color:C.sub,lineHeight:1.55}}>{q.explain}</div>
         </div>}
       </div>);})}
-      {mcqAnswered===mcqCount&&mcqCount>0&&<div style={{fontSize:14,fontWeight:700,color:color||C.text,textAlign:"center",padding:8}}>Score: {score}/{mcqCount}</div>}
+      {!printMode&&mcqAnswered===mcqCount&&mcqCount>0&&<div style={{fontSize:14,fontWeight:700,color:color||C.text,textAlign:"center",padding:8}}>Score: {score}/{mcqCount}</div>}
     </div>}
   </div>);
 }
@@ -838,13 +853,13 @@ function DiagPlot({type,model,highlight,hiIdx,onHi,plotName,plotColor}){
   if(!model)return <div style={{border:brd,borderRadius:10,padding:10,background:bg,minHeight:200,display:"flex",flexDirection:"column",justifyContent:"center"}}><span style={{fontSize:13,color:C.muted,textAlign:"center"}}>Need 3+ points</span>{plotLabel}</div>;
   const{fitted,residuals,stdRes,cooks,n}=model;
   const dot=(cx,cy,idx)=>{const isH=hiIdx===idx;return <g key={idx} style={{cursor:"pointer"}} onClick={e=>{e.stopPropagation();onHi?.(hiIdx===idx?null:idx);}}>{isH&&<circle cx={cx} cy={cy} r={9} fill={C.hiG}/>}<circle cx={cx} cy={cy} r={isH?5.5:3.5} fill={isH?C.hi:C.dot} stroke={isH?"#C53030":C.dotS} strokeWidth={isH?1.5:.6} opacity={(hiIdx!=null&&!isH) ? .3 : .8}/>{isH&&<text x={cx+8} y={cy-5} fontSize={9} fill={C.hi} fontWeight={700}>#{idx+1}</text>}</g>;};
-  const wrap=(ch)=><div style={{border:brd,borderRadius:12,padding:"9px 9px 6px",background:highlight?bg:C.card,boxShadow:highlight?`0 0 0 3px ${highlight}12, 0 6px 18px rgba(0,0,0,.05)`:"0 2px 10px rgba(0,0,0,.04)",transition:"all .2s"}} onClick={()=>onHi?.(null)}><div style={{fontSize:13,fontWeight:800,color:C.text,paddingLeft:4,lineHeight:1.15}}>{titles[type]}</div><div style={{fontSize:10.5,color:C.sub,paddingLeft:4,marginBottom:2,lineHeight:1.15}}>{subtitles[type]}</div>{ch}{plotLabel}</div>;
+  const wrap=(ch)=><div className="print-keep" style={{border:brd,borderRadius:12,padding:"9px 9px 6px",background:highlight?bg:C.card,boxShadow:highlight?`0 0 0 3px ${highlight}12, 0 6px 18px rgba(0,0,0,.05)`:"0 2px 10px rgba(0,0,0,.04)",transition:"all .2s"}} onClick={()=>onHi?.(null)}><div style={{fontSize:13,fontWeight:800,color:C.text,paddingLeft:4,lineHeight:1.15}}>{titles[type]}</div><div style={{fontSize:10.5,color:C.sub,paddingLeft:4,marginBottom:2,lineHeight:1.15}}>{subtitles[type]}</div>{ch}{plotLabel}</div>;
   const ciBand=(sm,sx,sy)=>{if(sm.length<2)return null;const top=sm.map(p=>`L${sx(p.x)},${sy(p.hi)}`).join(" ");const bot=[...sm].reverse().map(p=>`L${sx(p.x)},${sy(p.lo)}`).join(" ");return <path d={`M${sx(sm[0].x)},${sy(sm[0].hi)} ${top.slice(1)} ${bot} Z`} fill={C.smooth} opacity={.13} stroke="none"/>;};
   const ciLine=(sm,sx,sy)=>sm.length>1?<path d={sm.map((p,i)=>`${i?'L':'M'}${sx(p.x)},${sy(p.y)}`).join(' ')} fill="none" stroke={C.smooth} strokeWidth={2.2} opacity={.9}/>:null;
   if(type==="linearity"){const sm=loess(fitted,residuals);const ys=[...residuals,...sm.map(p=>p.lo),...sm.map(p=>p.hi)];return wrap(<CF xs={fitted} ys={ys} xL="Fitted values" yL="Residuals">{(sx,sy,w)=><>{<line x1={0} x2={w} y1={sy(0)} y2={sy(0)} stroke={C.dash} strokeWidth={1} strokeDasharray="5,5" opacity={.65}/>}{ciBand(sm,sx,sy)}{ciLine(sm,sx,sy)}{fitted.map((f,i)=>dot(sx(f),sy(residuals[i]),i))}</>}</CF>);}
   if(type==="homogeneity"){const sqA=stdRes.map(r=>Math.sqrt(Math.abs(r)));const sm=loess(fitted,sqA);const ys=[...sqA,...sm.map(p=>p.lo),...sm.map(p=>p.hi)];return wrap(<CF xs={fitted} ys={ys} xL="Fitted values" yL={"\u221A|Std. residuals|"}>{(sx,sy)=><>{ciBand(sm,sx,sy)}{ciLine(sm,sx,sy)}{fitted.map((f,i)=>dot(sx(f),sy(sqA[i]),i))}</>}</CF>);}
   if(type==="influential"){
-    const p=2,hat=model.hat||[],maxH=Math.max(.08,...hat)*1.18;
+    const p=model.p||2,hat=model.hat||[],maxH=Math.max(.08,...hat)*1.18;
     const df2=Math.max(n-p,1);
     const qt75=0.67449+0.2454/df2+0.0795/(df2*df2);
     const threshold=qt75*qt75;
@@ -913,14 +928,14 @@ function Scatter({points,setPoints,model,hiIdx,onHi,onEdit,xLabel="X",yLabel="Y"
 }
 
 /* ── AUTOCORRELATION DIAGRAMS ────────────────────────────────────────── */
-function AutocorrDiags(){
+function AutocorrDiags({forcedReveal=false}){
   // 28 days of ED asthma visits regressed on daily pollution. Truth: visits also
   // depend on day-of-week (more visits on weekends, when people aren't at work or
   // school). Pollution is roughly balanced across day-types, so the slope on
   // pollution stays approximately right; only the SE is fooled. Day-of-week acts
   // as a "cluster in time": weekend pairs and weekday runs share the same
   // residual sign, so the 28 rows carry far less information than 28 fresh ones.
-  const[showColors,setShowColors]=useState(false);
+  const[showColors,setShowColors]=useState(forcedReveal);
   const data=[
     {d:1,wk:false,p:20,v:10},{d:2,wk:false,p:15,v:9}, {d:3,wk:false,p:25,v:10},
     {d:4,wk:false,p:30,v:11},{d:5,wk:false,p:18,v:9}, {d:6,wk:true, p:22,v:15},
@@ -951,9 +966,9 @@ function AutocorrDiags(){
   // Faint connecting line through points in time order
   const tsPath=data.map((r,i)=>`${i?"L":"M"}${rx(r.d)},${ly(r.v)}`).join(" ");
   return <div>
-    <button onClick={()=>setShowColors(v=>!v)} style={{margin:"8px 0 10px",padding:"7px 12px",borderRadius:999,border:`1.5px solid ${baseColor}`,background:showColors?baseColor:"#fff",color:showColors?"#fff":baseColor,fontSize:12,fontWeight:800,fontFamily:"inherit",cursor:"pointer"}}>
+    {!forcedReveal&&<button onClick={()=>setShowColors(v=>!v)} style={{margin:"8px 0 10px",padding:"7px 12px",borderRadius:999,border:`1.5px solid ${baseColor}`,background:showColors?baseColor:"#fff",color:showColors?"#fff":baseColor,fontSize:12,fontWeight:800,fontFamily:"inherit",cursor:"pointer"}}>
       {showColors?"Hide":"Reveal"} weekend vs. weekday
-    </button>
+    </button>}
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,margin:"0 0 12px"}}>
     <div style={{background:C.bg,borderRadius:10,padding:12,border:`1.5px solid ${C.border}`}}>
       <div style={{fontSize:12,fontWeight:700,color:baseColor,marginBottom:6}}>Asthma visits vs. pollution</div>
@@ -985,8 +1000,8 @@ function AutocorrDiags(){
   </div>;
 }
 
-function ClusteredDiags(){
-  const[showColors,setShowColors]=useState(false);
+function ClusteredDiags({forcedReveal=false}){
+  const[showColors,setShowColors]=useState(forcedReveal);
   const clinics=[
     {name:"A",x:34,offset:-12,c:"#2E86AB"},{name:"B",x:70,offset:11,c:"#6B46C1"},
     {name:"C",x:106,offset:-3,c:"#2F855A"},{name:"D",x:142,offset:14,c:"#C53030"},
@@ -1000,9 +1015,9 @@ function ClusteredDiags(){
   }));
   const pointFill=p=>showColors?p.c:"#6B46C1";
   return <div>
-    <button onClick={()=>setShowColors(v=>!v)} style={{margin:"8px 0 10px",padding:"7px 12px",borderRadius:999,border:"1.5px solid #6B46C1",background:showColors?"#6B46C1":"#fff",color:showColors?"#fff":"#6B46C1",fontSize:12,fontWeight:800,fontFamily:"inherit",cursor:"pointer"}}>
+    {!forcedReveal&&<button onClick={()=>setShowColors(v=>!v)} style={{margin:"8px 0 10px",padding:"7px 12px",borderRadius:999,border:"1.5px solid #6B46C1",background:showColors?"#6B46C1":"#fff",color:showColors?"#fff":"#6B46C1",fontSize:12,fontWeight:800,fontFamily:"inherit",cursor:"pointer"}}>
       {showColors?"Hide":"Reveal"} clinic colors
-    </button>
+    </button>}
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,margin:"0 0 12px"}}>
     <div style={{background:C.bg,borderRadius:10,padding:12,border:`1.5px solid ${C.border}`}}>
       <div style={{fontSize:12,fontWeight:700,color:"#6B46C1",marginBottom:6}}>Naive scatter: 25 dots look independent</div>
@@ -1029,53 +1044,53 @@ function ClusteredDiags(){
   </div>;
 }
 
-function ExogeneityDiags(){
-  // 24 weeks across 3 temperature tiers. Within each tier, ice cream sales and
-  // shark attacks have essentially no relationship; the strong overall slope is
-  // entirely between-tier (driven by the hidden temperature variable).
-  const[showColors,setShowColors]=useState(false);
+function ExogeneityDiags({forcedReveal=false}){
+  // 24 people across 3 smoking tiers. Within each tier, coffee intake and lung
+  // cancer rate have essentially no relationship; the strong overall slope is
+  // entirely between-tier (driven by the hidden smoking variable).
+  const[showColors,setShowColors]=useState(forcedReveal);
   const data=[
-    {ic:2,sa:2,t:1}, {ic:3,sa:3,t:1},{ic:2,sa:2,t:1}, {ic:4,sa:4,t:1},
-    {ic:3,sa:3,t:1},{ic:4,sa:2,t:1}, {ic:2,sa:3,t:1},{ic:3,sa:4,t:1},
-    {ic:5,sa:9,t:2},{ic:6,sa:11,t:2},{ic:7,sa:10,t:2},{ic:5,sa:13,t:2},
-    {ic:6,sa:14,t:2},{ic:7,sa:9,t:2},{ic:6,sa:8,t:2},{ic:5,sa:12,t:2},
-    {ic:9,sa:22,t:3},{ic:10,sa:26,t:3},{ic:11,sa:23,t:3},{ic:12,sa:25,t:3},
-    {ic:9,sa:27,t:3},{ic:10,sa:20,t:3},{ic:11,sa:26,t:3},{ic:12,sa:21,t:3}
+    {cf:1,lc:4,t:1},{cf:2,lc:6,t:1},{cf:1,lc:5,t:1},{cf:3,lc:5,t:1},
+    {cf:2,lc:4,t:1},{cf:3,lc:6,t:1},{cf:1,lc:6,t:1},{cf:2,lc:5,t:1},
+    {cf:2,lc:20,t:2},{cf:3,lc:22,t:2},{cf:4,lc:19,t:2},{cf:2,lc:23,t:2},
+    {cf:3,lc:21,t:2},{cf:4,lc:24,t:2},{cf:3,lc:18,t:2},{cf:2,lc:22,t:2},
+    {cf:3,lc:47,t:3},{cf:4,lc:50,t:3},{cf:5,lc:48,t:3},{cf:4,lc:52,t:3},
+    {cf:5,lc:49,t:3},{cf:3,lc:46,t:3},{cf:4,lc:51,t:3},{cf:5,lc:47,t:3}
   ];
   const n=data.length;
-  const mic=data.reduce((s,d)=>s+d.ic,0)/n;
-  const msa=data.reduce((s,d)=>s+d.sa,0)/n;
+  const mcf=data.reduce((s,d)=>s+d.cf,0)/n;
+  const mlc=data.reduce((s,d)=>s+d.lc,0)/n;
   let sxx=0,sxy=0;
-  data.forEach(d=>{const dx=d.ic-mic;sxx+=dx*dx;sxy+=dx*(d.sa-msa);});
-  const slope=sxy/sxx, intercept=msa-slope*mic;
-  const lx=ic=>30+((ic-1)/12)*162;
-  const ly=sa=>96-(sa/30)*78;
+  data.forEach(d=>{const dx=d.cf-mcf;sxx+=dx*dx;sxy+=dx*(d.lc-mlc);});
+  const slope=sxy/sxx, intercept=mlc-slope*mcf;
+  const lx=cf=>30+(cf/6)*162;
+  const ly=lc=>96-(lc/60)*78;
   const baseColor="#8B6914";
   const tColors={1:"#3B82C4",2:"#C9A04A",3:"#C53030"};
-  const tNames={1:"Cool",2:"Mild",3:"Hot"};
+  const tNames={1:"Non-smoker",2:"Light",3:"Heavy"};
   const fillFor=t=>showColors?tColors[t]:"#A89968";
   return <div>
-    <button onClick={()=>setShowColors(v=>!v)} style={{margin:"8px 0 10px",padding:"7px 12px",borderRadius:999,border:`1.5px solid ${baseColor}`,background:showColors?baseColor:"#fff",color:showColors?"#fff":baseColor,fontSize:12,fontWeight:800,fontFamily:"inherit",cursor:"pointer"}}>
-      {showColors?"Hide":"Reveal"} the lurking variable
-    </button>
+    {!forcedReveal&&<button onClick={()=>setShowColors(v=>!v)} style={{margin:"8px 0 10px",padding:"7px 12px",borderRadius:999,border:`1.5px solid ${baseColor}`,background:showColors?baseColor:"#fff",color:showColors?"#fff":baseColor,fontSize:12,fontWeight:800,fontFamily:"inherit",cursor:"pointer"}}>
+      {showColors?"Hide":"Show"} smoking status
+    </button>}
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,margin:"0 0 12px"}}>
     <div style={{background:`${baseColor}10`,borderRadius:10,padding:12,border:`1.5px solid ${baseColor}55`}}>
       <div style={{fontSize:12,fontWeight:700,color:baseColor,marginBottom:6}}>The data</div>
       <svg viewBox="0 0 200 120" style={{width:"100%",height:"auto"}}>
         <line x1="30" x2="30" y1="15" y2="98" stroke={C.border} strokeWidth=".8"/>
         <line x1="30" x2="194" y1="98" y2="98" stroke={C.border} strokeWidth=".8"/>
-        <line x1={lx(1)} y1={ly(intercept+slope*1)} x2={lx(13)} y2={ly(intercept+slope*13)} stroke="#444" strokeWidth="1.4" strokeDasharray="3,2.5" opacity=".55"/>
-        {data.map((d,i)=><circle key={i} cx={lx(d.ic)} cy={ly(d.sa)} r="3.5" fill={fillFor(d.t)} stroke="#fff" strokeWidth=".7" opacity=".88"/>)}
-        <text x="112" y="114" textAnchor="middle" fontSize="10" fill={C.sub}>Ice cream sales</text>
-        <text x="10" y="58" textAnchor="middle" fontSize="10" fill={C.sub} transform="rotate(-90,10,58)">Shark attacks</text>
+        <line x1={lx(1)} y1={ly(intercept+slope*1)} x2={lx(5)} y2={ly(intercept+slope*5)} stroke="#444" strokeWidth="1.4" strokeDasharray="3,2.5" opacity=".55"/>
+        {data.map((d,i)=><circle key={i} cx={lx(d.cf)} cy={ly(d.lc)} r="3.5" fill={fillFor(d.t)} stroke="#fff" strokeWidth=".7" opacity=".88"/>)}
+        <text x="112" y="114" textAnchor="middle" fontSize="10" fill={C.sub}>Coffee (cups/day)</text>
+        <text x="10" y="58" textAnchor="middle" fontSize="10" fill={C.sub} transform="rotate(-90,10,58)">Lung cancer rate</text>
       </svg>
       {showColors && <div style={{display:"flex",gap:14,fontSize:11,color:C.sub,justifyContent:"center",marginTop:6}}>
         {[1,2,3].map(t=><span key={t} style={{display:"inline-flex",alignItems:"center",gap:4}}><span style={{display:"inline-block",width:9,height:9,borderRadius:"50%",background:tColors[t]}}/>{tNames[t]}</span>)}
       </div>}
-      <div style={{fontSize:11,color:baseColor,lineHeight:1.5,marginTop:4,fontWeight:600}}>{showColors?<>Within each tier the slope is flat. The whole apparent effect is between tiers.</>:<>Shark attacks rise with ice cream sales.</>}</div>
+      <div style={{fontSize:11,color:baseColor,lineHeight:1.5,marginTop:4,fontWeight:600}}>{showColors?<>Within each smoking level, coffee and lung cancer are not strongly related. The overall slope comes from differences between smoking groups.</>:<>Lung cancer rates increase with coffee intake.</>}</div>
     </div>
     <div style={{background:C.bg,borderRadius:10,padding:12,border:`1.5px solid ${C.border}`,display:"flex",flexDirection:"column"}}>
-      <div style={{fontSize:12,fontWeight:700,color:baseColor,marginBottom:6}}>The hidden cause</div>
+      <div style={{fontSize:12,fontWeight:700,color:baseColor,marginBottom:6}}>The confounder</div>
       {showColors ? <>
         <svg viewBox="0 0 200 120" style={{width:"100%",height:"auto"}}>
           <defs>
@@ -1083,20 +1098,20 @@ function ExogeneityDiags(){
             <marker id="arrExoGray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#666"/></marker>
           </defs>
           <ellipse cx="100" cy="25" rx="44" ry="14" fill={baseColor} fillOpacity=".18" stroke={baseColor} strokeWidth="1.6"/>
-          <text x="100" y="29" textAnchor="middle" fontSize="11" fill={baseColor} fontWeight="800">Temperature</text>
+          <text x="100" y="29" textAnchor="middle" fontSize="11" fill={baseColor} fontWeight="800">Smoking</text>
           <ellipse cx="42" cy="92" rx="34" ry="13" fill="#fff" stroke="#666" strokeWidth="1.4"/>
-          <text x="42" y="95" textAnchor="middle" fontSize="9.5" fill="#333" fontWeight="700">Ice cream</text>
+          <text x="42" y="95" textAnchor="middle" fontSize="9.5" fill="#333" fontWeight="700">Coffee</text>
           <ellipse cx="158" cy="92" rx="34" ry="13" fill="#fff" stroke="#666" strokeWidth="1.4"/>
-          <text x="158" y="95" textAnchor="middle" fontSize="9.5" fill="#333" fontWeight="700">Shark attacks</text>
+          <text x="158" y="95" textAnchor="middle" fontSize="9" fill="#333" fontWeight="700">Lung cancer</text>
           <path d="M 80 36 Q 60 60 47 80" fill="none" stroke={baseColor} strokeWidth="1.8" markerEnd="url(#arrExoGold)"/>
           <path d="M 120 36 Q 140 60 153 80" fill="none" stroke={baseColor} strokeWidth="1.8" markerEnd="url(#arrExoGold)"/>
           <line x1="77" y1="92" x2="125" y2="92" stroke="#666" strokeWidth="1.4" strokeDasharray="4,3" markerEnd="url(#arrExoGray)"/>
           <text x="101" y="88" textAnchor="middle" fontSize="11" fill="#C53030" fontWeight="800">?</text>
         </svg>
-        <div style={{fontSize:11,color:C.sub,lineHeight:1.5,marginTop:4}}>Temperature drives both. OLS only sees the dashed arrow, whose slope absorbs the path through temperature.</div>
+        <div style={{fontSize:11,color:C.sub,lineHeight:1.5,marginTop:4}}>Smokers tend to drink more coffee and have higher lung cancer risk. OLS only estimates the association between coffee and lung cancer, which partly reflects the effect of smoking.</div>
       </> : <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",color:C.muted,fontSize:13,padding:"24px 12px",textAlign:"center"}}>
         <div style={{fontSize:54,fontWeight:300,opacity:.3,lineHeight:1}}>?</div>
-        <div style={{marginTop:6}}>Click reveal to see what is driving both.</div>
+        <div style={{marginTop:6}}>Click the button to show smoking status.</div>
       </div>}
     </div>
     </div>
@@ -1165,48 +1180,183 @@ function VifOutputCard(){
   </div>;
 }
 
-function VifPlot(){
-  // Mimics plot(check_collinearity(model)) from performance/see:
-  // log10-scaled VIF, colored bands at the 5 and 10 cutoffs, dot + CI whisker per predictor.
+/* ── MULTICOLLINEARITY INTERACTIVE PANEL ─────────────────────────────── */
+function makeMCData(seedIn,n,rho,cfg){
+  let seed=seedIn>>>0;
+  const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+  const normal=()=>Math.sqrt(-2*Math.log(Math.max(rand(),1e-9)))*Math.cos(2*Math.PI*rand());
+  return Array.from({length:n},()=>{
+    const z1=normal(),z2=rho*z1+Math.sqrt(1-rho*rho)*normal();
+    const x1=+(cfg.m1+cfg.s1*z1).toFixed(cfg.d1??1);
+    const x2=+(cfg.m2+cfg.s2*z2).toFixed(cfg.d2??1);
+    const y=+(cfg.b0+cfg.b1*x1+cfg.b2*x2+cfg.sy*normal()).toFixed(1);
+    return{x1,x2,y};
+  });
+}
+function inv3(A){
+  const[a,b,c]=A[0],[d,e,f]=A[1],[g,h,i]=A[2];
+  const A11=e*i-f*h,A12=-(d*i-f*g),A13=d*h-e*g;
+  const det=a*A11+b*A12+c*A13;
+  if(!Number.isFinite(det)||Math.abs(det)<1e-8)return null;
+  const A21=-(b*i-c*h),A22=a*i-c*g,A23=-(a*h-b*g);
+  const A31=b*f-c*e,A32=-(a*f-c*d),A33=a*e-b*d;
+  return[[A11/det,A21/det,A31/det],[A12/det,A22/det,A32/det],[A13/det,A23/det,A33/det]];
+}
+function ols2(pts){
+  const n=pts.length;if(n<5)return null;
+  let s1=0,s2=0,s11=0,s22=0,s12=0,sy0=0,s1y=0,s2y=0;
+  for(const p of pts){s1+=p.x1;s2+=p.x2;s11+=p.x1*p.x1;s22+=p.x2*p.x2;s12+=p.x1*p.x2;sy0+=p.y;s1y+=p.x1*p.y;s2y+=p.x2*p.y;}
+  const Ainv=inv3([[n,s1,s2],[s1,s11,s12],[s2,s12,s22]]);
+  if(!Ainv)return null;
+  const bv=[sy0,s1y,s2y];
+  const beta=Ainv.map(row=>row[0]*bv[0]+row[1]*bv[1]+row[2]*bv[2]);
+  const fitted=pts.map(p=>beta[0]+beta[1]*p.x1+beta[2]*p.x2);
+  const resid=pts.map((p,i)=>p.y-fitted[i]);
+  const pN=3,rss=resid.reduce((a,r)=>a+r*r,0),mse=rss/Math.max(n-pN,1),rmse=Math.sqrt(Math.max(mse,0)),safeRmse=Math.max(rmse,1e-10);
+  const hat=pts.map(p=>{const v=[1,p.x1,p.x2];let h=0;for(let i=0;i<3;i++)for(let j=0;j<3;j++)h+=v[i]*Ainv[i][j]*v[j];return Math.min(Math.max(h,1e-10),1);});
+  const stdRes=resid.map((r,i)=>r/(safeRmse*Math.sqrt(Math.max(1-hat[i],1e-10))));
+  const studentRes=resid.map((r,i)=>{const denomDf=Math.max(n-pN-1,1),looVar=Math.max((rss-(r*r)/Math.max(1-hat[i],1e-10))/denomDf,1e-10);return r/(Math.sqrt(looVar)*Math.sqrt(Math.max(1-hat[i],1e-10)));});
+  const cooks=stdRes.map((s,i)=>(s*s*hat[i])/(pN*Math.max(1-hat[i],1e-10)));
+  const m1=s1/n,m2=s2/n;
+  const v1=s11-n*m1*m1,v2=s22-n*m2*m2,c12=s12-n*m1*m2;
+  const r12=c12/Math.sqrt(Math.max(v1*v2,1e-12));
+  const vif=1/Math.max(1-r12*r12,1e-6);
+  // 95% CI for VIF, as in performance::check_collinearity: CI on the auxiliary
+  // regression's R² (Olkin–Finn SE, normal approx), transformed via VIF = 1/(1-R²).
+  const r2=r12*r12,kAux=1; // aux regression: one predictor on the other
+  const seR2=Math.sqrt(Math.max((4*r2*(1-r2)**2*(n-kAux-1)**2)/((n*n-1)*(n+3)),0));
+  const r2lo=Math.max(r2-1.96*seR2,0),r2hi=Math.min(r2+1.96*seR2,0.9999);
+  const vifLo=Math.max(1/(1-r2lo),1),vifHi=1/(1-r2hi);
+  return{beta,fitted,residuals:resid,stdRes,studentRes,hat,cooks,n,p:pN,r12,vif,vifLo,vifHi};
+}
+const MCDS={
+  good:{key:"mc_low_overlap",label:"Age + parent income → child height",desc:"Age and parent income bracket measure different things, so the model can estimate their effects separately. VIF is close to 1.",
+    names:{x1:"age_years",x2:"income_bracket",y:"height_cm"},x1L:"Age (years)",x2L:"Income bracket",
+    points:makeMCData(20260701,60,0.15,{m1:9.5,s1:2.2,d1:1,m2:5,s2:1.8,d2:0,b0:82,b1:5.8,b2:0.6,sy:4})},
+  borderline:{key:"mc_moderate_overlap",label:"Diet score + exercise score → health index",desc:"Diet and exercise scores are positively correlated, so the predictors share information. VIF is in the moderate range.",
+    names:{x1:"diet_score",x2:"exercise_score",y:"health_index"},x1L:"Diet score",x2L:"Exercise score",
+    points:makeMCData(20260702,60,0.9,{m1:52,s1:9,d1:1,m2:55,s2:11,d2:1,b0:12,b1:0.45,b2:0.4,sy:5})},
+  bad:{key:"mc_high_overlap",label:"Age + school grade → child height",desc:"School grade is closely related to age, so the model cannot distinguish their separate effects. VIF is high, but the residual diagnostic plots still look acceptable.",
+    names:{x1:"age_years",x2:"grade",y:"height_cm"},x1L:"Age (years)",x2L:"School grade",
+    points:makeMCData(20260703,60,0.99,{m1:9.5,s1:2.2,d1:1,m2:4,s2:2.2,d2:0,b0:84,b1:5.4,b2:0.8,sy:4})},
+};
+function mcPointsToCSV(pts,names){return[`${names.x1},${names.x2},${names.y}`,...pts.map(p=>`${p.x1},${p.x2},${p.y}`)].join("\n")+"\n";}
+function mcPointsToR(pts,names,dsName){
+  const col=k=>pts.map(p=>p[k]).join(", ");
+  const safe=(dsName||"regression_data").replace(/[^a-zA-Z0-9_]/g,"_")||"regression_data";
+  return[
+    "# install.packages(\"pacman\")",
+    "pacman::p_load(performance, see, qqplotr)",
+    "",
+    `${safe} <- data.frame(`,
+    `  ${names.x1} = c(${col("x1")}),`,
+    `  ${names.x2} = c(${col("x2")}),`,
+    `  ${names.y} = c(${col("y")})`,
+    ")",
+    "",
+    `model <- lm(${names.y} ~ ${names.x1} + ${names.x2}, data = ${safe})`,
+    "summary(model)",
+    "",
+    "check_model(model)",
+    ""
+  ].join("\n");
+}
+function VifLive({model,names}){
+  if(!model)return null;
   const bands=[
     {lo:1,hi:5,color:"#3aaf85",label:"Low (< 5)"},
     {lo:5,hi:10,color:"#1b6ca8",label:"Moderate (< 10)"},
-    {lo:10,hi:30,color:"#cd201f",label:"High (≥ 10)"}
+    {lo:10,hi:80,color:"#cd201f",label:"High (≥ 10)"}
   ];
-  const pts=[
-    {term:"age_years",vif:8.0,lo:5.2,hi:12.8,band:1},
-    {term:"grade",vif:8.2,lo:5.3,hi:13.1,band:1},
-    {term:"income_bracket",vif:1.1,lo:1.0,hi:2.3,band:0}
-  ];
-  const w=560,h=300,P={top:16,right:16,bottom:52,left:56};
+  const clampV=v=>Math.min(Math.max(v,1.01),78);
+  const vifShow=clampV(model.vif),ciLo=clampV(model.vifLo??model.vif),ciHi=clampV(model.vifHi??model.vif);
+  const c=bands[model.vif>=10?2:model.vif>=5?1:0].color;
+  const w=460,h=228,P={top:10,right:14,bottom:36,left:44};
   const pw=w-P.left-P.right,ph=h-P.top-P.bottom;
-  const yMin=Math.log10(1),yMax=Math.log10(30);
-  const Y=v=>ph-((Math.log10(v)-yMin)/(yMax-yMin))*ph;
-  const X=i=>((i+.5)/pts.length)*pw;
-  const yTicks=[1,2,3,5,10,20,30];
-  return <div style={{background:C.bg,border:`1.5px solid ${C.border}`,borderRadius:12,padding:12,marginTop:12}}>
-    <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,color:C.sub,marginBottom:6}}>plot(check_collinearity(model))</div>
+  const yMax=Math.log10(80);
+  const Y=v=>ph-(Math.log10(v)/yMax)*ph;
+  const terms=[names.x1,names.x2];
+  return <div style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 10px 6px",marginTop:10}}>
     <svg viewBox={`0 0 ${w} ${h}`} style={{width:"100%",height:"auto",display:"block"}}>
       <g transform={`translate(${P.left},${P.top})`}>
         {bands.map(b=><rect key={b.label} x={0} width={pw} y={Y(b.hi)} height={Y(b.lo)-Y(b.hi)} fill={b.color} opacity={.14}/>)}
-        {yTicks.map(t=><g key={t}>
+        {[1,2,5,10,20,40,80].map(t=><g key={t}>
           <line x1={0} x2={pw} y1={Y(t)} y2={Y(t)} stroke={C.grid} strokeWidth={.8}/>
-          <text x={-8} y={Y(t)+4} textAnchor="end" fontSize={11} fill={C.sub}>{t}</text>
+          <text x={-7} y={Y(t)+4} textAnchor="end" fontSize={10.5} fill={C.sub}>{t}</text>
         </g>)}
         <line x1={0} x2={pw} y1={ph} y2={ph} stroke={C.border}/>
         <line x1={0} x2={0} y1={0} y2={ph} stroke={C.border}/>
-        {pts.map((p,i)=>{const c=bands[p.band].color;return <g key={p.term}>
-          <line x1={X(i)} x2={X(i)} y1={Y(p.lo)} y2={Y(p.hi)} stroke={c} strokeWidth={2.5}/>
-          <circle cx={X(i)} cy={Y(p.vif)} r={6} fill={c}/>
-          <text x={X(i)} y={ph+18} textAnchor="middle" fontSize={12} fill={C.sub} fontFamily="'JetBrains Mono',monospace">{p.term}</text>
+        {terms.map((t,i)=>{const x=((i+.5)/2)*pw;return <g key={t}>
+          <line x1={x} x2={x} y1={Y(ciLo)} y2={Y(ciHi)} stroke={c} strokeWidth={2.5}/>
+          <circle cx={x} cy={Y(vifShow)} r={6} fill={c}/>
+          <text x={x} y={ph+16} textAnchor="middle" fontSize={11.5} fill={C.sub} fontFamily="'JetBrains Mono',monospace">{t}</text>
         </g>;})}
-        <text x={-40} y={ph/2} textAnchor="middle" fontSize={12} fill={C.text} fontWeight={600} transform={`rotate(-90,-40,${ph/2})`}>VIF (log scale)</text>
+        <text x={-32} y={ph/2} textAnchor="middle" fontSize={11} fill={C.text} fontWeight={600} transform={`rotate(-90,-32,${ph/2})`}>VIF (log scale)</text>
       </g>
     </svg>
-    <div style={{display:"flex",gap:18,justifyContent:"center",flexWrap:"wrap",marginTop:6}}>
-      {bands.map(b=><span key={b.label} style={{display:"inline-flex",alignItems:"center",gap:6,fontSize:12,color:C.sub}}>
-        <span style={{width:10,height:10,borderRadius:"50%",background:b.color,display:"inline-block"}}/>{b.label}
+    <div style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap",marginTop:4,marginBottom:4}}>
+      {bands.map(b=><span key={b.label} style={{display:"inline-flex",alignItems:"center",gap:5,fontSize:11.5,color:C.sub}}>
+        <span style={{width:9,height:9,borderRadius:"50%",background:b.color,display:"inline-block"}}/>{b.label}
       </span>)}
+    </div>
+  </div>;
+}
+function MultiColPanel({item}){
+  const[exTab,setExTab]=useState("good");
+  const[hiIdx,setHiIdx]=useState(null);
+  const[copied,setCopied]=useState(false);
+  const ds=MCDS[exTab];
+  const pts=ds.points;
+  const model=useMemo(()=>ols2(pts),[pts]);
+  const diagTypes=["linearity","homogeneity","influential","normality"];
+  const diagMeta=Object.fromEntries(diagTypes.map(type=>{const d=SUNSHINE.find(s=>s.diagKey===type);const names=d?.readingPlotNames||[];const name=d?.plotCaption??(names[1]?`${names[0]} (${names[1]})`:names[0]);return[type,{name,color:d?.color||C.sub}];}));
+  const tabOrder=["good","borderline","bad"];const tabIcons={good:"✓",borderline:"~",bad:"✗"};const tabLabels={good:"Low Overlap",borderline:"Borderline",bad:"High Overlap"};
+  const pill=k=>({padding:"8px 16px",borderRadius:20,fontSize:13,fontWeight:exTab===k?700:500,border:`1.5px solid ${exTab===k?item.color:C.border}`,background:exTab===k?item.colorSoft:"transparent",color:exTab===k?item.color:C.muted,cursor:"pointer",transition:"all .15s",whiteSpace:"nowrap"});
+  const smBtn={padding:"4px 10px",borderRadius:6,border:`1px solid ${C.border}`,background:"transparent",fontSize:11,color:C.muted,cursor:"pointer",fontFamily:"inherit"};
+  const handleDownload=()=>downloadText(`${ds.key}.csv`,mcPointsToCSV(pts,ds.names),"text/csv");
+  const handleCopyR=async()=>{const ok=await copyText(mcPointsToR(pts,ds.names,ds.key));if(ok){setCopied(true);setTimeout(()=>setCopied(false),1500);}};
+  const Content=INFO[item.key];
+  return <div style={{display:"flex",flexDirection:"column",gap:14}}>
+    <div style={{background:C.card,border:`1.5px solid ${C.border}`,borderTop:`7px solid ${item.color}`,borderRadius:16,padding:"16px 22px",boxShadow:C.shadow}}>
+      <div style={{fontSize:22,fontWeight:800,color:item.color,marginBottom:2}}>{item.label}</div>
+      <div style={{fontSize:14,fontWeight:500,color:C.sub,marginBottom:14,fontStyle:"italic"}}>{item.summary}</div>
+      <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:.8,marginBottom:4}}>
+        EXAMPLE DATASETS <span style={{fontWeight:400,fontStyle:"italic",letterSpacing:0}}>(simulated for illustration)</span>
+      </div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}}>
+        {tabOrder.map(k=><button key={k} style={pill(k)} onClick={()=>{setExTab(k);setHiIdx(null);}}><span style={{marginRight:5}}>{tabIcons[k]}</span>{tabLabels[k]}</button>)}
+      </div>
+      <div style={{background:`${item.colorSoft}55`,borderRadius:10,padding:"10px 14px"}}>
+        <div style={{fontSize:14,fontWeight:700,color:item.color,marginBottom:2}}>{ds.label}</div>
+        <div style={{fontSize:13,color:C.sub,lineHeight:1.55}}><b>{ds.desc}</b></div>
+      </div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"minmax(520px, 1.1fr) minmax(470px, 1fr)",gap:14,alignItems:"start",minWidth:1000}}>
+      <div style={{background:C.card,border:`1.5px solid ${C.border}`,borderRadius:16,padding:14,boxShadow:C.shadow}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:6}}>
+          <span style={{fontSize:15,fontWeight:700,color:C.text}}>Predictor vs Predictor</span>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+            <button onClick={handleDownload} title="Download the current points as a CSV" style={smBtn}>Download CSV</button>
+            <button onClick={handleCopyR} title="Copy R code: data.frame, lm(y ~ x1 + x2), and check_model()" style={smBtn}>{copied?"Copied!":"Copy R code"}</button>
+          </div>
+        </div>
+        <div style={{fontSize:12,color:C.sub,marginBottom:8}}>Multicollinearity depends on how the <b>predictors</b> relate to each other. Click a point to track it across the residual plots.</div>
+        <CF xs={pts.map(p=>p.x1)} ys={pts.map(p=>p.x2)} xL={ds.x1L} yL={ds.x2L} w={460} h={300}>
+          {(sx,sy)=>pts.map((p,i)=>{const isH=hiIdx===i;return <g key={i} style={{cursor:"pointer"}} onClick={e=>{e.stopPropagation();setHiIdx(isH?null:i);}}>{isH&&<circle cx={sx(p.x1)} cy={sy(p.x2)} r={9} fill={C.hiG}/>}<circle cx={sx(p.x1)} cy={sy(p.x2)} r={isH?5.5:3.5} fill={isH?C.hi:C.dot} stroke={isH?"#C53030":C.dotS} strokeWidth={isH?1.5:.6} opacity={(hiIdx!=null&&!isH)?.3:.8}/>{isH&&<text x={sx(p.x1)+8} y={sy(p.x2)-5} fontSize={9} fill={C.hi} fontWeight={700}>#{i+1}</text>}</g>;})}
+        </CF>
+        {model&&<div style={{marginTop:8,fontFamily:"'JetBrains Mono',monospace",fontSize:13,color:C.sub,padding:"6px 12px",background:C.bg,borderRadius:6,lineHeight:1.6}}>
+          y&#770; = {model.beta[0].toFixed(2)} + {model.beta[1].toFixed(2)}&middot;{ds.names.x1} + {model.beta[2].toFixed(2)}&middot;{ds.names.x2} &nbsp;&nbsp; n = {pts.length}<br/>
+          r({ds.names.x1}, {ds.names.x2}) = {model.r12.toFixed(2)} &nbsp;&nbsp; VIF = {model.vif>=100?Math.round(model.vif):model.vif.toFixed(1)} [{model.vifLo.toFixed(1)}, {model.vifHi>=100?Math.round(model.vifHi):model.vifHi.toFixed(1)}]
+        </div>}
+        <VifLive model={model} names={ds.names}/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+        {diagTypes.map(dt=><DiagPlot key={dt} type={dt} model={model} hiIdx={hiIdx} onHi={setHiIdx} plotName={diagMeta[dt].name} plotColor={diagMeta[dt].color}/>)}
+      </div>
+    </div>
+    <div style={{"--accent":item.color,background:C.card,border:`1.5px solid ${C.border}`,borderTop:`7px solid ${item.color}`,borderRadius:16,padding:22,boxShadow:C.shadow}}>
+      {Content&&<Content/>}
+      <Quiz questions={MCQ[item.key]} color={item.color}/>
     </div>
   </div>;
 }
@@ -1219,9 +1369,8 @@ function pointsToR(points,name){
   const ys=points.map(p=>p.y).join(", ");
   const safe=(name||"regression_data").replace(/[^a-zA-Z0-9_]/g,"_").replace(/^_+|_+$/g,"")||"regression_data";
   return [
-    "# install.packages(c(\"ggplot2\", \"performance\", \"see\", \"qqplotr\"))",
-    "library(ggplot2)",
-    "library(performance)",
+    "# install.packages(\"pacman\")",
+    "pacman::p_load(ggplot2, performance, see, qqplotr)",
     "",
     `${safe} <- data.frame(`,
     `  x = c(${xs}),`,
@@ -1327,6 +1476,45 @@ function NormalityWalkthrough({color="#6B46C1"}){
   </div>;
 }
 
+/* ── EXOGENEITY: where the word comes from (model box + error term) ──── */
+function ExoOriginFig(){
+  const gold="#8B6914",red="#C53030",teal="#006D77",sub="#78716c",border="#e7e5e4";
+  const chip=(x,head,tail)=><g><rect x={x} y={8} width={140} height={22} rx={11} fill="#F0E4C8" stroke="#D8C48A" strokeWidth="1"/><text x={x+70} y={23} textAnchor="middle" fontSize="10.5" fill={gold}><tspan fontWeight="800">{head}</tspan>{tail}</text></g>;
+  const panel=(O,bad)=><g>
+    <text x={O+119} y={52} textAnchor="middle" fontSize="11.5" fill={bad?red:teal} fontWeight="800">{bad?"Endogenous: x related to ε":"Exogenous: x unrelated to ε"}</text>
+    <rect x={O+52} y={60} width={174} height={150} rx={12} fill={bad?"#FDF6F6":"#F0FAF9"} stroke={bad?red:teal} strokeWidth="1.6"/>
+    <rect x={O+124} y={102} width={78} height={30} rx={8} fill="#F0E4C8" stroke={gold} strokeWidth="1.4"/>
+    <text x={O+163} y={121} textAnchor="middle" fontSize="9" fill={gold} fontWeight="700">lung cancer (y)</text>
+    <ellipse cx={O+139} cy={176} rx={70} ry={24} fill="#FEF2F2" stroke={red} strokeWidth="1.5"/>
+    <text x={O+130} y={168} textAnchor="middle" fontSize="10" fill={red} fontWeight="800">ε (error term)</text>
+    {bad
+      ? <rect x={O+95} y={178} width={70} height="17" rx={5} fill="#fff" stroke={red} strokeWidth="1.1"/>
+      : <text x={O+130} y={188} textAnchor="middle" fontSize="8.5" fill={sub}>unmeasured causes</text>}
+    {bad && <text x={O+130} y={190} textAnchor="middle" fontSize="9" fill={red} fontWeight="700">smoking</text>}
+    <circle cx={O+22} cy={116} r={19} fill="#E8F6F5" stroke={teal} strokeWidth="1.5"/>
+    <text x={O+22} y={113} textAnchor="middle" fontSize="8.5" fill={teal} fontWeight="800">coffee</text>
+    <text x={O+22} y={124} textAnchor="middle" fontSize="8" fill={sub}>(x)</text>
+    <path d={`M ${O+42} 116 L ${O+122} 116`} fill="none" stroke={teal} strokeWidth="1.8" markerEnd="url(#exoIn)"/>
+    <text x={O+82} y={109} textAnchor="middle" fontSize="8" fill={sub}>modeled</text>
+    <path d={`M ${O+172} 178 L ${O+172} 132`} fill="none" stroke={red} strokeWidth="1.6" markerEnd="url(#exoBad)"/>
+    {bad && <path d={`M ${O+108} 187 C ${O+70} 200 ${O+30} 172 ${O+30} 138`} fill="none" stroke={red} strokeWidth="2" strokeDasharray="5,3" markerEnd="url(#exoBad)"/>}
+    <text x={O+139} y={225} textAnchor="middle" fontSize="9.5" fill={bad?red:sub} fontWeight={bad?700:400}>{bad?"x is related to smoking in ε; cor(x, ε) ≠ 0":"x is unrelated to ε; cor(x, ε) = 0"}</text>
+  </g>;
+  return <svg viewBox="0 0 472 266" style={{width:"100%",maxWidth:600,height:"auto",display:"block",margin:"4px auto 0"}}>
+    <defs>
+      <marker id="exoIn" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill={teal}/></marker>
+      <marker id="exoBad" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill={red}/></marker>
+    </defs>
+    {chip(8,"exo-"," = outside")}
+    {chip(166,"endo-"," = within")}
+    {chip(324,"-genous"," = born")}
+    {panel(6,false)}
+    {panel(244,true)}
+    <rect x="128" y="232" width="216" height="28" rx="6" fill="#F0E4C8" stroke="#D8C48A" strokeWidth="1"/>
+    <text x={236} y={251} textAnchor="middle" fontSize="13" fill={gold} fontWeight="700" fontFamily="'JetBrains Mono', monospace">y = β₀ + β₁·x + ε</text>
+  </svg>;
+}
+
 const INFO={
 sample:()=><div style={{display:"flex",flexDirection:"column",gap:16}}>
   <div><Hd>The key rule</Hd><p style={pa}>A common rule of thumb is to aim for at least <b>10 observations per parameter</b> you are estimating.</p></div>
@@ -1381,8 +1569,10 @@ uncorrelated:()=><div style={{display:"flex",flexDirection:"column",gap:18}}>
     <div><Hd>Formal test</Hd><FixList items={[
       {text:"**Plot residuals in collection order** (by time or sequence). Look for runs or waves.",
         links:[{title:"forecast::checkresiduals (acf + Ljung-Box)",short:"checkresiduals",url:"https://pkg.robjhyndman.com/forecast/reference/checkresiduals.html"}]},
-      {text:"**performance::check_autocorrelation(model)**: under the hood, this runs a **Durbin\u2013Watson test** for first-order autocorrelation.",
-        links:[{title:"performance::check_autocorrelation reference",short:"check_autocorrelation()",url:"https://easystats.github.io/performance/reference/check_autocorrelation.html"},{title:"lmtest::dwtest reference",short:"dwtest",url:"https://rdrr.io/cran/lmtest/man/dwtest.html"}]}
+      {text:"**Durbin\u2013Watson test** for first-order autocorrelation.",
+        links:[{title:"lmtest::dwtest reference",short:"dwtest",url:"https://rdrr.io/cran/lmtest/man/dwtest.html"}]},
+      {text:"In R, **performance::check_autocorrelation(model)** is a convenience wrapper that runs the Durbin\u2013Watson test.",
+        links:[{title:"performance::check_autocorrelation reference",short:"check_autocorrelation()",url:"https://easystats.github.io/performance/reference/check_autocorrelation.html"}]}
     ]}/></div>
     <div><Hd>How to fix</Hd><FixList items={[
       {text:"Use a **time-series model** (for example ARIMA errors or GLS), or add lagged variables when timing matters.",
@@ -1399,26 +1589,25 @@ multicollinearity:()=><div style={{display:"flex",flexDirection:"column",gap:14}
   </div>
   <div><Hd>What it means</Hd><p style={pa}>When predictors measure the same thing, the model cannot separate their slopes. <b>VIF</b> (variance inflation factor) measures how much that overlap inflates slope uncertainty.</p></div>
   <div><Hd>Reading the output</Hd>
-    <p style={pa}>Model: <code style={{fontFamily:"'JetBrains Mono',monospace",fontSize:13,background:C.bg,padding:"1px 5px",borderRadius:4}}>lm(bmi_pct ~ age_years + grade + income_bracket)</code> predicts BMI percentile from age, grade, and parent income bracket.</p>
+    <p style={pa}>Model: <code style={{fontFamily:"'JetBrains Mono',monospace",fontSize:13,background:C.bg,padding:"1px 5px",borderRadius:4}}>lm(height_cm ~ age_years + grade + income_bracket)</code> predicts child height from age, grade, and parent income bracket.</p>
     <ul style={{...ul,marginTop:6,marginBottom:0}}>
       <li>VIF near 1: little overlap (here, <code style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12}}>income_bracket</code>)</li>
       <li>VIF ≥ 5: strong overlap (here, <code style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12}}>age_years</code> and <code style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12}}>grade</code>)</li>
       <li>What VIF means in depth: <a href="https://www.youtube.com/watch?v=GMAp_tP1ZQ0" target="_blank" rel="noopener noreferrer" style={{color:"#006D77",textDecoration:"none",borderBottom:"1px dotted #83C5BE",fontWeight:700}}>VIF explanation video</a></li>
     </ul>
     <VifOutputCard/>
-    <VifPlot/>
   </div>
   <div><Hd>Effect on your results</Hd><WhatBreaks data={{items:[
-    {status:"good",text:"**Slope:** not biased just because predictors overlap, but individual slopes can become unstable and hard to interpret."},
+    {status:"warn",text:"**Slope:** not biased just because predictors overlap, but individual slopes can become unstable and hard to interpret."},
     {status:"bad",text:"**SEs, CIs, and p-values:** standard errors become larger, confidence intervals become wider, and p-values become larger."}
   ],bottomLine:"the model can still predict well, but it may not estimate each predictor's separate effect well."}}/></div>
   <div><Hd>Formal test</Hd><FixList items={[
-    {text:"**performance::check_collinearity(model)**: under the hood, this computes the **VIF (variance inflation factor)** for each predictor.",
-      links:[{title:"performance::check_collinearity reference",short:"check_collinearity()",url:"https://easystats.github.io/performance/reference/check_collinearity.html"}]},
     {text:"**VIF (variance inflation factor)**: values above 5 or 10 are often treated as a problem.",
       links:[{title:"VIF explanation (YouTube)",short:"VIF video",url:"https://www.youtube.com/watch?v=GMAp_tP1ZQ0"},{title:"Statology: Calculate VIF in R",short:"Statology",url:"https://www.statology.org/variance-inflation-factor-r/"},{title:"STHDA: Multicollinearity essentials and VIF in R",short:"STHDA",url:"https://www.sthda.com/english/articles/39-regression-model-diagnostics/160-multicollinearity-essentials-and-vif-in-r/"}]},
     {text:"**Correlation matrix** (or heatmap) of the predictors.",
-      links:[{title:"STHDA: Correlation matrix in R",short:"STHDA",url:"http://www.sthda.com/english/wiki/correlation-matrix-a-quick-start-guide-to-analyze-format-and-visualize-a-correlation-matrix-using-r-software"},{title:"corrplot package vignette (CRAN)",short:"corrplot",url:"https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html"}]}
+      links:[{title:"STHDA: Correlation matrix in R",short:"STHDA",url:"http://www.sthda.com/english/wiki/correlation-matrix-a-quick-start-guide-to-analyze-format-and-visualize-a-correlation-matrix-using-r-software"},{title:"corrplot package vignette (CRAN)",short:"corrplot",url:"https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html"}]},
+    {text:"In R, **performance::check_collinearity(model)** is a convenience wrapper that computes the VIF for each predictor.",
+      links:[{title:"performance::check_collinearity reference",short:"check_collinearity()",url:"https://easystats.github.io/performance/reference/check_collinearity.html"}]}
   ]}/></div>
   <div><Hd>How to fix</Hd><FixList items={[
     {text:"Remove one of the overlapping predictors, or combine overlapping predictors into one score when that matches the research question."},
@@ -1429,18 +1618,43 @@ multicollinearity:()=><div style={{display:"flex",flexDirection:"column",gap:14}
 exogeneity:()=><div style={{display:"flex",flexDirection:"column",gap:14}}>
   <div style={{background:"#FFF8E1",border:"1.5px solid #E8D080",borderRadius:8,padding:"12px 16px",fontSize:14,color:"#6B5B1F",lineHeight:1.6}}>
     <ul style={{...ul,marginTop:0,marginBottom:0,color:"inherit"}}>
-      <li>Exogeneity asks whether the slope is <b>causal</b>: would changing X really change Y by about that amount?</li>
-      <li>If exogeneity fails, you can still use the slope for description and prediction. You should not treat it as a causal effect.</li>
+      <li>Exogeneity matters for <b>causal interpretation</b>: is the predictor unrelated to unmeasured causes of Y?</li>
+      <li>It is necessary but not sufficient on its own. If exogeneity fails, treat the slope as association, not cause; description and prediction may still be fine.</li>
     </ul>
   </div>
-  <div><Hd>What it means</Hd><p style={pa}>The predictor should not be related to unmeasured factors that also affect the outcome. If a third variable affects both X and Y, the X coefficient may not represent a causal effect.</p></div>
-  <div><Hd>Example</Hd><p style={pa}>Across summer weeks, weekly <b>ice cream sales</b> and weekly <b>shark attacks</b> rise and fall together. Ice cream does not cause shark attacks. <b>Air temperature</b> affects both.</p></div>
-  <ExogeneityDiags/>
+  <div><Hd>What it means</Hd>
+    <ul style={ul}>
+      <li>The predictor should not be related to unmeasured factors that also affect the outcome.</li>
+      <li>When that fails, a causal reading of the X coefficient becomes harder to justify. Common reasons:
+        <ul style={{...ul,marginTop:6,marginBottom:0}}>
+          <li><b>Confounding:</b> a third variable affects both X and Y.</li>
+          <li><b>Reverse causation:</b> Y affects X.</li>
+          <li><b>Measurement error in X:</b> noise in the predictor is related to unmeasured causes of Y.</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+  <div><Hd>Example: confounding</Hd>
+    <p style={pa}>In a sample of adults, <b>coffee intake</b> and <b>lung cancer rates</b> are positively associated.</p>
+    <p style={{...pa,marginTop:8}}><b>Smoking</b> increases lung cancer risk, and smokers also tend to drink more coffee. Click the button to color points by smoking level.</p>
+    <ExogeneityDiags forcedReveal={typeof window!=="undefined"&&!!window.__REG_DIAG_PRINT__}/>
+  </div>
+  <div><Hd>Where the word comes from</Hd>
+    <p style={pa}>Every model splits the outcome into what you measured plus an <b>error term ε</b>, which represents other causes of Y that were left out.</p>
+    <p style={{...pa,marginTop:8}}>A predictor is <b>exo</b>genous (from Greek, "born outside") when it is not related to anything in ε. It is <b>endo</b>genous ("born within") when it is related to unmeasured causes included in ε.</p>
+    <ExoOriginFig/>
+  </div>
   <div><Hd>Effect on your results</Hd><WhatBreaks data={{items:[
-    {status:"bad",text:"**Slope:** biased as a causal estimate if an omitted factor affects both X and Y."},
-    {status:"bad",text:"**SEs, CIs, and p-values:** they describe the fitted association, but not the causal effect you may want."}
-  ],bottomLine:"the model can describe the data, but the coefficient should not be interpreted as causal."}}/></div>
-  <div><Hd>Formal test</Hd><p style={pa}>No plot can check exogeneity. Ask whether a third variable could affect both X and Y.</p></div>
+    {status:"warn",text:"**Slope:** may still describe the association in the data, but it may not represent a causal effect when a confounder, reverse causation, or measurement error is present."},
+    {status:"warn",text:"**SEs, CIs, and p-values:** apply to the fitted association; they do not by themselves establish a causal effect."}
+  ],bottomLine:"the model can still describe the data, but interpret the slope cautiously as a causal effect."}}/></div>
+  <div><Hd>Formal test</Hd>
+    <ul style={ul}>
+      <li>No plot can check exogeneity, because fitted residuals are uncorrelated with x by construction.</li>
+      <li>Ask whether a third variable could affect both X and Y.</li>
+      <li>Ask whether Y could affect X, or whether X is measured with error.</li>
+    </ul>
+  </div>
   <div><Hd>How to fix</Hd><FixList items={[
     {text:"**Randomized experiments** address this by design: random assignment separates the predictor from unmeasured confounders."},
     {text:"**Draw a DAG** and add control variables for plausible confounders in a multiple regression.",
@@ -1527,6 +1741,356 @@ function DiagPanel({item,points,setPoints,model,custom,setCustom}){
   </div>;
 }
 
+/* ── PRINT DECK ──────────────────────────────────────────────────────── */
+const PRINT_CSS=`
+@page { size: landscape; margin: 0.18in; }
+@media print {
+  html, body { background: #fff !important; }
+  .print-deck-toolbar { display: none !important; }
+  .print-slide {
+    page-break-after: always;
+    break-after: page;
+    box-shadow: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    min-height: auto !important;
+    padding: 8px 10px 6px !important;
+  }
+  .print-slide:last-child { page-break-after: auto; break-after: auto; }
+  .print-section-head { margin: -8px -10px 6px !important; padding: 5px 10px 4px !important; }
+  .print-example-card,
+  .print-plot-box,
+  .print-plot-grid,
+  .print-keep,
+  .print-quiz-q,
+  svg {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  .print-three-col > * {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}
+.print-slide {
+  width: 100%;
+  max-width: 10.8in;
+  margin: 0 auto 12px;
+  background: #fff;
+  border: 1px solid #e7e5e4;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(35,48,56,.08);
+  padding: 10px 12px 8px;
+  box-sizing: border-box;
+  min-height: 6.4in;
+}
+.print-section-head {
+  border-top: 5px solid var(--accent, #006D77);
+  border-radius: 8px 8px 0 0;
+  margin: -10px -12px 8px;
+  padding: 6px 12px 5px;
+  background: linear-gradient(180deg, #ffffff 0%, #fafaf9 100%);
+}
+.print-section-head > div > div:first-child > div:first-child { font-size: 18px !important; line-height: 1.1 !important; }
+.print-section-head > div > div:first-child > div:last-child { font-size: 11.5px !important; margin-top: 1px !important; line-height: 1.2 !important; }
+.print-three-col {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  align-items: start;
+}
+.print-example-card {
+  border: 1px solid #e7e5e4;
+  border-radius: 8px;
+  padding: 5px;
+  background: #fbfbfa;
+  min-width: 0;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.print-plot-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  margin-top: 3px;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.print-plot-box {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.print-plot-box svg { display: block; max-width: 100%; height: auto; }
+.print-keep { page-break-inside: avoid; break-inside: avoid; }
+.print-compact-text { font-size: 11px; line-height: 1.18; color: #57534e; }
+.print-compact-text p, .print-compact-text li { font-size: 11px; line-height: 1.18; margin: 0 0 2px; }
+.print-compact-text ul { margin: 0 0 3px; padding-left: 16px; }
+.print-compact-text > div { margin-top: 4px; }
+.print-compact-text > div:first-child { margin-top: 0; }
+.print-compact-text > div > div[style*="marginBottom"] { margin-bottom: 2px !important; }
+.print-compact-text li { margin-bottom: 0; }
+.print-compact-text div[style*="borderLeft"] { margin-bottom: 2px !important; font-size: 12px !important; line-height: 1.15 !important; }
+.print-quiz { margin-top: 4px !important; padding-top: 4px !important; }
+.print-quiz-q { margin: 0 !important; page-break-inside: avoid; break-inside: avoid; }
+`;
+
+function PrintSlide({children,className=""}) {
+  return <section className={`print-slide ${className}`.trim()}>{children}</section>;
+}
+
+function PrintSectionHead({item,subtitle,tag}){
+  return <div className="print-section-head" style={{"--accent":item.color}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
+      <div>
+        <div style={{fontSize:22,fontWeight:800,color:item.color,lineHeight:1.1}}>
+          {item.label}{item.labelParen&&<span style={{fontWeight:500,fontSize:14,color:C.sub}}> {item.labelParen}</span>}
+        </div>
+        <div style={{fontSize:13,color:C.sub,marginTop:3,fontStyle:"italic"}}>{subtitle||item.summary}</div>
+      </div>
+      {tag&&<div style={{fontSize:10,fontWeight:700,color:C.muted,letterSpacing:.6,whiteSpace:"nowrap"}}>{tag}</div>}
+    </div>
+  </div>;
+}
+
+const EX_TAB_ORDER=["good","borderline","bad"];
+const EX_TAB_ICONS={good:"\u2713",borderline:"~",bad:"\u2717"};
+const EX_TAB_LABELS={good:"Good Fit",borderline:"Borderline",bad:"Clear Violation"};
+const MC_TAB_LABELS={good:"Low Overlap",borderline:"Borderline",bad:"High Overlap"};
+const DIAG_TYPES=["linearity","homogeneity","influential","normality"];
+
+function diagMetaFor(types){
+  return Object.fromEntries(types.map(type=>{
+    const d=SUNSHINE.find(s=>s.diagKey===type);
+    const names=d?.readingPlotNames||[];
+    const name=d?.plotCaption??(names[1]?`${names[0]} (${names[1]})`:names[0]);
+    return[type,{name,color:d?.color||C.sub}];
+  }));
+}
+
+function PrintStaticScatter({points,model,xLabel,yLabel}){
+  return <div className="print-plot-box" style={{pointerEvents:"none"}}>
+    <Scatter points={points} setPoints={()=>{}} model={model} hiIdx={null} onHi={()=>{}} xLabel={xLabel} yLabel={yLabel}/>
+  </div>;
+}
+
+function PrintDiagExampleSlide({item,tab,diagMeta}){
+  const ds=DS[item.examples[tab]];
+  const model=ols(ds.points);
+  return <PrintSlide>
+    <PrintSectionHead item={item} tag={`${EX_TAB_ICONS[tab]} ${EX_TAB_LABELS[tab]}`}/>
+    <div className="print-keep" style={{fontSize:12,fontWeight:700,color:C.text,lineHeight:1.15,marginBottom:2}}>{ds.label}</div>
+    <div className="print-keep" style={{fontSize:10.5,color:C.sub,lineHeight:1.15,marginBottom:6}}>{ds.desc}</div>
+    <div style={{display:"grid",gridTemplateColumns:"minmax(0, 1.05fr) minmax(0, 1fr)",gap:8,alignItems:"start"}}>
+      <div className="print-keep">
+        <PrintStaticScatter points={ds.points} model={model} xLabel={ds.xLabel} yLabel={ds.yLabel}/>
+        {model&&<div style={{marginTop:3,fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:C.sub,lineHeight:1.2}}>
+          y&#770; = {model.b0.toFixed(2)} + {model.b1.toFixed(2)}x, n = {ds.points.length}
+        </div>}
+      </div>
+      <div className="print-plot-grid">
+        {DIAG_TYPES.map(dt=><div key={dt} className="print-plot-box">
+          <DiagPlot type={dt} model={model} highlight={dt===item.diagKey?item.color:null} plotName={diagMeta[dt].name} plotColor={diagMeta[dt].color}/>
+        </div>)}
+      </div>
+    </div>
+  </PrintSlide>;
+}
+
+function PrintDiagExamplesSlide({item}){
+  const diagMeta=diagMetaFor(DIAG_TYPES);
+  return <>
+    {EX_TAB_ORDER.map(tab=><PrintDiagExampleSlide key={tab} item={item} tab={tab} diagMeta={diagMeta}/>)}
+  </>;
+}
+
+function PrintDiagTextSlide({item}){
+  return <PrintSlide>
+    <PrintSectionHead item={item} tag="Concepts and practice"/>
+    <div className="print-compact-text" style={{"--accent":item.color}}>
+      <Hd>What it means</Hd><p style={pa}>{item.explanation}</p>
+      <div style={{marginTop:4}}><Hd>Reading the plots</Hd>
+        {item.readingPlotNames?.length?<p style={{...pa,marginTop:1,marginBottom:2,fontSize:11,fontWeight:600,color:item.color,lineHeight:1.15}}>{item.readingPlotNames[0]}{item.readingPlotNames[1]?<span style={{color:C.muted,fontStyle:"italic"}}> (also called {item.readingPlotNames[1]})</span>:null}</p>:null}
+        <div style={{...pa,display:"flex",flexDirection:"column",gap:1,marginTop:0,lineHeight:1.15}}>{item.plotGuide.split("\n").map((line,i)=><div key={i}><MdBold text={line}/></div>)}</div>
+      </div>
+      <div style={{marginTop:4}}><Hd>Effect on your results</Hd><WhatBreaks data={item.whatBreaks}/></div>
+      <div style={{marginTop:4}}><Hd>Formal test</Hd><FixList items={item.formalTestList}/></div>
+      <div style={{marginTop:4}}><Hd>How to fix</Hd><FixList items={item.howToFixList}/></div>
+      <Quiz questions={MCQ[item.key]} color={item.color} printMode/>
+    </div>
+  </PrintSlide>;
+}
+
+function PrintMultiColExampleSlide({item,tab,diagMeta}){
+  const ds=MCDS[tab];
+  const model=ols2(ds.points);
+  return <PrintSlide>
+    <PrintSectionHead item={item} tag={`${EX_TAB_ICONS[tab]} ${MC_TAB_LABELS[tab]}`}/>
+    <div className="print-keep" style={{fontSize:12,fontWeight:700,color:C.text,lineHeight:1.15,marginBottom:2}}>{ds.label}</div>
+    <div className="print-keep" style={{fontSize:10.5,color:C.sub,lineHeight:1.15,marginBottom:6}}>{ds.desc}</div>
+    <div style={{display:"grid",gridTemplateColumns:"minmax(0, 1.05fr) minmax(0, 1fr)",gap:8,alignItems:"start"}}>
+      <div className="print-keep">
+        <div className="print-plot-box" style={{pointerEvents:"none"}}>
+          <CF xs={ds.points.map(p=>p.x1)} ys={ds.points.map(p=>p.x2)} xL={ds.x1L} yL={ds.x2L} w={420} h={260}>
+            {(sx,sy)=>ds.points.map((p,i)=><circle key={i} cx={sx(p.x1)} cy={sy(p.x2)} r={3.2} fill={C.dot} stroke={C.dotS} strokeWidth={.6} opacity={.8}/>)}
+          </CF>
+        </div>
+        {model&&<div style={{marginTop:3,fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:C.sub,lineHeight:1.2}}>
+          r({ds.names.x1}, {ds.names.x2}) = {model.r12.toFixed(2)}; VIF = {model.vif>=100?Math.round(model.vif):model.vif.toFixed(1)}
+        </div>}
+        <div className="print-plot-box" style={{marginTop:4,pointerEvents:"none"}}>
+          <VifLive model={model} names={ds.names}/>
+        </div>
+      </div>
+      <div className="print-plot-grid">
+        {DIAG_TYPES.map(dt=><div key={dt} className="print-plot-box">
+          <DiagPlot type={dt} model={model} plotName={diagMeta[dt].name} plotColor={diagMeta[dt].color}/>
+        </div>)}
+      </div>
+    </div>
+  </PrintSlide>;
+}
+
+function PrintMultiColExamplesSlide({item}){
+  const diagMeta=diagMetaFor(DIAG_TYPES);
+  return <>
+    {EX_TAB_ORDER.map(tab=><PrintMultiColExampleSlide key={tab} item={item} tab={tab} diagMeta={diagMeta}/>)}
+  </>;
+}
+
+function PrintInfoSlide({item,children,tag,showQuiz=true}){
+  const Content=INFO[item.key];
+  return <PrintSlide>
+    <PrintSectionHead item={item} tag={tag}/>
+    <div className="print-compact-text" style={{"--accent":item.color}}>
+      {children||(Content&&<Content/>)}
+      {showQuiz&&MCQ[item.key]&&<Quiz questions={MCQ[item.key]} color={item.color} printMode/>}
+    </div>
+  </PrintSlide>;
+}
+
+function PrintUncorrelatedClusterSlide({item}){
+  return <PrintInfoSlide item={item} tag="Violation type 1: clustered data" showQuiz={false}>
+    <div style={{background:"#F5F0FF",border:"1.5px solid #D0C0E8",borderRadius:8,padding:8,display:"flex",flexDirection:"column",gap:6}}>
+      <div style={{fontSize:14,fontWeight:700,color:"#6B46C1"}}>Violation type 1: Clustered data</div>
+      <p style={pa}>Observations in the same group (hospital, school, neighborhood) often resemble each other. Their residuals are correlated.</p>
+      <p style={{...pa,marginTop:0}}><b>Example:</b> patient satisfaction regressed on minutes with doctor, using patients from 10 clinics.</p>
+      <ClusteredDiags forcedReveal/>
+      <div><Hd>Effect on your results</Hd><WhatBreaks data={{items:[
+        {status:"good",text:"**Slope:** usually still unbiased if the model includes the right predictors."},
+        {status:"bad",text:"**SEs, CIs, and p-values:** standard errors are often too small, so confidence intervals are too narrow and p-values too small."}
+      ],bottomLine:"the model overstates how much independent information the data contain."}}/></div>
+      <div><Hd>Formal test</Hd><FixList items={[
+        {text:"Consider how the data were collected. Are observations grouped by site, school, provider, or family?"},
+        {text:"Compute the **intraclass correlation coefficient (ICC)** to measure between-group vs within-group variation.",
+          links:[{title:"performance::icc: ICC for mixed models",short:"icc()",url:"https://easystats.github.io/performance/reference/icc.html"}]}
+      ]}/></div>
+      <div><Hd>How to fix</Hd><FixList items={[
+        {text:"Fit a **multilevel or mixed-effects model** that accounts for the grouping.",
+          links:[{title:"Mixed Models with R (Michael Clark)",short:"m-clark",url:"https://m-clark.github.io/mixed-models-with-R/"}]},
+        {text:"Use **cluster-robust standard errors** if a full multilevel model is not practical.",
+          links:[{title:"Miratrix: MLM and cluster-robust SE",short:"Miratrix",url:"https://lmiratrix.github.io/MLM/robust_mlm.html"}]}
+      ]}/></div>
+    </div>
+  </PrintInfoSlide>;
+}
+
+function PrintUncorrelatedTimeSlide({item}){
+  return <PrintInfoSlide item={item} tag="Violation type 2: autocorrelation">
+    <div style={{background:"#F0F8FF",border:"1.5px solid #B8D8F0",borderRadius:8,padding:8,display:"flex",flexDirection:"column",gap:6}}>
+      <div style={{fontSize:14,fontWeight:700,color:"#2E86AB"}}>Violation type 2: Autocorrelation (time-ordered data)</div>
+      <p style={pa}>When data are collected over time, nearby observations often have similar residuals.</p>
+      <p style={{...pa,marginTop:0}}><b>Example:</b> 28 days of emergency-department asthma visits regressed on daily pollution.</p>
+      <AutocorrDiags forcedReveal/>
+      <div><Hd>Effect on your results</Hd><WhatBreaks data={{items:[
+        {status:"good",text:"**Slope:** usually still unbiased if the time pattern is not related to omitted causes."},
+        {status:"bad",text:"**SEs, CIs, and p-values:** standard errors are often too small, so confidence intervals are too narrow and p-values too small."}
+      ],bottomLine:"the model treats nearby observations as more independent than they are."}}/></div>
+      <div><Hd>Formal test</Hd><FixList items={[
+        {text:"**Plot residuals in collection order** (by time or sequence). Look for runs or waves.",
+          links:[{title:"forecast::checkresiduals (acf + Ljung-Box)",short:"checkresiduals",url:"https://pkg.robjhyndman.com/forecast/reference/checkresiduals.html"}]},
+        {text:"**Durbin\u2013Watson test** for first-order autocorrelation.",
+          links:[{title:"lmtest::dwtest reference",short:"dwtest",url:"https://rdrr.io/cran/lmtest/man/dwtest.html"}]},
+        {text:"In R, **performance::check_autocorrelation(model)** is a convenience wrapper that runs the Durbin\u2013Watson test.",
+          links:[{title:"performance::check_autocorrelation reference",short:"check_autocorrelation()",url:"https://easystats.github.io/performance/reference/check_autocorrelation.html"}]}
+      ]}/></div>
+      <div><Hd>How to fix</Hd><FixList items={[
+        {text:"Use a **time-series model** (for example ARIMA errors or GLS), or add lagged variables when timing matters.",
+          links:[{title:"Fish-Forecast: Multivariate regression with ARMA errors",short:"Fish-Forecast",url:"https://fish-forecast.github.io/Fish-Forecast-Bookdown/6-2-multivariate-linear-regression-with-arma-errors.html"}]},
+        {text:"Use **Newey\u2013West or HAC standard errors** for serially correlated errors.",
+          links:[{title:"Econometrics with R: HAC standard errors",short:"EWR",url:"https://www.econometrics-with-r.org/15.4-hac-standard-errors.html"}]}
+      ]}/></div>
+    </div>
+  </PrintInfoSlide>;
+}
+
+function PrintExogeneitySlide({item}){
+  const Content=INFO[item.key];
+  return <PrintSlide>
+    <PrintSectionHead item={item} tag="Concepts and practice"/>
+    <div className="print-compact-text" style={{"--accent":item.color}}>
+      {Content&&<Content/>}
+      <Quiz questions={MCQ[item.key]} color={item.color} printMode/>
+    </div>
+  </PrintSlide>;
+}
+
+function PrintDeck(){
+  const diagnosticItems=SUNSHINE.filter(s=>s.type==="diagnostic");
+  return <div style={{fontFamily:"Inter, ui-sans-serif, system-ui, sans-serif",background:C.bg,color:C.text,padding:"10px 8px 24px"}}>
+    <style>{PRINT_CSS}</style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+    <div className="print-deck-toolbar" style={{maxWidth:1060,margin:"0 auto 16px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+      <div>
+        <div style={{fontSize:18,fontWeight:800,color:C.teal}}>Regression Diagnostics Print Deck</div>
+        <div style={{fontSize:12,color:C.sub,marginTop:2}}>Landscape slides with all panels and all three example datasets.</div>
+      </div>
+      <button onClick={()=>window.print()} style={{padding:"10px 18px",borderRadius:999,border:`2px solid ${C.teal}`,background:C.teal,color:"#fff",fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>Print / Save as PDF</button>
+    </div>
+
+    <PrintSlide>
+      <div style={{textAlign:"center",padding:"28px 10px 18px"}}>
+        <div style={{height:5,maxWidth:420,margin:"0 auto 18px",background:`linear-gradient(90deg, ${C.gold}, ${C.tealLight}, ${C.teal})`,borderRadius:4}}/>
+        <h1 style={{fontSize:34,fontWeight:800,margin:0,color:C.teal,letterSpacing:"-0.02em"}}>Linear Regression Diagnostics</h1>
+        <p style={{fontSize:15,color:C.sub,margin:"10px auto 0",maxWidth:680,lineHeight:1.5}}>Complete slide deck export of the interactive explorer. Each diagnostic panel includes good, borderline, and clear-violation examples side by side.</p>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(8, minmax(0, 1fr))",gap:6,maxWidth:760,margin:"22px auto 0"}}>
+          {SUNSHINE.map(item=><div key={item.key} style={{border:`2px solid ${item.color}`,background:item.colorSoft,borderRadius:10,padding:"8px 4px 6px",textAlign:"center"}}>
+            <div style={{fontWeight:800,fontSize:22,color:item.color,lineHeight:1}}>{item.letter}</div>
+            <div style={{fontSize:8,color:item.color,fontWeight:700,lineHeight:1.2,marginTop:4}}>{item.label}</div>
+            <MiniIcon type={item.diagKey||item.key}/>
+          </div>)}
+        </div>
+        <p style={{fontSize:11,color:C.muted,marginTop:16}}>Use your browser&apos;s print dialog with landscape orientation. Slides are sized for US Letter / A4 landscape.</p>
+      </div>
+    </PrintSlide>
+
+    <PrintInfoSlide item={SUNSHINE.find(s=>s.key==="sample")} tag="Concepts and practice"/>
+
+    <PrintUncorrelatedClusterSlide item={SUNSHINE.find(s=>s.key==="uncorrelated")}/>
+    <PrintUncorrelatedTimeSlide item={SUNSHINE.find(s=>s.key==="uncorrelated")}/>
+
+    <PrintMultiColExamplesSlide item={SUNSHINE.find(s=>s.key==="multicollinearity")}/>
+    <PrintInfoSlide item={SUNSHINE.find(s=>s.key==="multicollinearity")} tag="Concepts and practice"/>
+
+    {diagnosticItems.map(item=><div key={item.key}>
+      <PrintDiagExamplesSlide item={item}/>
+      <PrintDiagTextSlide item={item}/>
+    </div>)}
+
+    <PrintExogeneitySlide item={SUNSHINE.find(s=>s.key==="exogeneity")}/>
+
+    <PrintSlide>
+      <PrintSectionHead item={{label:"A note on reading diagnostic plots",summary:"Use plots and formal tests together",color:C.teal}} tag="Closing note"/>
+      <div className="print-compact-text">
+        <p style={pa}>Reading these plots takes practice, and two people may read the same plot differently. <b>Formal tests</b> (Breusch-Pagan, Shapiro-Wilk, etc.) are not a substitute: they often flag small problems in large samples and miss real problems in small ones. Use them along with the plots, not instead of them.</p>
+        <p style={{...pa,marginTop:10}}>If regression is important to your analysis, <b>report your diagnostic checks</b> so readers can see them.</p>
+      </div>
+    </PrintSlide>
+  </div>;
+}
+
 /* ── MAIN ────────────────────────────────────────────────────────────── */
 export default function App(){
   const[selected,setSelected]=useState("shape");
@@ -1542,7 +2106,7 @@ export default function App(){
     <div style={{height:5,background:`linear-gradient(90deg, ${C.gold}, ${C.tealLight}, ${C.teal})`}}/>
     <div style={{width:1060,minWidth:1060,margin:"0 auto",padding:"20px 28px 40px"}}>
       <div style={{marginBottom:20}}>
-        <h1 style={{fontSize:28,fontWeight:800,margin:0,lineHeight:1.15,color:C.teal,letterSpacing:"-0.02em"}}>Regression Assumptions Explorer</h1>
+        <h1 style={{fontSize:28,fontWeight:800,margin:0,lineHeight:1.15,color:C.teal,letterSpacing:"-0.02em"}}>Linear Regression Diagnostics</h1>
         <p style={{fontSize:14,color:C.sub,margin:"6px 0 0",lineHeight:1.5}}>Click any letter below to explore that assumption for linear regression.</p>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(8, minmax(0, 1fr))",gap:5,marginBottom:20}}>
@@ -1555,14 +2119,14 @@ export default function App(){
         <div style={{gridColumn:"1 / 3"}}/>
         <div style={{gridColumn:"3 / span 5",height:8,borderTop:`2px solid ${C.teal}`,borderLeft:`2px solid ${C.teal}`,borderRight:`2px solid ${C.teal}`,borderTopLeftRadius:8,borderTopRightRadius:8,alignSelf:"end",marginLeft:18,marginRight:18}}/>
         <div style={{gridColumn:"8 / 9"}}/>
-        {SUNSHINE.map(item=>{const isA=selected===item.key;const isD=item.type==="diagnostic";return <button key={item.key} onClick={()=>handleSel(item.key)} style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"10px 6px 6px",borderRadius:12,minWidth:0,border:`2.5px solid ${isA?item.color:C.border}`,background:isA?item.colorSoft:C.card,cursor:"pointer",transition:"all .2s",position:"relative",boxShadow:isA?`0 3px 16px ${item.color}25`:"0 1px 3px #0001",transform:isA?"translateY(-2px)":"none"}}>
+        {SUNSHINE.map(item=>{const isA=selected===item.key;return <button key={item.key} onClick={()=>handleSel(item.key)} style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"10px 6px 6px",borderRadius:12,minWidth:0,border:`2.5px solid ${isA?item.color:C.border}`,background:isA?item.colorSoft:C.card,cursor:"pointer",transition:"all .2s",position:"relative",boxShadow:isA?`0 3px 16px ${item.color}25`:"0 1px 3px #0001",transform:isA?"translateY(-2px)":"none"}}>
           <span style={{fontWeight:800,fontSize:27,lineHeight:1,color:isA?item.color:"#A09A90"}}>{item.letter}</span>
           <span style={{fontSize:8.5,color:isA?item.color:C.muted,textAlign:"center",lineHeight:1.2,marginTop:3,fontWeight:isA?800:600,maxWidth:76}}>{item.label}{item.labelParen?` ${item.labelParen}`:""}</span>
-          {isD&&<MiniIcon type={item.diagKey}/>}
+          <MiniIcon type={item.diagKey||item.key}/>
           {isA&&<div style={{position:"absolute",bottom:-10,left:"50%",transform:"translateX(-50%)",width:0,height:0,borderLeft:"9px solid transparent",borderRight:"9px solid transparent",borderTop:`9px solid ${item.color}`}}/>}
         </button>;})}
       </div>
-      {selItem?.type==="info"&&<InfoPanel item={selItem}/>}
+      {selItem?.type==="info"&&(selItem.key==="multicollinearity"?<MultiColPanel item={selItem}/>:<InfoPanel item={selItem}/>)}
       {selItem?.type==="diagnostic"&&<DiagPanel key={selItem.key} item={selItem} points={points} setPoints={setPoints} model={model} custom={customData} setCustom={setCustomData}/>}
       {selItem?.type==="diagnostic"&&<div style={{marginTop:22}}>
         <button onClick={()=>setShowNote(!showNote)} style={{padding:"8px 16px",borderRadius:20,border:`1.5px solid ${C.border}`,background:C.card,fontSize:13,color:C.sub,cursor:"pointer",fontFamily:"inherit"}}>
@@ -1577,5 +2141,15 @@ export default function App(){
   </div>;
 }
 
+export {
+  DS, SUNSHINE, MCDS, MCQ, C, INFO,
+  ols, ols2, DiagPlot, CF, VifLive,
+  WhatBreaks, FixList, MdBold, MiniIcon, Hd,
+  QuizVisual, ExoOriginFig, SampleParamDiags,
+  ClusteredDiags, AutocorrDiags, ExogeneityDiags,
+  VifOutputCard, pa, ul, RLinks, PrintDeck,
+};
+
 const rootEl = document.getElementById("root");
-if (rootEl) createRoot(rootEl).render(<App />);
+const isPrintDeck=typeof window!=="undefined"&&(window.__REG_DIAG_PRINT__||location.search.includes("print=1")||location.hash.includes("print"));
+if (rootEl) createRoot(rootEl).render(isPrintDeck?<PrintDeck/>:<App />);

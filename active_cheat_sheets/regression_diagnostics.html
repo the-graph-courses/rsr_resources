@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<!-- active concept sheet: regression diagnostics -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Regression Diagnostics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#dfe8ea;
+      --paper:#f7f4ed;
+      --ink:#101418;
+      --muted:#665f51;
+      --line:#d6cfbd;
+      --teal:#0d7377;
+      --teal-dark:#0a5d61;
+      --teal-soft:#e3f3f3;
+      --gold:#f0c808;
+      --gold-soft:#fff3cc;
+      --rose:#b83b5e;
+      --rose-soft:#fdeef1;
+      --green:#2c8a4a;
+      --white:#fffef9;
+      --shadow:rgba(16,20,24,0.42);
+      --c-s1:#9B6B2F; --c-u:#2E86AB; --c-n1:#6B6B6B; --c-s2:#2B6CB0;
+      --c-h:#2F855A; --c-i:#C53030; --c-n2:#6B46C1; --c-e:#8B6914;
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:'Space Grotesk', Arial, Helvetica, sans-serif; font-size:8.55pt; line-height:1.24; }
+
+    .toolbar { width:210mm; max-width:calc(100vw - 24px); margin:24px auto 8px; display:flex; justify-content:space-between; align-items:flex-end; gap:16px; color:var(--ink); }
+    .toolbar-intro { flex:1; min-width:0; font-size:9pt; line-height:1.4; }
+    .toolbar-intro .title { font-weight:800; color:var(--teal); font-family:'JetBrains Mono', Consolas, Menlo, monospace; font-size:10pt; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:2px; }
+    .toolbar-intro .descr { color:#3a4a4f; max-width:130mm; }
+    .toolbar-intro .descr b { color:var(--teal); }
+    .toolbar-actions { display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
+    button { border:2px solid var(--ink); background:var(--paper); color:var(--ink); border-radius:7px; padding:7px 11px; font:inherit; font-weight:700; cursor:pointer; box-shadow:3px 3px 0 var(--shadow); font-family:'Space Grotesk', Arial, Helvetica, sans-serif; }
+    button.primary { background:var(--teal); color:white; border-color:var(--ink); }
+    .print-button { display:inline-flex; align-items:center; gap:5px; }
+    .print-button svg { width:13px; height:13px; display:block; }
+    .zoom-group { display:inline-flex; align-items:stretch; border:2px solid var(--ink); border-radius:7px; overflow:visible; background:var(--paper); box-shadow:3px 3px 0 var(--shadow); }
+    .zoom-group button { border:0; border-radius:0; padding:6px 10px; background:transparent; font-weight:800; box-shadow:none; }
+    .zoom-group button + button { border-left:2px solid var(--ink); }
+    .zoom-group .zoom-label { display:inline-flex; align-items:center; justify-content:center; min-width:44px; padding:0 9px; border-left:2px solid var(--ink); color:var(--muted); font-family:'JetBrains Mono', Consolas, Menlo, monospace; font-size:9pt; font-weight:800; }
+
+    .page-wrap { display:flex; flex-direction:column; align-items:center; }
+    .page { width:210mm; min-height:297mm; margin:0 auto 18px; background:var(--paper); border:2px solid var(--ink); border-radius:10px; padding:3.2mm 7mm 2.4mm; box-shadow:8px 8px 0 rgba(16,20,24,0.13), 0 14px 36px rgba(16,20,24,0.14); display:flex; flex-direction:column; gap:1.7mm; transform-origin:top center; }
+    header { border-bottom:1mm solid var(--gold); padding-bottom:0.85mm; margin-bottom:0.15mm; display:flex; justify-content:space-between; align-items:flex-end; gap:4mm; flex-shrink:0; }
+    h1 { margin:0; color:var(--teal); font-family:'Space Grotesk', Arial, Helvetica, sans-serif; font-size:19pt; font-weight:800; letter-spacing:-0.03em; line-height:0.98; }
+    .subtitle { margin-top:1.2mm; color:var(--muted); font-family:'JetBrains Mono', Consolas, Menlo, monospace; font-weight:700; font-size:7.3pt; letter-spacing:0.02em; }
+
+    .group-label { display:flex; align-items:center; gap:3mm; color:var(--ink); font-family:'Space Grotesk', Arial, Helvetica, sans-serif; font-size:7.6pt; font-weight:900; letter-spacing:0.02em; margin:0.1mm 0; flex-shrink:0; }
+    .group-label::before, .group-label::after { content:""; flex:1; border-top:2px solid var(--ink); height:0; }
+    .group-label span { white-space:nowrap; background:var(--paper); border:2px solid var(--ink); border-radius:5px; padding:0.4mm 1.8mm; }
+
+    .box { border:2px solid var(--ink); border-radius:8px; overflow:visible; background:var(--white); display:flex; flex-direction:column; min-width:0; box-shadow:4px 4px 0 var(--shadow); flex-shrink:0; }
+    .box-tag { background:var(--teal); color:white; border-bottom:2px solid var(--ink); border-radius:6px 6px 0 0; font-family:'Space Grotesk', Arial, Helvetica, sans-serif; font-size:8.2pt; font-weight:900; letter-spacing:0.02em; padding:0.75mm 2.4mm 0.6mm; }
+    .box-tag .tag-hint { font-weight:700; font-size:6.9pt; letter-spacing:0; opacity:0.88; margin-left:1.2mm; }
+    .box-body { padding:1.1mm 1.6mm 1.2mm; flex:1; display:flex; flex-direction:column; gap:0.9mm; background:var(--teal-soft); min-width:0; overflow:visible; border-radius:0 0 6px 6px; }
+    .box-body p { margin:0; }
+
+    /* SUNSHINE checklist grid */
+    .check-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:1.3mm; }
+    .cell { border:1.5px solid var(--ink); border-left:4px solid var(--cc); border-radius:5px; background:var(--white); padding:0.8mm 1.3mm 0.9mm; display:flex; gap:2mm; align-items:flex-start; min-width:0; }
+    .cl { flex-shrink:0; width:5.4mm; height:5.4mm; border:1.5px solid var(--ink); border-radius:3px; background:var(--cc); color:#fff; font-weight:900; font-size:10pt; line-height:1; font-family:'JetBrains Mono', Consolas, Menlo, monospace; display:inline-flex; align-items:center; justify-content:center; box-shadow:1.5px 1.5px 0 var(--shadow); }
+    .cbody { min-width:0; padding-top:0.15mm; border-left:1.5px dotted var(--line); padding-left:1.6mm; }
+    .cname { font-weight:800; font-size:8pt; line-height:1.15; color:var(--ink); }
+    .cq { font-size:6.7pt; color:var(--muted); line-height:1.18; margin-top:0.35mm; }
+    .check-note { font-size:7.8pt; color:var(--ink); line-height:1.3; }
+
+    /* diagnostic table rows */
+    .diag-row { display:grid; grid-template-columns:21mm 1fr 34mm; gap:2.2mm; border:1.5px solid var(--ink); border-left:4px solid var(--cc); border-radius:6px; background:var(--white); padding:1mm 1.6mm; align-items:start; min-width:0; box-shadow:2.5px 2.5px 0 var(--shadow); flex-shrink:0; }
+    .diag-row.nofig { grid-template-columns:21mm 1fr; }
+    .dr-label { display:flex; flex-direction:column; align-items:flex-start; gap:0.5mm; align-self:start; padding-top:0.4mm; }
+    .dr-letter { font-weight:800; font-size:14pt; color:var(--cc); line-height:0.95; font-family:'JetBrains Mono', Consolas, Menlo, monospace; }
+    .dr-name { font-weight:800; font-size:7.4pt; line-height:1.1; color:var(--ink); }
+    .dr-paren { font-weight:700; font-size:6.3pt; line-height:1.1; color:var(--muted); }
+    .dr-text { font-size:8pt; line-height:1.24; min-width:0; display:flex; flex-direction:column; gap:0.65mm; }
+    .dr-lead { margin:0; font-size:7.6pt; line-height:1.22; color:var(--muted); font-weight:600; }
+    .dr-blocks { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:0.65mm; }
+    .dr-blocks.cols-3 { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+    .dr-block.kind-note { grid-column:1 / -1; }
+    .dr-block-b a { color:var(--teal-dark); font-weight:800; text-decoration:underline; text-underline-offset:1.5px; text-decoration-thickness:1px; }
+    .dr-block-b a:hover { color:var(--teal); }
+    .dr-block { border:1px solid var(--ink); border-left:3.5px solid var(--blk); border-radius:4px; background:var(--blk-bg); padding:0.55mm 1.1mm 0.6mm; min-width:0; }
+    .dr-block-h { font-weight:900; font-size:6.3pt; letter-spacing:0.06em; text-transform:uppercase; color:var(--blk); margin-bottom:0.3mm; line-height:1.1; }
+    .dr-block-b { font-size:7.5pt; line-height:1.2; }
+    .dr-block-b p { margin:0; }
+    .dr-block-b ul { margin:0; padding-left:2.8mm; display:flex; flex-direction:column; gap:0.25mm; list-style:disc; }
+    .dr-block-b li { margin:0; padding-left:0.2mm; }
+    .dr-block.kind-check { --blk:var(--teal-dark); --blk-bg:#f2faf9; }
+    .dr-block.kind-break { --blk:var(--rose); --blk-bg:var(--rose-soft); }
+    .dr-block.kind-fix { --blk:var(--green); --blk-bg:#edf7f0; }
+    .dr-block.kind-rule { --blk:var(--cc); --blk-bg:var(--white); }
+    .dr-block.kind-note { --blk:var(--muted); --blk-bg:#f5f2ea; }
+    .k { font-weight:900; font-size:6.7pt; letter-spacing:0.05em; text-transform:uppercase; color:var(--cc); }
+    .dr-fig { min-width:0; }
+    .dr-fig img { width:100%; display:block; border:1.5px solid var(--ink); border-radius:4px; background:#fff; }
+    .dr-fig.violation img { border-color:var(--rose); border-width:2px; box-shadow:inset 0 0 0 1.5px var(--rose-soft); }
+    .fig-cap { font-size:6.4pt; color:var(--muted); text-align:center; line-height:1.18; margin-top:0.5mm; font-weight:700; }
+    .fig-cap code { font-size:6.2pt; }
+    .fig-badge { display:inline-block; background:var(--rose); color:#fff; border:1px solid var(--ink); border-radius:3px; font-size:5.8pt; font-weight:900; letter-spacing:0.04em; text-transform:uppercase; padding:0.15mm 1mm; }
+    .fig-title { font-size:7pt; font-weight:900; color:var(--ink); text-align:center; line-height:1.15; margin:0.35mm 0 0.55mm; }
+    .fig-cap .fig-badge { margin-bottom:0.35mm; }
+
+    .worked { font-family:'JetBrains Mono', Consolas, Menlo, monospace; font-size:8.2pt; background:#1d2229; color:#f0ecdf; border:2px solid var(--ink); border-radius:7px; padding:1.4mm 2.4mm; line-height:1.9; flex-shrink:0; }
+    .worked .cm { color:#a8b3b4; font-style:italic; }
+    .worked .fn { color:#8fd5d2; }
+    .worked .fill { background:rgba(255,255,255,0.13); color:#ffe9a8; border-bottom-color:var(--gold); }
+    .worked .hint { color:#8a94a3; }
+    .hints-hidden .worked { line-height:1.5; }
+
+    .formula, code { font-family:'JetBrains Mono', Consolas, Menlo, monospace !important; }
+
+    .b { display:inline-flex; flex-direction:column; align-items:center; vertical-align:baseline; line-height:1; margin:0 0.2mm; text-align:center; max-width:100%; min-width:0; }
+    .fill { border:0; border-bottom:1.8px solid var(--teal); border-radius:3px 3px 0 0; padding:0 0.3mm 0.5px; color:var(--ink); background:rgba(255,255,255,0.36); font:inherit; font-weight:800; line-height:1; text-align:center; min-width:2mm; max-width:100%; transition:width 0.18s ease-out; }
+    .fill.code { font-family:'JetBrains Mono', Consolas, Menlo, monospace !important; }
+    .fill:focus { outline:none; border-bottom-color:var(--teal-dark); box-shadow:0 3px 0 rgba(240,200,8,0.35); }
+    .hint { font-size:4.9pt; color:#8b897d; font-weight:700; font-family:'JetBrains Mono', Consolas, Menlo, monospace; line-height:1.05; margin-top:0.35mm; letter-spacing:0.03em; white-space:normal; overflow-wrap:anywhere; max-width:34mm; text-align:center; }
+    .b.solved .hint { display:none; }
+    .b.solved .fill { background:rgba(255,255,255,0.36); border-bottom-color:var(--teal-dark); }
+    .hints-hidden .hint { display:none; }
+
+    .fill.wrong-pick { border-bottom-color:var(--rose) !important; color:var(--rose); animation:shake 0.45s; }
+    .fill.correct-flash { animation:correctFlash 0.75s ease-out; }
+
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-2px)} 40%,80%{transform:translateX(2px)} }
+    @keyframes correctFlash { 0%{background-color:rgba(44,138,74,0);border-bottom-color:var(--teal)} 20%{background-color:rgba(44,138,74,0.28);border-bottom-color:var(--green)} 60%{background-color:rgba(44,138,74,0.18);border-bottom-color:var(--green)} 100%{background-color:rgba(44,138,74,0);border-bottom-color:var(--teal)} }
+
+    footer { background:var(--teal); border-radius:7px; color:#fff; margin-top:auto; padding:1mm 2mm; box-shadow:4px 4px 0 var(--shadow); display:flex; justify-content:center; font-family:'JetBrains Mono', Consolas, Menlo, monospace; font-size:7.3pt; font-weight:700; letter-spacing:0.02em; flex-shrink:0; }
+    footer a { color:#fff; text-decoration:none; font-weight:900; }
+    footer a:hover { text-decoration:underline; }
+
+    @page { size:A4; margin:0; }
+    @media print {
+      body { background:white; font-size:7.7pt; line-height:1.14; }
+      .toolbar { display:none; }
+      button { display:none; }
+      .page { width:210mm; min-height:297mm; max-height:297mm; overflow:hidden; margin:0; border:0; border-radius:0; box-shadow:none; padding:1.5mm 5mm 0.9mm; gap:1.1mm; background:white; transform:none !important; }
+      header { border-bottom-color:var(--gold); border-bottom-width:0.8mm; padding-bottom:0.25mm; margin-bottom:0; }
+      h1 { font-size:15.5pt; }
+      .subtitle { font-size:6.5pt; line-height:1.04; margin-top:0.2mm; }
+      .fill,.worked,.box,.box-tag,.box-body,.cell,.cl,.diag-row,.dr-letter,.dr-block,.fig-badge,.k,footer { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+      .box, .worked, .zoom-group, footer, .group-label span, .diag-row { box-shadow:none; }
+      .box, .worked, .group-label span { border-width:1.4px; border-radius:5px; }
+      .diag-row { border-width:1.2px; border-left-width:3.5px; border-radius:4px; padding:0.55mm 1.2mm; gap:1.8mm; grid-template-columns:20mm 1fr 32mm; }
+      .diag-row.nofig { grid-template-columns:20mm 1fr; }
+      .box-tag { border-bottom-width:1.4px; border-radius:4px 4px 0 0; font-size:7pt; font-weight:900; letter-spacing:0.015em; padding:0.38mm 1.55mm 0.28mm; line-height:1.08; }
+      .box-body { padding:0.7mm 1.1mm 0.8mm; gap:0.6mm; }
+      .check-grid { gap:1mm; }
+      .cell { border-width:1.1px; border-left-width:3.2px; padding:0.55mm 1mm 0.65mm; }
+      .cname { font-size:7.4pt; }
+      .cq { font-size:6.2pt; }
+      .cl { width:4.8mm; height:4.8mm; font-size:9pt; border-width:1.2px; box-shadow:none; }
+      .cbody { border-left-width:1.2px; padding-left:1.3mm; }
+      .check-note { font-size:7.2pt; line-height:1.2; }
+      .dr-text { font-size:7.2pt; line-height:1.12; gap:0.4mm; }
+      .dr-lead { font-size:7pt; }
+      .dr-blocks { gap:0.45mm; grid-template-columns:repeat(2, minmax(0, 1fr)); }
+      .dr-blocks.cols-3 { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+      .dr-block-b a { color:var(--teal-dark); }
+      .dr-block { padding:0.35mm 0.8mm 0.4mm; border-width:1px; border-left-width:3px; }
+      .dr-block-h { font-size:5.9pt; margin-bottom:0.2mm; }
+      .dr-block-b { font-size:6.9pt; line-height:1.12; }
+      .dr-block-b ul { gap:0.15mm; padding-left:2.4mm; }
+      .dr-letter { font-size:12pt; }
+      .dr-name { font-size:6.9pt; }
+      .dr-paren { font-size:5.9pt; }
+      .k { font-size:6.2pt; }
+      .fig-cap { font-size:6pt; line-height:1.1; margin-top:0.3mm; }
+      .dr-fig img { border-width:1.1px; }
+      .group-label { font-size:6.7pt; margin:0; }
+      .group-label span { padding:0.2mm 1mm; }
+      .worked { font-size:7.1pt; line-height:1.28 !important; padding:0.45mm 1.5mm; }
+      .hint { display:none !important; }
+      .fill { transition:none; }
+      .fill.wrong-pick { color:var(--ink); border-bottom-color:var(--teal) !important; }
+      .worked .fill.wrong-pick { color:#ffe9a8; border-bottom-color:var(--gold) !important; }
+      footer { border-radius:0; padding:0.22mm 0; font-size:6.25pt; }
+    }
+    @media screen and (max-width:820px) {
+      html, body { overflow-x:auto; }
+      .page,.toolbar { width:calc(100vw - 16px); }
+      .page { padding:16px; min-height:auto; transform:none !important; border-radius:10px; overflow:visible; }
+      .check-grid { grid-template-columns:1fr 1fr; }
+      .diag-row, .diag-row.nofig { grid-template-columns:1fr; }
+      .dr-blocks { grid-template-columns:1fr; }
+      .dr-block.kind-note { grid-column:auto; }
+      .toolbar { flex-direction:column; align-items:stretch; margin-top:12px; }
+      .toolbar-intro .descr { max-width:none; }
+      .toolbar-actions { justify-content:flex-start; }
+      .b { max-width:min(100%, 44vw); }
+      .fill { max-width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="toolbar-intro">
+      <div class="title">GRAPH Courses cheat sheet</div>
+      <div class="descr">Type your answers into the blanks. Hint options appear in small grey text below each blank. When finished, click Print / Save on the right.</div>
+    </div>
+    <div class="toolbar-actions">
+      <div class="zoom-group" role="group" aria-label="Zoom controls">
+        <button type="button" id="zoomOut" aria-label="Zoom out">Zoom -</button>
+        <button type="button" id="zoomIn" aria-label="Zoom in">Zoom +</button>
+        <span class="zoom-label" id="zoomLabel">100%</span>
+      </div>
+      <button type="button" id="toggleHints">Hide hints</button>
+      <button type="button" id="clearAnswers">Clear</button>
+      <button type="button" class="primary print-button" onclick="window.print()" aria-label="Print or save cheat sheet">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M7 3h10v5H7V3Zm10 14h2a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h2v4h10v-4Zm-8 2v-6h6v6H9Zm9-7.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/>
+        </svg>
+        Print / Save
+      </button>
+    </div>
+  </div>
+
+  <div class="page-wrap" id="pageWrap">
+  <section class="page" id="sheet">
+    <header>
+      <div>
+        <h1>Regression Diagnostics</h1>
+        <div class="subtitle">Eight assumptions behind your linear model, and how to check each one in R</div>
+      </div>
+    </header>
+
+    <div class="box">
+      <div class="box-tag">The SUNSHINE checklist <span class="tag-hint">· fill each blank with the whole word</span></div>
+      <div class="box-body">
+        <div class="check-grid">
+          <div class="cell" style="--cc:var(--c-s1)"><span class="cl">S</span><div class="cbody">
+            <div class="cname">Sample size</div>
+            <div class="cq">Do you have enough observations for your model?</div>
+          </div></div>
+          <div class="cell" style="--cc:var(--c-u)"><span class="cl">U</span><div class="cbody">
+            <div class="cname"><span class="b"><input class="fill" data-answer="uncorrelated" data-alt="independent"><span class="hint">uncorrelated / unbiased / uniform</span></span> errors</div>
+            <div class="cq">Are the residuals independent of each other?</div>
+          </div></div>
+          <div class="cell" style="--cc:var(--c-n1)"><span class="cl">N</span><div class="cbody">
+            <div class="cname">No <span class="b"><input class="fill" data-answer="multicollinearity" data-alt="collinearity"><span class="hint">multicollinearity / autocorrelation / heteroscedasticity</span></span></div>
+            <div class="cq">Are the predictors too correlated with each other?</div>
+          </div></div>
+          <div class="cell" style="--cc:var(--c-s2)"><span class="cl">S</span><div class="cbody">
+            <div class="cname">Shape, i.e. <span class="b"><input class="fill" data-answer="linearity" data-alt="linear"><span class="hint">linearity / normality / symmetry</span></span></div>
+            <div class="cq">Is the relationship really a straight line?</div>
+          </div></div>
+          <div class="cell" style="--cc:var(--c-h)"><span class="cl">H</span><div class="cbody">
+            <div class="cname"><span class="b"><input class="fill" data-answer="homogeneity" data-alt="homoscedasticity"><span class="hint">homogeneity / heterogeneity / normality</span></span> of variance</div>
+            <div class="cq">Does the spread of the residuals stay constant?</div>
+          </div></div>
+          <div class="cell" style="--cc:var(--c-i)"><span class="cl">I</span><div class="cbody">
+            <div class="cname"><span class="b"><input class="fill" data-answer="influential" data-alt="influence"><span class="hint">influential / insignificant / interacting</span></span> points</div>
+            <div class="cq">Is any single point pulling the fitted line too much?</div>
+          </div></div>
+          <div class="cell" style="--cc:var(--c-n2)"><span class="cl">N</span><div class="cbody">
+            <div class="cname"><span class="b"><input class="fill" data-answer="normality" data-alt="normal"><span class="hint">normality / linearity / neutrality</span></span> of residuals</div>
+            <div class="cq">Do the prediction errors follow a bell curve?</div>
+          </div></div>
+          <div class="cell" style="--cc:var(--c-e)"><span class="cl">E</span><div class="cbody">
+            <div class="cname"><span class="b"><input class="fill" data-answer="exogeneity" data-alt="exogenous"><span class="hint">exogeneity / endogeneity / elasticity</span></span></div>
+            <div class="cq">Is the predictor independent of the error term?</div>
+          </div></div>
+        </div>
+      </div>
+    </div>
+
+                    <div class="group-label"><span>Check by thinking about your data and study design</span></div>
+
+<div class="diag-row nofig" style="--cc:var(--c-s1)">
+      <div class="dr-label"><span class="dr-letter">S</span><span class="dr-name">Sample size</span></div>
+      <div class="dr-text"><div class="dr-blocks"><div class="dr-block kind-rule"><div class="dr-block-h">Common rule of thumb</div><div class="dr-block-b"><ul><li>Aim for at least <span class="b"><input class="fill code" data-answer="10"><span class="hint">10 / 5 / 50</span></span> observations per <span class="b"><input class="fill" data-answer="parameter" data-alt="coefficient"><span class="hint">parameter / predictor / outcome</span></span>.</li><li>With fewer observations, estimates are imprecise, individual points have more influence, and diagnostic plots are harder to interpret.</li></ul></div></div><div class="dr-block kind-fix"><div class="dr-block-h">Fix</div><div class="dr-block-b"><ul><li>Use fewer predictors.</li></ul></div></div></div></div>
+    </div>
+
+<div class="diag-row nofig" style="--cc:var(--c-u)">
+      <div class="dr-label"><span class="dr-letter">U</span><span class="dr-name">Uncorrelated errors</span></div>
+      <div class="dr-text"><p class="dr-lead">Each residual should be independent of the others.</p><div class="dr-blocks"><div class="dr-block kind-note"><div class="dr-block-h">Watch for</div><div class="dr-block-b"><ul><li><span class="b"><input class="fill" data-answer="clustered" data-alt="grouped"><span class="hint">clustered / censored / continuous</span></span> data (for example clinics or schools).</li><li>Data ordered in <span class="b"><input class="fill" data-answer="time"><span class="hint">time / space / cost</span></span> (autocorrelation).</li></ul></div></div><div class="dr-block kind-check"><div class="dr-block-h">How to check</div><div class="dr-block-b"><ul><li>Think about the study design.</li><li>Compute the <a href="https://easystats.github.io/performance/reference/icc.html" target="_blank" rel="noopener">ICC</a> for clustered data.</li><li>For time-ordered data, plot the residuals in collection order.</li></ul></div></div><div class="dr-block kind-fix"><div class="dr-block-h">Fix</div><div class="dr-block-b"><ul><li>For clustered data: a <span class="b"><input class="fill" data-answer="mixed" data-alt="multilevel"><span class="hint">mixed / additive / weighted</span></span>-effects model, or cluster-robust standard errors.</li><li>For time-ordered data: a <span class="b"><input class="fill" data-answer="time-series" data-alt="time series|timeseries"><span class="hint">time-series / linear / logistic</span></span> model.</li></ul></div></div></div></div>
+    </div>
+
+    <div class="group-label"><span>Five assumptions checked by <code style="font-size:7.2pt;">check_model()</code> in the performance package</span></div>
+
+    <div class="worked">library(<span class="b"><input class="fill code" data-answer="performance"><span class="hint">performance / diagnostics / modelcheck</span></span>)<br>model &lt;- <span class="fn">lm</span>(outcome ~ predictor, data = dat)<br><span class="b"><input class="fill code" data-answer="check_model" data-alt="check_model()"><span class="hint">check_model / plot_model / test_model</span></span>(model)&nbsp;&nbsp;<span class="cm"># draws the five panels below; a nicer version of base R's plot(model)</span></div>
+
+<div class="diag-row" style="--cc:var(--c-n1)">
+      <div class="dr-label"><span class="dr-letter">N</span><span class="dr-name">No multicollinearity</span><span class="dr-paren">multiple regression only</span></div>
+      <div class="dr-text"><p class="dr-lead">Predictors should not carry <span class="b"><input class="fill" data-answer="overlapping" data-alt="the same|shared|redundant"><span class="hint">overlapping / opposite / missing</span></span> information.</p><div class="dr-blocks"><div class="dr-block kind-check"><div class="dr-block-h">How to check</div><div class="dr-block-b"><ul><li>Check each predictor's variance inflation factor (<span class="b"><input class="fill code" data-answer="VIF"><span class="hint">VIF / ICC / SSR</span></span>).</li><li>A VIF near 1 is fine; above <span class="b"><input class="fill code" data-answer="10"><span class="hint">10 / 2 / 100</span></span> is high.</li></ul></div></div><div class="dr-block kind-fix"><div class="dr-block-h">Fix</div><div class="dr-block-b"><ul><li>Drop one of the overlapping predictors.</li><li>Or <span class="b"><input class="fill" data-answer="combine" data-alt="merge"><span class="hint">combine / square / center</span></span> them into a single score.</li></ul></div></div></div></div>
+      <div class="dr-fig violation"><div class="fig-title">Collinearity (VIF) plot</div><img src="regression_diagnostics_files/vif_bad.png" alt="check_model collinearity panel: two predictors with VIF around 26, both in the red high zone"><div class="fig-cap"><span class="fig-badge">Violation</span><br><code>lm(height ~ age + grade)</code>: age and grade both have high VIF.</div></div>
+    </div>
+
+<div class="diag-row" style="--cc:var(--c-s2)">
+      <div class="dr-label"><span class="dr-letter">S</span><span class="dr-name">Shape (linearity)</span></div>
+      <div class="dr-text"><p class="dr-lead">Is the relationship really a straight line?</p><div class="dr-blocks"><div class="dr-block kind-check"><div class="dr-block-h">How to check</div><div class="dr-block-b"><ul><li>On the residuals-versus-<span class="b"><input class="fill" data-answer="fitted" data-alt="predicted"><span class="hint">fitted / observed / squared</span></span> plot, the green smoother should stay near <span class="b"><input class="fill code" data-answer="zero" data-alt="0"><span class="hint">zero / one / the mean</span></span>.</li></ul></div></div><div class="dr-block kind-fix"><div class="dr-block-h">Fix</div><div class="dr-block-b"><ul><li>Transform the predictor or the outcome (for example with a <span class="b"><input class="fill" data-answer="log" data-alt="logarithm"><span class="hint">log / z-score / rank</span></span> or square root).</li><li>Or fit a <span class="b"><input class="fill" data-answer="non-linear" data-alt="nonlinear|non linear"><span class="hint">non-linear / mixed / additive</span></span> model.</li></ul></div></div></div></div>
+      <div class="dr-fig violation"><div class="fig-title">Residuals vs fitted</div><img src="regression_diagnostics_files/linearity_bad.png" alt="check_model linearity panel: smoother curves strongly away from the zero line"><div class="fig-cap"><span class="fig-badge">Violation</span><br><code>lm(quiz_score ~ study_hours)</code>: the smoother bends away from the zero line.</div></div>
+    </div>
+
+<div class="diag-row" style="--cc:var(--c-h)">
+      <div class="dr-label"><span class="dr-letter">H</span><span class="dr-name">Homogeneity of variance</span><span class="dr-paren">homoscedasticity, equal variance</span></div>
+      <div class="dr-text"><p class="dr-lead">The spread of the residuals should stay <span class="b"><input class="fill" data-answer="constant" data-alt="equal|the same"><span class="hint">constant / increasing / normal</span></span> across fitted values.</p><div class="dr-blocks"><div class="dr-block kind-check"><div class="dr-block-h">How to check</div><div class="dr-block-b"><ul><li>On the scale-location plot, the reference line should stay roughly flat. A line that slopes <span class="b"><input class="fill" data-answer="up" data-alt="upward|upwards"><span class="hint">up / down</span></span> from left to right means residual spread is increasing.</li></ul></div></div><div class="dr-block kind-fix"><div class="dr-block-h">Fix</div><div class="dr-block-b"><ul><li>Use heteroscedasticity-<span class="b"><input class="fill" data-answer="robust"><span class="hint">robust / free</span></span> standard errors.</li><li>Or transform the outcome.</li></ul></div></div></div></div>
+      <div class="dr-fig violation"><div class="fig-title">Scale-location plot</div><img src="regression_diagnostics_files/homogeneity_bad.png" alt="check_model homogeneity panel: reference line rises steadily from left to right"><div class="fig-cap"><span class="fig-badge">Violation</span><br><code>lm(spending ~ income)</code>: residual spread increases as fitted values increase.</div></div>
+    </div>
+
+<div class="diag-row" style="--cc:var(--c-i)">
+      <div class="dr-label"><span class="dr-letter">I</span><span class="dr-name">Influential points</span></div>
+      <div class="dr-text"><p class="dr-lead">An influential point is one that combines high <span class="b"><input class="fill" data-answer="leverage"><span class="hint">leverage / variance / skewness</span></span> and a large <span class="b"><input class="fill" data-answer="residual" data-alt="error"><span class="hint">residual / intercept / p-value</span></span>.</p><div class="dr-blocks"><div class="dr-block kind-check"><div class="dr-block-h">How to check</div><div class="dr-block-b"><ul><li>On the residuals-versus-leverage plot, look for points outside the dashed <span class="b"><input class="fill" data-answer="Cook's" data-alt="Cooks|Cook"><span class="hint">Cook's / Pearson's / Tukey's</span></span> distance contour.</li></ul></div></div><div class="dr-block kind-fix"><div class="dr-block-h">Fix</div><div class="dr-block-b"><ul><li>If the point looks like a data-entry <span class="b"><input class="fill" data-answer="error" data-alt="entry error|mistake"><span class="hint">error / cluster / winner</span></span> (for example an impossible value), correct or drop it and refit.</li><li>If the point is real, consider reporting the results with and <span class="b"><input class="fill" data-answer="without"><span class="hint">without / within / beyond</span></span> it.</li></ul></div></div></div></div>
+      <div class="dr-fig violation"><div class="fig-title">Residuals vs leverage</div><img src="regression_diagnostics_files/influential_bad.png" alt="check_model influential observations panel: one red point far outside the Cook's distance contour"><div class="fig-cap"><span class="fig-badge">Violation</span><br><code>lm(chol ~ bmi)</code>: one observation lies outside the Cook's distance contour.</div></div>
+    </div>
+
+<div class="diag-row" style="--cc:var(--c-n2)">
+      <div class="dr-label"><span class="dr-letter">N</span><span class="dr-name">Normality of residuals</span></div>
+      <div class="dr-text"><p class="dr-lead">The residuals should look roughly <span class="b"><input class="fill" data-answer="normal" data-alt="bell|bell-shaped"><span class="hint">normal / uniform / skewed</span></span>.</p><div class="dr-blocks"><div class="dr-block kind-check"><div class="dr-block-h">How to check</div><div class="dr-block-b"><ul><li>On the detrended <span class="b"><input class="fill code" data-answer="Q-Q" data-alt="QQ|quantile-quantile"><span class="hint">Q-Q / P-P / R-R</span></span> plot, points should stay close to the reference line and inside the confidence band.</li><li>Non-normality mainly matters in <span class="b"><input class="fill" data-answer="small" data-alt="smaller"><span class="hint">small / large / clustered</span></span> samples. With large n, the <span class="b"><input class="fill code" data-answer="CLT" data-alt="central limit theorem"><span class="hint">CLT / VIF / DAG</span></span> (central limit theorem) means the sampling distribution of the slope is still approximately normal.</li></ul></div></div><div class="dr-block kind-fix"><div class="dr-block-h">Fix</div><div class="dr-block-b"><ul><li>Transform the <span class="b"><input class="fill" data-answer="outcome" data-alt="response|y"><span class="hint">outcome / predictor</span></span> (for example with a log).</li><li>Inspect extreme <span class="b"><input class="fill" data-answer="residuals" data-alt="errors|outliers"><span class="hint">residuals / slopes / VIFs</span></span> and check whether they are data errors.</li></ul></div></div></div></div>
+      <div class="dr-fig violation"><div class="fig-title">Detrended Q-Q plot</div><img src="regression_diagnostics_files/normality_bad.png" alt="check_model normality panel: detrended Q-Q plot with right-tail points leaving the confidence band"><div class="fig-cap"><span class="fig-badge">Violation</span><br><code>lm(er_visits ~ poverty)</code>: points in the right tail fall outside the confidence band.</div></div>
+    </div>
+
+    <div class="group-label"><span>Check with subject-matter knowledge (needed for causal claims)</span></div>
+
+<div class="diag-row nofig" style="--cc:var(--c-e)">
+      <div class="dr-label"><span class="dr-letter">E</span><span class="dr-name">Exogeneity</span></div>
+      <div class="dr-text"><p class="dr-lead">The predictor should be unrelated to the error term ("exogenous" means born <span class="b"><input class="fill" data-answer="outside"><span class="hint">outside / inside / after</span></span> the system).</p><div class="dr-blocks cols-3"><div class="dr-block kind-note"><div class="dr-block-h">Watch for</div><div class="dr-block-b"><ul><li><span class="b"><input class="fill" data-answer="confounding" data-alt="a confounder|confounders"><span class="hint">confounding / collinearity / clustering</span></span></li><li>Reverse <span class="b"><input class="fill" data-answer="causation" data-alt="causality"><span class="hint">causation / coding / residuals</span></span></li><li>Measurement <span class="b"><input class="fill" data-answer="error" data-alt="errors"><span class="hint">error / bias / model</span></span></li></ul></div></div><div class="dr-block kind-check"><div class="dr-block-h">How to check</div><div class="dr-block-b"><ul><li>No residual plot can certify this.</li><li>Use domain knowledge.</li><li>Draw a <span class="b"><input class="fill code" data-answer="DAG"><span class="hint">DAG / VIF / QQ</span></span>.</li></ul></div></div><div class="dr-block kind-break"><div class="dr-block-h">If violated</div><div class="dr-block-b"><ul><li>The model is still valid for description and prediction.</li><li>The slope should not be read as <span class="b"><input class="fill" data-answer="causal" data-alt="a causal effect|causation"><span class="hint">causal / significant / linear</span></span>.</li></ul></div></div><div class="dr-block kind-fix"><div class="dr-block-h">Fix</div><div class="dr-block-b"><ul><li>Use a randomized <span class="b"><input class="fill" data-answer="experiment" data-alt="trial"><span class="hint">experiment / observation / regression</span></span>.</li><li>Or <span class="b"><input class="fill" data-answer="adjust" data-alt="control|condition"><span class="hint">adjust / ignore / drop</span></span> for confounders you can measure.</li></ul></div></div></div></div>
+    </div>
+
+    <footer><a href="https://thegraphcourses.org" target="_blank" rel="noopener">thegraphcourses.org</a></footer>
+  </section>
+  </div>
+
+  <script>
+    const sheet = document.getElementById("sheet"),
+          pageWrap = document.getElementById("pageWrap"),
+          blanks = Array.from(document.querySelectorAll(".b"));
+
+    function fingerprint(str) {
+      let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+      for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      return (h2 >>> 0).toString(36) + (h1 >>> 0).toString(36);
+    }
+    const fp = fingerprint(
+      blanks.map(b => {
+        const inp = b.querySelector(".fill");
+        return (inp.dataset.answer || "") + "|" + (inp.dataset.alt || "");
+      }).join("\n")
+    );
+    const storageKey = "regression-diagnostics-cheatsheet-" + fp;
+
+    blanks.forEach(b => {
+      const hint = b.querySelector(".hint");
+      if (!hint) return;
+      const opts = hint.textContent.split(/\s*\/\s*/).filter(s => s.length > 0);
+      if (opts.length < 2) return;
+      for (let i = opts.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [opts[i], opts[j]] = [opts[j], opts[i]];
+      }
+      hint.textContent = opts.join(" / ");
+    });
+
+    const measureCanvas = document.createElement("canvas");
+    const measureCtx = measureCanvas.getContext("2d");
+    function getFontShorthand(el) {
+      const s = getComputedStyle(el);
+      return `${s.fontStyle || "normal"} ${s.fontWeight || "400"} ${s.fontSize} ${s.fontFamily}`;
+    }
+    function measureTextWidth(text, inp) {
+      measureCtx.font = getFontShorthand(inp);
+      return measureCtx.measureText(text).width;
+    }
+    function getDefaultWidth(inp) {
+      const answers = [inp.dataset.answer || "", ...(inp.dataset.alt ? inp.dataset.alt.split("|") : [])];
+      let maxW = 0;
+      answers.forEach(ans => {
+        const w = measureTextWidth(ans, inp);
+        if (w > maxW) maxW = w;
+      });
+      return Math.max(maxW + 12, 22);
+    }
+    function getSolvedWidth(inp) {
+      const w = measureTextWidth(inp.value, inp);
+      return Math.max(w + 6, 12);
+    }
+    function applyWidth(inp, solved) {
+      const w = solved ? getSolvedWidth(inp) : getDefaultWidth(inp);
+      inp.style.width = `${w}px`;
+    }
+
+    blanks.forEach(b => applyWidth(b.querySelector(".fill"), false));
+
+    const norm = s => String(s)
+      .replace(/[−–]/g, "-")
+      .replace(/₀/g, "0").replace(/₁/g, "1").replace(/₂/g, "2").replace(/₃/g, "3").replace(/₄/g, "4")
+      .replace(/β/g, "beta")
+      .replace(/×/g, "x")
+      .replace(/[’']/g, "'")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+    const answersFor = input => [input.dataset.answer || "", ...(input.dataset.alt ? input.dataset.alt.split("|") : [])].map(norm);
+    const match = (value, input) => answersFor(input).includes(norm(value));
+
+    function flashCorrect(i) { i.classList.remove("correct-flash"); void i.offsetWidth; i.classList.add("correct-flash"); setTimeout(() => i.classList.remove("correct-flash"), 800); }
+    function flashWrong(i) { i.classList.remove("wrong-pick"); void i.offsetWidth; i.classList.add("wrong-pick"); }
+    function save() { localStorage.setItem(storageKey, JSON.stringify(blanks.map(b => b.querySelector(".fill").value))); }
+    function restore() {
+      try {
+        const d = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        blanks.forEach((b, i) => {
+          const inp = b.querySelector(".fill");
+          if (d[i]) {
+            inp.value = d[i];
+            if (match(d[i], inp)) {
+              b.classList.add("solved");
+              applyWidth(inp, true);
+            } else {
+              inp.classList.add("wrong-pick");
+            }
+          }
+        });
+      } catch { localStorage.removeItem(storageKey); }
+    }
+
+    blanks.forEach(blank => {
+      const inp = blank.querySelector(".fill");
+      inp.addEventListener("input", () => {
+        const was = blank.classList.contains("solved");
+        inp.classList.remove("wrong-pick");
+        const ok = inp.value !== "" && match(inp.value, inp);
+        if (ok && !was) {
+          blank.classList.add("solved");
+          applyWidth(inp, true);
+          flashCorrect(inp);
+        } else if (ok && was) {
+          applyWidth(inp, true);
+        } else if (!ok && was) {
+          blank.classList.remove("solved");
+          applyWidth(inp, false);
+        }
+        save();
+      });
+      inp.addEventListener("blur", () => {
+        const v = inp.value.trim();
+        if (v && !match(v, inp)) flashWrong(inp);
+      });
+    });
+    restore();
+
+    document.getElementById("toggleHints").addEventListener("click", e => {
+      sheet.classList.toggle("hints-hidden");
+      e.currentTarget.textContent = sheet.classList.contains("hints-hidden") ? "Show hints" : "Hide hints";
+    });
+    document.getElementById("clearAnswers").addEventListener("click", () => {
+      blanks.forEach(b => {
+        const i = b.querySelector(".fill");
+        i.value = "";
+        i.classList.remove("wrong-pick", "correct-flash");
+        b.classList.remove("solved");
+        applyWidth(i, false);
+      });
+      save();
+    });
+
+    const zoomLevels = [0.1, 0.25, 0.5, 0.75, 0.85, 1.0, 1.15, 1.3, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
+    const zoomKey = "regression-diagnostics-cheatsheet-zoom";
+    const defaultZoomIdx = zoomLevels.indexOf(1.0);
+    let zoomIdx = parseInt(localStorage.getItem(zoomKey) || String(defaultZoomIdx), 10);
+    if (isNaN(zoomIdx) || zoomIdx < 0 || zoomIdx >= zoomLevels.length) zoomIdx = defaultZoomIdx;
+    const zoomLabel = document.getElementById("zoomLabel");
+    function applyZoom() {
+      const z = zoomLevels[zoomIdx];
+      sheet.style.transform = z === 1 ? "" : `scale(${z})`;
+      pageWrap.style.minHeight = z === 1 ? "" : `${297 * z + 20}mm`;
+      zoomLabel.textContent = Math.round(z * 100) + "%";
+      localStorage.setItem(zoomKey, String(zoomIdx));
+    }
+    document.getElementById("zoomOut").addEventListener("click", () => {
+      if (zoomIdx > 0) { zoomIdx--; applyZoom(); }
+    });
+    document.getElementById("zoomIn").addEventListener("click", () => {
+      if (zoomIdx < zoomLevels.length - 1) { zoomIdx++; applyZoom(); }
+    });
+    applyZoom();
+  </script>
+</body>
+</html>

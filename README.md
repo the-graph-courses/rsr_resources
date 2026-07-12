@@ -18,11 +18,11 @@ Open `index.html` in a browser. Use the sidebar to navigate between resources.
 
 ## Development
 
-Interactive implementations live in `explorers/`. The regression assumptions explorer is built from `regression-diagnostics.jsx` into `explorers/regression-diagnostics.bundle.js`.
+Interactive implementations live in `explorers/`. The regression diagnostics explorer is built from `explorers/regression-diagnostics.jsx` into `explorers/regression-diagnostics.bundle.js`.
 
 ```bash
 npm install
 npm run build
 ```
 
-Run `npm run build` after editing `regression-diagnostics.jsx`. The generated bundle is committed so the site can still be deployed as static files.
+Run `npm run build` after editing `explorers/regression-diagnostics.jsx`. The generated bundle is committed so the site can still be deployed as static files.

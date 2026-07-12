@@ -1,0 +1,1343 @@
+---
+title: "Regression diagnostics: the SUNSHINE checks"
+subtitle: "WebR practical: diagnosing and fixing linear regression problems"
+author: "GRAPH Courses"
+format:
+  html:
+    toc: false
+    number-sections: false
+    theme: cosmo
+    page-layout: full
+engine: knitr
+filters:
+  - webr
+webr:
+  show-startup-message: false
+  show-header-message: false
+  packages: ['tidyverse', 'performance', 'see', 'patchwork', 'qqplotr', 'sandwich', 'lmtest']
+---
+
+<style>
+:root {
+  --dark-teal: #00565e;
+  --light-teal: #5fbfbf;
+  --light-teal-soft: #e3f4f4;
+  --gold: #f5c542;
+  --rose: #b83b5e;
+  --ink: #173234;
+  --muted: #5d7475;
+  --page: #f4f7f7;
+  --card: #ffffff;
+  --border: #d0dede;
+  --good: #287a4d;
+  --good-bg: #e8f8ef;
+  --bad: #b83b3b;
+  --bad-bg: #fdecea;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.quarto-title-block { display: none; }
+
+.page-shell {
+  width: min(900px, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding: 1.25rem 0 3rem;
+}
+
+.masthead {
+  background: var(--dark-teal);
+  color: #fff;
+  border-radius: 8px;
+  border-left: 6px solid var(--gold);
+  padding: 1.4rem 1.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.eyebrow {
+  color: var(--gold);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+.masthead h1 {
+  color: #fff;
+  font-size: 1.6rem;
+  line-height: 1.15;
+  font-weight: 800;
+  margin: 0;
+}
+
+.masthead p {
+  max-width: 700px;
+  margin: 0.55rem 0 0;
+  color: #d3eded;
+  font-size: 0.98rem;
+}
+
+.panel, .practice, .callout, .webr-wrap {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.panel {
+  padding: 1.15rem 1.3rem;
+  margin-bottom: 1rem;
+}
+
+.panel h2 {
+  color: var(--dark-teal);
+  font-weight: 800;
+  margin-top: 0;
+  font-size: 1.3rem;
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 0.45rem;
+  margin-bottom: 0.8rem;
+}
+
+.panel h3 { color: var(--dark-teal); font-size: 1.05rem; font-weight: 800; }
+
+.panel p:last-child, .callout p:last-child { margin-bottom: 0; }
+
+.tight-list { padding-left: 1.15rem; margin-bottom: 0; }
+.tight-list li { margin-bottom: 0.35rem; }
+
+.practice {
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  border-top: 4px solid var(--gold);
+}
+
+.practice .practice-title {
+  color: var(--dark-teal);
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+}
+
+.practice p { margin-bottom: 0.7rem; }
+
+.choice-set { display: grid; gap: 0.5rem; margin: 0.8rem 0; }
+
+.choice-set label {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 0.72rem 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.choice-set label:hover {
+  border-color: var(--light-teal);
+  background: #edf8f8;
+}
+
+.choice-set input {
+  appearance: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid #aacaca;
+  border-radius: 50%;
+  margin-top: 0.15rem;
+  flex: 0 0 auto;
+}
+
+.choice-set input:checked {
+  border-color: var(--dark-teal);
+  background:
+    radial-gradient(circle at center, #fff 0 34%, transparent 36%),
+    var(--dark-teal);
+}
+
+.practice button {
+  background: var(--dark-teal);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.55rem 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.practice button:hover { background: #003f45; }
+
+.practice .practice-feedback {
+  display: none;
+  margin-top: 0.8rem;
+  border-radius: 8px;
+  padding: 0.75rem 0.85rem;
+}
+
+.practice.is-correct .practice-feedback {
+  display: block;
+  background: var(--good-bg);
+  color: #173a26;
+  border: 1px solid #a9dab9;
+}
+
+.practice.is-incorrect .practice-feedback {
+  display: block;
+  background: var(--bad-bg);
+  color: #4b1c1c;
+  border: 1px solid #e6b1b1;
+}
+
+.practice label.correct-choice { border-color: var(--good); background: var(--good-bg); }
+.practice label.incorrect-choice { border-color: var(--bad); background: var(--bad-bg); }
+
+.callout {
+  padding: 1rem 1.15rem;
+  border-left: 5px solid var(--light-teal);
+  margin: 1rem 0;
+}
+
+.callout.warning { border-left-color: var(--gold); background: #fffaf0; }
+.callout.zoom { border-left-color: var(--rose); background: #fdf3f6; }
+
+.webr-wrap {
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  border-top: 4px solid var(--light-teal);
+}
+
+.webr-wrap h3 { color: var(--dark-teal); font-size: 1rem; margin-top: 0; }
+
+.answer { margin-top: 0.7rem; }
+.answer summary { cursor: pointer; font-weight: 700; color: var(--dark-teal); }
+.answer[open] summary { margin-bottom: 0.4rem; }
+
+code {
+  background: rgba(0, 86, 94, 0.08);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  color: #123638;
+}
+
+.qwebr-output-code-stdout pre, .qwebr-output-code-stderr pre { white-space: pre-wrap; }
+
+.panel.completion { border-top: 4px solid var(--gold); }
+
+.code-progress { font-weight: 800; color: var(--dark-teal); }
+
+.code-box {
+  display: none;
+  text-align: center;
+  background: var(--dark-teal);
+  color: #fff;
+  border-radius: 8px;
+  padding: 1.1rem;
+  margin-top: 0.6rem;
+}
+
+.code-box .code-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.code-box .code-value {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin-top: 0.3rem;
+}
+
+.footer-note { color: var(--muted); text-align: center; margin-top: 2rem; font-size: 0.9rem; }
+
+.sunshine-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.9rem 0 0.4rem;
+  font-size: 0.93rem;
+}
+
+.sunshine-table th, .sunshine-table td {
+  border: 1px solid var(--border);
+  padding: 0.45rem 0.65rem;
+  text-align: left;
+}
+
+.sunshine-table thead th {
+  background: var(--dark-teal);
+  color: #fff;
+  font-weight: 700;
+}
+
+.sunshine-table .letter {
+  font-weight: 800;
+  font-size: 1.05rem;
+  text-align: center;
+  width: 2.2rem;
+}
+.sunshine-table .plot-check td { background: var(--light-teal-soft); }
+
+/* Plots rendered by webR are canvases inside figure.qwebr-canvas-image:
+   make them zoomable (code editors also contain canvases, so scope tightly) */
+figure.qwebr-canvas-image canvas { cursor: zoom-in; }
+
+#plot-lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(7, 32, 34, 0.93);
+  cursor: zoom-out;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+}
+
+#plot-lightbox.open { display: flex; }
+
+#plot-lightbox img {
+  max-width: 96vw;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+#plot-lightbox .lightbox-hint { color: #cfe9e9; font-size: 0.85rem; }
+
+.flow-diagram {
+  margin: 1rem 0 0.2rem;
+  padding: 0.85rem 0.75rem 1rem;
+  background: #f2f9f9;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow-x: auto;
+}
+.flow-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem 0.55rem;
+}
+.flow-step {
+  background: var(--dark-teal);
+  color: #fff;
+  border-radius: 8px;
+  padding: 0.65rem 0.9rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-align: center;
+  min-width: 6.5rem;
+}
+.flow-step.ask {
+  background: #fff;
+  color: var(--ink);
+  border: 2.5px solid var(--rose);
+}
+.flow-step.yes-path { background: var(--rose); }
+.flow-step.no-path { background: var(--good); }
+.flow-arrow {
+  color: var(--dark-teal);
+  font-weight: 800;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+.flow-branch {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 10.5rem;
+}
+.flow-branch-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.flow-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  min-width: 1.6rem;
+}
+.flow-label.yes { color: var(--rose); }
+.flow-label.no { color: var(--good); }
+.flow-caption {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin: 0.55rem 0 0;
+  text-align: center;
+}
+.flow-checks {
+  margin: 0.85rem 0 0;
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.86rem;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.flow-checks th, .flow-checks td {
+  border: 1px solid var(--border);
+  padding: 0.45rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+.flow-checks th {
+  background: var(--dark-teal);
+  color: #fff;
+  font-weight: 700;
+}
+.flow-checks code {
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.flow-checks .when { color: var(--muted); }
+</style>
+
+<div class="page-shell">
+
+<header class="masthead">
+  <div class="eyebrow">WebR practical</div>
+  <h1>Regression diagnostics: the SUNSHINE checks</h1>
+  <p>This practical teaches the checks you can run with <code>performance::check_model()</code>.</p>
+</header>
+
+<section class="panel">
+
+<h2>Overview: the SUNSHINE acronym</h2>
+
+<table class="sunshine-table">
+  <thead>
+    <tr><th></th><th>Check</th><th>Question it asks</th><th>How you check it</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="letter">S</td><td>Sample size</td><td>Do you have enough observations for your model?</td><td>Count rows vs. parameters</td></tr>
+    <tr><td class="letter">U</td><td>Uncorrelated errors</td><td>Are the residuals independent of each other?</td><td>Think about the data collection</td></tr>
+    <tr class="plot-check"><td class="letter">N</td><td>No multicollinearity</td><td>Are the predictors too correlated? (multiple regression only)</td><td><code>check_model()</code></td></tr>
+    <tr class="plot-check"><td class="letter">S</td><td>Shape (linearity)</td><td>Is the relationship actually a straight line?</td><td><code>check_model()</code></td></tr>
+    <tr class="plot-check"><td class="letter">H</td><td>Homogeneity of variance</td><td>Does the spread of residuals stay constant?</td><td><code>check_model()</code></td></tr>
+    <tr class="plot-check"><td class="letter">I</td><td>Influential points</td><td>Is any single point pulling the line too much?</td><td><code>check_model()</code></td></tr>
+    <tr class="plot-check"><td class="letter">N</td><td>Normality of residuals</td><td>Do the prediction errors follow a bell curve?</td><td><code>check_model()</code></td></tr>
+    <tr><td class="letter">E</td><td>Exogeneity</td><td>Is the predictor independent of the error term?</td><td>Domain knowledge, not plots</td></tr>
+  </tbody>
+</table>
+
+<p>Sample size (<strong>S</strong>), uncorrelated errors (<strong>U</strong>), and exogeneity (<strong>E</strong>) still matter, but you cannot judge them from residual plots. This practical covers the highlighted rows only.</p>
+
+</section>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 1</div>
+  <p>Which SUNSHINE checks can you <em>not</em> assess with <code>check_model()</code> plots?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p1" value="a">Sample size, uncorrelated errors, and exogeneity.</label>
+<label><input type="radio" name="p1" value="b">Shape, homogeneity, and normality of residuals.</label>
+<label><input type="radio" name="p1" value="c">No multicollinearity and influential points.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Those three need other tools. The highlighted rows are the ones with check_model() panels." data-incorrect="Not quite. Sample size, uncorrelated errors, and exogeneity cannot be judged from these residual plots."></div>
+</div>
+
+<section class="panel">
+
+<h2>The <code>check_*</code> functions from <code>performance</code></h2>
+
+<p>Besides the plots from <code>check_model()</code>, the <code>performance</code> package also has formal check functions. Each one focuses on one problem and often returns a p-value.</p>
+
+<p>These tests can be very sensitive. In a large sample, they may flag tiny departures that do not matter in practice. So look at the plots first. Run a formal <code>check_*</code> function only if a panel already looks wrong.</p>
+
+```{=html}
+<div class="flow-diagram" aria-label="Diagnostic steps: fit model, check plots, then formal test only if needed">
+  <div class="flow-row">
+    <div class="flow-step">Fit model</div>
+    <div class="flow-arrow" aria-hidden="true">&rarr;</div>
+    <div class="flow-step">check_model()</div>
+    <div class="flow-arrow" aria-hidden="true">&rarr;</div>
+    <div class="flow-step ask">Does a panel<br>show a problem?</div>
+    <div class="flow-branch">
+      <div class="flow-branch-row">
+        <span class="flow-label yes">yes</span>
+        <div class="flow-step yes-path">Run matching<br>formal check</div>
+      </div>
+      <div class="flow-branch-row">
+        <span class="flow-label no">no</span>
+        <div class="flow-step no-path">Stop; no formal test</div>
+      </div>
+    </div>
+  </div>
+  <table class="flow-checks">
+    <thead>
+      <tr><th>If this panel looks wrong</th><th>Then run</th><th>What it does</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Homogeneity of Variance</td>
+        <td><code>check_heteroscedasticity()</code></td>
+        <td class="when">Breusch–Pagan test for unequal residual variance</td>
+      </tr>
+      <tr>
+        <td>Influential Observations</td>
+        <td><code>check_outliers()</code></td>
+        <td class="when">Flags which rows look influential / outlying</td>
+      </tr>
+      <tr>
+        <td>Normality of Residuals (Q–Q)</td>
+        <td><code>check_normality()</code></td>
+        <td class="when">Shapiro–Wilk test for non-normal residuals</td>
+      </tr>
+      <tr>
+        <td>Collinearity (VIF)</td>
+        <td><code>check_collinearity()</code></td>
+        <td class="when">Reports VIF for each predictor</td>
+      </tr>
+      <tr>
+        <td>Linearity</td>
+        <td><em>No formal check</em></td>
+        <td class="when">The plot is the check; fix the model form if curved</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="flow-caption">Look at the plots first. Run a formal <code>check_*</code> function only if its matching panel already suggests a problem.</p>
+</div>
+```
+
+</section>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 2</div>
+  <p>The Homogeneity panel shows a clear upward slope. What should you do next?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p2" value="a">Run <code>check_normality()</code> instead.</label>
+<label><input type="radio" name="p2" value="b">Run <code>check_heteroscedasticity()</code> for that panel.</label>
+<label><input type="radio" name="p2" value="c">Ignore the plot and trust the model summary p-values.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The plot already points to a problem, so you follow up with the matching formal check." data-incorrect="Not quite. Run the matching formal check for that panel, and only after the plot already looks wrong."></div>
+</div>
+
+<section class="panel">
+
+<h2>Part 1. S: Shape (linearity)</h2>
+
+<p>Here, we simulate a dataset which we will use to predict quiz scores from study hours.</p>
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: look at the data</h3>
+
+```{webr-r}
+library(tidyverse)
+library(performance)
+library(qqplotr)
+
+# Simulate quiz scores vs study hours
+set.seed(4)
+quiz <- data.frame(study_hours = round(runif(80, 1, 60), 1))
+quiz$quiz_score <- round(pmin(22 + 18 * log(quiz$study_hours) +
+                                rnorm(80, 0, 4.5), 100), 1)
+
+# Look at the scatter: quiz_score vs study_hours
+ggplot(quiz, aes(x = study_hours, y = quiz_score)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x = "Weekly study hours", y = "Quiz score (%)")
+```
+
+</div>
+
+<div class="webr-wrap">
+
+<h3>R code: fit the model and run <code>check_model()</code></h3>
+
+```{webr-r}
+#| fig-width: 10
+#| fig-height: 11
+#| out-width: 100%
+# Model to predict quiz scores from study hours
+m_quiz <- lm(____ ~ ____, data = quiz)
+
+# Run the check_model() function on the fitted model (click the plot to enlarge)
+_______(____)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+m_quiz <- lm(quiz_score ~ study_hours, data = quiz)
+check_model(m_quiz)
+```
+
+The Linearity panel should show a clear arch. There is no separate formal check for linearity; the plot is the check.
+
+</details>
+
+<section class="panel">
+
+<h3>Fix: transform the predictor</h3>
+
+<p>A common fix for this curved pattern is to <strong>log transform the predictor</strong> (other options include a square-root transform, a squared term, or a non-linear model). If you ignore the curve, the slope is biased and the standard errors and confidence intervals are based on the wrong model.</p>
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: apply the fix</h3>
+
+```{webr-r}
+#| fig-width: 10
+#| fig-height: 11
+#| out-width: 100%
+# Model to predict quiz scores from log of study hours
+m_quiz_log <- lm(quiz_score ~ ____(study_hours), data = quiz)
+
+# Run the check_model() function on the fitted model
+_______(____)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+m_quiz_log <- lm(quiz_score ~ log(study_hours), data = quiz)
+check_model(m_quiz_log)
+```
+
+The Linearity panel should look better: even if the green line wiggles a little, its confidence band should cover zero. The rounded coefficients are intercept <code>21.35</code> and <code>log(study_hours)</code> slope <code>18.13</code>.
+
+</details>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 3</div>
+  <p>In the Linearity panel, the green line may wiggle a little. What still reassures you that linearity is okay?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p3" value="a">The residuals still sum to roughly zero.</label>
+<label><input type="radio" name="p3" value="b">The confidence band around the line still covers zero.</label>
+<label><input type="radio" name="p3" value="c">The residuals get smaller as fitted values increase.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. A little wiggle is fine if the confidence band still covers the zero line. Residuals summing to zero happens in almost any OLS fit." data-incorrect="Not quite. Residuals often sum to about zero even with a clear curve. What matters is whether the confidence band still covers zero."></div>
+</div>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 4</div>
+  <p>Suppose you ignored the curvature and reported the straight-line model anyway. What is the main cost?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p4" value="a">The slope is biased, and predictions are systematically off.</label>
+<label><input type="radio" name="p4" value="b">The slope is fine, but p-values become slightly conservative.</label>
+<label><input type="radio" name="p4" value="c">Nothing changes, as long as R² is high.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. A straight line cannot capture a curve, so the slope and predictions are wrong in a systematic way." data-incorrect="Not quite. With a curved truth, the straight-line slope is biased and predictions are off in some regions of x. A high R² does not fix that."></div>
+</div>
+
+<section class="panel">
+
+<h2>Part 2. H: Homogeneity of variance</h2>
+
+<p>Here, we simulate a dataset which we will use to predict medical spending from household income.</p>
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: look at the data</h3>
+
+```{webr-r}
+# Simulate medical spending vs income
+set.seed(11)
+spend <- data.frame(income = round(runif(120, 20, 120), 1))
+spend$spending <- round(200 + 12 * spend$income +
+                          rnorm(120, 0, 4.2 * spend$income))
+
+# Look at the scatter: spending vs income
+ggplot(spend, aes(x = income, y = spending)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x = "Household income ($K)", y = "Medical spending ($)")
+```
+
+</div>
+
+<div class="webr-wrap">
+
+<h3>R code: fit the model and run <code>check_model()</code></h3>
+
+```{webr-r}
+#| fig-width: 10
+#| fig-height: 11
+#| out-width: 100%
+# Model to predict medical spending from household income
+m_spend <- lm(____ ~ ____, data = spend)
+
+# Run the check_model() function on the fitted model
+_______(____)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+m_spend <- lm(spending ~ income, data = spend)
+check_model(m_spend)
+```
+
+The Homogeneity panel shows an upward-sloping reference line. Because that panel looks wrong, we follow up with a formal check.
+
+</details>
+
+<div class="webr-wrap">
+
+<h3>R code: formal check after a problem in the plot</h3>
+
+```{webr-r}
+# Homogeneity panel looked wrong: pass m_spend to the check_heteroscedasticity() function
+# This function runs a Breusch-Pagan test for unequal residual variance
+check_heteroscedasticity(____)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+check_heteroscedasticity(m_spend)
+```
+
+You should see a message such as heteroscedasticity detected (<code>p &lt; .001</code>).
+
+</details>
+
+<section class="panel">
+
+<h3>Fix: transform the outcome, or use robust SEs</h3>
+
+<p>A common fix is to <strong>log transform the outcome</strong>. If you want to keep spending in dollars, keep the same slope and fix only the uncertainty with heteroscedasticity-robust standard errors (for example HC3).</p>
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: apply the log fix</h3>
+
+```{webr-r}
+#| fig-width: 10
+#| fig-height: 11
+#| out-width: 100%
+# Model to predict medical spending from log of household income
+m_spend_log <- lm(____(spending) ~ income, data = spend)
+
+# Run the check_model() function on the fitted model
+_______(____)
+```
+
+```{webr-r}
+# Again, run the check_heteroscedasticity() function on the fitted model
+check_heteroscedasticity(m_spend_log)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+m_spend_log <- lm(log(spending) ~ income, data = spend)
+check_model(m_spend_log)
+check_heteroscedasticity(m_spend_log)
+```
+
+The Homogeneity reference line becomes flatter, and the Breusch–Pagan result changes from heteroscedasticity detected (<code>p &lt; .001</code>) to OK (<code>p = 0.450</code>).
+
+</details>
+
+<div class="webr-wrap">
+
+<h3>R code: alternative fix with HC3 robust SEs</h3>
+
+```{webr-r}
+library(lmtest)
+library(sandwich)
+
+# Same slope as m_spend, but SEs that do not assume constant variance
+# Replace the blank with "HC3"
+coeftest(m_spend, vcov = vcovHC(m_spend, type = ____))
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+coeftest(m_spend, vcov = vcovHC(m_spend, type = "HC3"))
+```
+
+Compare this with <code>summary(m_spend)</code>: the coefficient on income stays the same, but the standard error and p-value change.
+
+</details>
+
+<div class="practice" data-answer="c">
+  <div class="practice-title">Question 5</div>
+  <p>Under clear heteroscedasticity, why are the usual confidence intervals unreliable?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p5" value="a">The slope estimate becomes badly biased.</label>
+<label><input type="radio" name="p5" value="b">The residuals can no longer sum to zero.</label>
+<label><input type="radio" name="p5" value="c">The usual SE formula assumes constant variance.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The slope is usually still unbiased. The problem is the uncertainty: the SE formula assumes constant variance." data-incorrect="Not quite. Heteroscedasticity usually leaves the slope unbiased. The SE formula assumes constant variance, so CIs and p-values become untrustworthy."></div>
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 6</div>
+  <p>You want to keep modelling spending on its original dollar scale (no log or other transformation). Which fix addresses the heteroscedasticity while leaving the fitted slope untouched?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p6" value="a">Remove the highest-income households until the fan disappears.</label>
+<label><input type="radio" name="p6" value="b">Use heteroscedasticity-robust standard errors (for example HC3).</label>
+<label><input type="radio" name="p6" value="c">Increase the significance threshold from 0.05 to 0.10.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Robust standard errors keep the same slope and fix only the uncertainty calculation." data-incorrect="Not quite. Deleting valid data or moving the significance cutoff are not fixes. Robust SEs recompute uncertainty without assuming constant variance."></div>
+</div>
+
+<section class="panel">
+
+<h2>Part 3. I: Influential points</h2>
+
+<p>Here, we simulate a dataset which we will use to predict total cholesterol from BMI. We add one suspicious record with <code>bmi = 42</code> and <code>total_chol = 130</code>.</p>
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: look at the data</h3>
+
+```{webr-r}
+# Simulate total cholesterol vs BMI
+set.seed(7)
+chol <- data.frame(bmi = round(rnorm(40, 26, 3), 1))
+chol$total_chol <- round(120 + 4.5 * chol$bmi + rnorm(40, 0, 9), 0)
+chol <- bind_rows(chol, data.frame(bmi = 42, total_chol = 130))
+
+# Look at the scatter
+ggplot(chol, aes(x = bmi, y = total_chol)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x = "BMI", y = "Total cholesterol (mg/dL)")
+```
+
+</div>
+
+<div class="webr-wrap">
+
+<h3>R code: fit the model and run <code>check_model()</code></h3>
+
+```{webr-r}
+#| fig-width: 10
+#| fig-height: 11
+#| out-width: 100%
+# Model to predict total cholesterol from BMI
+m_chol <- lm(____ ~ ____, data = chol)
+
+# Run the check_model() function on the fitted model
+_______(____)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+m_chol <- lm(total_chol ~ bmi, data = chol)
+check_model(m_chol)
+```
+
+One point falls outside the Cook's distance contours in the Influential Observations panel. Because that panel raises a flag, we follow up with a formal check.
+
+</details>
+
+<div class="webr-wrap">
+
+<h3>R code: formal check after a problem in the plot</h3>
+
+```{webr-r}
+# Influential Observations panel looked wrong: pass m_chol to the check_outliers() function
+# This function identifies outliers based on Cook's distance
+check_outliers(____)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+check_outliers(m_chol)
+```
+
+</details>
+
+<section class="panel">
+
+<h3>Fix: investigate, then sensitivity analysis</h3>
+
+<p>First ask why the point is unusual. If it is a data error, correct or remove it and refit; if it is a real observation, keep it and report results with and without that point. Here the record does not look plausible, so we treat it as an error and refit without it.</p>
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: refit without the flagged row</h3>
+
+```{webr-r}
+# Replace first blank with the flagged row number from check_outliers()
+chol_clean <- chol %>% slice(-____)
+
+# Replace blanks with total_chol, bmi, and chol_clean
+m_chol_clean <- lm(____ ~ ____, data = ____)
+
+# Compare slopes with vs without the flagged point
+coef(m_chol)
+coef(m_chol_clean)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+chol_clean <- chol %>% slice(-41)
+m_chol_clean <- lm(total_chol ~ bmi, data = chol_clean)
+```
+
+With the bad point, the BMI slope is <code>0.63</code> (p = 0.55). Without it, the slope is <code>5.29</code> (p &lt; .001).
+
+</details>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 7</div>
+  <p>Which pair of ingredients does Cook's distance combine to flag a point as influential?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p7" value="a">Sample size and the model's R².</label>
+<label><input type="radio" name="p7" value="b">Leverage and residual size.</label>
+<label><input type="radio" name="p7" value="c">Number of predictors and residual SE.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Influence needs both an unusual x-value (leverage) and a large residual." data-incorrect="Not quite. Cook's distance combines leverage (unusual x) and residual size (distance from the line)."></div>
+</div>
+
+<div class="practice" data-answer="c">
+  <div class="practice-title">Question 8</div>
+  <p>Suppose the flagged record had turned out to be a <em>genuine</em> patient, verified in the source records. What is the right move?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p8" value="a">Delete it anyway; influential points invalidate the model and make the results unreliable.</label>
+<label><input type="radio" name="p8" value="b">Keep it and say nothing; real data must never be questioned.</label>
+<label><input type="radio" name="p8" value="c">Keep it, and consider reporting results without it in addition.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Keep genuine data, but also show how much that one point changes the result." data-incorrect="Not quite. Do not silently delete real data, and do not hide that one point drives the conclusion. Report both fits."></div>
+</div>
+
+<section class="panel">
+
+<h2>Part 4. N: Normality of residuals</h2>
+
+<p>Here, we simulate a fairly large dataset (n = 150) to predict ER visits from neighborhood poverty rate. The residuals are right-skewed on purpose. Even if the Q–Q panel looks imperfect, with n above about 100 we can usually ignore mild non-normality for ordinary inference.</p>
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: look at the data</h3>
+
+```{webr-r}
+# Simulate ER visits vs poverty (n = 150; right-skewed residuals)
+set.seed(30)
+er <- data.frame(poverty = round(runif(150, 3, 42), 1))
+er$er_visits <- round((60 + 3.2 * er$poverty) * exp(rnorm(150, 0, 0.35)))
+
+# Look at the scatter
+ggplot(er, aes(x = poverty, y = er_visits)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x = "Neighborhood poverty rate (%)", y = "ER visits per 1,000")
+```
+
+</div>
+
+<div class="webr-wrap">
+
+<h3>R code: fit the model and run <code>check_model()</code></h3>
+
+```{webr-r}
+#| fig-width: 10
+#| fig-height: 11
+#| out-width: 100%
+# Model to predict ER visits from neighborhood poverty rate
+m_er <- lm(____ ~ ____, data = er)
+
+# Run the check_model() function on the fitted model
+_______(____)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+m_er <- lm(er_visits ~ poverty, data = er)
+check_model(m_er)
+```
+
+The Q–Q panel may look imperfect in the tails. Because the panel raises a flag, we can follow up with a formal check.
+
+</details>
+
+<div class="webr-wrap">
+
+<h3>R code: formal check after a problem in the plot</h3>
+
+```{webr-r}
+# Q-Q panel looked imperfect: pass m_er to the check_normality() function
+# This function runs a Shapiro-Wilk test for normality
+check_normality(____)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+check_normality(m_er)
+```
+
+The test may still flag non-normality. With n = 150, that is usually not a reason to transform or refit. For OLS inference, this check matters most in small samples.
+
+</details>
+
+<section class="panel">
+
+<h3>What to do when n is large</h3>
+
+<p>We do <strong>not</strong> apply a fix here. The slope is usually still fine, and with n above about 100 the usual confidence intervals and p-values are still useful even when residuals are not perfectly normal. Save transforms and other fixes for when n is small, or when another panel (linearity, homogeneity, influence) is clearly broken.</p>
+
+</section>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 9</div>
+  <p>In a detrended Q–Q plot, the dots follow the zero line through the middle but rise far above the shaded band at the right-hand end. What does this most likely indicate?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p9" value="a">Right-skewed residuals.</label>
+<label><input type="radio" name="p9" value="b">Approximately normal residuals.</label>
+<label><input type="radio" name="p9" value="c">Heteroscedasticity (unequal variance).</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Points escaping the band at the right end point to a long right tail." data-incorrect="Not quite. Leaving the band at one end means the extreme residuals are too large there: right skew. Unequal variance is read from the Homogeneity panel."></div>
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 10</div>
+  <p>For which situation does the normality-of-residuals assumption matter <em>most</em>?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p10" value="a">A very large sample (n = 5,000).</label>
+<label><input type="radio" name="p10" value="b">A small sample (n &lt; 30).</label>
+<label><input type="radio" name="p10" value="c">It matters equally at every sample size.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. In small samples, CIs and p-values lean directly on normality. In large samples the CLT helps." data-incorrect="Not quite. Large samples get help from the central limit theorem. The assumption matters most when n is small."></div>
+</div>
+
+<section class="panel">
+
+<h2>Part 5. N: No multicollinearity</h2>
+
+<p>Here, we simulate a dataset which we will use to predict children's height from age and school grade.</p>
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: look at the data</h3>
+
+```{webr-r}
+# Simulate height from age
+set.seed(33)
+kids <- data.frame(age = round(runif(100, 6, 12), 1))
+kids$grade  <- pmax(round(kids$age - 5 + rnorm(100, 0, 0.3)), 1)
+kids$height <- round(80 + 5.5 * kids$age + rnorm(100, 0, 4), 1)
+
+# Look at height vs age (left) and age vs grade (right)
+p1 <- ggplot(kids, aes(x = age, y = height)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x = "Age (years)", y = "Height (cm)")
+
+p2 <- ggplot(kids, aes(x = age, y = grade)) +
+  geom_point() +
+  labs(x = "Age (years)", y = "School grade")
+
+p1 + p2
+```
+
+</div>
+
+<div class="webr-wrap">
+
+<h3>R code: fit the model and run <code>check_model()</code></h3>
+
+```{webr-r}
+#| fig-width: 10
+#| fig-height: 11
+#| out-width: 100%
+# Model to predict children's height from age and school grade
+m_kids <- lm(____ ~ ____ + ____, data = kids)
+summary(m_kids)
+
+# Run the check_model() function on the fitted model
+check_model(____)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+m_kids <- lm(height ~ age + grade, data = kids)
+check_model(m_kids)
+```
+
+The Collinearity (VIF) panel shows high bars. Because that panel raises a flag, we follow up with a formal check.
+
+</details>
+
+<div class="webr-wrap">
+
+<h3>R code: formal check after a problem in the plot</h3>
+
+```{webr-r}
+# Collinearity panel looked wrong: pass m_kids to get the VIF table
+check_collinearity(____)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+check_collinearity(m_kids)
+```
+
+</details>
+
+<section class="panel">
+
+<h3>Fix: drop or combine a redundant predictor</h3>
+
+<p>If two predictors measure the same thing, keep the one that matters for your question, or combine them into one score. If you only need prediction and will not interpret individual coefficients, collinearity matters less and you can keep both.</p>
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: apply the fix</h3>
+
+```{webr-r}
+# Model to predict children's height from age only (drop grade)
+m_kids_age <- lm(height ~ ____, data = kids)
+
+# Compare the age coefficient and its SE with and without grade
+summary(m_kids)$coefficients["age", ]
+summary(m_kids_age)$coefficients["age", ]
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+m_kids_age <- lm(height ~ age, data = kids)
+```
+
+With both predictors, VIF is about <code>19.5</code>, the age slope is <code>4.09</code>, and the SE is <code>1.08</code>. With age alone, the slope is <code>5.63</code> and the SE is <code>0.25</code>.
+
+</details>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 11</div>
+  <p>Age and grade have VIFs around 19 in the two-predictor model. What is the main consequence for the coefficient estimates?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p11" value="a">Individual coefficients become unstable, with larger SEs.</label>
+<label><input type="radio" name="p11" value="b">Overall height predictions become badly inaccurate.</label>
+<label><input type="radio" name="p11" value="c">The residuals become non-normal.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Overall prediction can still be fine. What breaks is separating the two overlapping predictors." data-incorrect="Not quite. Collinearity mainly inflates the SEs of individual coefficients. Overall prediction and residual normality are not the main issue."></div>
+</div>
+
+<section class="panel">
+
+<h2>Recap</h2>
+
+<ul class="tight-list">
+  <li><strong>N: No multicollinearity.</strong> High VIF and inflated standard errors mean you should drop or combine redundant predictors.</li>
+  <li><strong>S: Shape.</strong> A curve in the Linearity panel means the slope is biased. Transform the predictor or change the model form.</li>
+  <li><strong>H: Homogeneity.</strong> A rising scale–location line means the standard errors and confidence intervals are unreliable. Log the outcome or use robust standard errors.</li>
+  <li><strong>I: Influential points.</strong> Points outside the Cook's distance contour need investigation. Fix data errors if you find them; otherwise report results with and without the point.</li>
+  <li><strong>N: Normality.</strong> Q–Q dots outside the band suggest non-normal residuals. This matters most in small samples; with n above about 100 you can usually ignore mild problems.</li>
+  <li>Look at the full <code>check_model()</code> plots first. Run formal <code>check_*</code> tests only if a panel suggests a problem.</li>
+  <li><strong>S, U, and E</strong> still belong on the checklist, but you cannot settle them from these plots alone.</li>
+</ul>
+
+</section>
+
+<section class="panel completion">
+
+<h2>Completion code</h2>
+
+<p>Answer at least 8 out of 11 questions correctly to reveal your completion code.</p>
+
+<p><span class="code-progress" id="code-progress">0 of 11 correct (need at least 8)</span></p>
+
+<div class="code-box" id="code-box">
+  <div class="code-label">Your completion code</div>
+  <div class="code-value" id="code-value"></div>
+</div>
+
+</section>
+
+<p class="footer-note">GRAPH Courses practical | Regression diagnostics: the SUNSHINE checks</p>
+
+</div>
+
+<div id="plot-lightbox" aria-hidden="true">
+  <img alt="Enlarged diagnostic plot">
+  <div class="lightbox-hint">Click anywhere or press Esc to close</div>
+</div>
+
+<script>
+const COMPLETION_CODE = "SUNSHINE";
+const COMPLETION_REQUIRED = 8;
+
+function updateCompletion() {
+  const cards = document.querySelectorAll(".practice");
+  const correct = document.querySelectorAll(".practice.is-correct").length;
+  const total = cards.length;
+  const progress = document.getElementById("code-progress");
+  const box = document.getElementById("code-box");
+  const value = document.getElementById("code-value");
+
+  if (progress) {
+    progress.textContent = correct + " of " + total + " correct (need at least " + COMPLETION_REQUIRED + ")";
+  }
+
+  if (box && value) {
+    if (correct >= COMPLETION_REQUIRED) {
+      value.textContent = COMPLETION_CODE;
+      box.style.display = "block";
+    } else {
+      box.style.display = "none";
+    }
+  }
+}
+
+document.querySelectorAll(".practice").forEach((card) => {
+  const button = card.querySelector("button");
+  const feedback = card.querySelector(".practice-feedback");
+  const answer = card.dataset.answer;
+
+  button.addEventListener("click", () => {
+    const selected = card.querySelector("input[type='radio']:checked");
+    card.classList.remove("is-correct", "is-incorrect");
+    card.querySelectorAll("label").forEach((label) => {
+      label.classList.remove("correct-choice", "incorrect-choice");
+    });
+
+    if (!selected) {
+      card.classList.add("is-incorrect");
+      feedback.textContent = "Choose an answer first, then check it.";
+      updateCompletion();
+      return;
+    }
+
+    const selectedLabel = selected.closest("label");
+    const correctInput = card.querySelector(`input[value="${answer}"]`);
+    const correctLabel = correctInput ? correctInput.closest("label") : null;
+
+    if (selected.value === answer) {
+      card.classList.add("is-correct");
+      selectedLabel.classList.add("correct-choice");
+      feedback.textContent = feedback.dataset.correct;
+    } else {
+      card.classList.add("is-incorrect");
+      selectedLabel.classList.add("incorrect-choice");
+      if (correctLabel) correctLabel.classList.add("correct-choice");
+      feedback.textContent = feedback.dataset.incorrect;
+    }
+
+    updateCompletion();
+  });
+});
+
+updateCompletion();
+
+/* ── Pop-up viewer for webR plots ─────────────────────────────────────
+   webR draws each plot onto a <canvas>. Clicking any canvas copies it
+   into a full-screen lightbox so cramped multi-panel diagnostics
+   (especially check_model output) can be inspected properly. */
+(function () {
+  const overlay = document.getElementById("plot-lightbox");
+  const img = overlay.querySelector("img");
+
+  function closeLightbox() {
+    overlay.classList.remove("open");
+    img.removeAttribute("src");
+  }
+
+  overlay.addEventListener("click", closeLightbox);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeLightbox();
+  });
+
+  document.addEventListener("click", (e) => {
+    const canvas = e.target.closest("figure.qwebr-canvas-image canvas");
+    if (!canvas || overlay.contains(canvas)) return;
+    try {
+      img.src = canvas.toDataURL("image/png");
+      overlay.classList.add("open");
+    } catch (err) {
+      /* canvas not readable: ignore */
+    }
+  });
+})();
+</script>
