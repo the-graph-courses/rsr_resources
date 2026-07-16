@@ -2053,7 +2053,7 @@ function PrintDeck(){
     <PrintSlide>
       <div style={{textAlign:"center",padding:"28px 10px 18px"}}>
         <div style={{height:5,maxWidth:420,margin:"0 auto 18px",background:`linear-gradient(90deg, ${C.gold}, ${C.tealLight}, ${C.teal})`,borderRadius:4}}/>
-        <h1 style={{fontSize:34,fontWeight:800,margin:0,color:C.teal,letterSpacing:"-0.02em"}}>Linear Regression Diagnostics</h1>
+        <h1 style={{fontSize:34,fontWeight:800,margin:0,color:C.teal,letterSpacing:"-0.02em"}}>Regression Diagnostics Explorer</h1>
         <p style={{fontSize:15,color:C.sub,margin:"10px auto 0",maxWidth:680,lineHeight:1.5}}>Complete slide deck export of the interactive explorer. Each diagnostic panel includes good, borderline, and clear-violation examples side by side.</p>
         <div style={{display:"grid",gridTemplateColumns:"repeat(8, minmax(0, 1fr))",gap:6,maxWidth:760,margin:"22px auto 0"}}>
           {SUNSHINE.map(item=><div key={item.key} style={{border:`2px solid ${item.color}`,background:item.colorSoft,borderRadius:10,padding:"8px 4px 6px",textAlign:"center"}}>
@@ -2106,8 +2106,8 @@ export default function App(){
     <div style={{height:5,background:`linear-gradient(90deg, ${C.gold}, ${C.tealLight}, ${C.teal})`}}/>
     <div style={{width:1060,minWidth:1060,margin:"0 auto",padding:"20px 28px 40px"}}>
       <div style={{marginBottom:20}}>
-        <h1 style={{fontSize:28,fontWeight:800,margin:0,lineHeight:1.15,color:C.teal,letterSpacing:"-0.02em"}}>Linear Regression Diagnostics</h1>
-        <p style={{fontSize:14,color:C.sub,margin:"6px 0 0",lineHeight:1.5}}>Click any letter below to explore that assumption for linear regression.</p>
+        <h1 style={{fontSize:28,fontWeight:800,margin:0,lineHeight:1.15,color:C.teal,letterSpacing:"-0.02em"}}>Regression Diagnostics Explorer</h1>
+        <p style={{fontSize:14,color:C.sub,margin:"6px 0 0",lineHeight:1.5}}>Click any letter below to explore that diagnostic for linear regression.</p>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(8, minmax(0, 1fr))",gap:5,marginBottom:20}}>
         <div style={{gridColumn:"1 / 3"}}/>

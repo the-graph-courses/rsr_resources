@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Logistic regression: grip strength and age (animated)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <style>
+    :root{
+      --gold:#e5b44f; --mist:#c4d8db; --teal:#035f6c; --alarm:#b5451f; --brown:#7a6212;
+      --ink:#073b42; --ink-2:#3a555a; --stage:#0d2b30; --paper:#ffffff; --soft:#f2f7f7;
+      --warm:#fbeecb; --coral:#e58b73; --violet:#8c7ab8;
+      --sans:"Space Grotesk","Helvetica Neue",Arial,sans-serif;
+      --mono:"IBM Plex Mono","SF Mono",Menlo,monospace;
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;height:100%;overflow:hidden;background:var(--stage);color:var(--ink);font-family:var(--sans);}
+    #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:28px 10px 22px;overflow:hidden;}
+    #deck{position:relative;width:1600px;height:900px;flex:none;container-type:size;transform-origin:center center;overflow:hidden;border-radius:2px;background:var(--paper);box-shadow:0 18px 60px rgba(0,0,0,.55);}
+    .chrome-top{position:absolute;top:0;left:0;right:0;height:8px;background:var(--gold);z-index:4;}
+    .chrome-bottom{position:absolute;bottom:0;left:0;right:0;height:8px;background:var(--teal);z-index:4;}
+    #board{position:absolute;inset:8px 0 8px 0;display:flex;flex-direction:column;padding:10px 26px 6px;}
+    header.head{flex:none;}
+    .head-row{display:flex;align-items:stretch;gap:16px;}
+    .ctx{display:none;width:100%;max-width:150px;margin:2px 0 4px;}
+    .ctx.vis{display:block;}
+    .ctx.live{animation:ctxPulse 1.7s ease-in-out infinite;}
+    .ctx img{display:block;width:100%;height:70px;object-fit:cover;object-position:55% 30%;border-radius:2px;border:1px solid var(--mist);box-shadow:0 3px 10px rgba(7,59,66,.12);}
+    .ctx figcaption{margin-top:2px;color:var(--brown);font-size:8px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+    @keyframes ctxPulse{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-1px) scale(1.025);}}
+    .head-text{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;}
+    .kicker{margin-bottom:2px;color:var(--brown);font-size:10px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;}
+    h1{margin:0;color:var(--teal);font-size:22px;line-height:1.05;font-weight:600;letter-spacing:-.01em;}
+    .title-line{width:300px;height:3px;margin-top:4px;border-radius:2px;background:var(--gold);}
+
+    /* Reading order: top-left, bottom-left, top-right, bottom-right */
+    .panels{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px;margin-top:8px;}
+    #panel1{grid-column:1;grid-row:1;}
+    #panel2{grid-column:1;grid-row:2;}
+    #panel3{grid-column:2;grid-row:1;}
+    #panel4{grid-column:2;grid-row:2;}
+    /* bullets ~3/7, plot column ~4/7 */
+    .panel{position:relative;min-width:0;min-height:0;display:grid;grid-template-columns:minmax(0,3fr) minmax(0,4fr);gap:10px;border:1px solid transparent;border-radius:3px;background:transparent;padding:10px 10px 8px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .4s ease,box-shadow .4s ease,border-color .4s ease,background .4s ease;}
+    .panel.lit{opacity:1;visibility:visible;pointer-events:auto;border-color:var(--mist);background:var(--paper);}
+    .panel.active{border-color:var(--gold);box-shadow:0 0 0 2px rgba(229,180,79,.35),0 8px 22px rgba(7,59,66,.10);}
+    .panel .p-num{position:absolute;top:-10px;left:10px;width:20px;height:20px;border-radius:50%;background:var(--teal);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.2);z-index:2;}
+    .panel.active .p-num{background:var(--gold);color:#0d2b30;}
+    .panel-side{min-width:0;min-height:0;display:flex;flex-direction:column;gap:4px;}
+    .panel-main{min-width:0;min-height:0;display:flex;flex-direction:column;gap:4px;}
+    .p-title{margin:2px 0 0;color:var(--teal);font-size:13.5px;font-weight:600;line-height:1.15;}
+    .p-sub{margin:0;color:var(--ink-2);font-size:10px;line-height:1.2;}
+    .panel-explain{flex:1;min-height:0;padding:5px 6px;background:var(--soft);border-left:2px solid var(--gold);border-radius:2px;}
+    .panel-explain ul{margin:0;padding:0 0 0 13px;color:var(--ink);font-size:9.8px;line-height:1.28;}
+    .panel-explain li{margin:0 0 3px;}
+    .panel-explain li:last-child{margin-bottom:0;}
+    .panel-explain li.ctx-slot{list-style:none;margin:4px 0 5px -13px;padding:0;}
+    .panel-explain li.head-slot{list-style:none;margin:4px 0 5px -13px;padding:0;}
+    .head-preview{margin:0;padding:4px 5px;border:1px solid var(--mist);border-radius:2px;background:#fff;font-family:var(--mono);font-size:7.8px;line-height:1.2;color:var(--ink-2);white-space:pre;overflow:hidden;}
+    .panel-explain strong{color:var(--teal);font-weight:600;}
+    .panel-explain .bad{color:var(--alarm);font-weight:600;}
+    .codebox{flex:none;display:none;position:relative;margin:0;padding:4px 6px 3px;border:1px solid var(--mist);border-left:2px solid var(--gold);border-radius:2px;background:var(--soft);font-family:var(--mono);font-size:8.2px;line-height:1.15;color:var(--ink);white-space:pre;overflow:hidden;}
+    .codebox.vis{display:block;}
+    .codebox .tag{position:absolute;top:2px;right:4px;color:var(--brown);font-size:7.5px;font-weight:700;letter-spacing:.08em;}
+    .codebox .out{color:var(--ink-2);}
+    .codebox .code-out{display:block;max-height:0;opacity:0;overflow:hidden;transition:max-height .45s ease,opacity .4s ease .12s;}
+    .codebox.show-out .code-out{max-height:96px;opacity:1;}
+    .codebox .cm{color:#7f9296;}
+    .codebox .hi{color:var(--teal);font-weight:600;}
+    .plotwrap{flex:1;min-width:0;min-height:0;position:relative;}
+    .plotwrap svg{width:100%;height:100%;display:block;overflow:hidden;}
+    .eqbox{flex:none;display:none;margin:0;padding:4px 6px;border-left:2px solid var(--gold);background:var(--warm);border-radius:2px;color:var(--teal);font-size:11px;text-align:center;}
+    .eqbox.vis{display:block;}
+    #ctxHome{display:none;}
+    #headHome{display:none;}
+
+    /* svg element styling */
+    .axis{stroke:#9fb7bb;stroke-width:1;}
+    .axis-lbl{fill:var(--ink-2);font-family:var(--sans);font-size:11px;}
+    .axis-title{fill:var(--brown);font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.03em;}
+    .grp{opacity:0;transition:opacity .45s ease;}
+    .grp.vis{opacity:1;}
+    .dot-not{fill:#2f5b61;transition:fill .45s ease;}
+    .dot-weak{fill:var(--alarm);transition:fill .45s ease;}
+    .ols{stroke:var(--gold);stroke-width:3;fill:none;stroke-linecap:round;transition:stroke-dashoffset .7s ease;}
+    .cut{stroke:var(--alarm);stroke-width:1.6;stroke-dasharray:5 5;fill:none;}
+    .cut-lbl{fill:var(--alarm);font-family:var(--sans);font-size:10.5px;font-weight:600;}
+    .lpm{stroke:var(--alarm);stroke-width:2.4;stroke-dasharray:7 5;fill:none;stroke-linecap:round;}
+    .rowline{stroke:#c4d8db;stroke-width:1;stroke-dasharray:2 4;}
+    .rowtag{fill:var(--ink-2);font-family:var(--mono);font-size:12px;font-weight:600;}
+    .bar{fill:var(--teal);}
+    .bar-lbl{fill:var(--ink-2);font-family:var(--sans);font-size:9.5px;font-weight:600;}
+    .forbid{fill:var(--alarm);opacity:.07;}
+    .refline{stroke:#9fb7bb;stroke-width:1;}
+    .reftag{fill:#7f9296;font-family:var(--mono);font-size:10px;}
+    .sig{stroke:var(--gold);stroke-width:3.4;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+    .badpt{fill:none;stroke:var(--alarm);stroke-width:2;}
+
+    #tools{position:fixed;top:14px;right:16px;z-index:22;display:flex;gap:8px;align-items:center;color:var(--mist);font-family:var(--sans);font-size:13px;}
+    #tools button{border:1px solid #4d747a;border-radius:2px;padding:6px 9px;background:#153d43;color:var(--mist);font:inherit;cursor:pointer;}
+    #tools button.on{border-color:var(--gold);background:var(--gold);color:#0d2b30;}
+    #hint{position:fixed;bottom:12px;left:0;right:0;z-index:20;text-align:center;color:var(--mist);font-size:13px;letter-spacing:.5px;opacity:.72;}
+    #counter{position:fixed;right:16px;bottom:12px;z-index:20;color:var(--mist);font-family:var(--mono);font-size:13px;opacity:.85;}
+    #ink{position:absolute;inset:0;z-index:15;width:100%;height:100%;pointer-events:none;touch-action:none;}
+    #deck.drawing #ink{pointer-events:auto;cursor:crosshair;}
+  </style>
+</head>
+<body>
+  <div id="tools">
+    <button id="pencil" type="button">Pencil: off</button>
+    <button id="undo" type="button">Undo</button>
+    <button id="clear" type="button">Clear</button>
+  </div>
+
+  <div id="stage">
+    <main id="deck" aria-live="polite">
+      <div class="chrome-top"></div>
+      <div id="board">
+        <header class="head">
+          <div class="head-row">
+            <div class="head-text">
+              <div class="kicker">KLoSA Wave 1 (2006) &middot; 4,184 Korean men aged 45+ &middot; grip strength by hand dynamometer</div>
+              <h1>Logistic regression: from continuous grip to a probability of weak grip</h1>
+              <div class="title-line"></div>
+            </div>
+          </div>
+        </header>
+
+        <div id="ctxHome">
+          <figure class="ctx" id="ctxPhoto">
+            <img src="images/grip_dynamometer.jpg" alt="Older man squeezing a digital handgrip dynamometer">
+            <figcaption>hand dynamometer</figcaption>
+          </figure>
+        </div>
+
+        <div id="headHome">
+          <pre class="head-preview" id="headPreview"># A tibble: 4 × 2
+   age  grip
+  &lt;dbl&gt; &lt;dbl&gt;
+1    52    35
+2    71    26
+3    64  31.5
+4    67 21.25</pre>
+        </div>
+
+        <div class="panels">
+          <!-- 1: top left -->
+          <section class="panel" id="panel1">
+            <div class="p-num">1</div>
+            <div class="panel-side">
+              <div class="p-title">Continuous outcome: grip on age</div>
+              <div class="panel-explain"><ul id="notes1"></ul></div>
+            </div>
+            <div class="panel-main">
+              <div class="codebox" id="code1"><span class="tag">R</span><span id="code1body"></span></div>
+              <div class="eqbox" id="eq1"></div>
+              <div class="plotwrap"><svg id="svg1" viewBox="0 0 460 380" preserveAspectRatio="xMidYMid meet"></svg></div>
+            </div>
+          </section>
+          <!-- 2: bottom left -->
+          <section class="panel" id="panel2">
+            <div class="p-num">2</div>
+            <div class="panel-side">
+              <div class="p-title">Binary outcome: weak grip</div>
+              <div class="p-sub">Same men. Outcome is 0 or 1 only.</div>
+              <div class="panel-explain"><ul id="notes2"></ul></div>
+            </div>
+            <div class="panel-main">
+              <div class="codebox" id="code2"><span class="tag">R</span><span id="code2body"></span></div>
+              <div class="eqbox" id="eq2"></div>
+              <div class="plotwrap"><svg id="svg2" viewBox="0 0 460 380" preserveAspectRatio="xMidYMid meet"></svg></div>
+            </div>
+          </section>
+          <!-- 3: top right -->
+          <section class="panel" id="panel3">
+            <div class="p-num">3</div>
+            <div class="panel-side">
+              <div class="p-title">Age-band proportions</div>
+              <div class="p-sub">A straight line through probabilities fails.</div>
+              <div class="panel-explain"><ul id="notes3"></ul></div>
+            </div>
+            <div class="panel-main">
+              <div class="eqbox" id="eq3"></div>
+              <div class="plotwrap"><svg id="svg3" viewBox="0 0 460 380" preserveAspectRatio="xMidYMid meet"></svg></div>
+            </div>
+          </section>
+          <!-- 4: bottom right -->
+          <section class="panel" id="panel4">
+            <div class="p-num">4</div>
+            <div class="panel-side">
+              <div class="p-title">Logistic regression</div>
+              <div class="p-sub">S-curve for the probability of weak grip.</div>
+              <div class="panel-explain"><ul id="notes4"></ul></div>
+            </div>
+            <div class="panel-main">
+              <div class="codebox" id="code3"><span class="tag">R</span><span class="cm"># logistic regression (binomial GLM)</span>
+glm(weak_grip ~ age, family = binomial, data = klosa)
+<span class="out">#&gt;             Estimate Std. Error z value Pr(&gt;|z|)
+#&gt; (Intercept) <span class="hi">-8.82431</span>    0.31925  -27.64   &lt;2e-16 ***
+#&gt; age          <span class="hi">0.11683</span>    0.00476   24.57   &lt;2e-16 ***</span></div>
+              <div class="eqbox" id="eq4"></div>
+              <div class="plotwrap"><svg id="svg4" viewBox="0 0 460 380" preserveAspectRatio="xMidYMid meet"></svg></div>
+            </div>
+          </section>
+        </div>
+      </div>
+      <div class="chrome-bottom"></div>
+      <canvas id="ink"></canvas>
+    </main>
+  </div>
+
+  <div id="hint">&larr;/&rarr; step &middot; &uarr;/&darr; jump panel &middot; P pencil &middot; U undo &middot; C clear &middot; R reset</div>
+  <div id="counter"></div>
+
+  <script>
+  // ============================ DATA ============================
+  const PTS = [[52,35,0],[60,34.5,0],[60,23.25,1],[59,34,0],[48,43.25,0],[54,38.25,0],[52,33,0],[46,40,0],[67,38.25,0],[79,24.5,1],[54,35.75,0],[60,35,0],[67,29.5,0],[56,29.5,0],[66,33.75,0],[80,26.5,1],[75,30,0],[72,28.5,0],[64,30,0],[67,28.5,0],[56,31.5,0],[68,27,1],[70,30,0],[63,30.25,0],[61,36.75,0],[59,40.25,0],[53,36.25,0],[67,34.5,0],[71,24.75,1],[58,27,1],[49,33.5,0],[63,34,0],[77,29.75,0],[54,30.5,0],[51,29.5,0],[47,34.25,0],[68,30,0],[50,39,0],[48,30.75,0],[82,7,1],[52,30.5,0],[67,40,0],[67,27.25,0],[83,29.25,0],[55,33,0],[52,40.25,0],[54,30,0],[60,31.5,0],[70,19.5,1],[55,35.25,0],[55,23.5,1],[72,39,0],[63,30.75,0],[72,32,0],[59,36,0],[57,39.75,0],[75,35.25,0],[46,37.5,0],[73,29.75,0],[70,38,0],[64,39,0],[56,40,0],[68,21.75,1],[90,23,1],[45,37.5,0],[63,30,0],[50,34.5,0],[57,43.25,0],[57,43.75,0],[81,14,1],[45,39,0],[45,35.5,0],[69,17.5,1],[69,30.25,0],[47,32,0],[83,27,1],[78,17.5,1],[62,37.25,0],[51,40,0],[48,42.5,0],[74,21.5,1],[63,35.25,0],[58,29.75,0],[67,35.75,0],[60,39.5,0],[56,35,0],[80,16,1],[67,20,1],[56,46.75,0],[66,22.5,1],[59,45.75,0],[55,37,0],[49,37,0],[54,39.5,0],[62,26.75,1],[49,36.5,0],[69,30,0],[46,30.25,0],[45,39.25,0],[57,30.5,0],[49,39.5,0],[73,17.5,1],[60,37.5,0],[72,16,1],[67,21.5,1],[55,37.25,0],[80,17.5,1],[72,30.5,0],[60,33.5,0],[55,26.5,1],[45,33.5,0],[70,28.25,0],[57,40,0],[67,34.5,0],[63,29.75,0],[54,32.75,0],[49,35,0],[74,30.75,0],[46,40.75,0],[47,38,0],[70,28.5,0],[50,38,0],[65,36.75,0],[49,39,0],[45,39.75,0],[83,22.75,1],[69,18,1],[80,24.5,1],[75,20.5,1],[64,29.5,0],[62,21.5,1],[80,21.75,1],[60,32.25,0],[69,34.5,0],[72,33.25,0],[49,34.25,0],[73,29.125,0],[56,36.375,0],[50,33.25,0],[58,38.5,0],[61,32.75,0],[72,8.5,1],[71,27.25,0],[47,29,0],[68,21.025,1],[60,37,0],[46,41.5,0],[46,39.75,0],[53,38.575,0],[64,29.5,0],[58,29.05,0],[49,34.75,0],[60,30.25,0],[76,32.25,0],[68,29.25,0],[47,33,0],[66,29.25,0],[52,46.25,0],[57,29.25,0],[76,35.25,0],[59,32.5,0],[53,44,0],[63,29.25,0],[72,32.5,0],[63,27.25,0],[61,36.5,0],[64,30.875,0],[65,33.25,0],[81,29.5,0],[48,31.5,0],[56,25,1],[68,36.625,0],[76,9.25,1],[65,38.75,0],[54,35.5,0],[62,39,0],[74,27.25,0],[74,18.25,1],[48,30.5,0],[73,26.75,1],[71,29.5,0],[67,33,0],[79,28.25,0],[51,47.5,0],[65,32.5,0],[68,32.5,0],[64,35.25,0],[49,33.75,0],[68,19.25,1],[51,39,0],[48,40.25,0],[55,33.25,0],[59,39.5,0],[70,39.25,0],[49,35,0],[62,36.375,0],[72,25.5,1],[45,34.75,0],[66,30,0],[62,29,0],[53,32.25,0],[72,25.25,1],[67,35,0],[62,31.25,0],[72,26.25,1],[74,30.5,0],[70,13.5,1],[54,39.5,0],[54,35.75,0],[71,25.25,1],[91,23.75,1],[59,26.5,1],[70,46.5,0],[49,37,0],[51,48.25,0],[48,32.5,0],[76,27.75,0],[70,20.25,1],[50,34,0],[46,45.75,0],[63,30,0],[55,33.75,0],[55,32.5,0],[69,30.5,0],[61,31,0],[49,31.5,0],[48,40.75,0],[46,40,0],[58,35.5,0],[57,30,0],[48,38.5,0],[59,27.5,0],[52,41.5,0],[64,32.25,0],[56,37.5,0],[63,24.25,1],[60,41.75,0],[57,29.5,0],[53,39.5,0],[65,33.5,0],[52,44,0],[79,29,0],[61,26.5,1],[48,41.5,0],[59,29.75,0],[62,34.5,0],[56,39.25,0],[53,30,0],[52,31,0],[62,32.5,0],[56,38.5,0],[49,39.5,0],[46,45.25,0],[64,36.5,0],[71,34.5,0],[76,35.5,0],[58,35.25,0],[73,32,0],[56,29.5,0],[58,46.5,0],[51,30,0],[56,37,0],[65,28.5,0],[58,33.25,0],[68,31.5,0],[69,31.5,0],[70,28.5,0],[70,26.375,1],[55,31.875,0],[53,31.25,0],[65,27.25,0],[51,26.125,1],[57,37.125,0],[67,36.375,0],[53,29.125,0],[61,9.75,1],[46,41,0],[45,16.25,1],[78,29.5,0],[63,34,0],[75,31,0],[52,37.25,0],[75,37.5,0],[49,28.25,0],[54,35.25,0],[48,33.5,0],[68,24,1],[59,38,0],[63,20,1],[55,32.5,0],[66,29.5,0],[77,20,1],[55,29.5,0],[46,29.25,0],[50,39.5,0],[68,33.75,0],[47,43.25,0],[67,32.25,0],[79,19.75,1],[69,35.75,0],[65,44.5,0],[57,21,1],[47,31.75,0],[61,36,0],[73,30.5,0],[69,27.5,0],[85,19,1],[62,38.75,0],[63,34.25,0],[65,30.5,0],[72,29,0],[61,33,0],[48,43,0],[63,31.75,0],[61,42.5,0],[45,38.25,0],[45,34,0],[76,26,1],[62,36.5,0],[57,38.75,0],[62,29,0],[58,44.75,0],[73,32.75,0],[64,20.5,1],[48,37,0],[68,36,0],[81,29.5,0],[70,30.5,0],[63,35.75,0],[74,31.25,0],[64,29.25,0],[54,37.25,0],[46,30.25,0],[59,38,0],[54,36.5,0],[68,29,0],[73,27.5,0],[71,32.5,0],[67,35,0],[87,19.5,1],[72,31.5,0],[48,41.75,0],[72,30,0],[61,25.625,1],[50,38.5,0],[47,39,0],[84,36.75,0],[72,22.625,1],[65,40.25,0],[46,38.5,0],[45,41.375,0],[89,20.5,1],[46,37.25,0],[49,42,0],[66,27,1],[78,26.75,1],[49,24.25,1],[52,40,0],[50,29,0],[45,28.75,0],[65,37,0],[73,19,1],[74,30,0],[80,29,0],[53,26.25,1],[62,26,1],[51,32.5,0],[60,31.25,0],[46,36.25,0],[45,34.75,0],[55,31.75,0],[69,28.5,0],[79,29,0],[46,28,0],[55,28.75,0],[67,32,0],[67,21.5,1],[66,27,1],[83,25.25,1],[70,32.5,0],[65,32.25,0],[81,29,0],[85,24,1],[69,17.25,1],[65,35.75,0],[90,13.5,1],[50,40,0],[64,32,0],[48,31,0],[46,37,0],[57,35,0],[76,28,0],[52,31.25,0],[55,33.5,0],[56,33,0],[49,29,0],[68,24,1],[56,35.5,0],[47,32.5,0],[69,38.5,0],[51,35.5,0],[52,30.5,0],[73,33,0],[74,17,1],[65,27.75,0],[58,35,0],[72,26.25,1],[86,29.5,0],[69,29.25,0],[71,31.5,0],[74,28.75,0],[73,34,0],[56,34.75,0],[60,33,0],[49,30.5,0],[48,42.75,0],[46,40.5,0],[74,32.25,0],[60,42.25,0],[63,31,0],[47,41.5,0],[63,28.75,0],[77,30,0],[72,32,0],[64,37.25,0],[78,22.25,1],[48,43.5,0],[77,26.5,1],[65,24,1],[48,34.5,0],[65,31,0],[77,19.75,1],[68,30.625,0],[69,33.125,0],[56,29.5,0],[75,24,1],[61,40,0],[59,26.25,1],[62,35,0],[47,30,0],[57,37,0],[60,42.5,0],[60,39.5,0],[50,35.75,0],[51,38.75,0],[57,30,0],[71,22,1],[66,43.5,0],[58,41,0],[83,13.5,1],[68,34.5,0],[56,29,0],[66,24.75,1],[52,35,0],[59,31.5,0],[83,18.875,1],[75,25.5,1],[47,43.5,0],[52,49.75,0],[74,28,0],[70,26.25,1],[57,41.5,0],[51,31.75,0],[52,36,0],[73,29.25,0],[60,35.375,0],[56,33.75,0],[58,37,0],[45,31,0],[56,37.25,0],[59,40.5,0],[70,20.25,1],[55,30.75,0],[62,27.5,0],[60,33.25,0],[84,19.875,1],[47,29.125,0],[64,22.75,1],[48,35,0],[51,37,0],[68,29.5,0],[51,45.625,0],[66,32.5,0],[57,39.25,0],[64,16.25,1],[73,34.5,0],[62,37,0],[83,18,1],[70,25,1],[50,32.25,0],[67,28.5,0],[52,40.25,0],[56,32,0],[55,33.5,0],[58,38.25,0],[79,36,0],[57,39.25,0],[61,32.75,0],[76,22,1],[48,32.75,0],[55,28.25,0],[58,39.25,0],[62,17.75,1],[45,43,0],[67,31.75,0],[63,32.25,0],[56,31.5,0],[51,37.5,0],[73,23.5,1],[66,35,0],[65,28,0],[45,37.5,0],[72,30.25,0],[64,25,1],[60,36,0],[46,43.25,0],[49,28.25,0],[51,33,0],[55,33.5,0],[55,27.75,0],[50,48.25,0],[46,48,0],[69,27,1]];                                  // [age, grip, weak(0/1)] sample (n=523)
+  const CUT = 27;                                       // weak-grip cutoff (kg)
+  const OLS  = {b0:55.70, b1:-0.382};                   // lm(grip ~ age)
+  const LPMi = {b0:-0.8140, b1:0.01679};                // lm(weak ~ age) on individuals (panel 2 line)
+  const LPMb = {b0:-0.9767, b1:0.01958};                // ols through the band proportions (panel 3 line)
+  const GLM  = {b0:-8.824312, b1:0.116834};             // glm(weak ~ age, binomial)
+  const BANDS = [                                        // age band, midpoint, proportion weak, label
+    {mid:47.07,p:0.0346,lab:'3%'},  {mid:52.03,p:0.0631,lab:'6%'},  {mid:57.04,p:0.0966,lab:'10%'},
+    {mid:61.96,p:0.1717,lab:'17%'}, {mid:66.998,p:0.2612,lab:'26%'},{mid:71.69,p:0.4294,lab:'43%'},
+    {mid:76.73,p:0.5265,lab:'53%'}, {mid:81.72,p:0.6194,lab:'62%'}, {mid:86.70,p:0.7907,lab:'79%'}
+  ];
+
+  // ============================ GEOMETRY ============================
+  const NS='http://www.w3.org/2000/svg';
+  const W=460,H=380, ML=42,MR=16,MT=18,MB=34;
+  const X0=ML, X1=W-MR, YT=MT, YB=H-MB;
+  const AGE=[44,89], AGE3=[40,106], GRIP=[12,48], PROB=[-0.18,1.18];
+  const lerp=(a,b,t)=>a+(b-a)*t;
+  const sc=(v,d0,d1,r0,r1)=>r0+(v-d0)/(d1-d0)*(r1-r0);
+  const ax  = v=>sc(v,AGE[0],AGE[1],X0,X1);
+  const gy  = v=>sc(v,GRIP[0],GRIP[1],YB,YT);
+  const ROW1=YT+60, ROW0=YB-52;                         // 0/1 rows in panel 2
+  const oy  = v=>lerp(ROW0,ROW1,v);                     // outcome axis (v in ~[-.15,1.15])
+  const ax3 = v=>sc(v,AGE3[0],AGE3[1],X0,X1);
+  const py  = v=>sc(v,PROB[0],PROB[1],YB,YT);
+  const sig = (b,age)=>1/(1+Math.exp(-(b.b0+b.b1*age)));
+
+  function el(tag,a){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);return e;}
+  function line(g,x1,y1,x2,y2,cls){g.appendChild(el('line',{x1,y1,x2,y2,class:cls}));}
+  function txt(g,x,y,s,cls,anchor){const t=el('text',{x,y,class:cls,'text-anchor':anchor||'middle'});t.textContent=s;g.appendChild(t);return t;}
+  function grp(svg,id){const g=el('g',{class:'grp',id});svg.appendChild(g);return g;}
+
+  const svg1=document.getElementById('svg1'), svg2=document.getElementById('svg2');
+  const svg3=document.getElementById('svg3'), svg4=document.getElementById('svg4');
+
+  // per-point cosmetic jitter (kept identical between panel 1 & 2 copies)
+  const JX = PTS.map(()=> (Math.random()-0.5)*3.2);
+  const JY = PTS.map(()=> (Math.random()-0.5)*30);     // vertical spread inside a 0/1 row
+
+  // ---------- shared axis frame ----------
+  function frame(svg, ticksX, xmap, xlab, ylab, yticks, ymap){
+    const g=el('g',{}); svg.appendChild(g);
+    line(g,X0,YT,X0,YB,'axis'); line(g,X0,YB,X1,YB,'axis');
+    ticksX.forEach(v=>{const x=xmap(v); line(g,x,YB,x,YB+4,'axis'); txt(g,x,YB+15,v,'axis-lbl');});
+    txt(g,(X0+X1)/2,H-4,xlab,'axis-title');
+    if(yticks) yticks.forEach(o=>{const y=ymap(o.v); line(g,X0-4,y,X0,y,'axis'); txt(g,X0-7,y+3.5,o.t,'axis-lbl','end');});
+    const yt=txt(g,0,0,ylab,'axis-title'); yt.setAttribute('transform',`translate(13,${(YT+YB)/2}) rotate(-90)`);
+  }
+  function makeBars(parent){
+    const BARW=15;
+    return BANDS.map(b=>{
+      const r=el('rect',{x:ax3(b.mid)-BARW/2,y:py(0),width:BARW,height:0,rx:1.5,class:'bar','fill-opacity':.85});
+      parent.appendChild(r);
+      txt(parent,ax3(b.mid),py(0)+13,b.lab,'bar-lbl');
+      return {r,b};
+    });
+  }
+
+  // ============================ PANEL 1 ============================
+  frame(svg1,[45,55,65,75,85],ax,'age (years)','grip strength (kg)',
+        [{v:20,t:'20'},{v:30,t:'30'},{v:40,t:'40'}],gy);
+  const g1dots=grp(svg1,'g1dots'), g1ols=grp(svg1,'g1ols'), g1cut=grp(svg1,'g1cut');
+  const dot1=PTS.map((p,i)=>{const c=el('circle',{cx:ax(p[0])+JX[i],cy:gy(p[1]),r:2.4,class:'dot-not','fill-opacity':.72});g1dots.appendChild(c);return c;});
+  const olsLine=el('line',{x1:ax(AGE[0]),y1:gy(OLS.b0+OLS.b1*AGE[0]),x2:ax(AGE[1]),y2:gy(OLS.b0+OLS.b1*AGE[1]),class:'ols'});
+  g1ols.appendChild(olsLine);
+  const olsLen=Math.hypot(+olsLine.getAttribute('x2')-+olsLine.getAttribute('x1'), +olsLine.getAttribute('y2')-+olsLine.getAttribute('y1'));
+  olsLine.style.strokeDasharray=String(olsLen); olsLine.style.strokeDashoffset=String(olsLen);
+  g1cut.appendChild(el('line',{x1:X0,y1:gy(CUT),x2:X1,y2:gy(CUT),class:'cut'}));
+  txt(g1cut,X1-2,gy(CUT)-4,'weak-grip cut = 27 kg','cut-lbl','end');
+  function setOlsDrawn(on){ olsLine.style.strokeDashoffset = on ? '0' : String(olsLen); }
+
+  // ============================ PANEL 2 ============================
+  frame(svg2,[45,55,65,75,85],ax,'age (years)','',null,null);
+  const g2cut=grp(svg2,'g2cut'), g2rows=grp(svg2,'g2rows'), g2dots=grp(svg2,'g2dots'), g2line=grp(svg2,'g2line');
+  line(g2rows,X0,ROW0,X1,ROW0,'rowline'); line(g2rows,X0,ROW1,X1,ROW1,'rowline');
+  txt(g2rows,X0-8,ROW1+4,'1',' rowtag','end'); txt(g2rows,X0-8,ROW0+4,'0',' rowtag','end');
+  txt(g2rows,X1-2,ROW1-6,'weak grip','cut-lbl','end');
+  txt(g2rows,X1-2,ROW0+16,'not weak','axis-lbl','end');
+  line(g2cut,X0,gy(CUT),X1,gy(CUT),'cut'); txt(g2cut,X1-2,gy(CUT)-4,'cut = 27 kg','cut-lbl','end');
+  const dot2=PTS.map((p,i)=>{const c=el('circle',{cx:ax(p[0])+JX[i],cy:gy(p[1]),r:2.4,class:'dot-not','fill-opacity':.72});g2dots.appendChild(c);return c;});
+  g2line.appendChild(el('line',{x1:ax(AGE[0]),y1:oy(LPMi.b0+LPMi.b1*AGE[0]),x2:ax(AGE[1]),y2:oy(LPMi.b0+LPMi.b1*AGE[1]),class:'lpm'}));
+  function setDotsRed(on){
+    PTS.forEach((p,i)=>{ if(p[2]){ const cls=on?'dot-weak':'dot-not'; dot1[i].setAttribute('class',cls); dot2[i].setAttribute('class',cls); }});
+  }
+
+  // ============================ PANEL 3: bars + failed straight line ============================
+  frame(svg3,[45,55,65,75,85,95,105],ax3,'age (years)','probability of weak grip',
+        [{v:0,t:'0'},{v:.5,t:'.5'},{v:1,t:'1'}],py);
+  const g3bars=grp(svg3,'g3bars'), g3line=grp(svg3,'g3line');
+  g3line.appendChild(el('rect',{x:X0,y:py(PROB[1]),width:X1-X0,height:py(1)-py(PROB[1]),class:'forbid'}));
+  g3line.appendChild(el('rect',{x:X0,y:py(0),width:X1-X0,height:py(PROB[0])-py(0),class:'forbid'}));
+  line(g3line,X0,py(1),X1,py(1),'refline'); line(g3line,X0,py(0),X1,py(0),'refline');
+  txt(g3line,X1-2,py(1)-4,'p = 1 ceiling','reftag','end'); txt(g3line,X1-2,py(0)+12,'p = 0 floor','reftag','end');
+  g3line.appendChild(el('line',{x1:ax3(AGE3[0]),y1:py(LPMb.b0+LPMb.b1*AGE3[0]),x2:ax3(AGE3[1]),y2:py(LPMb.b0+LPMb.b1*AGE3[1]),class:'lpm'}));
+  g3line.appendChild(el('circle',{cx:ax3(AGE3[0]),cy:py(LPMb.b0+LPMb.b1*AGE3[0]),r:6,class:'badpt'}));
+  g3line.appendChild(el('circle',{cx:ax3(AGE3[1]),cy:py(LPMb.b0+LPMb.b1*AGE3[1]),r:6,class:'badpt'}));
+  const bar3=makeBars(g3bars);
+
+  // ============================ PANEL 4: bars + logistic curve ============================
+  frame(svg4,[45,55,65,75,85,95,105],ax3,'age (years)','probability of weak grip',
+        [{v:0,t:'0'},{v:.5,t:'.5'},{v:1,t:'1'}],py);
+  const g4bars=grp(svg4,'g4bars'), g4sig=grp(svg4,'g4sig');
+  const bar4=makeBars(g4bars);
+  let dSig='M';
+  for(let a=AGE3[0];a<=AGE3[1]+0.01;a+=0.5){ dSig+=` ${ax3(a).toFixed(1)} ${py(sig(GLM,a)).toFixed(1)}`; }
+  const sigPath=el('path',{d:dSig,class:'sig'}); g4sig.appendChild(sigPath);
+  const sigLen=sigPath.getTotalLength();
+  sigPath.style.strokeDasharray=sigLen; sigPath.style.strokeDashoffset=sigLen;
+
+  // ============================ ANIMATION STATE ============================
+  const A={morph:0,bars:0,sigv:0};        // current continuous values
+  const AT={morph:0,bars:0,sigv:0};       // targets
+  let raf=null;
+  function drawCont(){
+    for(let i=0;i<PTS.length;i++){
+      const p=PTS[i];
+      dot2[i].setAttribute('cy', lerp(gy(p[1]), oy(p[2])+JY[i], A.morph));
+    }
+    [...bar3,...bar4].forEach(o=>{
+      const top=py(o.b.p*A.bars);
+      o.r.setAttribute('y',top);
+      o.r.setAttribute('height',Math.max(0,py(0)-top));
+    });
+    sigPath.style.strokeDashoffset = sigLen*(1-A.sigv);
+  }
+  function tick(){
+    let moving=false;
+    for(const k of ['morph','bars','sigv']){
+      const d=AT[k]-A[k];
+      if(Math.abs(d)>0.0015){A[k]+=d*0.14;moving=true;} else A[k]=AT[k];
+    }
+    drawCont();
+    raf = moving ? requestAnimationFrame(tick) : null;
+  }
+  function animateTo(){ if(!raf) raf=requestAnimationFrame(tick); }
+
+  // ============================ STEP SCRIPT ============================
+  // Short explanations sit inside the panel they describe.
+  // A setup step normally precedes the corresponding visual.
+  const STEPS=[
+    // Panel 1: data and continuous model
+    { vis:[], codes:[], code1out:false, dotsRed:false, olsDraw:false, ctx:false, ctxLive:false, panel:1, morph:0,bars:0,sigv:0,
+      bullets:[
+        '<strong>KLoSA Wave 1 (2006)</strong>: <strong>4,184</strong> Korean men aged <strong>45+</strong>.'
+      ]},
+    { vis:[], codes:['code1'], code1:'read', code1out:false, dotsRed:false, olsDraw:false, ctx:false, ctxLive:false, panel:1, morph:0,bars:0,sigv:0,
+      bullets:[
+        'Load the data in R.'
+      ]},
+    { vis:[], codes:['code1'], code1:'select', code1out:false, dotsRed:false, olsDraw:false, ctx:false, ctxLive:false, panel:1, morph:0,bars:0,sigv:0,
+      bullets:[
+        'Keep <strong>age</strong> and <strong>grip</strong>; preview the first rows.'
+      ]},
+    { vis:[], codes:[], code1out:false, dotsRed:false, olsDraw:false, ctx:true, ctxLive:false, panel:1, morph:0,bars:0,sigv:0,
+      bullets:[
+        'Variables: <strong>age</strong> (years) and <strong>grip strength</strong> (kg).'
+      ]},
+    { vis:['g1dots'], codes:[], code1out:false, dotsRed:false, olsDraw:false, ctx:true, ctxLive:false, panel:1, morph:0,bars:0,sigv:0,
+      bullets:[
+        'Grip tends to be <strong>lower at older ages</strong>.'
+      ]},
+    { vis:['g1dots'], codes:[], code1out:false, dotsRed:false, olsDraw:false, ctx:true, ctxLive:false, panel:1, morph:0,bars:0,sigv:0,
+      bullets:[
+        'Fit <strong>ordinary least squares</strong>: outcome = grip, predictor = age.',
+        'R: <strong>lm(grip ~ age)</strong>.'
+      ]},
+    { vis:['g1dots','g1ols'], codes:['code1'], code1:'lm', code1out:true, dotsRed:false, olsDraw:true, ctx:true, ctxLive:false, panel:1, morph:0,bars:0,sigv:0,
+      bullets:[
+        'Slope ≈ <strong>−0.38 kg per year</strong>. The model assumes the <strong>same change at every age</strong>.',
+        'This is a <strong>continuous</strong> outcome model, not logistic regression.'
+      ],
+      eq1:'$\\widehat{\\text{grip}} = 55.7 - 0.382\\,(\\text{age})$'},
+    { vis:['g1dots','g1ols'], codes:['code1'], code1out:true, dotsRed:false, olsDraw:true, ctx:true, ctxLive:false, panel:1, morph:0,bars:0,sigv:0,
+      bullets:[
+        'EWGSOP2: <span class="bad">weak grip</span> in men if grip <strong>≤ 27 kg</strong>.',
+        'Mark those men before changing the outcome to <strong>yes/no</strong>.'
+      ]},
+    { vis:['g1dots','g1ols'], codes:['code1'], code1out:true, dotsRed:true, olsDraw:true, ctx:true, ctxLive:false, panel:1, morph:0,bars:0,sigv:0,
+      bullets:[
+        '<span class="bad">Red</span> = grip ≤ 27 kg. Teal = grip > 27 kg.',
+        'Only the color has changed. Grip is still <strong>continuous</strong>.'
+      ]},
+    { vis:['g1dots','g1ols','g1cut'], codes:['code1'], code1out:true, dotsRed:true, olsDraw:true, ctx:true, ctxLive:false, panel:1, morph:0,bars:0,sigv:0,
+      bullets:[
+        'Dashed line = <strong>27 kg cutoff</strong>. This converts grip into a <strong>binary label</strong>.'
+      ]},
+
+    // Panel 2: binary outcome
+    { vis:['g1dots','g1ols','g1cut'], codes:['code1'], code1out:true, dotsRed:true, olsDraw:true, ctx:true, ctxLive:false, panel:1, morph:0,bars:0,sigv:0,
+      bullets:[
+        'Now ask only whether grip is weak. Keep age; replace grip with a <strong>0/1 outcome</strong>.'
+      ]},
+    { vis:['g1dots','g1ols','g1cut','g2cut','g2dots'], codes:['code1'], code1out:true, dotsRed:true, olsDraw:true, ctx:true, ctxLive:false, panel:2, morph:0,bars:0,sigv:0,
+      bullets:[
+        'Same men, ages, and grip values. The <strong>27 kg cutoff</strong> is shown again.'
+      ]},
+    { vis:['g1dots','g1ols','g1cut','g2cut','g2dots'], codes:['code1'], code1out:true, dotsRed:true, olsDraw:true, ctx:true, ctxLive:false, panel:2, morph:0,bars:0,sigv:0,
+      bullets:[
+        'Code <strong>weak_grip = 1</strong> if grip ≤ 27 kg, else <strong>0</strong>.',
+        'The mean of a 0/1 variable is the <strong>proportion</strong> with weak grip.'
+      ]},
+    { vis:['g1dots','g1ols','g1cut','g2rows','g2dots'], codes:['code1','code2'], code1out:true, code2:'bin', dotsRed:true, olsDraw:true, ctx:true, ctxLive:false, panel:2, morph:1,bars:0,sigv:0,
+      bullets:[
+        'Points now occupy two rows: <strong>1</strong> (weak) and <strong>0</strong> (not weak).',
+        'Distance from the 27 kg cutoff is <strong>no longer retained</strong>.'
+      ]},
+    { vis:['g1dots','g1ols','g1cut','g2rows','g2dots'], codes:['code1','code2'], code1out:true, code2:'bin', dotsRed:true, olsDraw:true, ctx:true, ctxLive:false, panel:2, morph:1,bars:0,sigv:0,
+      bullets:[
+        'Fit <strong>lm(weak_grip ~ age)</strong>: a <strong>linear probability model</strong>.',
+        'A straight line is <strong>not suitable</strong> for this outcome.'
+      ]},
+    { vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2line'], codes:['code1','code2'], code1out:true, code2:'lm', dotsRed:true, olsDraw:true, ctx:true, ctxLive:false, panel:2, morph:1,bars:0,sigv:0,
+      bullets:[
+        'The line can predict values <span class="bad">below 0</span> or <span class="bad">above 1</span>.',
+        'It does not respect the range of a <strong>probability</strong>.'
+      ]},
+
+    // Panel 3 (top right): age-band proportions and failed straight line
+    { vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2line'], codes:['code1','code2'], code1out:true, code2:'lm', dotsRed:true, olsDraw:true, ctx:true, ctxLive:false, panel:2, morph:1,bars:0,sigv:0,
+      bullets:[
+        'Group into <strong>age bands</strong> and calculate the <strong>proportion</strong> with weak grip.',
+        'Each proportion estimates a <strong>probability</strong>.'
+      ]},
+    { vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2line','g3bars'], codes:['code1','code2'], code1out:true, code2:'lm', dotsRed:true, olsDraw:true, ctx:true, ctxLive:false, panel:3, morph:1,bars:1,sigv:0,
+      bullets:[
+        'Weak grip rises from about <strong>3%</strong> (youngest) to <strong>79%</strong> (oldest).'
+      ]},
+    { vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2line','g3bars'], codes:['code1','code2'], code1out:true, code2:'lm', dotsRed:true, olsDraw:true, ctx:true, ctxLive:false, panel:3, morph:1,bars:1,sigv:0,
+      bullets:[
+        'Fit a <strong>straight line</strong> through these proportions. Check the ends and the constant slope.'
+      ]},
+    { vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2line','g3bars','g3line'], codes:['code1','code2'], code1out:true, code2:'lm', dotsRed:true, olsDraw:true, ctx:true, ctxLive:false, panel:3, morph:1,bars:1,sigv:0,
+      bullets:[
+        '<span class="bad">Problem 1:</span> it leaves <strong>[0, 1]</strong>. <span class="bad">Problem 2:</span> <strong>same change at every age</strong>.',
+        'The data rise <strong>slowly, then faster, then slowly</strong> again.'
+      ]},
+
+    // Panel 4 (bottom right): logistic regression
+    { vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2line','g3bars','g3line'], codes:['code1','code2'], code1out:true, code2:'lm', dotsRed:true, olsDraw:true, ctx:true, ctxLive:false, panel:4, morph:1,bars:1,sigv:0,
+      bullets:[
+        'Logistic regression models <strong>log-odds</strong> as a straight line in age.',
+        'On the probability scale, the curve stays inside <strong>[0, 1]</strong>.'
+      ]},
+    { vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2line','g3bars','g3line','g4bars'], codes:['code1','code2','code3'], code1out:true, code2:'lm', dotsRed:true, olsDraw:true, ctx:true, ctxLive:false, panel:4, morph:1,bars:1,sigv:0,
+      bullets:[
+        'R: <strong>glm(weak_grip ~ age, family = binomial)</strong>.',
+        'Coefficients are on the <strong>log-odds</strong> scale.'
+      ]},
+    { vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2line','g3bars','g3line','g4bars','g4sig'], codes:['code1','code2','code3'], code1out:true, code2:'lm', dotsRed:true, olsDraw:true, ctx:true, ctxLive:false, panel:4, morph:1,bars:1,sigv:1,
+      bullets:[
+        'The fitted curve stays inside <strong>[0, 1]</strong> and follows the age-band proportions.',
+        'Interpreting the <strong>age coefficient</strong> is the next lesson.'
+      ],
+      eq4:'$p = \\dfrac{1}{1 + e^{-(\\beta_0 + \\beta_1\\,\\text{age})}}$'}
+  ];
+  const N=STEPS.length;
+  const ALL_GROUPS=['g1dots','g1ols','g1cut','g2cut','g2rows','g2dots','g2line','g3bars','g3line','g4bars','g4sig'];
+  const ALL_CODES=['code1','code2','code3'];
+  const PANEL_FIRST={1:0,2:11,3:17,4:20};   // step at which each panel lights up
+  const CODE1={
+    read:'klosa &lt;- read_csv("klosa_men_grip_45plus.csv")',
+    select:`klosa &lt;- read_csv("klosa_men_grip_45plus.csv")
+klosa &lt;- klosa |&gt; select(age, grip)
+head(klosa, 4)`,
+    lm:`klosa &lt;- read_csv("klosa_men_grip_45plus.csv")
+lm(grip ~ age, data = klosa) |&gt; summary()
+<span class="code-out out">#&gt;             Estimate Std. Error t value Pr(&gt;|t|)
+#&gt; (Intercept) <span class="hi">55.68329</span>    0.53304  104.46   &lt;2e-16 ***
+#&gt; age         <span class="hi">-0.38241</span>    0.00865  -44.22   &lt;2e-16 ***</span>`
+  };
+  const CODE2={
+    bin:'klosa &lt;- klosa |&gt; mutate(weak_grip = as.integer(grip &lt;= 27))',
+    lm:`klosa &lt;- klosa |&gt; mutate(weak_grip = as.integer(grip &lt;= 27))
+lm(weak_grip ~ age, data = klosa) |&gt; summary()
+<span class="out">#&gt;             Estimate Std. Error t value Pr(&gt;|t|)
+#&gt; (Intercept) <span class="hi">-0.81404</span>    0.03370  -24.15   &lt;2e-16 ***
+#&gt; age          <span class="hi">0.01679</span>    0.00055   30.71   &lt;2e-16 ***</span>`
+  };
+  const code1El=document.getElementById('code1');
+  const code1body=document.getElementById('code1body');
+  const code2body=document.getElementById('code2body');
+  const ctxEl=document.getElementById('ctxPhoto');
+  const ctxHome=document.getElementById('ctxHome');
+  const headEl=document.getElementById('headPreview');
+  const headHome=document.getElementById('headHome');
+  const noteEls={1:document.getElementById('notes1'),2:document.getElementById('notes2'),3:document.getElementById('notes3'),4:document.getElementById('notes4')};
+  const eqEls={1:document.getElementById('eq1'),2:document.getElementById('eq2'),3:document.getElementById('eq3'),4:document.getElementById('eq4')};
+  const PANEL_IDS=[1,2,3,4];
+
+  let step=0;
+  const counter=document.getElementById('counter');
+  const panelEls={1:document.getElementById('panel1'),2:document.getElementById('panel2'),3:document.getElementById('panel3'),4:document.getElementById('panel4')};
+
+  function placeHead(show){
+    if(!show){
+      headHome.appendChild(headEl);
+      return;
+    }
+    const slot=document.createElement('li');
+    slot.className='head-slot';
+    const items=noteEls[1].querySelectorAll('li:not(.head-slot):not(.ctx-slot)');
+    const target=items[2];
+    if(target) target.after(slot);
+    else noteEls[1].appendChild(slot);
+    slot.appendChild(headEl);
+  }
+
+  function placeCtx(show, live){
+    ctxEl.classList.toggle('vis', show);
+    ctxEl.classList.toggle('live', show && live);
+    if(!show){
+      ctxHome.appendChild(ctxEl);
+      return;
+    }
+    // Sit after the sample bullet, with the variables bullet.
+    const slot=document.createElement('li');
+    slot.className='ctx-slot';
+    const first=noteEls[1].querySelector('li');
+    if(first && first.nextSibling) noteEls[1].insertBefore(slot, first.nextSibling);
+    else if(first) first.after(slot);
+    else noteEls[1].appendChild(slot);
+    slot.appendChild(ctxEl);
+  }
+
+  function apply(k){
+    step=(k+N)%N;
+    const s=STEPS[step];
+    const on=new Set(s.vis);
+    ALL_GROUPS.forEach(id=>document.getElementById(id).classList.toggle('vis',on.has(id)));
+    const codesOn=new Set(s.codes||[]);
+    ALL_CODES.forEach(id=>document.getElementById(id).classList.toggle('vis',codesOn.has(id)));
+    if(s.code2) code2body.innerHTML=CODE2[s.code2];
+    let c1=s.code1;
+    if(!c1 && codesOn.has('code1')){
+      for(let j=step;j>=0;j--){ if(STEPS[j].code1){ c1=STEPS[j].code1; break; } }
+    }
+    if(c1) code1body.innerHTML=CODE1[c1];
+    clearTimeout(window.__code1t);
+    const firstSummary = !!s.code1out && !code1El.classList.contains('show-out');
+    if(firstSummary && !window.__STILL__){
+      code1El.classList.remove('show-out');
+      setOlsDrawn(false);
+      window.__code1t=setTimeout(()=>{
+        code1El.classList.add('show-out');
+        setOlsDrawn(!!s.olsDraw);
+      }, 220);
+    } else {
+      code1El.classList.toggle('show-out', !!s.code1out);
+      setOlsDrawn(!!s.olsDraw);
+    }
+    setDotsRed(!!s.dotsRed);
+    AT.morph=s.morph; AT.bars=s.bars; AT.sigv=s.sigv;
+    if(window.__STILL__){A.morph=AT.morph;A.bars=AT.bars;A.sigv=AT.sigv;drawCont();} else animateTo();
+    PANEL_IDS.forEach(pn=>{
+      panelEls[pn].classList.toggle('lit', step>=PANEL_FIRST[pn]);
+      panelEls[pn].classList.toggle('active', s.panel===pn);
+    });
+    const allNotes={1:[],2:[],3:[],4:[]};
+    for(let j=0;j<=step;j++){
+      const t=STEPS[j];
+      if(allNotes[t.panel]) allNotes[t.panel].push(...(t.bullets||[]));
+    }
+    // Park movable slots before rewriting the list.
+    ctxHome.appendChild(ctxEl);
+    headHome.appendChild(headEl);
+    PANEL_IDS.forEach(pn=>{
+      noteEls[pn].innerHTML=allNotes[pn].map(b=>`<li>${b}</li>`).join('');
+    });
+    placeHead(step>=2);
+    placeCtx(step>=3, step===3 && !!s.ctxLive);
+    const latestEq={1:'',2:'',3:'',4:''};
+    for(let j=0;j<=step;j++){
+      const t=STEPS[j];
+      PANEL_IDS.forEach(pn=>{ if(t['eq'+pn]) latestEq[pn]=t['eq'+pn]; });
+    }
+    PANEL_IDS.forEach(pn=>{
+      if(step<PANEL_FIRST[pn] || !latestEq[pn]){
+        eqEls[pn].classList.remove('vis');
+        eqEls[pn].innerHTML='';
+      } else {
+        eqEls[pn].innerHTML=latestEq[pn];
+        eqEls[pn].classList.add('vis');
+      }
+    });
+    counter.textContent=`step ${step+1} / ${N}`;
+    if(window.renderMathInElement) renderMathInElement(document.getElementById('board'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false});
+  }
+  function next(){ if(step<N-1) apply(step+1); }
+  function prev(){ if(step>0) apply(step-1); }
+  function jumpPanel(dir){
+    const order=PANEL_IDS.map(pn=>PANEL_FIRST[pn]);
+    if(dir>0){const nx=order.find(o=>o>step); apply(nx!==undefined?nx:N-1);}
+    else{const pr=[...order].reverse().find(o=>o<step); apply(pr!==undefined?pr:0);}
+  }
+
+  // ============================ FIT / CHROME ============================
+  const stage=document.getElementById('stage'), deck=document.getElementById('deck');
+  function fitDeck(){
+    const st=getComputedStyle(stage);
+    const aw=stage.clientWidth-parseFloat(st.paddingLeft)-parseFloat(st.paddingRight);
+    const ah=stage.clientHeight-parseFloat(st.paddingTop)-parseFloat(st.paddingBottom);
+    deck.style.transform=`scale(${Math.min(aw/1600,ah/900)})`;
+  }
+  window.addEventListener('resize',fitDeck); fitDeck();
+
+  // ============================ PENCIL ============================
+  const canvas=document.getElementById('ink'), cx=canvas.getContext('2d');
+  const CW=1920,CH=1080; canvas.width=CW; canvas.height=CH;
+  let pencil=false,penW=4,stroke=null; const strokes=[];
+  const pBtn=document.getElementById('pencil'),uBtn=document.getElementById('undo'),cBtn=document.getElementById('clear');
+  function setPencil(v){pencil=v;deck.classList.toggle('drawing',v);pBtn.classList.toggle('on',v);pBtn.textContent=`Pencil: ${v?'on':'off'}`;}
+  function pt(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*CW/r.width,y:(e.clientY-r.top)*CH/r.height};}
+  function redraw(){cx.clearRect(0,0,CW,CH);strokes.forEach(s=>{if(s.points.length<2)return;cx.save();cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle=s.color;cx.lineWidth=s.width;cx.beginPath();cx.moveTo(s.points[0].x,s.points[0].y);s.points.slice(1).forEach(p=>cx.lineTo(p.x,p.y));cx.stroke();cx.restore();});}
+  canvas.addEventListener('pointerdown',e=>{if(!pencil)return;e.preventDefault();canvas.setPointerCapture(e.pointerId);stroke={color:'#e07a2f',width:penW,points:[pt(e)]};strokes.push(stroke);});
+  canvas.addEventListener('pointermove',e=>{if(!stroke||!pencil)return;stroke.points.push(pt(e));redraw();});
+  function endStroke(){stroke=null;} canvas.addEventListener('pointerup',endStroke);canvas.addEventListener('pointercancel',endStroke);
+  function undo(){strokes.pop();redraw();} function clearAll(){strokes.length=0;redraw();}
+  pBtn.onclick=e=>{e.stopPropagation();setPencil(!pencil);}; uBtn.onclick=e=>{e.stopPropagation();undo();}; cBtn.onclick=e=>{e.stopPropagation();clearAll();};
+  window.addEventListener('resize',redraw);
+
+  document.addEventListener('keydown',e=>{
+    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return;}
+    if(e.metaKey||e.ctrlKey||e.altKey)return;
+    const k=e.key.toLowerCase();
+    if(['ArrowRight',' ','PageDown','Enter'].includes(e.key)){e.preventDefault();next();}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}
+    else if(e.key==='ArrowDown'){e.preventDefault();jumpPanel(1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();jumpPanel(-1);}
+    else if(k==='p'){e.preventDefault();setPencil(!pencil);}
+    else if(k==='u'){e.preventDefault();undo();}
+    else if(k==='c'||k==='e'){e.preventDefault();clearAll();}
+    else if(e.key==='['){e.preventDefault();penW=Math.max(1,penW-1);}
+    else if(e.key===']'){e.preventDefault();penW=Math.min(18,penW+1);}
+    else if(k==='r'){e.preventDefault();apply(0);}
+  });
+
+  // ============================ GO ============================
+  const _q=new URLSearchParams(location.search);
+  window.__STILL__ = _q.get('still')==='1';
+  const _s=parseInt(_q.get('step'),10);
+  function boot(){ apply(Number.isFinite(_s)?_s:0); }
+  if(window.renderMathInElement) boot();
+  else window.addEventListener('load',boot);
+  </script>
+</body>
+</html>

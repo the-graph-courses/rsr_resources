@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MoCA Ecuador — Exploratory Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #eef2f6;
+    --bg-2: #e2e8f0;
+    --surface: #ffffff;
+    --ink: #1c2430;
+    --muted: #5c6674;
+    --line: #d0d7e2;
+    --teal: #0f766e;
+    --teal-soft: #d9efe9;
+    --coral: #c2410c;
+    --amber: #b45309;
+    --green: #15803d;
+    --blue: #1d4ed8;
+    --slate: #475569;
+    --shadow: 0 1px 0 rgba(28,36,48,0.04);
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: "DM Sans", system-ui, sans-serif;
+    color: var(--ink);
+    background:
+      linear-gradient(180deg, #e8f0f4 0%, #eef2f6 220px, #eef2f6 100%);
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 22px 64px;
+  }
+  header.hero {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 28px;
+    align-items: end;
+    margin-bottom: 22px;
+  }
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--teal);
+    font-weight: 700;
+    margin: 0 0 8px;
+  }
+  h1 {
+    font-family: Fraunces, Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(1.8rem, 3vw, 2.55rem);
+    line-height: 1.15;
+    margin: 0 0 12px;
+    letter-spacing: -0.02em;
+  }
+  .lede {
+    color: var(--muted);
+    font-size: 1.02rem;
+    max-width: 54ch;
+    margin: 0;
+  }
+  .hero-note {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+  }
+  .hero-note h2 {
+    margin: 0 0 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+  .hero-note p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 18px 0 24px;
+  }
+  .nav a {
+    text-decoration: none;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 0.86rem;
+    font-weight: 600;
+  }
+  .nav a:hover { border-color: var(--teal); color: var(--teal); }
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 14px 12px;
+    box-shadow: var(--shadow);
+  }
+  .kpi .label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .kpi .value {
+    font-family: Fraunces, Georgia, serif;
+    font-size: 1.7rem;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .kpi .sub { font-size: 0.78rem; color: var(--muted); }
+  .kpi.accent { background: #0f766e; border-color: #0f766e; color: #fff; }
+  .kpi.accent .label, .kpi.accent .sub { color: rgba(255,255,255,0.78); }
+  section.block {
+    margin-bottom: 22px;
+  }
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin: 8px 0 12px;
+  }
+  .section-head h2 {
+    font-family: Fraunces, Georgia, serif;
+    font-size: 1.35rem;
+    margin: 0;
+    font-weight: 600;
+  }
+  .section-head p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .grid-2 { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .grid-2-equal { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    min-width: 0;
+  }
+  .card h3 {
+    margin: 0 0 4px;
+    font-size: 0.98rem;
+    font-weight: 700;
+  }
+  .card .caption {
+    color: var(--muted);
+    font-size: 0.82rem;
+    margin: 0 0 12px;
+  }
+  .chart-box { position: relative; height: 260px; }
+  .chart-box.tall { height: 320px; }
+  .chart-box.short { height: 220px; }
+  .glossary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .var {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 13px;
+    background: #fff;
+  }
+  .var .name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 0.92rem;
+    margin-bottom: 4px;
+  }
+  .tag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: var(--bg-2);
+    color: var(--slate);
+  }
+  .tag.outcome { background: #fee2e2; color: #9a3412; }
+  .tag.demo { background: #dbeafe; color: #1e40af; }
+  .tag.clinical { background: #ffedd5; color: #9a3412; }
+  .tag.behavior { background: #dcfce7; color: #166534; }
+  .tag.admin { background: #e2e8f0; color: #334155; }
+  .var p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.86rem;
+  }
+  .callout {
+    background: var(--teal-soft);
+    border: 1px solid #b7ddd4;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    color: #134e4a;
+    font-size: 0.92rem;
+  }
+  .callout strong { color: #115e59; }
+  .note {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+  footer {
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+  @media (max-width: 1100px) {
+    .kpis { grid-template-columns: repeat(3, 1fr); }
+    header.hero, .grid-2, .grid-3, .grid-2-equal, .glossary { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .wrap { padding: 18px 14px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Exploratory data analysis</p>
+      <h1>Cognitive impairment in Ecuadorian adults (mobile MoCA)</h1>
+      <p class="lede">
+        Dashboard overview of sociodemographic, clinical, behavioral, and cognitive-performance
+        variables from a sample of adults assessed with a mobile version of the Montreal Cognitive Assessment (MoCA).
+      </p>
+    </div>
+    <div class="hero-note">
+      <h2>How to read this page</h2>
+      <p>
+        Start with the glossary so each variable makes sense, then skim the headline metrics and
+        distributions. Categorical fields in the raw CSV were free-text and inconsistent, so charts
+        below use lightly cleaned labels for readability.
+      </p>
+    </div>
+  </header>
+
+  <nav class="nav">
+    <a href="#glossary">Variable glossary</a>
+    <a href="#overview">Overview</a>
+    <a href="#outcomes">Cognitive outcomes</a>
+    <a href="#people">Who is in the sample</a>
+    <a href="#clinical">Clinical &amp; behavioral</a>
+    <a href="#patterns">Patterns with Cog_num</a>
+  </nav>
+
+  <section class="block" id="glossary">
+    <div class="section-head">
+      <h2>Variable glossary</h2>
+      <p>What each field measures in this dataset</p>
+    </div>
+    <div class="glossary">
+      <div class="var">
+        <div class="name">ID <span class="tag admin">ID</span></div>
+        <p>Unique participant identifier (e.g. MOCA0001). One row per adult assessed.</p>
+      </div>
+      <div class="var">
+        <div class="name">Edad <span class="tag demo">Sociodemographic</span></div>
+        <p>Age in years at assessment. Sample ranges from young adulthood into older age.</p>
+      </div>
+      <div class="var">
+        <div class="name">Nivel <span class="tag demo">Sociodemographic</span></div>
+        <p>Highest educational level attained (free-text in the raw file; chart uses normalized categories such as Primaria, Secundaria, Universitaria, Posgrado).</p>
+      </div>
+      <div class="var">
+        <div class="name">Años <span class="tag demo">Sociodemographic</span></div>
+        <p>Years of formal education completed. Useful as a continuous education measure alongside Nivel.</p>
+      </div>
+      <div class="var">
+        <div class="name">Ocupación <span class="tag demo">Sociodemographic</span></div>
+        <p>Employment / occupational status (full-time, part-time, retired, homemaker, unemployed, etc.).</p>
+      </div>
+      <div class="var">
+        <div class="name">Sexo <span class="tag demo">Sociodemographic</span></div>
+        <p>Self-reported sex: Hombre, Mujer, or Otro.</p>
+      </div>
+      <div class="var">
+        <div class="name">Residencia <span class="tag demo">Sociodemographic</span></div>
+        <p>Area of residence, mainly Urbano vs Rural (raw spellings cleaned for the chart).</p>
+      </div>
+      <div class="var">
+        <div class="name">Historial <span class="tag clinical">Clinical</span></div>
+        <p>Self-reported clinical history (e.g. none, hypertension, diabetes, cardiac, neurological, psychiatric). Free-text; grouped for display.</p>
+      </div>
+      <div class="var">
+        <div class="name">Alcohol <span class="tag behavior">Behavioral</span></div>
+        <p>Usual alcohol use frequency: never / occasionally / frequently (normalized from free-text).</p>
+      </div>
+      <div class="var">
+        <div class="name">Tabaco <span class="tag behavior">Behavioral</span></div>
+        <p>Tobacco use status: never, former smoker, occasional smoker, or daily smoker.</p>
+      </div>
+      <div class="var">
+        <div class="name">Actividad Física <span class="tag behavior">Behavioral</span></div>
+        <p>Usual physical activity intensity: sedentary, light, moderate, or intense.</p>
+      </div>
+      <div class="var">
+        <div class="name">Tiempo_minutos_segundos <span class="tag admin">Process</span></div>
+        <p>Time taken to complete the mobile MoCA assessment (stored as mm:ss; plotted in minutes).</p>
+      </div>
+      <div class="var">
+        <div class="name">Cog_num <span class="tag outcome">Outcome</span></div>
+        <p><strong>Not the classic 0–30 MoCA total.</strong> The data documentation calls this the numeric MoCA result, but values in the file run from 0 to 100 (higher = better). Treat it as the mobile app’s reported numeric performance score / scaled index, not the traditional MoCA points total unless the authors clarify otherwise.</p>
+      </div>
+      <div class="var">
+        <div class="name">Cog_ord <span class="tag outcome">Outcome</span></div>
+        <p>Ordinal performance band tied tightly to Cog_num in this file: below expected (0–42), slightly below (43–71), within expected (72–100). Labels are the app’s “expected range” categories, not a standard published MoCA cutoff like &lt;26/30.</p>
+      </div>
+    </div>
+    <p class="note">
+      Source file: <code>MOCA_TEST_ECUADOR.csv</code> (semicolon-delimited, Latin-1). Dataset theme:
+      cognitive impairment screening with mobile MoCA plus sociodemographic, clinical, and behavioral covariates.
+    </p>
+  </section>
+
+  <section class="block" id="overview">
+    <div class="section-head">
+      <h2>Overview</h2>
+      <p>Headline sample characteristics</p>
+    </div>
+    <div class="kpis">
+      <div class="kpi accent">
+        <div class="label">Participants</div>
+        <div class="value" id="kpi-n">—</div>
+        <div class="sub">complete rows in file</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Mean age</div>
+        <div class="value" id="kpi-age">—</div>
+        <div class="sub" id="kpi-age-sub"></div>
+      </div>
+      <div class="kpi">
+        <div class="label">Mean education</div>
+        <div class="value" id="kpi-edu">—</div>
+        <div class="sub">years of schooling</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Mean Cog_num (0–100)</div>
+        <div class="value" id="kpi-cog">—</div>
+        <div class="sub" id="kpi-cog-sub"></div>
+      </div>
+      <div class="kpi">
+        <div class="label">Within expected range</div>
+        <div class="value" id="kpi-within">—</div>
+        <div class="sub" id="kpi-bands"></div>
+      </div>
+      <div class="kpi">
+        <div class="label">Urban residence</div>
+        <div class="value" id="kpi-urban">—</div>
+        <div class="sub" id="kpi-sex"></div>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Quick take:</strong> The sample is roughly balanced by sex, mostly urban, and middle-aged on average.
+      Cog_num here is on a 0–100 scale (mean about 60; median 67), not classic MoCA 0–30.
+      More than half fall slightly below or below the app’s “expected” band.
+    </div>
+  </section>
+
+  <section class="block" id="outcomes">
+    <div class="callout" style="margin-bottom:14px">
+      <strong>Important scoring note:</strong> A standard paper MoCA totals 0–30 points.
+      In this dataset, <code>Cog_num</code> instead spans 0–100 and lines up exactly with the three
+      <code>Cog_ord</code> bands (0–42 / 43–71 / 72–100). So these look like mobile-app scaled scores
+      or percentile-like indices, not raw MoCA points. Use them as the file’s cognitive outcome,
+      but do not interpret a value of 26 here as “MoCA = 26/30.”
+    </div>
+
+    <div class="section-head">
+      <h2>Cognitive outcomes</h2>
+      <p>The main endpoints from the mobile MoCA assessment</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Cog_num distribution</h3>
+        <p class="caption">App-reported numeric score in this file (0–100), not the classic MoCA 0–30 total. Higher = better.</p>
+        <div class="chart-box tall"><canvas id="chartCog"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Cog_ord performance bands</h3>
+        <p class="caption">App performance bands. In these data they map to Cog_num 0–42 / 43–71 / 72–100.</p>
+        <div class="chart-box tall"><canvas id="chartCogOrd"></canvas></div>
+      </div>
+    </div>
+    <div class="grid-2-equal" style="margin-top:14px">
+      <div class="card">
+        <h3>Test completion time</h3>
+        <p class="caption">Minutes to finish the mobile assessment (parsed from mm:ss).</p>
+        <div class="chart-box"><canvas id="chartTime"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Cog_num by performance band</h3>
+        <p class="caption">Average score within each Cog_ord category (sanity check that bands track the numeric score).</p>
+        <div class="chart-box"><canvas id="chartCogByBand"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="people">
+    <div class="section-head">
+      <h2>Who is in the sample</h2>
+      <p>Sociodemographic structure</p>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <h3>Age</h3>
+        <p class="caption">Edad in years</p>
+        <div class="chart-box short"><canvas id="chartAge"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Years of education</h3>
+        <p class="caption">Años completed</p>
+        <div class="chart-box short"><canvas id="chartEdu"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Sex</h3>
+        <p class="caption">Sexo</p>
+        <div class="chart-box short"><canvas id="chartSexo"></canvas></div>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:14px">
+      <div class="card">
+        <h3>Educational level</h3>
+        <p class="caption">Nivel, normalized from free-text responses</p>
+        <div class="chart-box tall"><canvas id="chartNivel"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Occupation &amp; residence</h3>
+        <p class="caption">Ocupación (normalized) and Residencia</p>
+        <div class="chart-box tall"><canvas id="chartOcup"></canvas></div>
+        <div class="chart-box short" style="margin-top:8px"><canvas id="chartRes"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="clinical">
+    <div class="section-head">
+      <h2>Clinical &amp; behavioral profile</h2>
+      <p>Health history and lifestyle covariates</p>
+    </div>
+    <div class="grid-2-equal">
+      <div class="card">
+        <h3>Clinical history</h3>
+        <p class="caption">Historial grouped from free-text (hypertension, diabetes, cardiac, etc.)</p>
+        <div class="chart-box tall"><canvas id="chartHist"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Lifestyle behaviors</h3>
+        <p class="caption">Alcohol, tobacco, and physical activity (normalized)</p>
+        <div class="chart-box short"><canvas id="chartAlc"></canvas></div>
+        <div class="chart-box short" style="margin-top:8px"><canvas id="chartTab"></canvas></div>
+        <div class="chart-box short" style="margin-top:8px"><canvas id="chartAct"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="patterns">
+    <div class="section-head">
+      <h2>Patterns with Cog_num</h2>
+      <p>How the continuous score relates to key groups (descriptive only)</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Age vs Cog_num</h3>
+        <p class="caption">Random sample of 400 participants for readability</p>
+        <div class="chart-box tall"><canvas id="chartScatter"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Mean Cog_num by education level</h3>
+        <p class="caption">Descriptive group means; not adjusted for confounding</p>
+        <div class="chart-box tall"><canvas id="chartCogNivel"></canvas></div>
+      </div>
+    </div>
+    <div class="grid-3" style="margin-top:14px">
+      <div class="card">
+        <h3>By sex</h3>
+        <p class="caption">Mean Cog_num</p>
+        <div class="chart-box short"><canvas id="chartCogSexo"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>By residence</h3>
+        <p class="caption">Mean Cog_num</p>
+        <div class="chart-box short"><canvas id="chartCogRes"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>By physical activity</h3>
+        <p class="caption">Mean Cog_num</p>
+        <div class="chart-box short"><canvas id="chartCogAct"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Built as an exploratory dashboard for teaching / data familiarization.
+    Categorical cleaning is heuristic and intended for visualization, not as a definitive recode for analysis.
+  </footer>
+</div>
+
+<script>
+const DATA = {"n": 1203, "kpis": {"n": 1203, "age_mean": 51.2, "age_sd": 9.9, "age_min": 20, "age_max": 93, "edu_mean": 14.8, "edu_sd": 8.3, "cog_mean": 60.0, "cog_sd": 27.4, "cog_median": 67.0, "time_mean": 5.5, "pct_within": 43.9, "pct_slight": 29.2, "pct_below": 26.9, "pct_urban": 72.3, "pct_female": 47.8, "pct_male": 48.5}, "hist": {"edad": {"counts": [2, 1, 0, 0, 2, 1, 96, 223, 182, 128, 114, 83, 77, 84, 57, 70, 38, 14, 11, 10, 4, 1, 4, 0, 1], "edges": [20, 23, 26, 29, 32, 35, 38, 41, 44, 47, 50, 53, 56, 59, 62, 65, 68, 71, 74, 77, 80, 83, 86, 89, 92, 95], "labels": ["20\u201323", "23\u201326", "26\u201329", "29\u201332", "32\u201335", "35\u201338", "38\u201341", "41\u201344", "44\u201347", "47\u201350", "50\u201353", "53\u201356", "56\u201359", "59\u201362", "62\u201365", "65\u201368", "68\u201371", "71\u201374", "74\u201377", "77\u201380", "80\u201383", "83\u201386", "86\u201389", "89\u201392", "92\u201395"]}, "anos": {"counts": [17, 11, 36, 93, 86, 77, 246, 151, 138, 165, 75, 52, 16, 2, 1, 3, 0, 4, 0, 0, 1, 2], "edges": [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44], "labels": ["0\u20132", "2\u20134", "4\u20136", "6\u20138", "8\u201310", "10\u201312", "12\u201314", "14\u201316", "16\u201318", "18\u201320", "20\u201322", "22\u201324", "24\u201326", "26\u201328", "28\u201330", "30\u201332", "32\u201334", "34\u201336", "36\u201338", "38\u201340", "40\u201342", "42\u201344"]}, "cog": {"counts": [34, 29, 43, 31, 40, 43, 44, 32, 49, 59, 46, 73, 59, 58, 67, 82, 129, 123, 124, 38], "edges": [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100], "labels": ["0\u20135", "5\u201310", "10\u201315", "15\u201320", "20\u201325", "25\u201330", "30\u201335", "35\u201340", "40\u201345", "45\u201350", "50\u201355", "55\u201360", "60\u201365", "65\u201370", "70\u201375", "75\u201380", "80\u201385", "85\u201390", "90\u201395", "95\u2013100"]}, "tiempo": {"counts": [7, 30, 111, 121, 179, 150, 129, 115, 72, 44, 48, 19, 19, 14, 21, 9, 15, 10, 11, 3, 4, 9, 3, 6, 4, 3, 5, 3, 3, 2, 0, 0, 2, 0, 0, 0, 0, 2, 2], "edges": [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5, 15.0, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5, 20.0, 20.5], "labels": ["1\u20132", "2\u20132", "2\u20132", "2\u20133", "3\u20134", "4\u20134", "4\u20134", "4\u20135", "5\u20136", "6\u20136", "6\u20136", "6\u20137", "7\u20138", "8\u20138", "8\u20138", "8\u20139", "9\u201310", "10\u201310", "10\u201310", "10\u201311", "11\u201312", "12\u201312", "12\u201312", "12\u201313", "13\u201314", "14\u201314", "14\u201314", "14\u201315", "15\u201316", "16\u201316", "16\u201316", "16\u201317", "17\u201318", "18\u201318", "18\u201318", "18\u201319", "19\u201320", "20\u201320", "20\u201320"]}}, "cats": {"cog_ord": {"labels": ["Dentro del rango", "Ligeramente bajo", "Por debajo"], "values": [528, 351, 324]}, "sexo": {"labels": ["Hombre", "Mujer", "Otro"], "values": [583, 575, 45]}, "residencia": {"labels": ["Urbano", "Rural", "Sin dato"], "values": [870, 332, 1]}, "nivel": {"labels": ["Sin educaci\u00f3n formal", "Primaria incompleta", "Primaria", "Secundaria incompleta", "Secundaria", "T\u00e9cnica / tecnol\u00f3gica", "Universitaria incompleta", "Universitaria completa", "Posgrado", "Otro / no clasificado"], "values": [32, 12, 132, 43, 347, 62, 33, 340, 135, 67]}, "ocupacion": {"labels": ["Empleo tiempo completo", "Empleo tiempo parcial", "Ama de casa", "Jubilado/a", "Desempleado/a", "Estudiante", "Agricultor / jornalero", "Profesional independiente", "Negocio propio", "No especificado", "Otro"], "values": [380, 168, 92, 101, 59, 23, 8, 13, 2, 346, 11]}, "historial": {"labels": ["Ninguno", "Hipertensi\u00f3n", "Diabetes", "Card\u00edacas", "Neurol\u00f3gicas", "Psiqui\u00e1tricas", "M\u00faltiples / combinadas", "Otras"], "values": [793, 117, 115, 68, 16, 22, 25, 47]}, "alcohol": {"labels": ["Nunca", "Ocasionalmente", "Frecuentemente"], "values": [413, 685, 105]}, "tabaco": {"labels": ["Nunca", "Exfumador", "Fumador ocasional", "Fumador diario", "Otro"], "values": [719, 142, 282, 56, 4]}, "actividad": {"labels": ["Sedentario", "Ligera", "Moderada", "Intensa", "Otro"], "values": [183, 621, 311, 84, 4]}}, "cog_by": {"sexo": {"labels": ["Hombre", "Mujer", "Otro"], "means": [59.0, 60.9, 61.5], "ns": [583, 575, 45], "stds": [27.6, 27.3, 28.3]}, "residencia": {"labels": ["Urbano", "Rural", "Sin dato"], "means": [62.4, 53.8, 70.0], "ns": [870, 332, 1], "stds": [27.0, 27.5, 0]}, "nivel": {"labels": ["Sin educaci\u00f3n formal", "Primaria incompleta", "Primaria", "Secundaria incompleta", "Secundaria", "T\u00e9cnica / tecnol\u00f3gica", "Universitaria incompleta", "Universitaria completa", "Posgrado", "Otro / no clasificado"], "means": [39.1, 25.2, 43.2, 46.5, 56.4, 65.4, 60.6, 70.4, 69.0, 60.8], "ns": [32, 12, 132, 43, 347, 62, 33, 340, 135, 67], "stds": [29.3, 19.2, 26.9, 23.4, 27.0, 24.3, 22.0, 24.2, 25.1, 25.0]}, "actividad": {"labels": ["Sedentario", "Ligera", "Moderada", "Intensa", "Otro"], "means": [49.8, 60.6, 63.6, 64.4, 73.5], "ns": [183, 621, 311, 84, 4], "stds": [27.0, 26.6, 27.8, 28.5, 16.8]}, "historial": {"labels": ["Ninguno", "Hipertensi\u00f3n", "Diabetes", "Card\u00edacas", "Neurol\u00f3gicas", "Psiqui\u00e1tricas", "M\u00faltiples / combinadas", "Otras"], "means": [62.9, 60.7, 55.1, 50.9, 47.2, 49.6, 49.9, 49.6], "ns": [793, 117, 115, 68, 16, 22, 25, 47], "stds": [26.6, 27.6, 28.4, 28.9, 27.0, 29.9, 30.2, 24.6]}, "cog_ord": {"labels": ["Dentro del rango", "Ligeramente bajo", "Por debajo"], "means": [85.1, 57.7, 21.7], "ns": [528, 351, 324], "stds": [6.6, 8.4, 12.2]}}, "scatter": {"edad": [50, 60, 49, 43, 46, 42, 40, 60, 58, 47, 50, 60, 43, 49, 48, 41, 41, 77, 44, 62, 48, 41, 42, 68, 67, 44, 50, 50, 53, 49, 59, 42, 44, 48, 50, 41, 50, 52, 44, 50, 57, 65, 70, 45, 44, 62, 42, 43, 41, 43, 40, 69, 51, 43, 44, 45, 60, 54, 40, 53, 48, 45, 54, 72, 40, 58, 42, 46, 42, 88, 60, 46, 86, 40, 49, 50, 58, 45, 45, 42, 66, 40, 44, 40, 67, 63, 45, 65, 50, 57, 69, 47, 66, 58, 57, 40, 57, 48, 49, 60, 42, 50, 65, 44, 55, 61, 63, 49, 65, 62, 44, 50, 70, 79, 44, 43, 40, 42, 44, 40, 48, 50, 47, 50, 41, 60, 63, 47, 52, 46, 42, 52, 40, 62, 55, 61, 42, 43, 61, 46, 50, 44, 65, 41, 57, 62, 41, 40, 68, 61, 41, 62, 59, 57, 40, 52, 44, 60, 59, 62, 41, 63, 55, 40, 45, 59, 52, 71, 46, 64, 44, 50, 58, 63, 44, 41, 44, 48, 60, 60, 75, 42, 49, 58, 52, 40, 50, 43, 60, 50, 75, 53, 52, 57, 45, 55, 55, 42, 58, 47, 40, 50, 56, 54, 59, 40, 51, 52, 64, 52, 43, 57, 48, 48, 43, 65, 63, 40, 57, 41, 64, 54, 40, 40, 43, 50, 40, 41, 45, 55, 46, 49, 43, 67, 40, 65, 62, 60, 46, 65, 50, 67, 59, 41, 68, 50, 41, 73, 42, 55, 44, 46, 49, 40, 68, 49, 70, 60, 65, 43, 45, 56, 51, 58, 55, 45, 60, 62, 45, 50, 59, 57, 57, 52, 47, 46, 61, 46, 42, 45, 65, 40, 62, 66, 53, 55, 56, 42, 42, 45, 44, 46, 49, 41, 53, 66, 69, 63, 60, 41, 50, 46, 42, 59, 46, 48, 41, 40, 64, 60, 45, 55, 45, 63, 65, 59, 47, 55, 62, 41, 44, 43, 45, 40, 58, 69, 58, 93, 43, 49, 63, 56, 69, 56, 67, 48, 40, 41, 67, 44, 60, 51, 44, 45, 55, 57, 68, 43, 56, 41, 47, 59, 42, 58, 42, 45, 55, 46, 41, 45, 45, 78, 50, 41, 48, 45, 48, 42, 46, 47, 55, 50, 40, 51, 66, 65, 51, 42, 45, 66, 49, 21, 50, 55, 67, 44, 63, 43, 41, 70, 46, 65, 42, 41, 56, 47, 67, 60, 59, 42], "cog": [57, 28, 88, 80, 9, 19, 90, 48, 94, 61, 37, 14, 89, 92, 91, 73, 3, 28, 5, 81, 96, 78, 95, 12, 12, 78, 29, 0, 72, 59, 72, 23, 46, 61, 79, 85, 74, 44, 93, 0, 84, 15, 44, 79, 27, 92, 68, 69, 87, 94, 85, 88, 18, 76, 91, 96, 53, 65, 80, 63, 91, 62, 16, 49, 96, 82, 64, 23, 13, 1, 65, 22, 6, 40, 46, 54, 71, 78, 37, 44, 82, 29, 55, 94, 21, 82, 21, 22, 81, 2, 12, 92, 7, 80, 53, 35, 82, 49, 80, 4, 66, 79, 71, 68, 55, 46, 44, 35, 62, 87, 100, 10, 13, 7, 52, 87, 93, 71, 92, 26, 49, 69, 60, 36, 85, 32, 15, 9, 62, 92, 95, 55, 72, 20, 61, 92, 50, 89, 66, 75, 72, 75, 56, 54, 56, 89, 50, 91, 28, 46, 39, 38, 83, 78, 92, 85, 77, 27, 93, 43, 92, 78, 80, 88, 7, 78, 56, 75, 15, 13, 44, 66, 86, 80, 89, 89, 68, 62, 84, 46, 30, 46, 81, 70, 78, 25, 50, 11, 32, 56, 34, 83, 26, 2, 57, 10, 74, 96, 85, 87, 88, 80, 83, 73, 44, 57, 89, 88, 59, 81, 79, 54, 49, 88, 34, 34, 90, 59, 60, 87, 39, 51, 44, 81, 30, 40, 57, 85, 89, 42, 80, 54, 70, 45, 73, 82, 30, 55, 94, 56, 48, 38, 75, 89, 90, 59, 56, 96, 81, 45, 45, 58, 90, 81, 75, 25, 70, 15, 54, 81, 25, 46, 87, 32, 82, 63, 45, 30, 87, 65, 52, 91, 40, 42, 88, 78, 89, 56, 53, 92, 90, 84, 88, 60, 60, 20, 4, 48, 82, 79, 85, 31, 56, 23, 70, 34, 14, 0, 70, 85, 50, 68, 34, 53, 71, 83, 92, 16, 90, 83, 92, 44, 70, 8, 43, 14, 8, 36, 14, 54, 58, 72, 91, 87, 88, 35, 44, 40, 92, 82, 39, 59, 48, 38, 59, 62, 97, 87, 75, 40, 29, 14, 81, 92, 82, 40, 85, 92, 61, 73, 61, 81, 75, 61, 79, 80, 92, 23, 82, 49, 93, 18, 5, 9, 55, 92, 85, 86, 68, 46, 56, 82, 41, 50, 87, 36, 74, 81, 63, 59, 19, 82, 61, 20, 65, 85, 22, 85, 88, 55, 96, 22, 83, 94, 28, 80, 66, 10, 6, 79], "anos": [15, 5, 23, 18, 13, 12, 11, 10, 15, 13, 19, 18, 14, 13, 7, 20, 13, 6, 6, 25, 20, 13, 19, 0, 15, 16, 12, 6, 20, 16, 10, 13, 7, 16, 9, 17, 22, 12, 19, 7, 21, 6, 35, 13, 12, 12, 19, 21, 9, 21, 13, 12, 9, 23, 2, 15, 14, 18, 14, 19, 12, 13, 18, 14, 16, 8, 10, 13, 18, 3, 18, 12, 3, 10, 7, 19, 18, 24, 17, 15, 16, 19, 17, 15, 13, 63, 6, 13, 11, 16, 6, 3, 66, 13, 18, 2, 18, 30, 13, 18, 9, 0, 13, 18, 15, 12, 15, 15, 14, 16, 19, 15, 10, 8, 27, 19, 14, 11, 13, 5, 13, 12, 14, 7, 20, 7, 0, 14, 52, 15, 6, 8, 18, 14, 16, 8, 5, 19, 18, 14, 25, 13, 7, 18, 16, 24, 10, 20, 14, 0, 12, 18, 13, 12, 19, 12, 13, 13, 59, 23, 20, 12, 12, 19, 7, 14, 9, 16, 7, 5, 16, 15, 22, 13, 16, 10, 19, 12, 16, 11, 5, 12, 11, 12, 7, 18, 8, 12, 14, 19, 13, 11, 12, 13, 6, 22, 10, 20, 20, 16, 19, 15, 13, 20, 15, 18, 24, 12, 20, 16, 20, 18, 18, 13, 7, 16, 23, 16, 11, 7, 16, 13, 18, 14, 10, 6, 18, 18, 19, 13, 15, 49, 18, 22, 13, 16, 19, 8, 15, 17, 35, 9, 6, 13, 13, 15, 18, 18, 16, 12, 9, 8, 13, 15, 18, 49, 14, 15, 12, 14, 10, 14, 18, 9, 18, 19, 18, 10, 17, 17, 9, 21, 10, 22, 20, 18, 19, 14, 12, 22, 12, 13, 12, 14, 11, 8, 22, 12, 21, 22, 14, 23, 13, 13, 21, 13, 11, 15, 8, 13, 8, 20, 12, 18, 19, 18, 12, 5, 18, 6, 20, 15, 14, 7, 10, 0, 6, 8, 16, 10, 12, 15, 16, 13, 16, 22, 31, 10, 20, 9, 12, 56, 21, 10, 4, 12, 18, 13, 6, 12, 6, 8, 12, 16, 15, 10, 18, 5, 11, 18, 11, 9, 13, 18, 15, 15, 25, 9, 17, 18, 8, 11, 14, 12, 48, 20, 15, 13, 12, 11, 18, 16, 21, 20, 13, 8, 12, 17, 18, 12, 6, 12, 15, 7, 24, 14, 16, 13, 15, 10, 0, 5, 13, 12, 7, 16, 12, 5, 6, 13], "sexo": ["Hombre", "Hombre", "Mujer", "Hombre", "Otro", "Mujer", "Hombre", "Mujer", "Hombre", "Mujer", "Hombre", "Hombre", "Hombre", "Hombre", "Mujer", "Hombre", "Otro", "Hombre", "Mujer", "Mujer", "Hombre", "Mujer", "Hombre", "Hombre", "Hombre", "Mujer", "Hombre", "Mujer", "Mujer", "Hombre", "Otro", "Mujer", "Mujer", "Hombre", "Mujer", "Mujer", "Mujer", "Mujer", "Hombre", "Mujer", "Hombre", "Mujer", "Hombre", "Otro", "Hombre", "Hombre", "Hombre", "Mujer", "Mujer", "Mujer", "Mujer", "Hombre", "Hombre", "Otro", "Hombre", "Mujer", "Hombre", "Mujer", "Hombre", "Mujer", "Hombre", "Mujer", "Hombre", "Hombre", "Hombre", "Hombre", "Mujer", "Mujer", "Mujer", "Hombre", "Mujer", "Hombre", "Mujer", "Hombre", "Mujer", "Mujer", "Mujer", "Hombre", "Hombre", "Hombre", "Hombre", "Mujer", "Hombre", "Hombre", "Hombre", "Mujer", "Otro", "Mujer", "Mujer", "Hombre", "Hombre", "Mujer", "Hombre", "Hombre", "Mujer", "Hombre", "Hombre", "Mujer", "Otro", "Otro", "Otro", "Hombre", "Hombre", "Mujer", "Mujer", "Mujer", "Hombre", "Mujer", "Hombre", "Mujer", "Hombre", "Otro", "Hombre", "Mujer", "Mujer", "Hombre", "Mujer", "Mujer", "Mujer", "Hombre", "Hombre", "Hombre", "Mujer", "Hombre", "Mujer", "Mujer", "Hombre", "Otro", "Hombre", "Mujer", "Mujer", "Mujer", "Hombre", "Mujer", "Mujer", "Hombre", "Mujer", "Hombre", "Mujer", "Hombre", "Mujer", "Otro", "Mujer", "Hombre", "Mujer", "Hombre", "Mujer", "Mujer", "Mujer", "Hombre", "Mujer", "Hombre", "Mujer", "Mujer", "Hombre", "Mujer", "Mujer", "Hombre", "Mujer", "Mujer", "Mujer", "Hombre", "Hombre", "Hombre", "Hombre", "Hombre", "Mujer", "Hombre", "Mujer", "Hombre", "Hombre", "Hombre", "Mujer", "Mujer", "Hombre", "Mujer", "Mujer", "Hombre", "Mujer", "Hombre", "Hombre", "Hombre", "Otro", "Hombre", "Hombre", "Mujer", "Otro", "Hombre", "Mujer", "Mujer", "Hombre", "Mujer", "Hombre", "Hombre", "Hombre", "Mujer", "Mujer", "Mujer", "Mujer", "Hombre", "Hombre", "Hombre", "Hombre", "Hombre", "Hombre", "Mujer", "Hombre", "Mujer", "Mujer", "Hombre", "Mujer", "Hombre", "Mujer", "Mujer", "Mujer", "Mujer", "Mujer", "Mujer", "Hombre", "Mujer", "Hombre", "Hombre", "Hombre", "Hombre", "Mujer", "Hombre", "Hombre", "Mujer", "Mujer", "Hombre", "Hombre", "Hombre", "Mujer", "Hombre", "Mujer", "Hombre", "Mujer", "Hombre", "Hombre", "Hombre", "Mujer", "Hombre", "Mujer", "Mujer", "Hombre", "Mujer", "Mujer", "Hombre", "Hombre", "Mujer", "Hombre", "Mujer", "Hombre", "Hombre", "Hombre", "Mujer", "Mujer", "Hombre", "Hombre", "Mujer", "Mujer", "Hombre", "Hombre", "Hombre", "Hombre", "Otro", "Hombre", "Mujer", "Mujer", "Hombre", "Hombre", "Hombre", "Mujer", "Hombre", "Mujer", "Hombre", "Hombre", "Hombre", "Hombre", "Hombre", "Hombre", "Mujer", "Hombre", "Hombre", "Mujer", "Mujer", "Hombre", "Mujer", "Hombre", "Mujer", "Hombre", "Hombre", "Hombre", "Hombre", "Hombre", "Mujer", "Mujer", "Mujer", "Hombre", "Mujer", "Otro", "Hombre", "Mujer", "Mujer", "Hombre", "Hombre", "Hombre", "Mujer", "Mujer", "Hombre", "Otro", "Hombre", "Hombre", "Hombre", "Hombre", "Hombre", "Mujer", "Mujer", "Mujer", "Mujer", "Hombre", "Hombre", "Mujer", "Hombre", "Mujer", "Mujer", "Hombre", "Mujer", "Mujer", "Hombre", "Hombre", "Hombre", "Mujer", "Mujer", "Mujer", "Hombre", "Hombre", "Mujer", "Otro", "Hombre", "Hombre", "Hombre", "Mujer", "Hombre", "Hombre", "Mujer", "Mujer", "Mujer", "Hombre", "Mujer", "Hombre", "Mujer", "Mujer", "Mujer", "Mujer", "Mujer", "Mujer", "Hombre", "Mujer", "Hombre", "Hombre", "Mujer", "Mujer", "Hombre", "Hombre", "Hombre", "Hombre", "Hombre", "Mujer", "Mujer", "Mujer", "Otro", "Mujer", "Hombre", "Hombre", "Mujer", "Hombre", "Hombre", "Mujer", "Hombre", "Hombre", "Mujer", "Mujer", "Mujer", "Hombre", "Hombre", "Hombre", "Hombre", "Hombre", "Hombre", "Hombre", "Hombre", "Hombre", "Mujer", "Mujer", "Hombre", "Mujer", "Hombre", "Hombre", "Mujer"]}};
+
+const colors = {
+  teal: '#0f766e',
+  tealFill: 'rgba(15,118,110,0.75)',
+  coral: '#c2410c',
+  amber: '#b45309',
+  green: '#15803d',
+  blue: '#1d4ed8',
+  slate: '#64748b',
+  ink: '#1c2430',
+  grid: 'rgba(28,36,48,0.08)',
+  band: ['#15803d', '#b45309', '#c2410c'],
+  multi: ['#0f766e', '#1d4ed8', '#b45309', '#c2410c', '#0e7490', '#0891b2', '#be123c', '#475569', '#ca8a04', '#166534'],
+};
+
+Chart.defaults.font.family = '"DM Sans", system-ui, sans-serif';
+Chart.defaults.color = '#5c6674';
+Chart.defaults.plugins.legend.labels.boxWidth = 12;
+Chart.defaults.plugins.legend.labels.boxHeight = 12;
+Chart.defaults.scale.grid.color = colors.grid;
+Chart.defaults.scale.border.color = 'rgba(28,36,48,0.15)';
+
+function pct(n, d) { return ((100 * n) / d).toFixed(0) + '%'; }
+
+function fillKpis() {
+  const k = DATA.kpis;
+  document.getElementById('kpi-n').textContent = k.n.toLocaleString();
+  document.getElementById('kpi-age').textContent = k.age_mean;
+  document.getElementById('kpi-age-sub').textContent = `SD ${k.age_sd} · range ${k.age_min}–${k.age_max}`;
+  document.getElementById('kpi-edu').textContent = k.edu_mean;
+  document.getElementById('kpi-cog').textContent = k.cog_mean;
+  document.getElementById('kpi-cog-sub').textContent = `SD ${k.cog_sd} · median ${k.cog_median}`;
+  document.getElementById('kpi-within').textContent = k.pct_within + '%';
+  document.getElementById('kpi-bands').textContent = `${k.pct_slight}% slight · ${k.pct_below}% below`;
+  document.getElementById('kpi-urban').textContent = k.pct_urban + '%';
+  document.getElementById('kpi-sex').textContent = `${k.pct_male}% men · ${k.pct_female}% women`;
+}
+
+function histChart(id, hist, label, color) {
+  return new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: {
+      labels: hist.labels,
+      datasets: [{
+        label,
+        data: hist.counts,
+        backgroundColor: color,
+        borderRadius: 3,
+        barPercentage: 1,
+        categoryPercentage: 0.95,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => items[0].label + (label.includes('min') ? ' min' : ''),
+            label: (item) => `n = ${item.raw}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: {
+            maxRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: 10,
+            font: { size: 10 },
+          },
+          title: { display: true, text: label, font: { size: 11, weight: '600' }, color: colors.ink },
+        },
+        y: {
+          title: { display: true, text: 'Frequency', font: { size: 11, weight: '600' }, color: colors.ink },
+          ticks: { precision: 0 },
+        },
+      },
+    },
+  });
+}
+
+function barChart(id, cat, opts = {}) {
+  const horizontal = !!opts.horizontal;
+  const palette = opts.colors || colors.multi;
+  const bg = cat.labels.map((_, i) => palette[i % palette.length]);
+  return new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: {
+      labels: cat.labels,
+      datasets: [{
+        data: cat.values,
+        backgroundColor: bg,
+        borderRadius: 4,
+      }],
+    },
+    options: {
+      indexAxis: horizontal ? 'y' : 'x',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (item) => {
+              const n = item.raw;
+              return `n = ${n} (${pct(n, DATA.n)})`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          title: { display: true, text: horizontal ? 'Participants (n)' : (opts.xTitle || ''), font: { size: 11, weight: '600' }, color: colors.ink },
+          ticks: { precision: 0, maxRotation: 0, font: { size: 11 } },
+        },
+        y: {
+          title: { display: !horizontal && !!opts.yTitle, text: opts.yTitle || 'Participants (n)', font: { size: 11, weight: '600' }, color: colors.ink },
+          ticks: { font: { size: 11 } },
+        },
+      },
+    },
+  });
+}
+
+function meanBar(id, obj, color = colors.teal) {
+  return new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: {
+      labels: obj.labels,
+      datasets: [{
+        label: 'Mean Cog_num',
+        data: obj.means,
+        backgroundColor: Array.isArray(color) ? color : color,
+        borderRadius: 4,
+      }],
+    },
+    options: {
+      indexAxis: obj.labels.length > 5 ? 'y' : 'x',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (item) => {
+              const i = item.dataIndex;
+              return `mean ${obj.means[i]} (n=${obj.ns[i]}, SD=${obj.stds[i]})`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          min: 0,
+          max: 100,
+          title: { display: true, text: obj.labels.length > 5 ? 'Mean Cog_num (0–100)' : '', font: { size: 11, weight: '600' }, color: colors.ink },
+        },
+        y: {
+          min: obj.labels.length > 5 ? undefined : 0,
+          max: obj.labels.length > 5 ? undefined : 100,
+          title: { display: obj.labels.length <= 5, text: 'Mean Cog_num (0–100)', font: { size: 11, weight: '600' }, color: colors.ink },
+          ticks: { font: { size: 11 } },
+        },
+      },
+    },
+  });
+}
+
+function doughnut(id, cat, palette) {
+  return new Chart(document.getElementById(id), {
+    type: 'doughnut',
+    data: {
+      labels: cat.labels,
+      datasets: [{
+        data: cat.values,
+        backgroundColor: palette,
+        borderWidth: 2,
+        borderColor: '#ffffff',
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '58%',
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 14 } },
+        tooltip: {
+          callbacks: {
+            label: (item) => `${item.label}: ${item.raw} (${pct(item.raw, DATA.n)})`,
+          },
+        },
+      },
+    },
+  });
+}
+
+fillKpis();
+
+histChart('chartCog', DATA.hist.cog, 'Cog_num score', colors.tealFill);
+doughnut('chartCogOrd', DATA.cats.cog_ord, colors.band);
+histChart('chartTime', DATA.hist.tiempo, 'Minutes', 'rgba(180,83,9,0.75)');
+meanBar('chartCogByBand', DATA.cog_by.cog_ord, colors.band);
+
+histChart('chartAge', DATA.hist.edad, 'Age (years)', 'rgba(29,78,216,0.75)');
+histChart('chartEdu', DATA.hist.anos, 'Years of education', 'rgba(14,116,144,0.75)');
+barChart('chartSexo', DATA.cats.sexo, { colors: ['#1d4ed8', '#be123c', '#64748b'], yTitle: 'Participants (n)' });
+barChart('chartNivel', DATA.cats.nivel, { horizontal: true, colors: Array(10).fill(colors.teal) });
+barChart('chartOcup', DATA.cats.ocupacion, { horizontal: true, colors: Array(12).fill('#0891b2') });
+barChart('chartRes', DATA.cats.residencia, { colors: ['#0f766e', '#b45309', '#64748b', '#94a3b8'], yTitle: 'Participants (n)' });
+
+barChart('chartHist', DATA.cats.historial, { horizontal: true, colors: ['#64748b', '#c2410c', '#b45309', '#be123c', '#0e7490', '#1d4ed8', '#0f766e', '#a8a29e'] });
+barChart('chartAlc', DATA.cats.alcohol, { colors: ['#15803d', '#b45309', '#c2410c', '#64748b'], yTitle: 'n' });
+barChart('chartTab', DATA.cats.tabaco, { colors: ['#15803d', '#0891b2', '#b45309', '#c2410c', '#64748b'], yTitle: 'n' });
+barChart('chartAct', DATA.cats.actividad, { colors: ['#64748b', '#0891b2', '#0f766e', '#15803d', '#a8a29e'], yTitle: 'n' });
+
+// scatter
+const sexColor = { Hombre: '#1d4ed8', Mujer: '#be123c', Otro: '#64748b' };
+new Chart(document.getElementById('chartScatter'), {
+  type: 'scatter',
+  data: {
+    datasets: ['Hombre', 'Mujer', 'Otro'].map(s => ({
+      label: s,
+      data: DATA.scatter.edad.map((x, i) => DATA.scatter.sexo[i] === s ? ({ x, y: DATA.scatter.cog[i] }) : null).filter(Boolean),
+      backgroundColor: sexColor[s] + '99',
+      pointRadius: 3.5,
+      pointHoverRadius: 5,
+    })),
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: (ctx) => `${ctx.dataset.label}: age ${ctx.raw.x}, Cog_num ${ctx.raw.y}`,
+        },
+      },
+    },
+    scales: {
+      x: {
+        title: { display: true, text: 'Age (years)', font: { size: 11, weight: '600' }, color: colors.ink },
+      },
+      y: {
+        min: 0,
+        max: 100,
+        title: { display: true, text: 'Cog_num (0–100)', font: { size: 11, weight: '600' }, color: colors.ink },
+      },
+    },
+  },
+});
+
+meanBar('chartCogNivel', DATA.cog_by.nivel, colors.teal);
+meanBar('chartCogSexo', DATA.cog_by.sexo, ['#1d4ed8', '#be123c', '#64748b']);
+meanBar('chartCogRes', DATA.cog_by.residencia, ['#0f766e', '#b45309', '#64748b', '#94a3b8']);
+meanBar('chartCogAct', DATA.cog_by.actividad, ['#64748b', '#0891b2', '#0f766e', '#15803d', '#a8a29e']);
+</script>
+</body>
+</html>
