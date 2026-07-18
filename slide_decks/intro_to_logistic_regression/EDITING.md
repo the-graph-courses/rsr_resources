@@ -1,8 +1,9 @@
 # Editing this deck
 
-Open `index.html` and search for `EDIT PANEL 1 HERE` (or the panel 2–4 bullet lists).
+Open `index.html` and search for `EDIT PANEL 1 HERE`, `EDIT PANEL 2 HERE`, or
+`EDIT PANEL 3 HERE`.
 
-## Panel 1 (left column)
+## Panel content
 
 Everything is ordinary stacked HTML. Edit in place; keep `data-step` for when each piece appears:
 
@@ -18,19 +19,11 @@ Everything is ordinary stacked HTML. Edit in place; keep `data-step` for when ea
 - `frag out` = console output
 - Same `data-step` value → appear together
 
-## Panels 2–4
-
-Still list bullets:
-
-```html
-<li data-step="5">Grip tends to be <strong>lower at older ages</strong>.</li>
-```
-
 - Use `<strong>...</strong>` for teal emphasis.
 - Use `<span class="bad">...</span>` for red emphasis.
 
 The `STEP_CHANGES` list near the bottom of `index.html` controls only the charts,
-equations, and active panel (and the code boxes on panels 2 and 4).
+equations, and active panel.
 
 ## Images
 
@@ -38,7 +31,7 @@ Images can be ordinary HTML with a reveal step. The panel 1 photograph is an
 example:
 
 ```html
-<figure class="inset-photo" data-step="4">
+<figure class="inset-photo" data-step="1">
   <img src="images/grip_dynamometer.jpg" alt="Description of the image">
   <figcaption>hand dynamometer</figcaption>
 </figure>
@@ -46,5 +39,3 @@ example:
 
 Its size and position are controlled by `.inset-photo` in the CSS near the top
 of `index.html`. No image-specific JavaScript is required.
-
-The original deck remains unchanged in `../logistic_regression_html_animate/`.

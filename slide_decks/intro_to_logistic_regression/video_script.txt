@@ -1,0 +1,266 @@
+Intro to Logistic Regression
+===
+
+[00:00:00] 
+
+
+Hello and welcome back. In the previous sets of videos, we've been getting introduced to the concepts behind linear regression. We're going to carry some of those concepts forward now to a new topic called logistic regression, which we use to model outcomes that are [00:56:00] binary, outcomes that are yes or no, and we're going to be modeling the probability of having a positive outcome.
+
+And what we're going to be modeling is the probability of getting that outcome
+
+And what we're gonna be modeling is the probability of that outcome
+
+So let's get started
+
+Here is our list of learning objectives. We will first distinguish between continuous and binary outcomes. Continuous outcomes are what we had in linear regression. Binary outcomes will be for logistic regression. Then we will explain why a straight line, a linear regression fit, is unsuitable for modeling probabilities.
+
+And then we will fit a logistic regression and understand how it can be used to predict probabilities[00:57:00] 
+
+GRAPH Courses Team: So let's start by introducing the data we're going to be using. We're gonna be using this KLOSA dataset, where KLOSA stands for Korean Longitudinal Study on Aging, and we have four thousand one hundred and eighty-four Korean men aged forty-five and above. we read in that data, and then we're just going to be using two variables in this particular illustration, their age and their grip strength in kilograms.
+
+Grip strength is measured by this device called a hand dynamometer And it is used as an indicator of general muscular strength and muscular health especially for aging individuals
+
+Our outcome in this case is going to be grip strength, which you'll notice is a continuous outcome, and our predictor is going to be age. So we're starting with a continuous outcome, but eventually we'll turn it into a binary outcome, which is what we actually model with logistic regression.
+
+But we're starting with a linear regression for revision and so that we can draw some contrasts between the [00:01:00] two
+
+So let's plot this data of age and grip strength for these Korean men. Here is some of that data on the screen. We didn't plot every single point because the plot will get too busy if we do that
+
+So let's fit our ordinary least squares regression. So we just call LM with grip predicted by age, set the data
+
+And we can immediately call the summary of that model. And here is some of that output
+
+And here is the equation that we have essentially fit, which is given by this yellow line on the right. We have an intercept of fifty-five point seven. That means someone at age zero would have a grip strength of fifty-five point seven kg based on this line.
+
+That's not really a meaningful intercept. But the thing that's really meaningful here is this slope on age, this effect of age, which we see happens to be significant. And what that basically means is that for every one unit increase in age You have a 0.38 kg reduction in grip strength. Okay?
+
+So looking at this line, we can see for every one unit you move in the X direction, you move [00:02:00] down zero point three eight two, in the Y-axis.
+
+or if you want, you can say something like, for every ten units you move on the x-axis, you move down on the y-axis by three point eight two units. So that is just a revision of linear regression. Now, if we want to turn this into a logistic regression question, then we're going to take our outcome of grip strength and turn it into a binary variable In this case, we're going to use the cutoff that was suggested by the European Working Group on, uh, sarcopenia, that men are considered to have weak grip, So medically weak grip that may be worth some investigation if their grip strength is less than, uh, twenty-seven kg or less than or equal to twenty-seven kg 
+
+Here's what that looks like on the plot
+
+And we can put a line for that cutoff of, uh, twenty-seven kg. And so what we're going to ask now on the next slide is how does the probability of having a weak grip change as you go across ages? As you can see, there's a higher [00:03:00] chance of someone that is aged, let's say eighty-five, having a weak grip than someone that is aged, let's say forty-five.
+
+But how do we model this probability? This is the question that logistic regression is going to help us answer.
+
+In this case, we're taking a continuous outcome that's modeled with linear regression, turning it into a binary outcome that will be modeled with logistic regression. But it's important for you to remember that in a lot of research, especially health research, many variables by default are just going to be binary, are just going to be yes or no. For example, did someone get a disease or not? Was someone cured or not? Did someone die or not? So it's actually more common to find outcome variables that are binary in public health literature than to find outcomes that are continuous. And for this reason, logistic regression is very popular in public health research.
+
+GRAPH Courses Team-1: So let's move on to a new slide where we're going to implement fully this binarization of our outcome Here's the R code for doing this. We're simply going to code-- We're gonna [00:04:00] create-- We'll create a new column called weak grip, and if someone's grip is less than or equal to twenty-seven, that column will be set to one, otherwise it'll be set to zero
+
+And that allows us to change this plot And so now we'll change this
+
+And now we can switch from this scatter plot view
+
+And now we can change the Y-axis on this plot such that now it takes just one of two values, one
+
+such that now it takes just one of two values, a value of one for those who are identified as having weak grip, and a value of zero for those who are identified as not having a weak grip. And we add a little bit of jitter to these points just so we can see them
+
+Okay. Now the next step
+
+And under this new view, we still want to model the relationship between age and years and the chances of having a weak grip on the y-axis. The next step for doing this is let's cut up our dot plot into five-year age bands.
+
+Here's the R code for doing that. And within each age band, we calculate what [00:05:00] proportion of people have a weak grip So as it says here, we group into age bands, 
+
+calculate the proportion with a weak grip. Each of these proportions will be estimating a probability
+
+And here are those proportions. So what we're saying here, starting with this three percent, for example, is that of all the people aged forty-five to fifty, only three percent, in particular these two people
+
+Only 3%, represented here by these two people
+
+have a weak grip. But by the time you get to ages eighty-five to ninety over here, about seventy-nine percent of people have this weak grip, which is a grip lower than twenty-seven kg Okay. And now this is the data that we're going to try to model. This relationship between age in years and this probability here of having a weak grip, that is what we're going to be modeling under this logistic regression framework
+
+Now here is one idea that does not work so well. We could try it, but it doesn't work so well, and that is to try [00:06:00] to fit a straight line through this, uh, probability distribution
+
+We can do that with R. So this red line is basically treating our information still kind of like a scatter plot, and it's trying to fit some line
+
+So here we're trying to fit this line still basically to a
+
+Here's the code for trying to fit that line through this data And here's the estimates that it gives us. This corresponds to this line here with the intercept of negative zero point nine seven and the slope of zero point zero one nine. So what would this mean? This would mean that for every increase of one year in age, you increase the probability of having a weak grip by zero point zero one nine or zero point zero two.
+
+And it's a bit of a reasonable assumption, and it's a reasonable fit. It's not so horrible for this data. However, there are two big problems with it. The first problem is that the line predicts probabilities below zero or above one. So for example, here's our zero point, and [00:07:00] this line, this red line, this red dotted line is predicting that people in the age band of forty-five to fifty will have a negative probability of having a weaker grip.
+
+As you know, there's no such thing as a negative probability. Probabilities have to be between zero and one. And if you go far enough to the right as well, it's going to predict a greater than one probability of, uh, having a weak grip. There's no such thing as a greater than one probability.
+
+Probability needs to be bounded between zero and one. So that is problem number one. The line predicts probabilities below zero or above one. Problem two is that a straight line really does not quite capture the right shape
+
+Because if you look at this distribution, it seems like there's a bit of a more gradual increase at the start, then a faster increase in the middle, and then eventually it kind of has to taper off because as you get to very old ages, almost everyone has a weak grip. So you don't have that many new people
+
+To capture in your distribution. Okay? So by definition, we really [00:08:00] should have some kind of S-shaped fit. And this S-shaped fit applies not only to this particular example of age versus weak grip, but a lot of... 
+
+But really a lot of binary outcomes. But really in many cases, when you have a continuous predictor and a binary outcome, you will see a similar shape
+
+For example, think of the risk of getting cardiovascular disease. When you're young, there's pretty-- a pretty low chance. Then as you g- reach into middle and old age, the probability starts to go up, but then eventually it has to flatten out a little bit I don't know about that actually, buddy
+
+For example, imagine that on our x-axis we had maybe the dose of a drug, and on the y-axis we had the probability of getting cured. Generally, okay, if you start with some very, very low doses, you're probably not going to get a cure, and then you're going to go through some transition region where you start to approach the effective dose for certain people.
+
+And over that period, your slope will accelerate. And then at some point, you get to a dose that's so high that basically everyone [00:09:00] that takes that dose will get cured
+
+And so your slope will necessarily start to flatten Or you can think of 
+
+a baby's birth weight
+
+and their probability of surviving
+
+You can imagine that at some very, very low birth weights, there's basically a zero percent chance of surviving or something close to it. But eventually, as you start to get to healthy birth weights, the chance of surviving starts to go up
+
+And then you reach some point where
+
+You can imagine that at some really low birth weights, the chances of survival are pretty small Then we start to reach birth weights where you can sort of put the baby in the ICU, and maybe they have a chance of survival and so on. And then eventually you get to the healthy birth weights where basically most babies that are...
+
+And then eventually you get to the healthy birth weights where babies will have very high chance of survival. But they can't have, but they can't have a greater than a hundred percent chance of survival, so you kind of have to flatten out that curve there
+
+Okay. So what we would like then is we would like a function. So what we need is a function that lets us take in our predictor and output an S-curve that fits our data nicely
+
+So what we [00:10:00] need is a kind of function that will take in our predictor and give us a kind of S curve that will fit our data nicely and that will be bounded between one and zero for the probabilities. This type of curve is called a sigmoid curve
+
+And one example of a sigmoid curve, which is what we're gonna be looking at, is a logistic curve. So let's go over to the next slide and fit our logistic curve
+
+Okay.
+
+So on this slide, so on this slide
+
+Now on this slide, I have reproduced that same figure on the right, and we're going to fit this logistic curve or this logistic regression And here is the R code for doing this. It is, again, super simple code. We use the GLM function, so remember that for linear regression we use the LM function. Now we're using GLM, which stands for generalized linear model, because you'll see that logistic regression uses some principles from linear regression, or really many principles from linear regression.
+
+So it's a generalization of the linear model. So GLM, and then we're trying to [00:11:00] predict the probability of weak grip, remember that the weak grip variable in our data is either one or zero. We're predicting it based on age. We need to set the family to binomial.
+
+So binomial means that you have... So binomial means two. Okay? So binomial of course means there's two categories, one and zero. We need to set this family binomial because logistic regression is not the only generalized linear model. There are other generalized linear models. Okay? And finally, we set data equals to our data sets.
+
+Close up And then we call our summary function
+
+And we see, okay, and here is part of the output from summary. If you have done linear regression, you'll notice that all of these look very familiar. We have the estimate, the standard error, the Z value, which is equivalent to the T value, and the P value as well. And for the estimates, okay, and in terms of the rows, we have the intercept, and then we also have the coefficients for age
+
+Now, what I was saying on the previous slide is that we need to fit some kind of S to this data, [00:12:00] and these two numbers here will allow us to fit that S
+
+And they do that through the logistic function, which I'm gonna show on the screen now. It's a little bit scary, b-but don't panic. Here is the logistic function
+
+So that is the S that has been fit by R using this GLM function. And the way we draw that S is using this bit of mathematics. I have two versions here.
+
+The first one is the generic form where I just have b zero for the coefficient of the intercept and b one for the coefficient of the age. And in the second one, which is the one we actually fit, I put in those numbers
+
+So now we've seen what this logistic function is. to better understand this equation, we're going to jump over to one of my favorite mathematical tools, which is desmos.com. I encourage you to do this as well, and we'll play around with that to get some better intuitions for this function 
+
+GRAPH Courses Team-2: [00:13:00] [00:14:00] But quickly before we go any further, let's do a little bit of practice. Here I have three practice questions for you. First one, can this logistic equation produce a probability greater than one? Is that yes or no? And I'm referring to this equation here. The second one, who has the higher predicted probability of a weak grip according to that equation?
+
+Is it the fifty-year-old or the eighty-year-old? And lastly, if the beta one were zero, that's this beta one of age or this estimate of the intercept here, if that were zero, would the predicted probability stay constant [00:15:00] across age or increase with age? Pause and think Again. So here the answers are going to be no.
+
+Okay? So the answers here are gonna be B, B, and A Can this logistic equation produce a probability greater than one? We already told you that no, by definition, the logistic equation will not produce a probability greater than one. You don't even have to look at the specific numbers in here, as long as you know we're fitting a general
+
+As long as you know that we're fitting a logistic regres-- As long as you know that we're fitting a logistic regression, then it's-- then we know by definition this answer will be no
+
+Next one, who has the higher predicted probability of a weak grip? By looking at our chart here, you should be able to tell that an eighty-year-old has a higher probability. But [00:16:00] also just by looking at this estimate here, if this estimate is positive, it means that the greater the age, the greater the odds of ha...
+
+But also just noticing here that this estimate is positive, it's above zero, tells us that the bigger the age, the higher the probability of a weak grip. So the bigger the age, the higher the probability of a weak grip. We don't have to do any fancy mathematics yet to deduce that fact. And we can see that that age coefficient is significant based on this P value.
+
+Last one, if beta one were zero, that is if this value here was zero, what would happen to the predicted probability? And for the last one, if beta one were zero, the predicted probability would stay constant across age. So just like with linear regression. So just like with simple... So just like with linear regression, if this thing is exactly zero, that means there's no relationship between [00:17:00] age and the outcome of a probability of weak grip, and therefore the predicted probability would stay constant across the ages
+
+Yeah. Okay. So now, okay. So now that we've seen this equation
+
+So now that we've seen this equation, to get a better understanding of it, we're going to jump over to my favorite mathematical tool, that is desmos.com, and I encourage you to do this as well on your own computer. And we'll do some explorations to get a general intuition for this logistic function.
+
+So I go over to desmos.com, and I open the graphing calculator
+
+And you may remember this calculator from when we were using it to draw linear regression lines. For example, [00:18:00] four plus two x looks like that on a linear regression line
+
+Now we're going to use it to think about the logistic function. Here's the very basic format for a logistic function. We say Y equals to one over one plus some number. We could use two, we could use three, but in... okay
+
+But to make the mathematics easier, mathematicians use ... But to make the mathematics easier, we use the number E, that's Euler's number, that's two point seven one eight or something like that. So we use E, that's just a constant. Just let me just remind you that E is the constant two point seven one eight two eight blah, blah, blah, blah, blah.
+
+And then we raise that to the power of negative X. Okay? So it's, [00:19:00] so it's not too scary. Maybe ... Okay. Okay. So that is the logistic function that lets us draw this S curve, which you will notice never goes below zero on the Y-axis and never goes above one as well
+
+So this is the default most basic logistic function. However, we can change what it looks like by changing the value of this X. So for example, if I wanted the curve to go up more rapidly, if I wanted this curve to be a bit more steep I could increase the slope on the X, so two would make that So here, if I change this to two, you can see that the slope or the rate of change is increasing.
+
+What is changing? Is it the slope?[00:20:00] [00:21:00] 
+
+Now I can modify what this curve looks like by changing the values of
+
+Now I can modify what this curve looks like by changing the values of this X here
+
+So is it? So for example, if I wanted the steepness of this curve to be a little bit greater, I could change this [00:22:00] coefficient before the X, so something like two X, and there it's a bit steeper. Three X even steeper. Four X even steeper as well. If I wanted to move the line back and forth along the X-axis, then I could add a constant term before this, uh, four X So I could say, for example, one plus four X
+
+So I could say, for example, one plus four X, and what you'll notice is that the middle of the slope
+
+And what you notice is that the middle of this sort of, uh, hill climb has moved a little bit to the left. Okay? [00:23:00] If I say something like 10, then I move it very much to the left. If, on the other hand, I wanna move it to the right, I say minus 10, and I move it that way to the right. Okay? So it seems like with two numbers, just as we had, okay- So it seems like just as we had with the linear regression, with just two numbers, something that looks like an intercept and something that looks like a slope, I can move this curve along.
+
+With just two numbers So it seems that with just two numbers, this one that looks like an intercept and this one that looks like a slope, I can move this curve around and make it better fit my data And that is what the logistic regression... And that is what the logistic regression procedure algorithm.
+
+And that [00:24:00] is what the logistic regression procedure or algorithm does. It tries to find numbers to put into this equation here in order to nicely fit some data
+
+So now let's go back to our slide deck and see what are the numbers that it gave us to fit our specific data here for the effect of age or the relationship between age and probability of weak grip. Here are the two numbers: negative eight point eight two for the intercept and zero point one one six eight for the slope, and zero point one one six eight for the estimate, and zero point one one six eight for the coefficient of age.
+
+So let's copy those And paste them in here. First the one for H, put that in there. So you see it makes our slope
+
+And [00:25:00] then the intercept here
+
+And now we have to zoom out to see the full line because remember on our x-axis now is age in years, so we need to see between forty and eighty. And our y-axis, we need to zoom in because we need to focus on between zero and one. So for this, what I'm gonna do is I'll click on the graph settings, and I will-- and I'll change my y-axis limits to, let's say, negative one all the way to one.
+
+So that'll expand the y-axis, so I can see this a little bit better. So here now is our updated curve. So from this now, we can read the probabilities of any one of any of these ages, their probabilities or their predicted probabilities of having weak grip. So for example, someone age sixty has a fourteen percent chance, according to our model, of having a weak grip.
+
+[00:26:00] Someone at age eighty has a sixty-two percent chance of having a weak grip. Someone at age hundred has a ninety-four percent chance, and so on and so forth. So I'm just reading this little thing up there. To be clear, all I'm read... okay To be clear, I'm just reading. To be clear, I'm just reading that, uh, pair of parenthesized numbers there.
+
+To be clear, I'm just reading those numbers in parentheses at the top left there that say a hundred comma zero point nine four five, and that zero point nine four translates to a ninety-four point five percent chance
+
+GRAPH Courses Team-1: [00:27:00] So now we have our curve. Let me now paste in the actual points that we were trying to fit our data to. So here we have the midpoint for the forty to forty-five age group, and this is the proportion of people in our data that had, uh, a weak grip. Here's the midpoint for fifty to fifty-five and that proportion.
+
+So th-- so this is equivalent to these bar charts and percentages that we have here
+
+And we can see that our [00:28:00] blue line, which we fit with the logistic regression procedure, pretty nicely fits our black dots. Pretty-- So it pret-it pretty nicely explains this relationship between age and the probability of a weak grip
+
+If we want, we could compare it to this linear-- If we want, we could compare it to what this linear model would have given us. So let me copy this over, take it to Desmos I say Y equals to this equation, and I replace the age with our X
+
+So that is... Okay. Now let me hide the logistic function, and now we just have the linear function. You can see the linear function doesn't fit the data super well, and of course, it has this problem that is gonna give us negative probabilities on the low end and [00:29:00] probabilities above one on the high end. So it's definitely a worse model than our logistic
+
+Okay, now under those practice questions, I think the next thing we wanna say is, um, I think, um
+
+J- you know, in general, there's two functions of regression, right? One, it lets us predict values And the second is it lets us understand the [00:30:00] effect of one variable on another. For predicting, it's fairly easy, right? We just substitute in someone's age into this model, and we get out our prediction of the probability.
+
+But to understand the effect is a little bit hard, right? Because there's not just one effect, there's not just one slope the way we have with, um, with, um, linear, but the slope changes. Okay? However, it seems like we, we just need one relationship, this beta one, whatever that beta one is, to explain this, okay?
+
+So I guess in the linear case, we say for every one unit increase in age, we get a one unit increase in, we get a x, x amount increase in grip strength, for example
+
+But here we can't say such a thing, right? We need to do a bit more work [00:31:00] What we can say actually is for every one unit increase in age, we get a fixed one unit increase in something called the log odds. Okay? So although the probabili-- although our change in the probability is, is moving, although the change in the probability is changing throughout this curve, there's something that's actually fixed, and that is the change in the log odds.
+
+And understanding log odds and how to interpret that, how to present that in a way that other people can understand is what makes logistic regression particularly challenging, okay? This problem that there's no fixed rate of change. Okay, so that's what I wanna say. Somehow we need to fit all of that into
+
+one or two or three or four bullet points. [00:32:00] I think what we could probably do is if we run out of space at the bottom left, we can put it up atop this, atop this, um, this chart at the, at the top right of the, of slide three, because that chart doesn't need to be as big as it is[00:33:00] [00:34:00] [00:35:00] [00:36:00] [00:37:00] [00:38:00] [00:39:00] [00:40:00] [00:41:00] [00:42:00] [00:43:00] 
+
+So now let's head back to our slide
+
+We have seen what the generic form-- We have now seen what this generic for-- We have seen now what the generic form of a logistic curve looks like. And then we also, and then we also drew the specific curve that was fitted by our GLM function, which gave us these, which gave us these two estimates
+
+Okay. [00:44:00] N-now let's think about, okay
+
+Now let's think about what we can do with... Now let's think about what we can do with this equation or with this model
+
+You will recall, you, okay. You may, you may recall from previous lessons that we said regression... You may recall from previous lessons that we said regression has two main functions. The first is it helps us predict. The first is for prediction, and the second is for understanding effects
+
+Let's think about how this logistic regression curve will help us do both of these things. For prediction, it's fairly easy All you have to do to [00:45:00] predict someone's probability of a weak grip is to substitute in their age into this model equation here, and you'll obtain a predicted probability
+
+Okay? So you're basically just tracing the point on this line, and it'll give you some pred-- So you're basically just tracing some point on this yellow line from the age to the predicted probability. Or you could think of that as plugging in the age in this equation. You could do that manually, or you could do that in R using the predict function.
+
+So that is fairly straightforward. But the second one, understanding effects, is a little bit harder in the case of logistic regression. That is, it is harder than with linear regression. Okay? So we say here that understanding and explaining effects is a bit harder because there's no fixed [00:46:00] probability change for a one-year increase in age.
+
+What do we mean by that? Let's go back to our linear model over here The interpretation of this linear model or of this coefficient of the age estimate here is that for every one unit increase in age, the grip strength goes down by three point eight two, uh, kg The interpretation of this age coefficient is that for every one unit increase in age, the grip strength goes down by, uh, zero point three eight two kg.
+
+Okay? So we have a fixed reduction. Okay? So the slope everywhere is fixed because this is a straight line That is the effect of age everywhere is fixed
+
+But if we go back to this curve, the slope everywhere is not fixed. Here you have a much gentler slope [00:47:00] than over here Okay? So we cannot say something like for every one year increase in age, we have a, let's say zero point zero five increase in probability. You can make no such statement because for every one year increase in age, it depends where you are on this curve to know how much you're gonna go up, uh, in your probability terms
+
+Yeah. However, however, if you look at the output of your, uh, your GLM function, we see that there still seems to be one number in particular that is explaining the relationship between the age However, if we look-- however, if we look at the output of the GLM function, it seems that there's still just one number that's supposed to explain the relationship between age and this probability of, uh, having a weak grip [00:48:00] So we should be able to make some statement like for every one unit in age, something is going up by a fixed amount, something is going up by zero point one one six.
+
+It is not the probability there's something else that's going up by zero point one one six for every unit increase in age Okay? The thing that's going up by 0.1016 for every one unit increase in age is the log odds. So it-- so as it says here, instead, each year adds a fixed beta one to the log odds
+
+Yeah. Now understanding[00:49:00] 
+
+Now what, now what exactly are log odds? How can we understand these, and importantly, how can we explain these when we conduct our regression? How can we explain these to the audience that is gonna be reading our papers?
+
+This is really the hardest part of logistic regression, and this is what we'll tackle in the next videos. And this is what will be tackled in the coming lessons[00:50:00] [00:51:00] [00:52:00] [00:53:00] 
+
+Is the S state[00:54:00] 
+
+What state has the most members in the House of Representatives?[00:55:00] 
+
+Okay, so congrats on getting through this introduction to logistic regression Hopefully you're excited for what is to come. Hopefully you're excited to-- Hopefully you're Hopefully, hopefully you're excited for what is to come
+
+Hopefully you're excited for what is to come. I'll see you there. Bye bye
+

@@ -38,6 +38,8 @@
     #panel2{grid-column:1;grid-row:2;}
     #panel3{grid-column:2;grid-row:1;}
     #panel4{grid-column:2;grid-row:2;}
+    #panel4 .panel-side{grid-column:1 / -1;}
+    #panel4 .panel-main{display:none;}
     /* text ~1/2, figure section ~1/2 */
     .panel{position:relative;min-width:0;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;border:1px solid transparent;border-radius:3px;background:transparent;padding:10px 10px 8px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .4s ease,box-shadow .4s ease,border-color .4s ease,background .4s ease;}
     .panel.lit{opacity:1;visibility:visible;pointer-events:auto;border-color:var(--mist);background:var(--paper);}
@@ -66,20 +68,31 @@
     .codebox .out{color:var(--ink-2);}
     .codebox .cm{color:#7f9296;}
     .codebox .hi{color:var(--teal);font-weight:600;}
-    /* Panel 1: one stacked column of reveal fragments (bullets, code, output) */
-    #panel1 .panel-side{overflow:auto;min-height:0;}
-    #panel1 .panel-explain{flex:1;display:flex;flex-direction:column;gap:4px;overflow:auto;}
-    #panel1 .panel-explain .frag{margin:0;color:var(--ink);font-size:9.8px;line-height:1.28;}
-    #panel1 .panel-explain .frag.bullet{padding-left:13px;position:relative;}
-    #panel1 .panel-explain .frag.bullet::before{content:"•";position:absolute;left:0;color:var(--teal);}
-    #panel1 .panel-explain pre.frag{margin:0;padding:5px 7px;border:1px solid var(--mist);border-left:2px solid var(--gold);border-radius:2px;background:#fff;font-family:var(--mono);font-size:8.4px;line-height:1.2;white-space:pre;overflow:auto;}
-    #panel1 .panel-explain pre.frag.code{color:var(--ink);}
-    #panel1 .panel-explain pre.frag.out{color:var(--ink-2);border-left-color:var(--mist);}
-    #panel1 .panel-explain .hi{color:var(--teal);font-weight:600;}
-    #panel1 .panel-explain .inline-eq{padding:5px 7px;border-left:2px solid var(--gold);border-radius:2px;background:var(--warm);color:var(--teal);font-size:11px;text-align:center;}
+    /* Stacked reveal fragments: bullets, code, output, and equations. */
+    #panel1 .panel-side,#panel2 .panel-side,#panel3 .panel-side{overflow:auto;min-height:0;}
+    .panel-explain.stack{flex:1;display:flex;flex-direction:column;gap:4px;overflow:auto;}
+    .panel-explain.stack .frag{margin:0;color:var(--ink);font-size:9.8px;line-height:1.28;}
+    .panel-explain.stack .frag.bullet{padding-left:13px;position:relative;}
+    .panel-explain.stack .frag.bullet::before{content:"•";position:absolute;left:0;color:var(--teal);}
+    .panel-explain.stack pre.frag{margin:0;padding:5px 7px;border:1px solid var(--mist);border-left:2px solid var(--gold);border-radius:2px;background:#fff;font-family:var(--mono);font-size:8.4px;line-height:1.2;white-space:pre;overflow:auto;}
+    .panel-explain.stack pre.frag.code{color:var(--ink);}
+    .panel-explain.stack pre.frag.out{color:var(--ink-2);border-left-color:var(--mist);}
+    .panel-explain.stack .hi{color:var(--teal);font-weight:600;}
+    .panel-explain.stack .inline-eq{padding:3px 6px;border-left:2px solid var(--gold);border-radius:2px;background:var(--warm);color:var(--teal);font-size:10px;text-align:center;}
+    .practice-set{display:flex;flex-direction:column;gap:4px;margin-top:1px;}
+    .practice-q{padding:4px 5px;border:1px solid var(--mist);border-radius:2px;background:#fff;}
+    .practice-q p{margin:0 0 3px;color:var(--ink);font-size:8.8px;font-weight:600;line-height:1.18;}
+    .practice-options{display:flex;gap:4px;}
+    .practice-options span{flex:1;padding:2px 4px;border-radius:2px;background:var(--soft);color:var(--ink-2);font-size:8.3px;line-height:1.15;}
+    .concept-slot{flex:none;height:86px;}
+    .concept-box{height:100%;padding:5px 6px;border-left:2px solid var(--gold);border-radius:2px;background:var(--soft);overflow:hidden;}
+    .concept-box ul{margin:0;padding-left:14px;color:var(--ink);font-size:8.8px;line-height:1.2;}
+    .concept-box li{margin:0 0 3px;}
+    .concept-box li:last-child{margin-bottom:0;}
+    .concept-box strong{color:var(--teal);font-weight:600;}
     .plotwrap{flex:1;min-width:0;min-height:0;position:relative;}
     .plotwrap svg{width:100%;height:100%;display:block;overflow:hidden;}
-    .eqbox{flex:none;display:none;margin:0;padding:4px 6px;border-left:2px solid var(--gold);background:var(--warm);border-radius:2px;color:var(--teal);font-size:11px;text-align:center;}
+    .eqbox{flex:none;display:none;margin:0;padding:2px 5px;border-left:2px solid var(--gold);background:var(--warm);border-radius:2px;color:var(--teal);font-size:10px;text-align:center;}
     .eqbox.vis{display:block;}
     /* svg element styling */
     .axis{stroke:#9fb7bb;stroke-width:1;}
@@ -87,6 +100,7 @@
     .axis-title{fill:var(--brown);font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.03em;}
     .grp{opacity:0;transition:opacity .45s ease;}
     .grp.vis{opacity:1;}
+    .grp.vis.faded{opacity:.22;}
     .dot-not{fill:#2f5b61;transition:fill .45s ease;}
     .dot-weak{fill:var(--alarm);transition:fill .45s ease;}
     .ols{stroke:var(--gold);stroke-width:3;fill:none;stroke-linecap:round;transition:stroke-dashoffset .7s ease;}
@@ -95,6 +109,7 @@
     .lpm{stroke:var(--alarm);stroke-width:2.4;stroke-dasharray:7 5;fill:none;stroke-linecap:round;}
     .rowline{stroke:#c4d8db;stroke-width:1;stroke-dasharray:2 4;}
     .rowtag{fill:var(--ink-2);font-family:var(--mono);font-size:12px;font-weight:600;}
+    .band-divider{stroke:var(--gold);stroke-width:1;stroke-dasharray:3 4;opacity:.8;}
     .bar{fill:var(--teal);}
     .bar-lbl{fill:var(--ink-2);font-family:var(--sans);font-size:9.5px;font-weight:600;}
     .forbid{fill:var(--alarm);opacity:.07;}
@@ -140,7 +155,7 @@
             <div class="panel-side">
               <div class="p-title">Continuous outcome: grip on age</div>
               <!-- EDIT PANEL 1 HERE. Everything is stacked top→bottom. data-step = when it appears. -->
-              <div class="panel-explain" id="notes1">
+              <div class="panel-explain stack" id="notes1">
                 <p class="frag bullet" data-step="1"><strong>KLoSA (Korean Longitudinal Study on Aging)</strong>: <strong>4,184</strong> Korean men <strong>45+</strong>.</p>
                 <pre class="frag code" data-step="1">klosa &lt;- read_csv("klosa_men_grip_45plus.csv")</pre>
                 <pre class="frag code" data-step="1">klosa &lt;- klosa |&gt; select(age, grip)
@@ -153,7 +168,8 @@ head(klosa, 4)</pre>
 3    64  31.5
 4    67 21.25</pre>
                 <p class="frag bullet" data-step="3">Fit <strong>ordinary least squares</strong>: outcome = grip, predictor = age.</p>
-                <pre class="frag code" data-step="3">summary(lm(grip ~ age, data = klosa))</pre>
+                <pre class="frag code" data-step="3">grip_lm &lt;- lm(grip ~ age, data = klosa)
+summary(grip_lm)</pre>
                 <pre class="frag out" data-step="3">#&gt;             Estimate Std. Error t value Pr(&gt;|t|)
 #&gt; (Intercept) <span class="hi">55.68329</span>    0.53304  104.46   &lt;2e-16 ***
 #&gt; age         <span class="hi">-0.38241</span>    0.00865  -44.22   &lt;2e-16 ***</pre>
@@ -177,80 +193,101 @@ head(klosa, 4)</pre>
             <div class="p-num">2</div>
             <div class="panel-side">
               <div class="p-title">Binary outcome: weak grip</div>
-              <div class="p-sub">Same men. Outcome is 0 or 1 only.</div>
-              <div class="panel-explain">
-                <ul id="notes2">
-                  <li data-step="9">Same men, ages, and grip values. The <strong>27 kg cutoff</strong> is shown again.</li>
-                  <li data-step="10">Code <strong>weak_grip = 1</strong> if grip ≤ 27 kg, else <strong>0</strong>.</li>
-                  <li data-step="10">The mean of a 0/1 variable is the <strong>proportion</strong> with weak grip.</li>
-                  <li data-step="11">Points now occupy two rows: <strong>1</strong> (weak) and <strong>0</strong> (not weak).</li>
-                  <li data-step="11">Distance from the 27 kg cutoff is <strong>no longer retained</strong>.</li>
-                  <li data-step="12">Fit <strong>lm(weak_grip ~ age)</strong>: a <strong>linear probability model</strong>.</li>
-                  <li data-step="12">A straight line is <strong>not suitable</strong> for this outcome.</li>
-                  <li data-step="13">The line can predict values <span class="bad">below 0</span> or <span class="bad">above 1</span>.</li>
-                  <li data-step="13">It does not respect the range of a <strong>probability</strong>.</li>
-                  <li data-step="14">Group into <strong>age bands</strong> and calculate the <strong>proportion</strong> with weak grip.</li>
-                  <li data-step="14">Each proportion estimates a <strong>probability</strong>.</li>
-                </ul>
+              <!-- EDIT PANEL 2 HERE. Text, code, and output follow the reveal order. -->
+              <div class="panel-explain stack" id="notes2">
+                <p class="frag bullet" data-step="10">Code <strong>weak_grip = 1</strong> if grip ≤ 27 kg, else <strong>0</strong>.</p>
+                <pre class="frag code" data-step="10">klosa &lt;- klosa |&gt;
+  mutate(weak_grip = as.integer(grip &lt;= 27))</pre>
+                <p class="frag bullet" data-step="11">Points now take one of two values: <strong>1</strong> (weak) and <strong>0</strong> (not weak).</p>
+                <p class="frag bullet" data-step="12">Cut the dot plot into <strong>five-year age bands</strong>.</p>
+                <pre class="frag code" data-step="12">age_bands &lt;- klosa |&gt;
+  mutate(age_band = cut(age,
+    breaks = c(seq(45, 85, 5), Inf), right = FALSE)) |&gt;
+  group_by(age_band) |&gt;
+  summarise(age_mid = mean(age),
+    prop_weak = mean(weak_grip), .groups = "drop")</pre>
+                <p class="frag bullet" data-step="13">Group into age bands and calculate the proportion with weak grip. Each proportion estimates a probability.</p>
+                <p class="frag bullet" data-step="15">One idea that does not work well: fit a <strong>straight line</strong> through.</p>
+                <pre class="frag code" data-step="15">band_lm &lt;- lm(prop_weak ~ age_mid, data = age_bands)
+summary(band_lm)</pre>
+                <pre class="frag out" data-step="15">#&gt;             Estimate Std. Error t value Pr(&gt;|t|)
+#&gt; (Intercept) <span class="hi">-0.97688</span>    0.10611   -9.21  3.68e-05 ***
+#&gt; age_mid      <span class="hi">0.01958</span>    0.00156   12.56  4.67e-06 ***</pre>
+                <div class="frag inline-eq" data-step="15">$\widehat{\Pr(\text{weak grip})} = -0.97688 + 0.01958\,(\text{age})$</div>
+                <p class="frag bullet bad" data-step="15"><strong>Problem 1:</strong> the line predicts probabilities below 0 or above 1. <strong>Problem 2:</strong> a straight line does not capture the right shape.</p>
               </div>
             </div>
             <div class="panel-main">
-              <div class="codebox" id="code2"><span class="tag">R</span><span id="code2body"></span></div>
               <div class="eqbox" id="eq2"></div>
               <div class="main-viz">
                 <div class="plotwrap"><svg id="svg2" viewBox="0 0 460 380" preserveAspectRatio="xMidYMid meet"></svg></div>
               </div>
             </div>
           </section>
-          <!-- 3: top right -->
+          <!-- 3: right column -->
           <section class="panel" id="panel3">
             <div class="p-num">3</div>
             <div class="panel-side">
-              <div class="p-title">Age-band proportions</div>
-              <div class="p-sub">A straight line through probabilities fails.</div>
-              <div class="panel-explain">
-                <ul id="notes3">
-                  <li data-step="15">Weak grip rises from about <strong>3%</strong> (youngest) to <strong>79%</strong> (oldest).</li>
-                  <li data-step="16">Fit a <strong>straight line</strong> through these proportions. Check the ends and the constant slope.</li>
-                  <li data-step="17"><span class="bad">Problem 1:</span> it leaves <strong>[0, 1]</strong>. <span class="bad">Problem 2:</span> <strong>same change at every age</strong>.</li>
-                  <li data-step="17">The data rise <strong>slowly, then faster, then slowly</strong> again.</li>
-                </ul>
+              <div class="p-title">Logistic regression</div>
+              <div class="p-sub">S-curve for the probability of weak grip.</div>
+              <!-- EDIT PANEL 3 HERE. Logistic regression now follows panel 2 directly. -->
+              <div class="panel-explain stack" id="notes3">
+                <p class="frag bullet" data-step="17">Fit a logistic regression.</p>
+                <pre class="frag code" data-step="17">weak_glm &lt;- glm(weak_grip ~ age, family = binomial, data = klosa)
+summary(weak_glm)</pre>
+                <pre class="frag out" data-step="17">#&gt;             Estimate Std. Error z value Pr(&gt;|z|)
+#&gt; (Intercept) <span class="hi">-8.82431</span>    0.31925  -27.64   &lt;2e-16 ***
+#&gt; age          <span class="hi">0.11683</span>    0.00476   24.57   &lt;2e-16 ***</pre>
+                <div class="frag inline-eq" data-step="18">$p = \dfrac{1}{1 + e^{-(\beta_0 + \beta_1\,\text{age})}}$</div>
+                <div class="frag inline-eq" data-step="18">$\widehat p = \dfrac{1}{1 + e^{-(-8.82431 + 0.11683\,\text{age})}}$</div>
+                <div class="practice-set" data-step="19">
+                  <div class="practice-q">
+                    <p>1. Can this logistic equation produce a probability greater than 1?</p>
+                    <div class="practice-options"><span>A. Yes</span><span>B. No</span></div>
+                  </div>
+                  <div class="practice-q">
+                    <p>2. Who has the higher predicted probability of weak grip?</p>
+                    <div class="practice-options"><span>A. A 50-year-old</span><span>B. An 80-year-old</span></div>
+                  </div>
+                  <div class="practice-q">
+                    <p>3. If $\beta_1=0$, the predicted probability would:</p>
+                    <div class="practice-options"><span>A. Stay constant across age</span><span>B. Increase with age</span></div>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="panel-main">
               <div class="eqbox" id="eq3"></div>
+              <div class="concept-slot">
+                <div class="concept-box" data-step="20">
+                  <ul>
+                    <li data-step="20">Regression helps us <strong>predict</strong> and <strong>understand effects</strong>.</li>
+                    <li data-step="21">Prediction is easy: substitute age to obtain a predicted probability.</li>
+                    <li data-step="22">Understanding (and explaining) effects: Harder! There is no fixed probability change for a one-year increase in age.</li>
+                    <li data-step="23">Instead, each year adds a fixed <strong>$\beta_1$</strong> to the <strong>log odds.</strong></li>
+                  </ul>
+                </div>
+              </div>
               <div class="main-viz">
                 <div class="plotwrap"><svg id="svg3" viewBox="0 0 460 380" preserveAspectRatio="xMidYMid meet"></svg></div>
               </div>
             </div>
           </section>
-          <!-- 4: bottom right -->
+          <!-- 4: reserved for the next part -->
           <section class="panel" id="panel4">
             <div class="p-num">4</div>
             <div class="panel-side">
-              <div class="p-title">Logistic regression</div>
-              <div class="p-sub">S-curve for the probability of weak grip.</div>
+              <div class="p-title">Learning objectives</div>
               <div class="panel-explain">
-                <ul id="notes4">
-                  <li data-step="18">Logistic regression models <strong>log-odds</strong> as a straight line in age.</li>
-                  <li data-step="18">On the probability scale, the curve stays inside <strong>[0, 1]</strong>.</li>
-                  <li data-step="19">R: <strong>glm(weak_grip ~ age, family = binomial)</strong>.</li>
-                  <li data-step="19">Coefficients are on the <strong>log-odds</strong> scale.</li>
-                  <li data-step="20">The fitted curve stays inside <strong>[0, 1]</strong> and follows the age-band proportions.</li>
-                  <li data-step="20">Interpreting the <strong>age coefficient</strong> is the next lesson.</li>
+                <ul>
+                  <li data-step="24">Distinguish <strong>continuous</strong> and <strong>binary</strong> outcomes.</li>
+                  <li data-step="24">Explain why a straight line is unsuitable for modeling probabilities.</li>
+                  <li data-step="24">Fit a logistic regression and understand how it can be used to predict probabilities.</li>
                 </ul>
               </div>
             </div>
             <div class="panel-main">
-              <div class="codebox" id="code3"><span class="tag">R</span><span class="cm"># logistic regression (binomial GLM)</span>
-glm(weak_grip ~ age, family = binomial, data = klosa)
-<span class="out">#&gt;             Estimate Std. Error z value Pr(&gt;|z|)
-#&gt; (Intercept) <span class="hi">-8.82431</span>    0.31925  -27.64   &lt;2e-16 ***
-#&gt; age          <span class="hi">0.11683</span>    0.00476   24.57   &lt;2e-16 ***</span></div>
               <div class="eqbox" id="eq4"></div>
-              <div class="main-viz">
-                <div class="plotwrap"><svg id="svg4" viewBox="0 0 460 380" preserveAspectRatio="xMidYMid meet"></svg></div>
-              </div>
             </div>
           </section>
         </div>
@@ -281,7 +318,7 @@ glm(weak_grip ~ age, family = binomial, data = klosa)
   const NS='http://www.w3.org/2000/svg';
   const W=460,H=380, ML=42,MR=16,MT=18,MB=34;
   const X0=ML, X1=W-MR, YT=MT, YB=H-MB;
-  const AGE=[44,89], AGE3=[40,106], GRIP=[12,48], PROB=[-0.18,1.18];
+  const AGE=[44,89], AGE3=[40,106], GRIP=[5,51], PROB=[-0.18,1.18];
   const lerp=(a,b,t)=>a+(b-a)*t;
   const sc=(v,d0,d1,r0,r1)=>r0+(v-d0)/(d1-d0)*(r1-r0);
   const ax  = v=>sc(v,AGE[0],AGE[1],X0,X1);
@@ -298,7 +335,7 @@ glm(weak_grip ~ age, family = binomial, data = klosa)
   function grp(svg,id){const g=el('g',{class:'grp',id});svg.appendChild(g);return g;}
 
   const svg1=document.getElementById('svg1'), svg2=document.getElementById('svg2');
-  const svg3=document.getElementById('svg3'), svg4=document.getElementById('svg4');
+  const svg3=document.getElementById('svg3');
 
   // per-point cosmetic jitter (kept identical between panel 1 & 2 copies)
   const JX = PTS.map(()=> (Math.random()-0.5)*3.2);
@@ -322,10 +359,19 @@ glm(weak_grip ~ age, family = binomial, data = klosa)
       return {r,b};
     });
   }
+  function makeBinaryBars(parent){
+    const BARW=15;
+    return BANDS.map(b=>{
+      const r=el('rect',{x:ax(b.mid)-BARW/2,y:oy(0),width:BARW,height:0,rx:1.5,class:'bar','fill-opacity':.82});
+      parent.appendChild(r);
+      txt(parent,ax(b.mid),oy(b.p)-5,b.lab,'bar-lbl');
+      return {r,b};
+    });
+  }
 
   // ============================ PANEL 1 ============================
   frame(svg1,[45,55,65,75,85],ax,'age (years)','grip strength (kg)',
-        [{v:20,t:'20'},{v:30,t:'30'},{v:40,t:'40'}],gy);
+        [{v:10,t:'10'},{v:20,t:'20'},{v:30,t:'30'},{v:40,t:'40'},{v:50,t:'50'}],gy);
   const g1dots=grp(svg1,'g1dots'), g1ols=grp(svg1,'g1ols'), g1cut=grp(svg1,'g1cut');
   const dot1=PTS.map((p,i)=>{const c=el('circle',{cx:ax(p[0])+JX[i],cy:gy(p[1]),r:2.4,class:'dot-not','fill-opacity':.72});g1dots.appendChild(c);return c;});
   const olsLine=el('line',{x1:ax(AGE[0]),y1:gy(OLS.b0+OLS.b1*AGE[0]),x2:ax(AGE[1]),y2:gy(OLS.b0+OLS.b1*AGE[1]),class:'ols'});
@@ -338,39 +384,29 @@ glm(weak_grip ~ age, family = binomial, data = klosa)
 
   // ============================ PANEL 2 ============================
   frame(svg2,[45,55,65,75,85],ax,'age (years)','',null,null);
-  const g2cut=grp(svg2,'g2cut'), g2rows=grp(svg2,'g2rows'), g2dots=grp(svg2,'g2dots'), g2line=grp(svg2,'g2line');
+  const g2cut=grp(svg2,'g2cut'), g2rows=grp(svg2,'g2rows'), g2dots=grp(svg2,'g2dots');
+  const g2bands=grp(svg2,'g2bands'), g2bars=grp(svg2,'g2bars'), g2line=grp(svg2,'g2line');
   line(g2rows,X0,ROW0,X1,ROW0,'rowline'); line(g2rows,X0,ROW1,X1,ROW1,'rowline');
   txt(g2rows,X0-8,ROW1+4,'1',' rowtag','end'); txt(g2rows,X0-8,ROW0+4,'0',' rowtag','end');
   txt(g2rows,X1-2,ROW1-6,'weak grip','cut-lbl','end');
   txt(g2rows,X1-2,ROW0+16,'not weak','axis-lbl','end');
   line(g2cut,X0,gy(CUT),X1,gy(CUT),'cut'); txt(g2cut,X1-2,gy(CUT)-4,'cut = 27 kg','cut-lbl','end');
   const dot2=PTS.map((p,i)=>{const c=el('circle',{cx:ax(p[0])+JX[i],cy:gy(p[1]),r:2.4,class:'dot-not','fill-opacity':.72});g2dots.appendChild(c);return c;});
-  g2line.appendChild(el('line',{x1:ax(AGE[0]),y1:oy(LPMi.b0+LPMi.b1*AGE[0]),x2:ax(AGE[1]),y2:oy(LPMi.b0+LPMi.b1*AGE[1]),class:'lpm'}));
+  [49.5,54.5,59.5,64.5,69.5,74.5,79.5,84.5].forEach(age=>line(g2bands,ax(age),ROW1-20,ax(age),ROW0+20,'band-divider'));
+  const bar2=makeBinaryBars(g2bars);
+  g2line.appendChild(el('line',{x1:ax(AGE[0]),y1:oy(LPMb.b0+LPMb.b1*AGE[0]),x2:ax(AGE[1]),y2:oy(LPMb.b0+LPMb.b1*AGE[1]),class:'lpm'}));
   function setDotsRed(on){
     PTS.forEach((p,i)=>{ if(p[2]){ const cls=on?'dot-weak':'dot-not'; dot1[i].setAttribute('class',cls); dot2[i].setAttribute('class',cls); }});
   }
 
-  // ============================ PANEL 3: bars + failed straight line ============================
+  // ============================ PANEL 3: bars + logistic curve ============================
   frame(svg3,[45,55,65,75,85,95,105],ax3,'age (years)','probability of weak grip',
         [{v:0,t:'0'},{v:.5,t:'.5'},{v:1,t:'1'}],py);
-  const g3bars=grp(svg3,'g3bars'), g3line=grp(svg3,'g3line');
-  g3line.appendChild(el('rect',{x:X0,y:py(PROB[1]),width:X1-X0,height:py(1)-py(PROB[1]),class:'forbid'}));
-  g3line.appendChild(el('rect',{x:X0,y:py(0),width:X1-X0,height:py(PROB[0])-py(0),class:'forbid'}));
-  line(g3line,X0,py(1),X1,py(1),'refline'); line(g3line,X0,py(0),X1,py(0),'refline');
-  txt(g3line,X1-2,py(1)-4,'p = 1 ceiling','reftag','end'); txt(g3line,X1-2,py(0)+12,'p = 0 floor','reftag','end');
-  g3line.appendChild(el('line',{x1:ax3(AGE3[0]),y1:py(LPMb.b0+LPMb.b1*AGE3[0]),x2:ax3(AGE3[1]),y2:py(LPMb.b0+LPMb.b1*AGE3[1]),class:'lpm'}));
-  g3line.appendChild(el('circle',{cx:ax3(AGE3[0]),cy:py(LPMb.b0+LPMb.b1*AGE3[0]),r:6,class:'badpt'}));
-  g3line.appendChild(el('circle',{cx:ax3(AGE3[1]),cy:py(LPMb.b0+LPMb.b1*AGE3[1]),r:6,class:'badpt'}));
+  const g3bars=grp(svg3,'g3bars'), g3sig=grp(svg3,'g3sig');
   const bar3=makeBars(g3bars);
-
-  // ============================ PANEL 4: bars + logistic curve ============================
-  frame(svg4,[45,55,65,75,85,95,105],ax3,'age (years)','probability of weak grip',
-        [{v:0,t:'0'},{v:.5,t:'.5'},{v:1,t:'1'}],py);
-  const g4bars=grp(svg4,'g4bars'), g4sig=grp(svg4,'g4sig');
-  const bar4=makeBars(g4bars);
   let dSig='M';
   for(let a=AGE3[0];a<=AGE3[1]+0.01;a+=0.5){ dSig+=` ${ax3(a).toFixed(1)} ${py(sig(GLM,a)).toFixed(1)}`; }
-  const sigPath=el('path',{d:dSig,class:'sig'}); g4sig.appendChild(sigPath);
+  const sigPath=el('path',{d:dSig,class:'sig'}); g3sig.appendChild(sigPath);
   const sigLen=sigPath.getTotalLength();
   sigPath.style.strokeDasharray=sigLen; sigPath.style.strokeDashoffset=sigLen;
 
@@ -383,7 +419,12 @@ glm(weak_grip ~ age, family = binomial, data = klosa)
       const p=PTS[i];
       dot2[i].setAttribute('cy', lerp(gy(p[1]), oy(p[2])+JY[i], A.morph));
     }
-    [...bar3,...bar4].forEach(o=>{
+    bar2.forEach(o=>{
+      const top=oy(o.b.p*A.bars);
+      o.r.setAttribute('y',top);
+      o.r.setAttribute('height',Math.max(0,oy(0)-top));
+    });
+    bar3.forEach(o=>{
       const top=py(o.b.p*A.bars);
       o.r.setAttribute('y',top);
       o.r.setAttribute('height',Math.max(0,py(0)-top));
@@ -405,7 +446,7 @@ glm(weak_grip ~ age, family = binomial, data = klosa)
   // Bullets are ordinary HTML above. This list now controls visuals only.
   // Each entry inherits the previous entry, so only changes need to be written.
   const DEFAULT_STEP={
-    vis:[], codes:[], dotsRed:false, olsDraw:false,
+    vis:[], dotsRed:false, dotsFade:false, olsDraw:false,
     panel:1, morph:0, bars:0, sigv:0
   };
   const STEP_CHANGES=[
@@ -419,35 +460,28 @@ glm(weak_grip ~ age, family = binomial, data = klosa)
     {},
     {panel:2,vis:['g1dots','g1ols','g1cut','g2cut','g2dots']},
     {},
-    {vis:['g1dots','g1ols','g1cut','g2rows','g2dots'],codes:['code2'],code2:'bin',morph:1},
+    {vis:['g1dots','g1ols','g1cut','g2rows','g2dots'],morph:1},
+    {vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2bands']},
     {},
-    {vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2line'],code2:'lm'},
+    {vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2bands','g2bars'],dotsFade:true,bars:1},
+    {vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2bands','g2bars','g2line']},
+    {panel:3,vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2bands','g2bars','g2line','g3bars']},
     {},
-    {panel:3,vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2line','g3bars'],bars:1},
+    {vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2bands','g2bars','g2line','g3bars','g3sig'],sigv:1},
     {},
-    {vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2line','g3bars','g3line']},
-    {panel:4},
-    {vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2line','g3bars','g3line','g4bars'],codes:['code2','code3']},
-    {vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2line','g3bars','g3line','g4bars','g4sig'],sigv:1,
-      eq4:'$p = \\dfrac{1}{1 + e^{-(\\beta_0 + \\beta_1\\,\\text{age})}}$'}
+    {},
+    {},
+    {},
+    {},
+    {panel:4}
   ];
   const STEPS=STEP_CHANGES.reduce((steps,change)=>{
     steps.push({...DEFAULT_STEP,...steps.at(-1),...change});
     return steps;
   },[]);
   const N=STEPS.length;
-  const ALL_GROUPS=['g1dots','g1ols','g1cut','g2cut','g2rows','g2dots','g2line','g3bars','g3line','g4bars','g4sig'];
-  const ALL_CODES=['code2','code3'];
-  const PANEL_FIRST={1:0,2:8,3:14,4:17};   // step at which each panel lights up
-  const CODE2={
-    bin:'klosa &lt;- klosa |&gt; mutate(weak_grip = as.integer(grip &lt;= 27))',
-    lm:`klosa &lt;- klosa |&gt; mutate(weak_grip = as.integer(grip &lt;= 27))
-lm(weak_grip ~ age, data = klosa) |&gt; summary()
-<span class="out">#&gt;             Estimate Std. Error t value Pr(&gt;|t|)
-#&gt; (Intercept) <span class="hi">-0.81404</span>    0.03370  -24.15   &lt;2e-16 ***
-#&gt; age          <span class="hi">0.01679</span>    0.00055   30.71   &lt;2e-16 ***</span>`
-  };
-  const code2body=document.getElementById('code2body');
+  const ALL_GROUPS=['g1dots','g1ols','g1cut','g2cut','g2rows','g2dots','g2bands','g2bars','g2line','g3bars','g3sig'];
+  const PANEL_FIRST={1:0,2:8,3:15,4:23};   // step at which each panel lights up
   const eqEls={1:document.getElementById('eq1'),2:document.getElementById('eq2'),3:document.getElementById('eq3'),4:document.getElementById('eq4')};
   const PANEL_IDS=[1,2,3,4];
 
@@ -460,11 +494,9 @@ lm(weak_grip ~ age, data = klosa) |&gt; summary()
     const s=STEPS[step];
     const on=new Set(s.vis);
     ALL_GROUPS.forEach(id=>document.getElementById(id).classList.toggle('vis',on.has(id)));
-    const codesOn=new Set(s.codes||[]);
-    ALL_CODES.forEach(id=>document.getElementById(id).classList.toggle('vis',codesOn.has(id)));
-    if(s.code2) code2body.innerHTML=CODE2[s.code2];
     setOlsDrawn(!!s.olsDraw);
     setDotsRed(!!s.dotsRed);
+    g2dots.classList.toggle('faded',!!s.dotsFade);
     AT.morph=s.morph; AT.bars=s.bars; AT.sigv=s.sigv;
     if(window.__STILL__){A.morph=AT.morph;A.bars=AT.bars;A.sigv=AT.sigv;drawCont();} else animateTo();
     PANEL_IDS.forEach(pn=>{
@@ -513,7 +545,7 @@ lm(weak_grip ~ age, data = klosa) |&gt; summary()
   // ============================ PENCIL ============================
   const canvas=document.getElementById('ink'), cx=canvas.getContext('2d');
   const CW=1920,CH=1080; canvas.width=CW; canvas.height=CH;
-  let pencil=false,penW=4,stroke=null; const strokes=[];
+  let pencil=false,penW=1.75,stroke=null; const strokes=[];
   const pBtn=document.getElementById('pencil'),uBtn=document.getElementById('undo'),cBtn=document.getElementById('clear');
   function setPencil(v){pencil=v;deck.classList.toggle('drawing',v);pBtn.classList.toggle('on',v);pBtn.textContent=`Pencil: ${v?'on':'off'}`;}
   function pt(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*CW/r.width,y:(e.clientY-r.top)*CH/r.height};}
