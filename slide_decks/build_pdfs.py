@@ -6,9 +6,9 @@ Usage:
 
 Adapted from intro_research_stats_admin/lessons/t_tests/build_pdfs.py.
 
-These decks are a single 1600x900 canvas with many animation steps, not
-multiple <section class="slide"> blocks. Each step is captured via
-?still=1&step=N (still mode jumps animations to their end state).
+These decks are a single 1600x900 canvas with many animation steps.
+We export only the final step (everything revealed) via
+?still=1&step=N-1.
 """
 from __future__ import annotations
 
@@ -75,7 +75,7 @@ html, body {
 
 
 def count_steps(html_path: Path) -> int:
-    """Count entries in the STEP_CHANGES array (one PDF page per step)."""
+    """Count entries in the STEP_CHANGES array."""
     text = html_path.read_text(encoding="utf-8")
     m = re.search(r"const\s+STEP_CHANGES\s*=\s*\[(.*?)\];", text, re.S)
     if not m:
@@ -93,48 +93,45 @@ def build_deck_pdf(page, lesson_dir: Path, out_pdf: Path) -> None:
     if n_steps == 0:
         raise RuntimeError(f"No steps found in {index_html}")
 
-    print(f"  {lesson_dir.name}: {n_steps} step(s)", flush=True)
+    final_step = n_steps - 1  # 0-based index of the fully revealed state
+    print(f"  {lesson_dir.name}: final step {n_steps}/{n_steps}", flush=True)
 
     writer = PdfWriter()
     base_url = index_html.resolve().as_uri()
+    url = f"{base_url}?still=1&step={final_step}"
+    page.goto(url, wait_until="networkidle")
 
-    for i in range(n_steps):
-        url = f"{base_url}?still=1&step={i}"
-        page.goto(url, wait_until="networkidle")
+    page.wait_for_function(
+        """([expected]) => {
+            const el = document.getElementById('counter');
+            return el && el.textContent.includes(`step ${expected} /`);
+        }""",
+        arg=[n_steps],
+        timeout=15000,
+    )
+    page.evaluate("document.fonts && document.fonts.ready")
+    page.wait_for_timeout(400)
 
-        page.wait_for_function(
-            """([expected]) => {
-                const el = document.getElementById('counter');
-                return el && el.textContent.includes(`step ${expected} /`);
-            }""",
-            arg=[i + 1],
-            timeout=15000,
-        )
-        page.evaluate("document.fonts && document.fonts.ready")
-        page.wait_for_timeout(400)
+    page.add_style_tag(content=PRINT_CSS)
+    page.evaluate(
+        """() => {
+            const deck = document.getElementById('deck');
+            if (deck) deck.style.transform = 'none';
+        }"""
+    )
+    page.wait_for_timeout(150)
 
-        page.add_style_tag(content=PRINT_CSS)
-        page.evaluate(
-            """() => {
-                const deck = document.getElementById('deck');
-                if (deck) deck.style.transform = 'none';
-            }"""
-        )
-        page.wait_for_timeout(150)
+    pdf_bytes = page.pdf(
+        width=f"{DECK_W}px",
+        height=f"{DECK_H}px",
+        print_background=True,
+        margin={"top": "0", "bottom": "0", "left": "0", "right": "0"},
+        prefer_css_page_size=False,
+    )
 
-        pdf_bytes = page.pdf(
-            width=f"{DECK_W}px",
-            height=f"{DECK_H}px",
-            print_background=True,
-            margin={"top": "0", "bottom": "0", "left": "0", "right": "0"},
-            prefer_css_page_size=False,
-        )
-
-        reader = PdfReader(io.BytesIO(pdf_bytes))
-        for p in reader.pages:
-            writer.add_page(p)
-
-        print(f"    step {i + 1}/{n_steps}", flush=True)
+    reader = PdfReader(io.BytesIO(pdf_bytes))
+    for p in reader.pages:
+        writer.add_page(p)
 
     with out_pdf.open("wb") as f:
         writer.write(f)
