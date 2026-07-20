@@ -8,7 +8,7 @@
 
 <meta name="author" content="GRAPH Courses">
 
-<title>Odds, log-odds, and odds ratios</title>
+<title>Intro to logistic regression</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -21,19 +21,53 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="index_files/libs/clipboard/clipboard.min.js"></script>
-<script src="index_files/libs/quarto-html/quarto.js"></script>
-<script src="index_files/libs/quarto-html/popper.min.js"></script>
-<script src="index_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="index_files/libs/quarto-html/anchor.min.js"></script>
-<link href="index_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="index_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="index_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="index_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="index_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="intro_to_logistic_regression_files/libs/clipboard/clipboard.min.js"></script>
+<script src="intro_to_logistic_regression_files/libs/quarto-html/quarto.js"></script>
+<script src="intro_to_logistic_regression_files/libs/quarto-html/popper.min.js"></script>
+<script src="intro_to_logistic_regression_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="intro_to_logistic_regression_files/libs/quarto-html/anchor.min.js"></script>
+<link href="intro_to_logistic_regression_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="intro_to_logistic_regression_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="intro_to_logistic_regression_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="intro_to_logistic_regression_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="intro_to_logistic_regression_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.47.0/min/vs/editor/editor.main.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   
@@ -312,7 +346,7 @@ iframe.qwebr-output-code-browse {
 // Document level settings ----
 
 // Determine if we need to install R packages
-globalThis.qwebrInstallRPackagesList = ['broom', 'dplyr'];
+globalThis.qwebrInstallRPackagesList = ['MASS', 'dplyr', 'ggplot2'];
 
 // Specify possible locations to search for the repository
 globalThis.qwebrPackageRepoURLS = ['https://repo.r-wasm.org/'];
@@ -334,7 +368,7 @@ globalThis.qwebrCustomizedWebROptions = {
 };
 
 // Store cell data
-globalThis.qwebrCellDetails = [{"code":"p <- 0.80\nodds <- p / (1 - p)\nlog_odds <- log(odds)\n\nc(probability = p, odds = odds, log_odds = log_odds)","options":{"classes":"","out-height":"","context":"interactive","fig-height":5,"read-only":"false","warning":"true","comment":"","autorun":"false","message":"true","fig-cap":"","label":"unnamed-chunk-1","output":"true","editor-quick-suggestions":"false","results":"markup","fig-width":7,"out-width":"700px","editor-font-scale":"1","editor-max-height":"","dpi":72,"editor-word-wrap":"true"},"id":1},{"code":"# Age log-odds coefficient from glm(weak_grip ~ age, family = binomial)\nage_coef <- 0.1168\nexp(age_coef)","options":{"classes":"","out-height":"","context":"interactive","fig-height":5,"read-only":"false","warning":"true","comment":"","autorun":"false","message":"true","fig-cap":"","label":"unnamed-chunk-2","output":"true","editor-quick-suggestions":"false","results":"markup","fig-width":7,"out-width":"700px","editor-font-scale":"1","editor-max-height":"","dpi":72,"editor-word-wrap":"true"},"id":2},{"code":"library(dplyr)\nlibrary(broom)\n\nklosa <- read.csv(\"https://raw.githubusercontent.com/the-graph-courses/rsr_resources/refs/heads/main/data/28_klosa_men_grip.csv\")\n\nmod <- glm(weak_grip ~ age, family = binomial, data = klosa)\n\ntidy(mod, exponentiate = TRUE, conf.int = TRUE) %>%\n  select(term, estimate, conf.low, conf.high, p.value)","options":{"classes":"","out-height":"","context":"interactive","fig-height":5,"read-only":"false","warning":"true","comment":"","autorun":"false","message":"true","fig-cap":"","label":"unnamed-chunk-3","output":"true","editor-quick-suggestions":"false","results":"markup","fig-width":7,"out-width":"700px","editor-font-scale":"1","editor-max-height":"","dpi":72,"editor-word-wrap":"true"},"id":3},{"code":"klosa <- klosa %>%\n  mutate(\n    age_group = cut(\n      age,\n      breaks = c(45, 65, 75, Inf),\n      right = FALSE,\n      labels = c(\"45-64\", \"65-74\", \"75+\")\n    )\n  )\n\nmod_agegroup <- glm(weak_grip ~ age_group, family = binomial, data = klosa)\n\ntidy(mod_agegroup, exponentiate = TRUE, conf.int = TRUE) %>%\n  select(term, estimate, conf.low, conf.high, p.value)","options":{"classes":"","out-height":"","context":"interactive","fig-height":5,"read-only":"false","warning":"true","comment":"","autorun":"false","message":"true","fig-cap":"","label":"unnamed-chunk-4","output":"true","editor-quick-suggestions":"false","results":"markup","fig-width":7,"out-width":"700px","editor-font-scale":"1","editor-max-height":"","dpi":72,"editor-word-wrap":"true"},"id":4}];
+globalThis.qwebrCellDetails = [{"id":1,"code":"library(dplyr)\nlibrary(ggplot2)\n\nklosa <- read.csv(\"https://raw.githubusercontent.com/the-graph-courses/rsr_resources/refs/heads/main/data/28_klosa_men_grip.csv\")\n\nklosa %>%\n  select(age, grip, weak_grip) %>%\n  head()","options":{"warning":"true","editor-quick-suggestions":"false","read-only":"false","classes":"","results":"markup","out-width":"700px","context":"interactive","editor-max-height":"","autorun":"false","comment":"","label":"unnamed-chunk-1","dpi":72,"editor-word-wrap":"true","fig-height":5,"output":"true","fig-cap":"","out-height":"","message":"true","fig-width":7,"editor-font-scale":"1"}},{"id":2,"code":"# Calculate the proportion with weak grip in each 5-year age band.\nband_props <- klosa %>%\n  group_by(age_band = cut_width(age, 5, boundary = 45)) %>%\n  summarize(age = mean(age), proportion = mean(weak_grip))\n\n# Plot the observed proportions.\nggplot(band_props, aes(x = age, y = proportion)) +\n  geom_line(color = \"darkcyan\") +\n  geom_point(color = \"indianred\", size = 3) +\n  labs(x = \"Age (years)\", y = \"Proportion with weak grip\")","options":{"warning":"true","editor-quick-suggestions":"false","read-only":"false","classes":"","results":"markup","out-width":"700px","context":"interactive","editor-max-height":"","autorun":"false","comment":"","label":"unnamed-chunk-2","dpi":72,"editor-word-wrap":"true","fig-height":5,"output":"true","fig-cap":"","out-height":"","message":"true","fig-width":7,"editor-font-scale":"1"}},{"id":3,"code":"grip_model <- glm(____ ~ ____, family = ____, data = klosa)\nsummary(grip_model)","options":{"warning":"true","editor-quick-suggestions":"false","read-only":"false","classes":"","results":"markup","out-width":"700px","context":"interactive","editor-max-height":"","autorun":"false","comment":"","label":"unnamed-chunk-3","dpi":72,"editor-word-wrap":"true","fig-height":5,"output":"true","fig-cap":"","out-height":"","message":"true","fig-width":7,"editor-font-scale":"1"}},{"id":4,"code":"# Predicted probabilities from grip_model.\nage_line <- data.frame(age = seq(min(klosa$age), max(klosa$age), by = 1))\nage_line$prob <- predict(grip_model, newdata = age_line, type = \"response\")\n\nggplot() +\n  geom_line(data = age_line, aes(x = age, y = prob), color = \"gold\") +\n  geom_point(data = band_props, aes(x = age, y = proportion),\n             color = \"indianred\", size = 3) +\n  labs(x = \"Age (years)\", y = \"Probability of weak grip\")","options":{"warning":"true","editor-quick-suggestions":"false","read-only":"false","classes":"","results":"markup","out-width":"700px","context":"interactive","editor-max-height":"","autorun":"false","comment":"","label":"unnamed-chunk-4","dpi":72,"editor-word-wrap":"true","fig-height":5,"output":"true","fig-cap":"","out-height":"","message":"true","fig-width":7,"editor-font-scale":"1"}},{"id":5,"code":"# Probability of weak grip for a 70-year-old\n1 / (1 + exp(-(____ + ____ * 70)))","options":{"warning":"true","editor-quick-suggestions":"false","read-only":"false","classes":"","results":"markup","out-width":"700px","context":"interactive","editor-max-height":"","autorun":"false","comment":"","label":"unnamed-chunk-5","dpi":72,"editor-word-wrap":"true","fig-height":5,"output":"true","fig-cap":"","out-height":"","message":"true","fig-width":7,"editor-font-scale":"1"}},{"id":6,"code":"new_people <- data.frame(age = c(50, 60, 70, 80))\n# Here, fill in the model name (grip_model) and the type argument (\"response\").\npredict(____, newdata = new_people, type = ____)","options":{"warning":"true","editor-quick-suggestions":"false","read-only":"false","classes":"","results":"markup","out-width":"700px","context":"interactive","editor-max-height":"","autorun":"false","comment":"","label":"unnamed-chunk-6","dpi":72,"editor-word-wrap":"true","fig-height":5,"output":"true","fig-cap":"","out-height":"","message":"true","fig-width":7,"editor-font-scale":"1"}},{"id":7,"code":"library(MASS)\n\nbw_props <- birthwt %>%\n  group_by(weight_band = cut_width(lwt, 20, boundary = 80)) %>%\n  summarize(weight = mean(lwt), proportion = mean(low))\n\nggplot(bw_props, aes(x = weight, y = proportion)) +\n  geom_line(color = \"darkcyan\") +\n  geom_point(color = \"indianred\", size = 3) +\n  labs(x = \"Mother's weight at last menstrual period (pounds)\",\n       y = \"Proportion with low birth weight\")","options":{"warning":"true","editor-quick-suggestions":"false","read-only":"false","classes":"","results":"markup","out-width":"700px","context":"interactive","editor-max-height":"","autorun":"false","comment":"","label":"unnamed-chunk-7","dpi":72,"editor-word-wrap":"true","fig-height":5,"output":"true","fig-cap":"","out-height":"","message":"true","fig-width":7,"editor-font-scale":"1"}},{"id":8,"code":"bw_model <- glm(____ ~ ____, family = binomial, data = birthwt)\nsummary(bw_model)","options":{"warning":"true","editor-quick-suggestions":"false","read-only":"false","classes":"","results":"markup","out-width":"700px","context":"interactive","editor-max-height":"","autorun":"false","comment":"","label":"unnamed-chunk-8","dpi":72,"editor-word-wrap":"true","fig-height":5,"output":"true","fig-cap":"","out-height":"","message":"true","fig-width":7,"editor-font-scale":"1"}},{"id":9,"code":"# Predicted probabilities from bw_model.\nweight_line <- data.frame(lwt = seq(min(birthwt$lwt), max(birthwt$lwt), by = 1))\nweight_line$prob <- predict(bw_model, newdata = weight_line, type = \"response\")\n\nggplot() +\n  geom_line(data = weight_line, aes(x = lwt, y = prob), color = \"gold\") +\n  geom_point(data = bw_props, aes(x = weight, y = proportion),\n             color = \"indianred\", size = 3) +\n  labs(x = \"Mother's weight at last menstrual period (pounds)\",\n       y = \"Probability of low birth weight\")","options":{"warning":"true","editor-quick-suggestions":"false","read-only":"false","classes":"","results":"markup","out-width":"700px","context":"interactive","editor-max-height":"","autorun":"false","comment":"","label":"unnamed-chunk-9","dpi":72,"editor-word-wrap":"true","fig-height":5,"output":"true","fig-cap":"","out-height":"","message":"true","fig-width":7,"editor-font-scale":"1"}},{"id":10,"code":"# Probability of low birth weight when the mother weighs 120 pounds.\n1 / (1 + exp(-(____ + ____ * 120)))","options":{"warning":"true","editor-quick-suggestions":"false","read-only":"false","classes":"","results":"markup","out-width":"700px","context":"interactive","editor-max-height":"","autorun":"false","comment":"","label":"unnamed-chunk-10","dpi":72,"editor-word-wrap":"true","fig-height":5,"output":"true","fig-cap":"","out-height":"","message":"true","fig-width":7,"editor-font-scale":"1"}},{"id":11,"code":"new_mothers <- data.frame(lwt = c(100, 130, 160))\npredict(____, newdata = new_mothers, type = ____)","options":{"warning":"true","editor-quick-suggestions":"false","read-only":"false","classes":"","results":"markup","out-width":"700px","context":"interactive","editor-max-height":"","autorun":"false","comment":"","label":"unnamed-chunk-11","dpi":72,"editor-word-wrap":"true","fig-height":5,"output":"true","fig-cap":"","out-height":"","message":"true","fig-width":7,"editor-font-scale":"1"}}];
 
 </script>
 <script type="module">
@@ -1916,8 +1950,8 @@ globalThis.qwebrCreateMonacoEditorInstance = function (cellData) {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Odds, log-odds, and odds ratios</h1>
-<p class="subtitle lead">WebR practical: from log-odds coefficients to paper-ready odds ratios</p>
+<h1 class="title">Intro to logistic regression</h1>
+<p class="subtitle lead">WebR practical: logistic regression in R</p>
 </div>
 
 
@@ -1992,20 +2026,20 @@ body {
 
 .masthead h1 {
   color: #fff;
-  font-size: 1.55rem;
+  font-size: 1.6rem;
   line-height: 1.15;
   font-weight: 800;
   margin: 0;
 }
 
 .masthead p {
-  max-width: 720px;
+  max-width: 700px;
   margin: 0.55rem 0 0;
   color: #d3eded;
   font-size: 0.98rem;
 }
 
-.panel, .practice, .callout, .webr-wrap {
+.panel, .practice, .callout, .webr-wrap, .svg-panel {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -2039,6 +2073,15 @@ body {
   margin: 1rem 0;
   overflow-x: auto;
 }
+
+.svg-panel {
+  padding: 0.6rem;
+  margin: 0.85rem 0 0.4rem;
+  overflow-x: auto;
+}
+
+.svg-panel svg { width: 100%; min-width: 560px; display: block; }
+.svg-caption { color: var(--muted); font-size: 0.9rem; margin: 0.2rem 0.3rem 0; }
 
 .practice {
   padding: 1rem 1.15rem;
@@ -2190,45 +2233,36 @@ code {
 
 .footer-note { color: var(--muted); text-align: center; margin-top: 2rem; font-size: 0.9rem; }
 
-.paperbox {
-  background: #fffaf0;
-  border: 1px solid #edd9a0;
-  border-left: 4px solid var(--gold);
-  border-radius: 8px;
-  padding: 0.9rem 1rem;
-  margin: 0.8rem 0;
-}
-
-.paperbox .plab {
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #8a6d00;
-  margin-bottom: 0.35rem;
-}
-
-.ortable {
+.slope-table {
   border-collapse: collapse;
   width: 100%;
   margin: 0.9rem 0 0.4rem;
   font-size: 0.95rem;
 }
 
-.ortable th, .ortable td {
+.slope-table caption {
+  caption-side: top;
+  text-align: left;
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin-bottom: 0.4rem;
+}
+
+.slope-table th, .slope-table td {
   border: 1px solid var(--border);
   padding: 0.5rem 0.7rem;
   text-align: left;
 }
 
-.ortable thead th {
+.slope-table thead th {
   background: var(--dark-teal);
   color: #fff;
   font-weight: 700;
 }
 
-.ortable tbody tr:nth-child(even) { background: #f2f9f9; }
-.ortable td.or { font-family: Consolas, monospace; font-weight: 700; color: var(--dark-teal); }
+.slope-table tbody tr:nth-child(even) { background: #f2f9f9; }
+.slope-table .refrow td { background: var(--light-teal-soft); font-weight: 600; }
+.slope-table td code { background: transparent; padding: 0; }
 </style>
 <div class="page-shell">
 <header class="masthead">
@@ -2236,11 +2270,8 @@ code {
 WebR practical
 </div>
 <h1>
-Odds, log-odds, and odds ratios
+Intro to logistic regression
 </h1>
-<p>
-Follow-up after Intro to Logistic Regression and Interpreting Logistic Regression Coefficients. Connect probability, odds, and log-odds, then report odds ratios the way papers do, using <code>broom::tidy(…, exponentiate = TRUE)</code>.
-</p>
 </header>
 <section class="panel">
 <h2 class="anchored">
@@ -2249,52 +2280,50 @@ Overview
 <p>In this practical you will:</p>
 <ul class="tight-list">
 <li>
-Review probability, odds, and log-odds with a short numeric example.
+Fit a model to predict the probability of weak grip (yes or no) from age on the KLOSA data.
 </li>
 <li>
-Turn a logistic coefficient into an odds ratio with <code>exp()</code>.
+Read the age coefficient and interpret its sign.
 </li>
 <li>
-Use <code>broom::tidy(…, exponentiate = TRUE)</code> on the KLoSA weak-grip model.
+Use the fitted coefficients to predict weak grip for some example ages.
 </li>
 <li>
-Practice reading paper-style results sentences that report odds ratios.
+Repeat the workflow on a second dataset with a negative coefficient.
 </li>
 </ul>
 <p>After answering the questions, your completion code will be revealed.</p>
+<p>
+This is the sequence logistic regression follows:
+</p>
+<div class="svg-panel">
+<svg viewbox="0 0 860 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagram showing the sequence of logistic regression">
+<defs> <marker id="arr" markerwidth="9" markerheight="9" refx="7" refy="4.5" orient="auto"> <path d="M0,0 L9,4.5 L0,9 z" fill="#5d7475"></path> </marker> </defs> <rect x="10" y="55" width="170" height="80" rx="10" fill="#e3f4f4" stroke="#00565e" stroke-width="2"></rect> <text x="95" y="88" text-anchor="middle" font-size="15" font-weight="700" fill="#00565e">Predictor</text> <text x="95" y="112" text-anchor="middle" font-size="14" fill="#173234">age, e.g.&nbsp;70</text> <line x1="180" y1="95" x2="230" y2="95" stroke="#5d7475" stroke-width="2.5" marker-end="url(#arr)"></line> <rect x="235" y="55" width="200" height="80" rx="10" fill="#ffffff" stroke="#00565e" stroke-width="2"></rect> <text x="335" y="83" text-anchor="middle" font-size="15" font-weight="700" fill="#00565e">Linear score</text> <text x="335" y="110" text-anchor="middle" font-size="14" font-family="Consolas, monospace" fill="#173234">b0 + b1 × age</text> <line x1="435" y1="95" x2="485" y2="95" stroke="#5d7475" stroke-width="2.5" marker-end="url(#arr)"></line> <rect x="490" y="40" width="185" height="110" rx="10" fill="#fffaf0" stroke="#f5c542" stroke-width="2.5"></rect> <text x="582" y="66" text-anchor="middle" font-size="15" font-weight="700" fill="#8a6d00">Logistic function</text> <text x="582" y="92" text-anchor="middle" font-size="14" font-family="Consolas, monospace" fill="#173234">1 / (1 + e⁻ᶻ)</text> <path d="M 508 142 C 570 142, 595 105, 657 105" fill="none" stroke="#b83b5e" stroke-width="2.5"></path> <line x1="675" y1="95" x2="720" y2="95" stroke="#5d7475" stroke-width="2.5" marker-end="url(#arr)"></line> <rect x="725" y="55" width="125" height="80" rx="10" fill="#e8f8ef" stroke="#287a4d" stroke-width="2"></rect> <text x="787" y="88" text-anchor="middle" font-size="15" font-weight="700" fill="#287a4d">Probability</text> <text x="787" y="112" text-anchor="middle" font-size="14" fill="#173234">always 0 to 1</text>
+</svg>
+<p class="svg-caption">
+First the model calculates a linear score from the predictor and the coefficients. Then the logistic function converts that score into a probability between 0 and 1.
+</p>
+</div>
 </section>
 <section class="panel">
 <h2 class="anchored">
-Part 1. Probability, odds, and log-odds
+Part 1. Weak grip in the KLOSA data
 </h2>
-<p>Suppose an event happens to 8 of 10 people.</p>
+<p>We use the same data as the video: 4,184 men aged 45 and above from the Korean Longitudinal Study of Aging (KLOSA).</p>
 <ul class="tight-list">
 <li>
-<strong>Probability</strong> is the share of the whole group: <span class="math inline">\(p = 8/10 = 0.80\)</span>.
+<strong>Predictor:</strong> <code>age</code> (years)
 </li>
 <li>
-<strong>Odds</strong> compare happens with does-not: <span class="math inline">\(\text{odds} = 8/2 = 4\)</span>, or <span class="math inline">\(p/(1-p) = 0.80/0.20 = 4\)</span>.
-</li>
-<li>
-<strong>Log-odds</strong> is the natural log of the odds: <span class="math inline">\(\ln(4) \approx 1.39\)</span>.
+<strong>Outcome:</strong> <code>weak_grip</code>, which is <code>1</code> when grip strength is 27 kg or less and <code>0</code> otherwise
 </li>
 </ul>
-<div class="callout callout-style-simple callout-none no-icon">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-body-container">
-<p>Odds equal <strong>1</strong> at a 50-50 chance. Odds above 1 mean more likely than not. Log-odds equal <strong>0</strong> at that same 50-50 point, positive above it, and negative below it.</p>
-</div>
-</div>
-</div>
+<p>Run the cell to load the data and preview the first few rows.</p>
 </section>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code: convert probability to odds and log-odds
+R code: read the data
 </h3>
-<p>Run the cell. Then try changing <code>p</code> to <code>0.25</code> and run again.</p>
 <div id="qwebr-insertion-location-1"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 </div>
@@ -2303,392 +2332,310 @@ R code: convert probability to odds and log-odds
 Question 1
 </div>
 <p>
-If probability is <code>0.25</code>, are the odds and log-odds above or below the 50-50 point?
+Our outcome <code>weak_grip</code> only takes the values <code>1</code> and <code>0</code>. What kind of outcome is this, and which function fits the right model for it?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p1" value="a">Odds above 1 and log-odds positive, because 0.25 is still a fairly common event.</label> <label><input type="radio" name="p1" value="b">Odds below 1 and log-odds negative, because 0.25 is below a 50-50 chance.</label>
+<label><input type="radio" name="p0" value="a">A <strong>continuous</strong> outcome measured on a numeric scale, best modeled with <code>lm()</code>.</label> <label><input type="radio" name="p0" value="b">A <strong>binary</strong> outcome with two values (0 and 1), best modeled with <code>glm(family = binomial)</code>.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Below p = 0.5, odds are below 1 and log-odds are negative. At p = 0.25, odds = 1/3 and log-odds are about -1.10." data-incorrect="Not quite. The 50-50 point is p = 0.5. Anything below that has odds below 1 and negative log-odds.">
+<div class="practice-feedback" data-correct="Correct. Yes or no outcomes are binary, and logistic regression, fit with glm(family = binomial), models the probability of the 1." data-incorrect="Not quite. The outcome only has two possible values, so it is binary, and we model its probability with glm(family = binomial).">
+
+</div>
+</div>
+<div class="webr-wrap">
+<h3 class="anchored">
+R code: plot weak grip by age group
+</h3>
+<p>We divide age into 5-year bands. For each band, we calculate the proportion of men with weak grip. The points show these observed proportions, and the line connects them. We have not fitted a model yet.</p>
+<div id="qwebr-insertion-location-2"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<section class="panel">
+<h2 class="anchored">
+Fitting the model
+</h2>
+<p>The observed proportions suggest that a curved line may fit the data well. We will now fit a logistic regression model.</p>
+</section>
+<div class="webr-wrap">
+<h3 class="anchored">
+R code: fit the logistic regression, fill in the blank
+</h3>
+<p>Fill in the outcome (<code>weak_grip</code>), predictor (<code>age</code>), and family (<code>binomial</code>).</p>
+<div id="qwebr-insertion-location-3"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<details class="answer">
+<summary>
+Show the answer
+</summary>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>grip_model <span class="ot">&lt;-</span> <span class="fu">glm</span>(weak_grip <span class="sc">~</span> age, <span class="at">family =</span> binomial, <span class="at">data =</span> klosa)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(grip_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<pre><code>             Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept) -8.8243     0.3193   -27.64   &lt;2e-16 ***
+age          0.1168     0.0048    24.57   &lt;2e-16 ***</code></pre>
+</details>
+<div class="webr-wrap">
+<h3 class="anchored">
+R code: add the fitted logistic curve
+</h3>
+<p>Now use the fitted model to get predicted probabilities across a range of ages. Then draw the curve with <code>geom_line()</code>. The points are still the observed proportions from the age bands.</p>
+<div id="qwebr-insertion-location-4"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<div class="practice" data-answer="b">
+<div class="practice-title">
+Question 2
+</div>
+<p>
+In the summary output, what is the coefficient (the Estimate) for <code>age</code>?
+</p>
+<div class="choice-set">
+<label><input type="radio" name="p1" value="a"><code>-8.8243</code>, in the <strong>(Intercept)</strong> row of the <strong>Estimate</strong> column.</label> <label><input type="radio" name="p1" value="b"><code>0.1168</code>, in the <strong>age</strong> row of the <strong>Estimate</strong> column.</label>
+</div>
+<button type="button">Check</button>
+<div class="practice-feedback" data-correct="Correct. Each predictor gets its own row, and its coefficient is in the Estimate column. -8.8243 is the intercept." data-incorrect="Not quite. Look at the row labeled age and read the Estimate column: 0.1168. The -8.8243 is the intercept.">
+
+</div>
+</div>
+<div class="practice" data-answer="a">
+<div class="practice-title">
+Question 3
+</div>
+<p>
+The age coefficient <code>0.1168</code> is positive. From its sign alone, what do we learn?
+</p>
+<div class="choice-set">
+<label><input type="radio" name="p2" value="a">As age increases, the <strong>predicted probability</strong> of weak grip goes <strong>up</strong>.</label> <label><input type="radio" name="p2" value="b">Each extra year of age adds <strong>0.1168</strong> to the <strong>probability</strong> of weak grip.</label>
+</div>
+<button type="button">Check</button>
+<div class="practice-feedback" data-correct="Correct. A positive coefficient means the probability increases as the predictor increases, so higher age means higher probability. The probability does not rise by a fixed 0.1168 per year." data-incorrect="Not quite. A positive coefficient means the probability increases as the predictor increases. The probability does not rise by a fixed amount each year.">
+
+</div>
+</div>
+<div class="practice" data-answer="b">
+<div class="practice-title">
+Question 4
+</div>
+<p>
+So the probability does not go up by 0.1168 per year. What does go up by exactly 0.1168 for each extra year of age?
+</p>
+<div class="choice-set">
+<label><input type="radio" name="p3" value="a">The <strong>probability</strong> of weak grip, measured on the <strong>percentage scale</strong> (0 to 100).</label> <label><input type="radio" name="p3" value="b">The <strong>log odds</strong> of weak grip.</label>
+</div>
+<button type="button">Check</button>
+<div class="practice-feedback" data-correct="Correct. Each extra year adds a fixed 0.1168 to the log odds. You do not need to know log odds yet. For now, remember that the sign tells you the direction of the probability change." data-incorrect="Not quite. The quantity that changes by a fixed 0.1168 per year is the log odds. The probability changes by different amounts depending on age.">
 
 </div>
 </div>
 <section class="panel">
 <h2 class="anchored">
-Part 2. Why logistic regression uses log-odds
+Part 2. Predicting a probability by hand
 </h2>
-<p>You already fitted a model for weak grip by age. The computer works on the log-odds scale:</p>
+<p>The two estimates from the summary are the <span class="math inline">\(b_0\)</span> and <span class="math inline">\(b_1\)</span> of the logistic equation. To predict a probability for a specific person, put their age into the equation:</p>
 <div class="formula-panel">
 <p><span class="math display">\[
-\text{log-odds of weak grip} = -8.8243 + 0.1168 \times \text{age}
+\widehat{p}(\text{weak grip}) \;=\; \frac{1}{1 + e^{-(b_0 + b_1 \times \text{age})}}
+\;=\; \frac{1}{1 + e^{-(-8.8243 \;+\; 0.1168 \times \text{age})}}
 \]</span></p>
 </div>
-<p>Each extra year adds a fixed <strong>0.1168</strong> to the log-odds. That is a clean straight-line story.</p>
+<p>We can calculate this using a calculator or using R. (Note that in R, <code>exp(x)</code> computes <span class="math inline">\(e^{x}\)</span>.)</p>
+<p>In R, <code>exp(x)</code> computes <span class="math inline">\(e^{x}\)</span>, so the whole right-hand side is one line of code. Here we predict the probability of weak grip for a 70-year-old man.</p>
+</section>
+<div class="webr-wrap">
+<h3 class="anchored">
+R code: predict a probability by hand
+</h3>
+<p>Fill in the intercept (<code>-8.8243</code>) and the age coefficient (<code>0.1168</code>).</p>
+<div id="qwebr-insertion-location-5"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<details class="answer">
+<summary>
+Show the answer
+</summary>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>(<span class="sc">-</span><span class="fl">8.8243</span> <span class="sc">+</span> <span class="fl">0.1168</span> <span class="sc">*</span> <span class="dv">70</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This returns about <code>0.343</code>. According to our model, a 70-year-old man has roughly a 34% chance of having a weak grip.</p>
+</details>
+<section class="panel">
+<h2 class="anchored">
+The same prediction with predict()
+</h2>
+<p>R can also calculate the predicted probabilities for us. We create a small data frame of new people, then call <code>predict()</code> on the model. Use <code>type = "response"</code> to get probabilities.</p>
+</section>
+<div class="webr-wrap">
+<h3 class="anchored">
+R code: predict for several ages
+</h3>
+<p>Fill in the model name (<code>grip_model</code>) and the type argument (<code>"response"</code>).</p>
+<div id="qwebr-insertion-location-6"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<details class="answer">
+<summary>
+Show the answer
+</summary>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>new_people <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">age =</span> <span class="fu">c</span>(<span class="dv">50</span>, <span class="dv">60</span>, <span class="dv">70</span>, <span class="dv">80</span>))</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(grip_model, <span class="at">newdata =</span> new_people, <span class="at">type =</span> <span class="st">"response"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>You should see (rounded):</p>
+<pre><code>     1      2      3      4
+0.0482 0.1401 0.3439 0.6277</code></pre>
+<p>The third value, 0.3439, matches the hand calculation for the 70-year-old (up to rounding, since we typed in rounded coefficients).</p>
+</details>
 <div class="warning callout callout-style-simple callout-none no-icon">
 <div class="callout-body d-flex">
 <div class="callout-icon-container">
 <i class="callout-icon no-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>In papers, authors almost never report that 0.1168 log-odds change. They report an <strong>odds ratio</strong> instead.</p>
-</div>
-</div>
-</div>
-</section>
-<div class="practice" data-answer="a">
-<div class="practice-title">
-Question 2
-</div>
 <p>
-When authors report a logistic regression in a paper, what do they usually report for each predictor?
+If you leave out <code>type = “response”</code>, <code>predict()</code> returns the linear score <span class="math inline">\(b_0 + b_1 \times \text{age}\)</span> instead, on the log odds scale.
 </p>
-<div class="choice-set">
-<label><input type="radio" name="p2" value="a">An odds ratio (and often its 95% CI and p-value)</label> <label><input type="radio" name="p2" value="b">Only the raw log-odds coefficient, with no odds ratio</label>
 </div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Log-odds coefficients are hard for most readers, so papers convert them to odds ratios." data-incorrect="Not quite. Papers usually report odds ratios, not only the raw log-odds coefficients.">
-
-</div>
-</div>
-<section class="panel">
-<h2 class="anchored">
-Part 3. From a log-odds coefficient to an odds ratio
-</h2>
-<p>A useful rule of logs: if you <strong>add</strong> on the log scale, you <strong>multiply</strong> after you undo the log with <code>exp()</code>.</p>
-<div class="formula-panel">
-<p><span class="math display">\[
-\text{odds ratio} = e^{\text{log-odds coefficient}}
-\]</span></p>
-</div>
-<p>For age, <span class="math inline">\(e^{0.1168} \approx 1.124\)</span>. That means a one-year older man has <strong>1.124 times the odds</strong> of weak grip, or about <strong>12.4% higher odds</strong>.</p>
-<table class="ortable">
-<thead>
-<tr>
-<th>
-Odds ratio
-</th>
-<th>
-Plain-language reading
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="or">
-0.50
-</td>
-<td>
-50% lower odds, or half the odds
-</td>
-</tr>
-<tr>
-<td class="or">
-0.80
-</td>
-<td>
-20% lower odds
-</td>
-</tr>
-<tr>
-<td class="or">
-1.00
-</td>
-<td>
-No change in the odds
-</td>
-</tr>
-<tr>
-<td class="or">
-1.12
-</td>
-<td>
-12% higher odds
-</td>
-</tr>
-<tr>
-<td class="or">
-1.50
-</td>
-<td>
-50% higher odds
-</td>
-</tr>
-<tr>
-<td class="or">
-2.00
-</td>
-<td>
-Twice the odds
-</td>
-</tr>
-<tr>
-<td class="or">
-4.00
-</td>
-<td>
-Four times the odds
-</td>
-</tr>
-</tbody>
-</table>
-</section>
-<div class="webr-wrap">
-<h3 class="anchored">
-R code: exponentiate the age coefficient
-</h3>
-<div id="qwebr-insertion-location-2"></div>
-<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
-</div>
-<div class="practice" data-answer="b">
-<div class="practice-title">
-Question 3
-</div>
-<p>
-The age odds ratio is about <code>1.124</code>. Which sentence matches that number?
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p3" value="a">Each extra year adds 1.124 to the probability of weak grip.</label> <label><input type="radio" name="p3" value="b">Each extra year is associated with 1.124 times the odds of weak grip (about 12% higher odds).</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. Odds ratios multiply odds. They do not add a fixed amount to probability." data-incorrect="Not quite. An odds ratio multiplies the odds. It is not a fixed change in probability.">
-
 </div>
 </div>
 <div class="practice" data-answer="a">
-<div class="practice-title">
-Question 4
-</div>
-<p>
-An odds ratio of <code>0.80</code> means the outcome has:
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p4" value="a">20% lower odds (0.80 times the odds)</label> <label><input type="radio" name="p4" value="b">80% higher odds</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. For OR below 1, percent lower is about (1 - OR) x 100%. Here 1 - 0.80 = 0.20." data-incorrect="Not quite. OR 0.80 means 0.80 times the odds, which is 20% lower, not 80% higher.">
-
-</div>
-</div>
-<section class="panel">
-<h2 class="anchored">
-Part 4. Odds ratios in R with broom::tidy()
-</h2>
-<p>Fit the logistic model as usual. Then ask <code>broom::tidy()</code> to <strong>exponentiate</strong> the coefficients. That turns log-odds coefficients into odds ratios.</p>
-</section>
-<div class="webr-wrap">
-<h3 class="anchored">
-R code: fit the model and tidy with exponentiate = TRUE
-</h3>
-<div id="qwebr-insertion-location-3"></div>
-<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
-</div>
-<details class="answer">
-<summary>
-What you should see (rounded)
-</summary>
-<pre><code># A tibble: 2 × 5
-  term        estimate  conf.low conf.high p.value
-  &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt;
-1 (Intercept) 0.000147  0.000078   0.000273       0
-2 age         1.12      1.11       1.13           0</code></pre>
-<p>The age <strong>estimate</strong> is now an odds ratio of about <strong>1.12</strong>, not the log-odds coefficient 0.1168.</p>
-</details>
-<div class="practice" data-answer="b">
 <div class="practice-title">
 Question 5
 </div>
 <p>
-In the <code>tidy(…, exponentiate = TRUE)</code> output, what is the age <strong>estimate</strong> of about 1.12?
+From the output of <code>predict()</code>, what is the predicted probability of weak grip for an 80-year-old?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p5" value="a">The change in probability for a one-year increase in age</label> <label><input type="radio" name="p5" value="b">The odds ratio for a one-year increase in age</label>
+<label><input type="radio" name="p4" value="a">About <strong>0.63</strong>.</label> <label><input type="radio" name="p4" value="b">About <strong>0.52</strong>.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. exponentiate = TRUE converts the log-odds coefficient into an odds ratio." data-incorrect="Not quite. With exponentiate = TRUE, the estimate column is an odds ratio, not a probability change.">
+<div class="practice-feedback" data-correct="Correct. The predicted probability of weak grip for an 80-year-old is about 0.63." data-incorrect="Not quite. The predicted probability of weak grip for an 80-year-old is about 0.63.">
 
 </div>
 </div>
 <section class="panel">
 <h2 class="anchored">
-Part 5. Age groups give the same kind of output
+Part 3. A second dataset
 </h2>
-<p>If age is cut into groups, each odds ratio compares that group with the reference group (here, ages 45–64).</p>
+<p>In the KLOSA model the coefficient was positive, so the probability increased with age. Let us now examine a second dataset.</p>
+<p>The <code>birthwt</code> dataset (from the <code>MASS</code> package, built into R) records 189 births at a hospital in Springfield, Massachusetts.</p>
+<ul class="tight-list">
+<li>
+<strong>Predictor:</strong> <code>lwt</code>, the mother’s weight in pounds at her last menstrual period
+</li>
+<li>
+<strong>Outcome:</strong> <code>low</code>, which is <code>1</code> if the baby was born with low birth weight (under 2.5 kg) and <code>0</code> otherwise
+</li>
+</ul>
 </section>
 <div class="webr-wrap">
 <h3 class="anchored">
-R code: tidy odds ratios for age groups
+R code: plot low birth weight against mother’s weight
 </h3>
-<div id="qwebr-insertion-location-4"></div>
+<p>We divide the mothers’ weights into 20-pound bands. For each band, we calculate the proportion of babies with low birth weight. The points show these observed proportions, and the line connects them. We have not fitted a model yet.</p>
+<div id="qwebr-insertion-location-7"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<div class="webr-wrap">
+<h3 class="anchored">
+R code: fit the model, fill in the blanks
+</h3>
+<p>Now, let’s fit a logistic regression model to predict low birth weight from mother’s weight. Fill in the outcome (<code>low</code>) and predictor (<code>lwt</code>).</p>
+<div id="qwebr-insertion-location-8"></div>
 <noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 </div>
 <details class="answer">
 <summary>
-What the key rows mean
+Show the answer
 </summary>
-<p>Compared with men aged 45–64:</p>
-<ul>
-<li>ages <strong>65–74</strong> have about <strong>5.22 times</strong> the odds of weak grip</li>
-<li>ages <strong>75+</strong> have about <strong>14.4 times</strong> the odds of weak grip</li>
-</ul>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>bw_model <span class="ot">&lt;-</span> <span class="fu">glm</span>(low <span class="sc">~</span> lwt, <span class="at">family =</span> binomial, <span class="at">data =</span> birthwt)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(bw_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>In the coefficients table you should see (rounded):</p>
+<pre><code>             Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept)  0.9983     0.7853     1.27    0.204
+lwt         -0.0141     0.0062    -2.28    0.023 *</code></pre>
 </details>
-<div class="practice" data-answer="a">
+<div class="webr-wrap">
+<h3 class="anchored">
+R code: add the fitted logistic curve
+</h3>
+<p>Now use the fitted model to get predicted probabilities across a range of weights. Then draw the curve with <code>geom_line()</code>. The points are the observed proportions from the weight bands.</p>
+<div id="qwebr-insertion-location-9"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
+</div>
+<div class="svg-panel">
+<svg viewbox="0 0 860 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two S curves showing positive and negative coefficients">
+<g> <rect x="20" y="15" width="390" height="200" rx="10" fill="#ffffff" stroke="#d0dede"></rect> <text x="215" y="42" text-anchor="middle" font-size="15" font-weight="700" fill="#00565e">Positive coefficient (b1 &gt; 0)</text> <line x1="60" y1="185" x2="380" y2="185" stroke="#5d7475" stroke-width="1.5"></line> <line x1="60" y1="185" x2="60" y2="60" stroke="#5d7475" stroke-width="1.5"></line> <text x="52" y="66" text-anchor="end" font-size="12" fill="#5d7475">1</text> <text x="52" y="189" text-anchor="end" font-size="12" fill="#5d7475">0</text> <text x="220" y="207" text-anchor="middle" font-size="12.5" fill="#5d7475">predictor (e.g.&nbsp;age)</text> <path d="M 65 180 C 160 178, 180 70, 375 65" fill="none" stroke="#287a4d" stroke-width="3"></path> <text x="115" y="105" text-anchor="middle" font-size="13" fill="#287a4d" font-weight="700">probability goes UP</text> </g> <g> <rect x="450" y="15" width="390" height="200" rx="10" fill="#ffffff" stroke="#d0dede"></rect> <text x="645" y="42" text-anchor="middle" font-size="15" font-weight="700" fill="#00565e">Negative coefficient (b1 &lt; 0)</text> <line x1="490" y1="185" x2="810" y2="185" stroke="#5d7475" stroke-width="1.5"></line> <line x1="490" y1="185" x2="490" y2="60" stroke="#5d7475" stroke-width="1.5"></line> <text x="482" y="66" text-anchor="end" font-size="12" fill="#5d7475">1</text> <text x="482" y="189" text-anchor="end" font-size="12" fill="#5d7475">0</text> <text x="650" y="207" text-anchor="middle" font-size="12.5" fill="#5d7475">predictor (e.g.&nbsp;mother’s weight)</text> <path d="M 495 65 C 590 70, 610 178, 805 180" fill="none" stroke="#b83b3b" stroke-width="3"></path> <text x="695" y="105" text-anchor="middle" font-size="13" fill="#b83b3b" font-weight="700">probability goes DOWN</text> </g>
+</svg>
+<p class="svg-caption">
+The sign of the coefficient sets the direction of the curve. When the coefficient is positive, the probability rises as the predictor increases. When it is negative, the probability falls.
+</p>
+</div>
+<div class="practice" data-answer="b">
 <div class="practice-title">
 Question 6
 </div>
 <p>
-In the age-group tidy output, an estimate of about <strong>5.22</strong> for ages 65–74 means:
+The coefficient for <code>lwt</code> is <code>-0.0141</code>, and its p-value is 0.023. What is the right reading?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p6" value="a">Compared with 45–64, ages 65–74 had about 5.22 times the odds of weak grip.</label> <label><input type="radio" name="p6" value="b">Ages 65–74 had a probability of weak grip equal to 5.22.</label>
+<label><input type="radio" name="p5" value="a">Heavier mothers have a <strong>higher probability</strong> of a low birth weight baby, and <strong>p = 0.023</strong> shows this is <strong>statistically significant</strong>.</label> <label><input type="radio" name="p5" value="b">Heavier mothers have a <strong>lower probability</strong> of a low birth weight baby, and <strong>p = 0.023</strong> shows this is <strong>statistically significant</strong>.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. For a categorical predictor, each OR compares that level with the reference level." data-incorrect="Not quite. An odds ratio of 5.22 is a comparison of odds versus the reference group, not a probability of 5.22.">
+<div class="practice-feedback" data-correct="Correct. The negative sign means the probability decreases as the mother's weight increases. And p = 0.023 is below 0.05. The fixed change of 0.0141 per pound is on the log odds scale, not the probability scale." data-incorrect="Not quite. The negative sign means the probability falls as weight rises. The fixed 0.0141 per pound applies to log odds, not to probability directly.">
 
 </div>
 </div>
-<section class="panel">
-<h2 class="anchored">
-Part 6. How this looks in a paper
-</h2>
-<p>Results text usually pairs a plain-language odds statement with the OR, confidence interval, and p-value.</p>
-<div class="paperbox">
-<div class="plab">
-Continuous age
+<div class="webr-wrap">
+<h3 class="anchored">
+R code: predict by hand, fill in the blanks
+</h3>
+<p>Let’s predict the probability of a low birth weight baby for a mother who weighs 120 pounds. Fill in the intercept (<code>0.9983</code>) and the <code>lwt</code> coefficient (<code>-0.0141</code>).</p>
+<div id="qwebr-insertion-location-10"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 </div>
-<p>Each additional year of age was associated with 12% higher odds of weak grip (OR 1.12, 95% CI 1.11–1.13, p &lt; 0.001).</p>
+<details class="answer">
+<summary>
+Show the answer
+</summary>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>(<span class="fl">0.9983</span> <span class="sc">+</span> <span class="sc">-</span><span class="fl">0.0141</span> <span class="sc">*</span> <span class="dv">120</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This returns about <code>0.333</code>, so roughly a 33% predicted chance of a low birth weight baby. Note that this time <span class="math inline">\(b_1\)</span> is negative, so the linear score shrinks as weight goes up.</p>
+</details>
+<div class="webr-wrap">
+<h3 class="anchored">
+R code: check with predict()
+</h3>
+<p>Fill in the model name (<code>bw_model</code>) and type (<code>"response"</code>).</p>
+<div id="qwebr-insertion-location-11"></div>
+<noscript>Please enable JavaScript to experience the dynamic code cell content on this page.</noscript>
 </div>
-<div class="paperbox">
-<div class="plab">
-Age groups
-</div>
-<p>Compared with men aged 45–64, men aged 65–74 had 5.22 times the odds of weak grip (95% CI 4.35–6.28), while men aged 75+ had 14.44 times the odds (95% CI 11.44–18.22).</p>
-</div>
-<div class="callout callout-style-simple callout-none no-icon">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-body-container">
-<p>Notice the pattern: words first, then (OR, 95% CI, p) or (95% CI) in parentheses.</p>
-</div>
-</div>
-</div>
-</section>
-<div class="practice" data-answer="a">
+<details class="answer">
+<summary>
+Show the output
+</summary>
+<pre><code>     1      2      3
+0.3995 0.3038 0.2225</code></pre>
+<p>The probabilities fall as the mother’s weight rises, exactly what the negative coefficient promised.</p>
+</details>
+<div class="practice" data-answer="b">
 <div class="practice-title">
 Question 7
 </div>
 <p>
-Read this results sentence:
-</p>
-<div class="paperbox">
-Each additional year of age was associated with 12% higher odds of weak grip (OR 1.12, 95% CI 1.11–1.13, p &lt; 0.001).
-</div>
-<p>
-Which claim matches the sentence?
+Without computing anything, which mother has the higher predicted probability of a low birth weight baby: one who weighs 100 pounds or one who weighs 160 pounds?
 </p>
 <div class="choice-set">
-<label><input type="radio" name="p7" value="a">Older age is associated with higher odds of weak grip, and the association is statistically significant.</label> <label><input type="radio" name="p7" value="b">Older age reduces the odds of weak grip by 12 percentage points.</label>
+<label><input type="radio" name="p6" value="a">The <strong>160-pound</strong> mother, because a <strong>larger predictor value</strong> always means a <strong>larger probability</strong>.</label> <label><input type="radio" name="p6" value="b">The <strong>100-pound</strong> mother, because the <strong>negative coefficient</strong> means the probability <strong>falls</strong> as weight rises.</label>
 </div>
 <button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. OR 1.12 is above 1, so odds are higher. p < 0.001 is well below 0.05." data-incorrect="Not quite. OR 1.12 means higher odds, not a reduction, and it is not a change in probability percentage points.">
+<div class="practice-feedback" data-correct="Correct. With a negative coefficient, lower weight means higher probability. The model gives the 100-pound mother about a 40% chance and the 160-pound mother about a 22% chance." data-incorrect="Not quite. The sign of the coefficient sets the direction. It is negative here, so lower weight means higher probability.">
 
 </div>
 </div>
-<div class="practice" data-answer="b">
-<div class="practice-title">
-Question 8
-</div>
-<p>
-In that same sentence, what does <strong>95% CI 1.11–1.13</strong> tell you?
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p8" value="a">The probability of weak grip is between 1.11% and 1.13%.</label> <label><input type="radio" name="p8" value="b">A plausible range for the odds ratio is about 1.11 to 1.13, and it does not include 1.</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The CI is for the odds ratio. Because the whole interval sits above 1, the association is in the higher-odds direction." data-incorrect="Not quite. The CI belongs to the odds ratio, not to a probability expressed as a percentage.">
-
-</div>
-</div>
-<div class="practice" data-answer="a">
-<div class="practice-title">
-Question 9
-</div>
-<p>
-Read this sentence:
-</p>
-<div class="paperbox">
-Compared with men aged 45–64, men aged 75+ had 14.44 times the odds of weak grip (95% CI 11.44–18.22).
-</div>
-<p>
-Who is the reference group?
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p9" value="a">Men aged 45–64</label> <label><input type="radio" name="p9" value="b">Men aged 75+</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. The phrase 'Compared with…' names the reference group." data-incorrect="Not quite. 'Compared with men aged 45–64' names the reference group.">
-
-</div>
-</div>
-<div class="practice" data-answer="b">
-<div class="practice-title">
-Question 10
-</div>
-<p>
-A paper reports: OR 0.70 (95% CI 0.55–0.88). The best reading is:
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p10" value="a">70% higher odds, because 0.70 is close to 1.</label> <label><input type="radio" name="p10" value="b">About 30% lower odds, and the CI is entirely below 1.</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. OR 0.70 means 0.70 times the odds, which is 30% lower. The CI 0.55–0.88 stays below 1." data-incorrect="Not quite. OR below 1 means lower odds. 0.70 is 30% lower, and the CI does not cross 1.">
-
-</div>
-</div>
-<div class="practice" data-answer="a">
-<div class="practice-title">
-Question 11
-</div>
-<p>
-Which tidy call produces the odds ratios used in those paper sentences?
-</p>
-<div class="choice-set">
-<label><input type="radio" name="p11" value="a"><code>broom::tidy(mod, exponentiate = TRUE, conf.int = TRUE)</code></label> <label><input type="radio" name="p11" value="b"><code>broom::tidy(mod, exponentiate = FALSE)</code> only</label>
-</div>
-<button type="button">Check</button>
-<div class="practice-feedback" data-correct="Correct. You need exponentiate = TRUE for odds ratios and conf.int = TRUE for the confidence interval." data-incorrect="Not quite. Without exponentiate = TRUE you still have log-odds coefficients, not odds ratios.">
-
-</div>
-</div>
-<section class="panel">
-<h2 class="anchored">
-Summary
-</h2>
-<ul class="tight-list">
-<li>
-<strong>Probability</strong>: a share of the whole group, between 0 and 1.
-</li>
-<li>
-<strong>Odds</strong>: happens ÷ does not. Equals 1 at a 50-50 chance.
-</li>
-<li>
-<strong>Log-odds</strong>: ln(odds). This is the scale the logistic model fits.
-</li>
-<li>
-<strong>Odds ratio</strong>: exp(coefficient). This is usually what you report from R with <code>broom::tidy(…, exponentiate = TRUE)</code>.
-</li>
-</ul>
-</section>
 <section class="panel completion">
 <h2 class="anchored">
 Completion code
 </h2>
 <p>
-Answer at least 9 out of 11 questions correctly to reveal your completion code.
+Answer at least 6 out of 7 questions correctly to reveal your completion code.
 </p>
 <p>
-<span id="code-progress" class="code-progress">0 of 11 correct (need at least 9)</span>
+<span id="code-progress" class="code-progress">0 of 7 correct (need at least 6)</span>
 </p>
 <div id="code-box" class="code-box">
 <div class="code-label">
@@ -2700,12 +2647,12 @@ Your completion code
 </div>
 </section>
 <p class="footer-note">
-GRAPH Courses practical | Odds, log-odds, and odds ratios
+GRAPH Courses practical | Intro to logistic regression
 </p>
 </div>
 <script>
-const COMPLETION_CODE = "ODDSRATIO";
-const COMPLETION_REQUIRED = 9;
+const COMPLETION_CODE = "SIGMOID";
+const COMPLETION_REQUIRED = 6;
 
 function updateCompletion() {
   const cards = document.querySelectorAll(".practice");
