@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logistic Regression: Intro &amp; Interpreting Coefficients</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+  <style>
+    :root {
+      --bg: #dfe8ea;
+      --paper: #f7f4ed;
+      --white: #fffef9;
+      --ink: #101418;
+      --muted: #665f51;
+      --chapter: #4338a6;
+      --chapter-dark: #352d85;
+      --chapter-soft: #edebfa;
+      --teal: #0d7377;
+      --teal-dark: #0a5d61;
+      --teal-soft: #e3f3f3;
+      --gold: #f0c808;
+      --gold-soft: #fff3cc;
+      --rose: #b83b5e;
+      --rose-soft: #fdeef1;
+      --green: #2c8a4a;
+      --navy: #2f5f98;
+      --navy-soft: #e7eef7;
+      --orange: #d97706;
+      --orange-soft: #fff1dc;
+      --border: #101418;
+      --shadow: rgba(16, 20, 24, 0.42);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Space Grotesk', Arial, Helvetica, sans-serif;
+      font-size: 8.25pt;
+      line-height: 1.21;
+    }
+    .toolbar {
+      width: 210mm;
+      max-width: calc(100vw - 24px);
+      margin: 24px auto 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      line-height: 1.35;
+    }
+    .toolbar-intro { flex: 1; min-width: 0; font-size: 9pt; }
+    .toolbar-intro .title {
+      color: var(--chapter);
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 10pt;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .toolbar-intro .descr { color: #3a4a4f; max-width: 132mm; }
+    .toolbar-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+    button, .zoom-group {
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: 7px;
+      padding: 7px 11px;
+      font: inherit;
+      font-weight: 800;
+      line-height: 1.2;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 var(--shadow);
+    }
+    button.primary { background: var(--chapter); color: #fff; border-color: var(--ink); }
+    .print-button { display: inline-flex; align-items: center; gap: 5px; }
+    .print-button svg { width: 13px; height: 13px; display: block; }
+    .zoom-group { display: inline-flex; align-items: stretch; padding: 0; overflow: visible; }
+    .zoom-group button { border: 0; border-radius: 0; padding: 6px 10px; background: transparent; box-shadow: none; }
+    .zoom-group button + button, .zoom-group .zoom-label { border-left: 2px solid var(--ink); }
+    .zoom-label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      padding: 0 9px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-weight: 900;
+    }
+    .page-wrap { display: flex; flex-direction: column; align-items: center; }
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto 18px;
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: 10px;
+      padding: 3mm 7mm 2.2mm;
+      box-shadow: 8px 8px 0 rgba(16, 20, 24, 0.13), 0 14px 36px rgba(16, 20, 24, 0.14);
+      display: flex;
+      flex-direction: column;
+      gap: 1.85mm;
+      transform-origin: top center;
+    }
+    header {
+      border-bottom: 1mm solid var(--chapter);
+      padding-bottom: 0.8mm;
+      line-height: 1.1;
+    }
+    h1 {
+      margin: 0;
+      color: var(--chapter);
+      font-size: 17.6pt;
+      font-weight: 800;
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+    .subtitle {
+      margin-top: 0.5mm;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 7.25pt;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .group-label {
+      display: flex;
+      align-items: center;
+      gap: 2.7mm;
+      color: var(--ink);
+      font-size: 7.75pt;
+      font-weight: 900;
+      margin: 0;
+      break-after: avoid;
+    }
+    .group-label::before, .group-label::after { content: ""; flex: 1; border-top: 2px solid var(--ink); height: 0; }
+    .group-label span { background: var(--paper); border: 2px solid var(--ink); border-radius: 5px; padding: 0.36mm 1.65mm; white-space: nowrap; }
+    .row { display: grid; gap: 2.55mm; align-items: stretch; }
+    .row.cols-2 { grid-template-columns: 1fr 1fr; }
+    .row.split-52-48 { grid-template-columns: 52fr 48fr; }
+    .row.split-47-53 { grid-template-columns: 47fr 53fr; }
+    .row.split-44-56 { grid-template-columns: 44fr 56fr; }
+    .box, .box-body, .row > *, .fig, .verdict-row, .or-chip { min-width: 0; }
+    .box {
+      background: var(--white);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      box-shadow: 4px 4px 0 var(--shadow);
+      overflow: visible;
+      display: flex;
+      flex-direction: column;
+    }
+    .box-tag {
+      background: var(--teal);
+      color: white;
+      border-bottom: 2px solid var(--ink);
+      border-radius: 6px 6px 0 0;
+      font-size: 8pt;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      padding: 0.66mm 2.15mm 0.52mm;
+      line-height: 1.15;
+    }
+    .box-body {
+      border-radius: 0 0 6px 6px;
+      padding: 0.82mm 1.7mm 0.92mm;
+      gap: 0.5mm;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--teal-soft);
+      overflow: visible;
+    }
+    .box-body p { margin: 0; overflow-wrap: break-word; }
+    .tag-chapter .box-tag { background: var(--chapter); color: #fff; }
+    .tag-chapter .box-body { background: var(--chapter-soft); }
+    .tag-navy .box-tag { background: var(--navy); color: #fff; }
+    .tag-navy .box-body { background: var(--navy-soft); }
+    .tag-gold .box-tag { background: var(--gold); color: var(--ink); }
+    .tag-gold .box-body { background: var(--gold-soft); }
+    .tag-rose .box-tag { background: var(--rose); color: #fff; }
+    .tag-rose .box-body { background: var(--rose-soft); }
+    .chapter { color: var(--chapter); }
+    .navy { color: var(--navy); }
+    .rose { color: var(--rose); }
+    code, .r-code { font-family: 'JetBrains Mono', Consolas, Menlo, monospace; }
+    .big-eq, .formula {
+      text-align: center;
+      line-height: 1.35;
+      padding: 0.55mm 0;
+    }
+    .big-eq { font-size: 11.2pt; }
+    .formula { font-size: 9.4pt; }
+    .eq-inline {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: baseline;
+      gap: 0.45mm 1.1mm;
+    }
+    .big-eq .katex, .formula .katex { color: var(--ink); }
+    .big-eq .katex { font-size: 1.12em; }
+    .formula .katex { font-size: 1.05em; }
+    .katex-display { margin: 0.15em 0; }
+    .mini-note {
+      border: 2px solid var(--ink);
+      border-radius: 7px;
+      background: var(--white);
+      padding: 0.58mm 1.25mm;
+      font-size: 7.35pt;
+      font-weight: 760;
+      line-height: 1.2;
+    }
+    .mini-note.gold { background: var(--gold-soft); color: #6f5200; }
+    .mini-note.chapter { background: var(--chapter-soft); color: var(--chapter-dark); }
+    .r-code {
+      border: 2px solid var(--ink);
+      border-radius: 7px;
+      background: #1d2229;
+      color: #f0ecdf;
+      padding: 0.7mm 1.5mm;
+      font-size: 6.6pt;
+      line-height: 1.32;
+      white-space: pre;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .r-code .cm { color: #a8b3b4; font-style: italic; }
+    .r-code .fn { color: #8fd5d2; }
+    .r-code .hl-int { background: rgba(47, 95, 152, 0.55); padding: 0 2px; border-radius: 3px; }
+    .r-code .hl-slope { background: rgba(184, 59, 94, 0.55); padding: 0 2px; border-radius: 3px; }
+    .fig {
+      position: relative;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      padding: 0.42mm 0.75mm 0.55mm;
+      background: var(--white);
+      overflow: visible;
+    }
+    .fig svg { display: block; width: 100%; height: auto; }
+    .fig-caption {
+      font-size: 6.85pt;
+      color: var(--ink);
+      text-align: center;
+      line-height: 1.18;
+      padding-top: 0.15mm;
+    }
+    .or-scale { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8mm; }
+    .or-chip {
+      border: 1.6px solid var(--ink);
+      border-radius: 6px;
+      background: var(--white);
+      padding: 0.45mm 0.8mm;
+      font-size: 7.05pt;
+      font-weight: 850;
+      line-height: 1.22;
+      display: flex;
+      align-items: baseline;
+      gap: 1.4mm;
+    }
+    .or-chip b { font-family: 'JetBrains Mono', Consolas, Menlo, monospace; font-size: 7.3pt; white-space: nowrap; }
+    .or-chip.up b { color: var(--chapter); }
+    .or-chip.down b { color: var(--rose); }
+    .b {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      vertical-align: baseline;
+      line-height: 1;
+      margin: 0 0.2mm;
+      text-align: center;
+      max-width: 100%;
+      min-width: 0;
+    }
+    .fill {
+      border: 0;
+      border-bottom: 1.8px solid var(--chapter);
+      border-radius: 3px 3px 0 0;
+      padding: 0 0.3mm 0.5px;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.38);
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: 850;
+      line-height: 1;
+      text-align: center;
+      min-width: 2mm;
+      max-width: 100%;
+      transition: width 0.18s ease-out;
+    }
+    .fill.code { font-family: 'JetBrains Mono', Consolas, Menlo, monospace; }
+    .fill:focus { outline: none; border-bottom-color: var(--chapter-dark); box-shadow: 0 3px 0 rgba(67, 56, 166, 0.22); }
+    .hint {
+      font-size: 4.65pt;
+      color: #8b897d;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      line-height: 1.05;
+      margin-top: 0.3mm;
+      letter-spacing: 0.03em;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      max-width: 34mm;
+      text-align: center;
+    }
+    .b.solved .hint, .hints-hidden .hint { display: none; }
+    .b.solved .fill { background: rgba(255, 255, 255, 0.38); border-bottom-color: var(--chapter-dark); }
+    .fill.wrong-pick { border-bottom-color: var(--rose) !important; color: var(--rose); animation: shake 0.45s; }
+    .fill.correct-flash { animation: correctFlash 0.75s ease-out; }
+    @keyframes shake { 0%, 100% { transform: translateX(0) } 20%, 60% { transform: translateX(-2px) } 40%, 80% { transform: translateX(2px) } }
+    @keyframes correctFlash {
+      0% { background-color: rgba(44, 138, 74, 0); border-bottom-color: var(--chapter) }
+      20% { background-color: rgba(44, 138, 74, 0.30); border-bottom-color: var(--green) }
+      60% { background-color: rgba(44, 138, 74, 0.18); border-bottom-color: var(--green) }
+      100% { background-color: rgba(44, 138, 74, 0); border-bottom-color: var(--chapter) }
+    }
+    .verdict-row {
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      padding: 0.62mm 1.25mm;
+      background: var(--white);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.24mm 1.5mm;
+      align-items: center;
+    }
+    .verdict-row + .verdict-row { margin-top: 0.45mm; }
+    .v-text { font-size: 7.15pt; font-family: Georgia, serif; font-style: italic; color: var(--ink); line-height: 1.22; overflow-wrap: break-word; }
+    .verdict-btns { display: flex; gap: 0.7mm; }
+    .v-btn {
+      font-size: 5.95pt;
+      font-weight: 850;
+      padding: 0.38mm 1.4mm;
+      border-radius: 999px;
+      border: 1.5px solid var(--ink);
+      background: var(--white);
+      box-shadow: none;
+      cursor: pointer;
+      white-space: nowrap;
+      line-height: 1.12;
+    }
+    .v-btn.yes { color: var(--chapter-dark); border-color: var(--chapter-dark); }
+    .v-btn.no { color: var(--rose); border-color: var(--rose); }
+    .v-btn.picked.correct, .v-btn.was-correct { background: #d4ecd9; border-color: var(--green); color: #1e6a30; }
+    .v-btn.picked.incorrect { background: #f7d4dd; border-color: var(--rose); color: #8c2e48; animation: shake 0.45s; }
+    .v-btn:disabled { cursor: default; }
+    .v-explanation {
+      display: none;
+      grid-column: 1 / -1;
+      font-size: 6.7pt;
+      color: var(--muted);
+      border-top: 1.5px dashed var(--ink);
+      padding-top: 0.45mm;
+      margin-top: 0.2mm;
+      line-height: 1.24;
+    }
+    .verdict-row.revealed .v-explanation { display: block; }
+    footer {
+      background: var(--chapter);
+      border-radius: 7px;
+      color: #fff;
+      margin-top: auto;
+      padding: 0.82mm 2mm;
+      box-shadow: 4px 4px 0 var(--shadow);
+      text-align: center;
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 7.1pt;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+    footer a { color: #fff; text-decoration: none; font-weight: 900; }
+    footer a:hover { text-decoration: underline; }
+    @page { size: A4; margin: 0; }
+    @media print {
+      body { background: white; font-size: 7.45pt; line-height: 1.08; }
+      .toolbar { display: none; }
+      .page {
+        width: 210mm;
+        height: 297mm;
+        max-height: 297mm;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 1.5mm 5mm 0.85mm;
+        gap: 1.7mm;
+        background: white;
+        overflow: hidden;
+        transform: none !important;
+      }
+      header { border-bottom-width: 0.75mm; padding-bottom: 0.2mm; }
+      h1 { font-size: 14.8pt; }
+      .subtitle { font-size: 6.3pt; line-height: 1.02; margin-top: 0.18mm; }
+      .group-label { gap: 2mm; font-size: 6.45pt; margin: 0; }
+      .group-label::before, .group-label::after { border-top-width: 1.4px; }
+      .group-label span { background: white; border-width: 1.4px; border-radius: 4px; padding: 0.16mm 1mm; }
+      .row { gap: 2.35mm; }
+      .box, .fig, .mini-note, .verdict-row { box-shadow: none; border-width: 1.35px; border-radius: 5px; }
+      .box-tag { border-bottom-width: 1.35px; border-radius: 4px 4px 0 0; font-size: 6.75pt; padding: 0.31mm 1.25mm 0.24mm; line-height: 1.04; }
+      .box-body { padding: 0.38mm 0.88mm 0.46mm; gap: 0.3mm; }
+      .big-eq { font-size: 9.4pt; padding: 0.25mm 0; }
+      .formula { font-size: 8.1pt; padding: 0.2mm 0; }
+      .mini-note { font-size: 6.15pt; padding: 0.26mm 0.72mm; }
+      .r-code { border-width: 1.35px; border-radius: 5px; font-size: 5.85pt; line-height: 1.18; padding: 0.4mm 1mm; }
+      .fig { padding: 0.1mm 0.32mm 0.18mm; }
+      .fig-caption { font-size: 5.6pt; padding-top: 0; line-height: 1.06; }
+      .or-scale { gap: 0.45mm; }
+      .or-chip { font-size: 5.95pt; padding: 0.22mm 0.5mm; border-width: 1.05px; border-radius: 4px; }
+      .or-chip b { font-size: 6.15pt; }
+      .verdict-row { padding: 0.24mm 0.65mm; gap: 0.08mm 0.65mm; }
+      .verdict-row + .verdict-row { margin-top: 0.12mm; }
+      .v-text { font-size: 6pt; line-height: 1.06; }
+      .hint { display: none !important; }
+      .fill { transition: none; }
+      .fill.wrong-pick { color: var(--ink); border-bottom-color: var(--chapter) !important; }
+      button, .verdict-btns { display: none !important; }
+      .verdict-row .v-explanation { display: none !important; }
+      .verdict-row::after {
+        content: "Correct";
+        font-size: 5.05pt;
+        font-weight: 800;
+        padding: 0.18mm 0.7mm;
+        border-radius: 999px;
+        background: #d4ecd9;
+        border: 1px solid var(--green);
+        color: #1e6a30;
+      }
+      .verdict-row[data-correct="no"]::after { content: "Misconception"; background: #f7d4dd; border-color: var(--rose); color: #8c2e48; }
+      footer { border-radius: 0; padding: 0.17mm 0; font-size: 5.95pt; box-shadow: none; }
+      .fill, .box, .box-tag, .box-body, .fig, .big-eq, .formula, .r-code, .or-chip, .mini-note, .verdict-row, footer { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+    @media screen and (max-width: 820px) {
+      html, body { overflow-x: hidden; }
+      .page, .toolbar { width: calc(100vw - 16px); }
+      .page { padding: 16px; min-height: auto; transform: none !important; overflow: visible; }
+      .row, .or-scale { grid-template-columns: 1fr !important; }
+      .toolbar { flex-direction: column; align-items: stretch; margin-top: 12px; }
+      .toolbar-actions { justify-content: flex-start; }
+      .toolbar-intro .descr { max-width: none; }
+      button { padding: 6px 8px; }
+      .zoom-group button { padding: 5px 7px; }
+      .zoom-group .zoom-label { min-width: 38px; padding: 0 6px; }
+      .verdict-row { grid-template-columns: 1fr; }
+      .b { width: min(30vw, 140px); max-width: 100%; }
+      .fill { width: 100% !important; max-width: 100%; }
+      .hint { max-width: 100%; }
+      .big-eq, .formula { white-space: normal; overflow-wrap: anywhere; }
+      .big-eq { font-size: 10.1pt; }
+      .formula { font-size: 9pt; }
+      .eq-inline { justify-content: flex-start; }
+      .fig-caption { overflow-wrap: anywhere; }
+      .verdict-btns { flex-wrap: wrap; }
+      .r-code { white-space: pre-wrap; overflow-wrap: anywhere; }
+    }
+    @media screen and (max-width: 460px) {
+      body { font-size: 7.85pt; }
+      .page { padding: 10px; }
+      h1 { font-size: 15.8pt; }
+      .box-tag { font-size: 7.05pt; padding-left: 1.5mm; padding-right: 1.5mm; }
+      .box-body { padding: 0.8mm 1.2mm; }
+      .fig { padding: 4px; }
+      .b { width: min(28vw, 120px); }
+      .print-button svg { width: 12px; height: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="toolbar-intro">
+      <div class="title">GRAPH Courses cheat sheet</div>
+      <div class="descr">Type your answers in the blanks. Small grey text below each blank shows hint options. When you are finished, click Print / Save on the right.</div>
+    </div>
+    <div class="toolbar-actions">
+      <div class="zoom-group" role="group" aria-label="Zoom controls">
+        <button type="button" id="zoomOut" aria-label="Zoom out">Zoom -</button>
+        <button type="button" id="zoomIn" aria-label="Zoom in">Zoom +</button>
+        <span class="zoom-label" id="zoomLabel">100%</span>
+      </div>
+      <button type="button" id="toggleHints">Hide hints</button>
+      <button type="button" id="clearAnswers">Clear</button>
+      <button type="button" class="primary print-button" onclick="window.print()" aria-label="Print or save cheat sheet">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 3h10v5H7V3Zm10 14h2a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h2v4h10v-4Zm-8 2v-6h6v6H9Zm9-7.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" /></svg>
+        Print / Save
+      </button>
+    </div>
+  </div>
+
+  <div class="page-wrap" id="pageWrap">
+    <section class="page" id="sheet">
+      <header>
+        <h1>Logistic Regression: Intro &amp; Interpreting Coefficients</h1>
+        <div class="subtitle">This sheet is about modeling the probability of a yes/no outcome. Example: weak grip strength in 4,184 Korean men aged 45 or older (KLOSA study).</div>
+      </header>
+
+      <div class="group-label"><span>From linear regression to logistic regression</span></div>
+
+      <div class="row split-44-56">
+        <div class="box tag-chapter">
+          <div class="box-tag">The main idea</div>
+          <div class="box-body">
+            <p>Linear regression models a <b>continuous</b> outcome, such as grip strength in kg. When the outcome has two categories, we call the outcome <span class="b"><input class="fill" data-answer="binary"><span class="hint">binary / continuous / normal</span></span>, and we model it with <b>logistic regression</b>.</p>
+            <p>A logistic model does not predict the outcome value itself. It predicts the <span class="b"><input class="fill" data-answer="probability"><span class="hint">probability / variance / residual</span></span> of the outcome.</p>
+            <p>Outcomes such as having a disease or not, being cured or not, and dying or not are very <span class="b"><input class="fill" data-answer="common"><span class="hint">common / rare / unethical</span></span> in health research. This is why logistic regression is widely used in public health.</p>
+            <p>Our example uses KLOSA men. They are labeled as having <b>weak grip</b> (coded 1) when grip strength is at or below <span class="b"><input class="fill code" data-answer="27"><span class="hint">27 / 45 / 60</span></span> kg.</p>
+          </div>
+        </div>
+        <div class="box">
+          <div class="box-tag">Why a straight line does not work for probabilities</div>
+          <div class="box-body">
+            <div class="fig">
+              <svg viewBox="0 0 320 148" role="img" aria-label="Binned proportions of weak grip by age with a poor straight-line fit and a well-fitting sigmoid curve">
+                <rect x="1" y="1" width="318" height="146" rx="8" fill="#fffef9"/>
+                <rect x="30" y="122" width="278" height="14" fill="#fdeef1"/>
+                <rect x="30" y="10" width="278" height="12" fill="#fdeef1"/>
+                <line x1="30" y1="22" x2="308" y2="22" stroke="#b83b5e" stroke-width="1" stroke-dasharray="3,2.5"/>
+                <line x1="30" y1="122" x2="308" y2="122" stroke="#b83b5e" stroke-width="1" stroke-dasharray="3,2.5"/>
+                <line x1="30" y1="72" x2="308" y2="72" stroke="#eee9de" stroke-width="1"/>
+                <line x1="30" y1="10" x2="30" y2="136" stroke="#5d6d72" stroke-width="1.1"/>
+                <text x="27" y="24.5" text-anchor="end" font-size="6.4" font-weight="800" fill="#5d6d72">1</text>
+                <text x="27" y="74.5" text-anchor="end" font-size="6.4" font-weight="800" fill="#5d6d72">.5</text>
+                <text x="27" y="124.5" text-anchor="end" font-size="6.4" font-weight="800" fill="#5d6d72">0</text>
+                <text x="14" y="78" text-anchor="middle" font-size="6.6" font-weight="800" fill="#5d6d72" transform="rotate(-90,14,78)">P(weak grip)</text>
+                <g font-size="6.4" font-weight="800" fill="#5d6d72" text-anchor="middle">
+                  <text x="74.5" y="145">50</text><text x="130.1" y="145">60</text><text x="185.7" y="145">70</text><text x="241.3" y="145">80</text><text x="296.9" y="145">90</text>
+                </g>
+                <text x="304" y="118" text-anchor="end" font-size="6.2" font-weight="800" fill="#b83b5e">p below 0: impossible</text>
+                <text x="36" y="19.5" font-size="6.2" font-weight="800" fill="#b83b5e">p above 1: impossible</text>
+                <line x1="46.7" y1="133.5" x2="308" y2="44.2" stroke="#b83b5e" stroke-width="1.8" stroke-dasharray="5,3"/>
+                <path d="M30,120.1 L46.7,119.3 L74.5,117.2 L102.3,113.7 L130.1,108 L157.9,99.4 L185.7,87.6 L213.5,73.5 L241.3,59.2 L269.1,46.9 L296.9,37.6 L308,34.7" fill="none" stroke="#4338a6" stroke-width="2.4"/>
+                <g fill="#f0c808" stroke="#a07e00" stroke-width="0.9">
+                  <circle cx="58.2" cy="118.5" r="3.1"/><circle cx="85.8" cy="115.7" r="3.1"/><circle cx="113.6" cy="112.3" r="3.1"/><circle cx="141" cy="104.8" r="3.1"/><circle cx="169" cy="95.9" r="3.1"/><circle cx="195.1" cy="79.1" r="3.1"/><circle cx="223.1" cy="69.4" r="3.1"/><circle cx="250.8" cy="60.1" r="3.1"/><circle cx="278.5" cy="43.1" r="3.1"/>
+                </g>
+                <text x="121" y="90" font-size="6.6" font-weight="850" fill="#b83b5e">straight line</text>
+                <text x="228" y="38" font-size="6.6" font-weight="850" fill="#4338a6">logistic curve</text>
+              </svg>
+              <div class="fig-caption">The gold dots show the proportion with weak grip in 5-year age groups. The proportion is 3% for ages 45 to 49 and 79% for ages 85 and older.</div>
+            </div>
+            <p>A linear model does not work well for probabilities. It predicts probabilities below <span class="b"><input class="fill code" data-answer="0" data-alt="zero"><span class="hint">0 / 0.5 / -1</span></span> for the youngest men. For older ages, it would eventually predict probabilities above <span class="b"><input class="fill code" data-answer="1" data-alt="one"><span class="hint">1 / 100 / 0.5</span></span>. It also does not match the shape of the data.  The solution is an S-shaped curve called a <span class="b"><input class="fill" data-answer="sigmoid"><span class="hint">sigmoid / parabolic / exponential</span></span> curve.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-label"><span>How to fit and use the model</span></div>
+
+      <div class="row split-52-48">
+        <div class="box">
+          <div class="box-tag">Fit the model in R, then read summary(mod)</div>
+          <div class="box-body">
+<div class="r-code">mod &lt;- <span class="fn">glm</span>(weak_grip ~ age, family = binomial, data = klosa)
+<span class="fn">summary</span>(mod)
+             Estimate  Std. Error  z value  Pr(&gt;|z|)
+<span class="hl-int">(Intercept)</span>   -8.8243     0.3193   -27.64    &lt;2e-16 ***
+<span class="hl-slope">age</span>            0.1168     0.0048    24.57    &lt;2e-16 ***</div>
+            <p>Logistic regression is fit with the <span class="b"><input class="fill code" data-answer="glm" data-alt="glm()"><span class="hint">glm / lm / aov</span></span> function. glm stands for <span class="b"><input class="fill" data-answer="generalized"><span class="hint">generalized / gaussian / graphical</span></span> linear model. Because the outcome has two categories, we must set <code>family =</code> <span class="b"><input class="fill code" data-answer="binomial"><span class="hint">binomial / gaussian / poisson</span></span>.</p>
+            <p>The age estimate is positive. This means the probability of weak grip <span class="b"><input class="fill" data-answer="rises" data-alt="increases|goes up"><span class="hint">rises / falls / stays flat</span></span> with age. The p-value is very small. This shows the effect is <span class="b"><input class="fill" data-answer="significant" data-alt="statistically significant"><span class="hint">significant / negligible / causal</span></span>.</p>
+          </div>
+        </div>
+        <div class="box tag-gold">
+          <div class="box-tag">The logistic curve predicts probabilities</div>
+          <div class="box-body">
+            <div class="big-eq">\[p = \dfrac{1}{1 + e^{-(\beta_0 + \beta_1 x)}}\]</div>
+            <div class="formula">\[p = \dfrac{1}{1 + e^{-(-8.82 + 0.1168 \cdot \mathrm{age})}}\]</div>
+            <p>By design, this function only outputs values between 0 and 1. Every prediction is a valid <span class="b"><input class="fill" data-answer="probability"><span class="hint">probability / odds ratio / residual</span></span>.</p>
+            <p>When you enter an age, you get a point on the S curve.</p>
+            <p>In R, you can compute these with the <span class="b"><input class="fill code" data-answer="predict" data-alt="predict()"><span class="hint">predict / summary / anova</span></span> function. You do not need to substitute by hand.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-label"><span>Odds and log odds: what the slope actually changes</span></div>
+
+      <div class="box tag-navy">
+        <div class="box-tag">A straight line on the log odds scale</div>
+        <div class="box-body">
+          <div class="formula">\[\ln\!\left(\dfrac{p}{1 - p}\right) = \beta_0 + \beta_1 x\]</div>
+          <p>The quantity \(p / (1 - p)\) is called the <span class="b"><input class="fill" data-answer="odds"><span class="hint">odds / risk / rate</span></span>. Its natural log is called the <b>log odds</b>.</p>
+          <p>On the probability scale, the change per extra year is <span class="b"><input class="fill" data-answer="not fixed" data-alt="not constant|variable"><span class="hint">not fixed / always 0.1168 / always 12%</span></span>. The S curve is gentle at the ends and steepest in the <span class="b"><input class="fill" data-answer="middle"><span class="hint">middle / tails / intercept</span></span>.</p>
+          <p>What is fixed is the change in log odds: every extra year of age adds <span class="b"><input class="fill code" data-answer="0.1168" data-alt="0.1168 units|0.117"><span class="hint">0.1168 / 0.63 / 8.82</span></span> to the log odds, at every age. When you plot the model against log odds, the fitted model is a perfectly <span class="b"><input class="fill" data-answer="straight"><span class="hint">straight / S-shaped / vertical</span></span> line.</p>
+        </div>
+      </div>
+
+      <div class="group-label"><span>Odds ratios: what you report in a paper</span></div>
+
+      <div class="row split-52-48">
+        <div class="box tag-chapter">
+          <div class="box-tag">How to convert a coefficient to an odds ratio</div>
+          <div class="box-body">
+<div class="r-code"><span class="cm"># broom: exponentiate the estimates</span>
+<span class="fn">tidy</span>(mod, exponentiate = TRUE, conf.int = TRUE)
+term   estimate  conf.low  conf.high   p.value
+age        1.12      1.11       1.13    &lt;0.001</div>
+            <p>Log odds are hard for readers to understand. Papers usually report the <span class="b"><input class="fill" data-answer="odds ratio" data-alt="OR"><span class="hint">odds ratio / log odds / z value</span></span> instead. In R, broom's <code>tidy()</code> with <span class="b"><input class="fill code" data-answer="exponentiate = TRUE" data-alt="exponentiate=TRUE"><span class="hint">exponentiate = TRUE / conf.int = TRUE / family = binomial</span></span> reports odds ratios for you. You can also exponentiate the coefficient by hand:</p>
+            <div class="big-eq eq-inline">\(\mathrm{OR} = e^{\beta_1} = e^{0.1168} \approx\) <span class="b"><input class="fill code" data-answer="1.12" data-alt="1.124"><span class="hint">1.12 / 0.89 / 2.72</span></span></div>
+            <p>In words: <i>"Each additional year of age was associated with <span class="b"><input class="fill code" data-answer="12" data-alt="12%"><span class="hint">12 / 1.12 / 0.12</span></span>% higher odds of weak grip (OR 1.12; 95% CI 1.11 to 1.13; p &lt; 0.001)."</i></p>
+          </div>
+        </div>
+        <div class="box tag-rose">
+          <div class="box-tag">Categorical predictors</div>
+          <div class="box-body">
+<div class="r-code">mod3 &lt;- <span class="fn">glm</span>(weak_grip ~ age_grp, family = binomial, data = klosa)
+term              estimate  <span class="cm"># exponentiated</span>
+age_grp65-74          5.22
+age_grp75+           14.44</div>
+            <p>With a categorical predictor, R treats the <span class="b"><input class="fill" data-answer="first"><span class="hint">first / last / largest</span></span> level (here, ages 45 to 64) as the <span class="b"><input class="fill" data-answer="reference"><span class="hint">reference / outcome / intercept</span></span> group. Each odds ratio compares one group with the reference group.</p>
+            <p><i>"Compared with men aged 45 to 64, men aged 65 to 74 had <span class="b"><input class="fill code" data-answer="5.22"><span class="hint">5.22 / 14.44 / 1.12</span></span> times the odds of weak grip. Men aged 75 and older had <span class="b"><input class="fill code" data-answer="14.44"><span class="hint">14.44 / 5.22 / 0.522</span></span> times the odds."</i></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="row split-44-56">
+        <div class="box tag-gold">
+          <div class="box-tag">How to describe an odds ratio in words</div>
+          <div class="box-body">
+            <p>This table shows common odds ratios and how to describe them in words.</p>
+            <div class="or-scale">
+              <div class="or-chip up"><b>OR 1.12</b><span>The odds are <span class="b"><input class="fill code" data-answer="12" data-alt="12%"><span class="hint">12 / 112 / 1.2</span></span>% higher</span></div>
+              <div class="or-chip up"><b>OR 1.50</b><span>The odds are 50% higher</span></div>
+              <div class="or-chip up"><b>OR 2.00</b><span>The odds are <span class="b"><input class="fill" data-answer="twice" data-alt="double|2 times"><span class="hint">twice / half / 20% of</span></span> as high</span></div>
+              <div class="or-chip up"><b>OR 4.00</b><span>The odds are four times as high</span></div>
+              <div class="or-chip down"><b>OR 0.80</b><span>The odds are 20% <span class="b"><input class="fill" data-answer="lower"><span class="hint">lower / higher / equal</span></span></span></div>
+              <div class="or-chip down"><b>OR 0.50</b><span>The odds are <span class="b"><input class="fill" data-answer="half"><span class="hint">half / twice / 5% of</span></span> as high</span></div>
+            </div>
+            <div class="mini-note gold">An OR of exactly <span class="b"><input class="fill code" data-answer="1" data-alt="1.0"><span class="hint">1 / 0 / 100</span></span> means the predictor is not associated with any change in the odds.</div>
+          </div>
+        </div>
+        <div class="box tag-chapter">
+          <div class="box-tag">Correct or misconception?</div>
+          <div class="box-body">
+            <div class="verdict-row" data-correct="yes">
+              <div class="v-text">"Each extra year of age multiplies the odds of weak grip by about 1.12."</div>
+              <div class="verdict-btns"><button type="button" class="v-btn yes" data-pick="yes">Correct</button><button type="button" class="v-btn no" data-pick="no">Misconception</button></div>
+              <div class="v-explanation">This is correct. A fixed addition on the log odds scale is a fixed multiplication of the odds. Each year multiplies the odds by e^0.1168 = 1.12.</div>
+            </div>
+            <div class="verdict-row" data-correct="no">
+              <div class="v-text">"An OR of 1.12 per year means the probability of weak grip rises by 12 percentage points each year."</div>
+              <div class="verdict-btns"><button type="button" class="v-btn yes" data-pick="yes">Correct</button><button type="button" class="v-btn no" data-pick="no">Misconception</button></div>
+              <div class="v-explanation">This is a misconception. The odds rise by 12% per year, not the probability. The change in probability varies along the S curve, so you cannot state a fixed change in percentage points.</div>
+            </div>
+            <div class="verdict-row" data-correct="no">
+              <div class="v-text">"For very old ages, the fitted logistic curve will eventually predict a probability above 1."</div>
+              <div class="verdict-btns"><button type="button" class="v-btn yes" data-pick="yes">Correct</button><button type="button" class="v-btn no" data-pick="no">Misconception</button></div>
+              <div class="v-explanation">This is a misconception. The logistic function has a maximum of 1. Its predictions approach 1 but can never exceed it, at any age.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer><a href="https://thegraphcourses.org" target="_blank" rel="noopener">thegraphcourses.org</a></footer>
+    </section>
+  </div>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      if (typeof renderMathInElement === "function") {
+        renderMathInElement(document.getElementById("sheet"), {
+          delimiters: [
+            { left: "\\[", right: "\\]", display: true },
+            { left: "\\(", right: "\\)", display: false }
+          ],
+          throwOnError: false
+        });
+      }
+    });
+
+    const sheet = document.getElementById("sheet"),
+          pageWrap = document.getElementById("pageWrap"),
+          blanks = Array.from(document.querySelectorAll(".b"));
+
+    function fingerprint(str) {
+      let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+      for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      return (h2 >>> 0).toString(36) + (h1 >>> 0).toString(36);
+    }
+    const fp = fingerprint(
+      blanks.map(b => {
+        const inp = b.querySelector(".fill");
+        return (inp.dataset.answer || "") + "|" + (inp.dataset.alt || "");
+      }).join("\n") + "\n" +
+      Array.from(document.querySelectorAll(".verdict-row")).map(r => "v:" + (r.dataset.correct || "")).join("\n")
+    );
+    const storageKey = "logistic-regression-cheatsheet-" + fp;
+
+    blanks.forEach(b => {
+      const hint = b.querySelector(".hint");
+      if (!hint) return;
+      const opts = hint.textContent.split(/\s*\/\s*/).filter(s => s.length > 0);
+      if (opts.length < 2) return;
+      for (let i = opts.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [opts[i], opts[j]] = [opts[j], opts[i]];
+      }
+      hint.textContent = opts.join(" / ");
+    });
+
+    const measureCanvas = document.createElement("canvas");
+    const measureCtx = measureCanvas.getContext("2d");
+    function getFontShorthand(el) {
+      const s = getComputedStyle(el);
+      return `${s.fontStyle || "normal"} ${s.fontWeight || "400"} ${s.fontSize} ${s.fontFamily}`;
+    }
+    function measureTextWidth(text, inp) {
+      measureCtx.font = getFontShorthand(inp);
+      return measureCtx.measureText(text).width;
+    }
+    function getDefaultWidth(inp) {
+      const answers = [inp.dataset.answer || "", ...(inp.dataset.alt ? inp.dataset.alt.split("|") : [])];
+      let maxW = 0;
+      answers.forEach(ans => { const w = measureTextWidth(ans, inp); if (w > maxW) maxW = w; });
+      return Math.max(maxW + 12, 22);
+    }
+    function getSolvedWidth(inp) { return Math.max(measureTextWidth(inp.value, inp) + 6, 12); }
+    function applyWidth(inp, solved) { inp.style.width = `${solved ? getSolvedWidth(inp) : getDefaultWidth(inp)}px`; }
+    blanks.forEach(b => applyWidth(b.querySelector(".fill"), false));
+
+    const norm = s => String(s)
+      .replace(/[−–]/g, "-")
+      .replace(/₀/g, "0").replace(/₁/g, "1").replace(/₂/g, "2").replace(/₃/g, "3").replace(/₄/g, "4")
+      .replace(/β/g, "beta")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+    const answersFor = input => [input.dataset.answer || "", ...(input.dataset.alt ? input.dataset.alt.split("|") : [])].map(norm);
+    const match = (value, input) => answersFor(input).includes(norm(value));
+
+    function flashCorrect(i) {
+      i.classList.remove("correct-flash");
+      void i.offsetWidth;
+      i.classList.add("correct-flash");
+      setTimeout(() => i.classList.remove("correct-flash"), 800);
+    }
+    function flashWrong(i) {
+      i.classList.remove("wrong-pick");
+      void i.offsetWidth;
+      i.classList.add("wrong-pick");
+    }
+    function save() { localStorage.setItem(storageKey, JSON.stringify(blanks.map(b => b.querySelector(".fill").value))); }
+    function restore() {
+      try {
+        const d = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        blanks.forEach((b, i) => {
+          const inp = b.querySelector(".fill");
+          if (d[i]) {
+            inp.value = d[i];
+            if (match(d[i], inp)) { b.classList.add("solved"); applyWidth(inp, true); }
+            else { inp.classList.add("wrong-pick"); }
+          }
+        });
+      } catch { localStorage.removeItem(storageKey); }
+    }
+
+    blanks.forEach(blank => {
+      const inp = blank.querySelector(".fill");
+      inp.addEventListener("input", () => {
+        const was = blank.classList.contains("solved");
+        inp.classList.remove("wrong-pick");
+        const ok = inp.value !== "" && match(inp.value, inp);
+        if (ok && !was) { blank.classList.add("solved"); applyWidth(inp, true); flashCorrect(inp); }
+        else if (ok && was) { applyWidth(inp, true); }
+        else if (!ok && was) { blank.classList.remove("solved"); applyWidth(inp, false); }
+        save();
+      });
+      inp.addEventListener("blur", () => {
+        const v = inp.value.trim();
+        if (v && !match(v, inp)) flashWrong(inp);
+      });
+    });
+    restore();
+
+    const verdictRows = Array.from(document.querySelectorAll(".verdict-row"));
+    const verdictKey = "logistic-regression-cheatsheet-verdict-" + fp;
+    function applyVerdictPick(row, pick) {
+      if (row.classList.contains("revealed")) return;
+      const correct = row.dataset.correct;
+      const btn = row.querySelector(`.v-btn[data-pick="${pick}"]`);
+      if (!btn) return;
+      const isRight = pick === correct;
+      btn.classList.add("picked", isRight ? "correct" : "incorrect");
+      if (!isRight) {
+        const correctBtn = row.querySelector(`.v-btn[data-pick="${correct}"]`);
+        if (correctBtn) correctBtn.classList.add("was-correct");
+      }
+      row.classList.add("revealed");
+      row.querySelectorAll(".v-btn").forEach(b => b.disabled = true);
+    }
+    function saveVerdicts() {
+      const state = verdictRows.map(row => {
+        const picked = row.querySelector(".v-btn.picked");
+        return picked ? picked.dataset.pick : null;
+      });
+      localStorage.setItem(verdictKey, JSON.stringify(state));
+    }
+    function restoreVerdicts() {
+      try {
+        const state = JSON.parse(localStorage.getItem(verdictKey) || "[]");
+        verdictRows.forEach((row, i) => { if (state[i]) applyVerdictPick(row, state[i]); });
+      } catch { localStorage.removeItem(verdictKey); }
+    }
+    verdictRows.forEach(row => {
+      row.querySelectorAll(".v-btn").forEach(btn => {
+        btn.addEventListener("click", () => { applyVerdictPick(row, btn.dataset.pick); saveVerdicts(); });
+      });
+    });
+    restoreVerdicts();
+
+    document.getElementById("toggleHints").addEventListener("click", e => {
+      sheet.classList.toggle("hints-hidden");
+      e.currentTarget.textContent = sheet.classList.contains("hints-hidden") ? "Show hints" : "Hide hints";
+    });
+    document.getElementById("clearAnswers").addEventListener("click", () => {
+      blanks.forEach(b => {
+        const i = b.querySelector(".fill");
+        i.value = "";
+        i.classList.remove("wrong-pick", "correct-flash");
+        b.classList.remove("solved");
+        applyWidth(i, false);
+      });
+      verdictRows.forEach(row => {
+        row.classList.remove("revealed");
+        row.querySelectorAll(".v-btn").forEach(b => { b.classList.remove("picked", "correct", "incorrect", "was-correct"); b.disabled = false; });
+      });
+      save();
+      saveVerdicts();
+    });
+
+    const zoomLevels = [0.1, 0.25, 0.5, 0.75, 0.85, 1.0, 1.15, 1.3, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
+    const zoomKey = "logistic-regression-cheatsheet-zoom";
+    const defaultZoomIdx = zoomLevels.indexOf(1.0);
+    let zoomIdx = parseInt(localStorage.getItem(zoomKey) || String(defaultZoomIdx), 10);
+    if (isNaN(zoomIdx) || zoomIdx < 0 || zoomIdx >= zoomLevels.length) zoomIdx = defaultZoomIdx;
+    const zoomLabel = document.getElementById("zoomLabel");
+    function applyZoom() {
+      const z = zoomLevels[zoomIdx];
+      sheet.style.transform = z === 1 ? "" : `scale(${z})`;
+      const baseH = 297;
+      pageWrap.style.minHeight = z === 1 ? "" : `${baseH * z + 20}mm`;
+      zoomLabel.textContent = Math.round(z * 100) + "%";
+      localStorage.setItem(zoomKey, String(zoomIdx));
+    }
+    document.getElementById("zoomOut").addEventListener("click", () => { if (zoomIdx > 0) { zoomIdx--; applyZoom(); } });
+    document.getElementById("zoomIn").addEventListener("click", () => { if (zoomIdx < zoomLevels.length - 1) { zoomIdx++; applyZoom(); } });
+    applyZoom();
+  </script>
+</body>
+</html>

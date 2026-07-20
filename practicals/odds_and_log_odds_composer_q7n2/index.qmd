@@ -1,0 +1,619 @@
+---
+title: "Odds, log-odds, and odds ratios"
+subtitle: "WebR practical: reading and reporting logistic regression output"
+author: "GRAPH Courses"
+format:
+  html:
+    toc: false
+    number-sections: false
+    theme: cosmo
+    page-layout: full
+engine: knitr
+filters:
+  - webr
+webr:
+  show-startup-message: false
+  show-header-message: false
+  packages: ['broom', 'dplyr']
+---
+
+<style>
+:root {
+  --dark-teal: #00565e;
+  --light-teal: #5fbfbf;
+  --light-teal-soft: #e3f4f4;
+  --gold: #f5c542;
+  --rose: #b83b5e;
+  --ink: #173234;
+  --muted: #5d7475;
+  --page: #f4f7f7;
+  --card: #ffffff;
+  --border: #d0dede;
+  --good: #287a4d;
+  --good-bg: #e8f8ef;
+  --bad: #b83b3b;
+  --bad-bg: #fdecea;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.quarto-title-block { display: none; }
+
+.page-shell {
+  width: min(900px, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding: 1.25rem 0 3rem;
+}
+
+.masthead {
+  background: var(--dark-teal);
+  color: #fff;
+  border-radius: 8px;
+  border-left: 6px solid var(--gold);
+  padding: 1.4rem 1.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.eyebrow {
+  color: var(--gold);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+.masthead h1 {
+  color: #fff;
+  font-size: 1.6rem;
+  line-height: 1.15;
+  font-weight: 800;
+  margin: 0;
+}
+
+.masthead p {
+  max-width: 720px;
+  margin: 0.55rem 0 0;
+  color: #d3eded;
+  font-size: 0.98rem;
+}
+
+.panel, .practice, .callout, .webr-wrap {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.panel {
+  padding: 1.15rem 1.3rem;
+  margin-bottom: 1rem;
+}
+
+.panel h2 {
+  color: var(--dark-teal);
+  font-weight: 800;
+  margin-top: 0;
+  font-size: 1.3rem;
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 0.45rem;
+  margin-bottom: 0.8rem;
+}
+
+.tight-list { padding-left: 1.15rem; margin-bottom: 0; }
+.tight-list li { margin-bottom: 0.35rem; }
+
+.formula-panel {
+  background: var(--light-teal-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.practice {
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  border-top: 4px solid var(--gold);
+}
+
+.practice .practice-title {
+  color: var(--dark-teal);
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+}
+
+.choice-set { display: grid; gap: 0.5rem; margin: 0.8rem 0; }
+
+.choice-set label {
+  display: block;
+  position: relative;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 0.72rem 0.85rem 0.72rem 2.65rem;
+  cursor: pointer;
+}
+
+.choice-set label:hover {
+  border-color: var(--light-teal);
+  background: #edf8f8;
+}
+
+.choice-set input {
+  position: absolute;
+  left: 0.85rem;
+  top: 0.72rem;
+  appearance: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid #aacaca;
+  border-radius: 50%;
+  margin-top: 0.15rem;
+}
+
+.choice-set input:checked {
+  border-color: var(--dark-teal);
+  background:
+    radial-gradient(circle at center, #fff 0 34%, transparent 36%),
+    var(--dark-teal);
+}
+
+.practice button {
+  background: var(--dark-teal);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.55rem 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.practice .practice-feedback {
+  display: none;
+  margin-top: 0.8rem;
+  border-radius: 8px;
+  padding: 0.75rem 0.85rem;
+}
+
+.practice.is-correct .practice-feedback {
+  display: block;
+  background: var(--good-bg);
+  border: 1px solid #a9dab9;
+}
+
+.practice.is-incorrect .practice-feedback {
+  display: block;
+  background: var(--bad-bg);
+  border: 1px solid #e6b1b1;
+}
+
+.practice label.correct-choice { border-color: var(--good); background: var(--good-bg); }
+.practice label.incorrect-choice { border-color: var(--bad); background: var(--bad-bg); }
+
+.callout {
+  padding: 1rem 1.15rem;
+  border-left: 5px solid var(--light-teal);
+  margin: 1rem 0;
+}
+
+.webr-wrap {
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  border-top: 4px solid var(--light-teal);
+}
+
+.webr-wrap h3 { color: var(--dark-teal); font-size: 1rem; margin-top: 0; }
+
+.or-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.9rem 0;
+  font-size: 0.95rem;
+}
+
+.or-table th, .or-table td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+}
+
+.or-table thead th {
+  background: var(--dark-teal);
+  color: #fff;
+}
+
+.or-table tbody tr:nth-child(even) { background: #f2f9f9; }
+
+.paper-quote {
+  background: #fffaf0;
+  border-left: 4px solid var(--gold);
+  padding: 0.85rem 1rem;
+  margin: 0.8rem 0;
+  font-style: italic;
+}
+
+.answer summary { cursor: pointer; font-weight: 700; color: var(--dark-teal); }
+
+.panel.completion { border-top: 4px solid var(--gold); }
+
+.code-box {
+  display: none;
+  text-align: center;
+  background: var(--dark-teal);
+  color: #fff;
+  border-radius: 8px;
+  padding: 1.1rem;
+  margin-top: 0.6rem;
+}
+
+.code-box .code-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.code-box .code-value {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin-top: 0.3rem;
+}
+
+.footer-note { color: var(--muted); text-align: center; margin-top: 2rem; font-size: 0.9rem; }
+</style>
+
+<div class="page-shell">
+
+<header class="masthead">
+  <div class="eyebrow">WebR practical</div>
+  <h1>Odds, log-odds, and odds ratios</h1>
+  <p>Follow-up to Intro to Logistic Regression and coefficient interpretation. You will connect probability, odds, and log-odds, then use <code>broom::tidy()</code> with <code>exponentiate = TRUE</code> to read and interpret odds ratios the way papers report them.</p>
+</header>
+
+<section class="panel">
+
+<h2>Overview</h2>
+
+<p>In the slide decks you already:</p>
+
+<ul class="tight-list">
+  <li>Fitted <code>glm(weak_grip ~ age, family = binomial)</code> on KLOSA data.</li>
+  <li>Read the age coefficient <strong>0.117</strong> as a fixed change in <strong>log-odds</strong> per year.</li>
+  <li>Saw that papers usually report <strong>odds ratios</strong> instead of raw log-odds.</li>
+</ul>
+
+<p>This practical makes those scales concrete in R and gives you practice reading results text.</p>
+
+</section>
+
+<section class="panel">
+
+<h2>Part 1. Four scales for the same chance</h2>
+
+<p>Start with a probability <strong>p</strong>. The other scales follow:</p>
+
+<div class="formula-panel">
+$$
+\text{odds} = \frac{p}{1-p}, \qquad
+\text{log-odds} = \ln(\text{odds}), \qquad
+\text{OR from a coef} = e^{\text{log-odds coef}}
+$$
+</div>
+
+<ul class="tight-list">
+  <li><strong>Probability</strong> is between 0 and 1.</li>
+  <li><strong>Odds</strong> compare happens vs does-not. Odds = 1 at a 50-50 chance.</li>
+  <li><strong>Log-odds</strong> can be any number, balanced around 0. Logistic regression fits here.</li>
+  <li><strong>Odds ratio</strong> is what you report: a multiplicative change in odds per unit of the predictor.</li>
+</ul>
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: convert between scales</h3>
+
+Try a few probabilities. Run the cell to see odds and log-odds side by side.
+
+```{webr-r}
+p <- c(0.10, 0.25, 0.50, 0.75, 0.90)
+
+data.frame(
+  probability = p,
+  odds = p / (1 - p),
+  log_odds = log(p / (1 - p))
+)
+```
+
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 1</div>
+  <p>At probability <strong>p = 0.50</strong>, what are the odds?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p0" value="a">Odds = <strong>0.50</strong></label>
+<label><input type="radio" name="p0" value="b">Odds = <strong>1</strong> (50-50 means happens and does-not are equal)</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. 0.50 / 0.50 = 1. A 50-50 chance always has odds of 1." data-incorrect="Not quite. Odds = p / (1 - p). At p = 0.50 that is 0.50 / 0.50 = 1."></div>
+</div>
+
+<section class="panel">
+
+<h2>Part 2. Your KLoSA model on the log-odds scale</h2>
+
+<p>Reload the data and refit the age model. The <code>summary()</code> table shows coefficients on the <strong>log-odds</strong> scale.</p>
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: fit the model and read log-odds coefficients</h3>
+
+```{webr-r}
+library(dplyr)
+library(broom)
+
+klosa <- read.csv("https://raw.githubusercontent.com/the-graph-courses/rsr_resources/refs/heads/main/data/28_klosa_men_grip.csv")
+
+grip_model <- glm(weak_grip ~ age, family = binomial, data = klosa)
+summary(grip_model)$coefficients
+```
+
+</div>
+
+<div class="callout">
+<p>The age row <strong>Estimate</strong> (about <strong>0.117</strong>) is the change in <strong>log-odds</strong> of weak grip for each extra year of age. That is the scale <code>glm()</code> uses internally.</p>
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 2</div>
+  <p>The age coefficient in <code>summary()</code> is about <strong>0.117</strong>. That number is on which scale?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p1" value="a">Probability (0 to 1)</label>
+<label><input type="radio" name="p1" value="b">Log-odds</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. glm(family = binomial) reports log-odds coefficients by default." data-incorrect="Not quite. The default glm summary is on the log-odds scale, not probability."></div>
+</div>
+
+<section class="panel">
+
+<h2>Part 3. Exponentiate to get odds ratios with broom</h2>
+
+<p>To report results like a paper, exponentiate the log-odds coefficients. In R, <code>tidy(..., exponentiate = TRUE)</code> does this for you (it applies <code>exp()</code> to each estimate).</p>
+
+<div class="formula-panel">
+$$
+\text{OR for age} = e^{0.117} \approx 1.12
+$$
+</div>
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: tidy with exponentiate = TRUE</h3>
+
+```{webr-r}
+tidy(grip_model, exponentiate = TRUE, conf.int = TRUE)
+```
+
+</div>
+
+<div class="webr-wrap">
+
+<h3>R code: check the OR by hand</h3>
+
+```{webr-r}
+age_or <- exp(coef(grip_model)["age"])
+round(age_or, 3)
+```
+
+</div>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 3</div>
+  <p>In the <code>tidy()</code> output, the <strong>estimate</strong> for <code>age</code> is about <strong>1.12</strong>. What does that mean?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p2" value="a">Each extra year multiplies the odds of weak grip by about <strong>1.12</strong> (about <strong>12% higher odds</strong>).</label>
+<label><input type="radio" name="p2" value="b">Each extra year adds <strong>12 percentage points</strong> to the probability of weak grip.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. An OR is a multiplicative change in odds. (1.12 - 1) x 100% is about 12% higher odds." data-incorrect="Not quite. The OR changes odds, not probability directly. 1.12 means odds are multiplied by 1.12 each year."></div>
+</div>
+
+<section class="panel">
+
+<h2>Part 4. How papers phrase odds ratios</h2>
+
+<p>Authors translate ORs into plain language. Common patterns:</p>
+
+<table class="or-table">
+  <thead><tr><th>Odds ratio</th><th>Typical results wording</th></tr></thead>
+  <tbody>
+    <tr><td>1.12</td><td>12% higher odds</td></tr>
+    <tr><td>1.50</td><td>50% higher odds</td></tr>
+    <tr><td>2.00</td><td>100% higher odds, or twice the odds</td></tr>
+    <tr><td>4.00</td><td>Four times the odds</td></tr>
+    <tr><td>0.80</td><td>20% lower odds</td></tr>
+    <tr><td>0.50</td><td>50% lower odds, or half the odds</td></tr>
+  </tbody>
+</table>
+
+<div class="paper-quote">
+"Each additional year of age was associated with <strong>12% higher odds</strong> of weak grip (OR 1.12, 95% CI 1.11 to 1.13; p &lt; 0.001)."
+</div>
+
+</section>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 4</div>
+  <p>A sentence says mothers had <strong>half the odds</strong> of a low birth weight baby. Which OR matches?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p3" value="a">OR = 1.50</label>
+<label><input type="radio" name="p3" value="b">OR = 0.50</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Half the odds means multiply odds by 0.5." data-incorrect="Not quite. Half the odds is OR = 0.50."></div>
+</div>
+
+<section class="panel">
+
+<h2>Part 5. Categorical predictors and reference groups</h2>
+
+<p>When the predictor is a category (age group), R uses the <strong>first level as reference</strong>. Other rows in <code>tidy()</code> are ORs compared to that reference.</p>
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: age groups and ORs vs reference</h3>
+
+```{webr-r}
+klosa <- klosa %>%
+  mutate(age_group = cut(
+    age,
+    breaks = c(45, 65, 75, Inf),
+    labels = c("45-64", "65-74", "75+"),
+    right = FALSE
+  ))
+
+group_model <- glm(weak_grip ~ age_group, family = binomial, data = klosa)
+tidy(group_model, exponentiate = TRUE, conf.int = TRUE)
+```
+
+</div>
+
+<div class="callout">
+<p>Typical reading: compared with men aged <strong>45-64</strong> (reference), men aged <strong>65-74</strong> had about <strong>5 times the odds</strong> of weak grip, and men aged <strong>75+</strong> had about <strong>14 times the odds</strong>.</p>
+</div>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 5</div>
+  <p>Paper text: "Compared with men aged 45-64, men aged 75+ had <strong>14.4 times the odds</strong> of weak grip." Who is the reference group?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p4" value="a">Men aged <strong>45-64</strong></label>
+<label><input type="radio" name="p4" value="b">Men aged <strong>75+</strong></label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Compared with names the reference. The OR describes the other group relative to it." data-incorrect="Not quite. The reference is named after compared with: men aged 45-64."></div>
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 6</div>
+  <p>In <code>tidy(group_model, exponentiate = TRUE)</code>, a row shows OR = <strong>5.22</strong> for <code>age_group65-74</code>. The best reading is:</p>
+  <div class="choice-set">
+<label><input type="radio" name="p5" value="a">Men 65-74 have <strong>5.22% higher</strong> probability of weak grip.</label>
+<label><input type="radio" name="p5" value="b">Men 65-74 have about <strong>5.22 times the odds</strong> of weak grip compared with the reference group (45-64).</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. OR compares odds between groups, not probability directly." data-incorrect="Not quite. OR = 5.22 is a ratio of odds vs the reference group, not a percent change in probability."></div>
+</div>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 7</div>
+  <p>A table row shows OR = <strong>0.80</strong> (95% CI 0.65 to 0.98) for mother's weight (<code>lwt</code>). Best plain-language reading:</p>
+  <div class="choice-set">
+<label><input type="radio" name="p6" value="a">Each extra pound was associated with about <strong>20% lower odds</strong> of low birth weight.</label>
+<label><input type="radio" name="p6" value="b">Each extra pound was associated with an <strong>80% probability</strong> of low birth weight.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. OR below 1 means lower odds. (1 - 0.80) x 100% = 20% lower odds per pound." data-incorrect="Not quite. OR = 0.80 means odds are multiplied by 0.80 (20% lower), not that probability is 80%."></div>
+</div>
+
+<section class="panel completion">
+
+<h2>Completion code</h2>
+
+<p>Answer at least 6 out of 7 questions correctly to reveal your completion code.</p>
+
+<p><span id="code-progress">0 of 7 correct (need at least 6)</span></p>
+
+<div class="code-box" id="code-box">
+  <div class="code-label">Your completion code</div>
+  <div class="code-value" id="code-value"></div>
+</div>
+
+</section>
+
+<p class="footer-note">GRAPH Courses practical | Odds, log-odds, and odds ratios</p>
+
+</div>
+
+<script>
+const COMPLETION_CODE = "EXPORAT";
+const COMPLETION_REQUIRED = 6;
+
+function updateCompletion() {
+  const cards = document.querySelectorAll(".practice");
+  const correct = document.querySelectorAll(".practice.is-correct").length;
+  const total = cards.length;
+  const progress = document.getElementById("code-progress");
+  const box = document.getElementById("code-box");
+  const value = document.getElementById("code-value");
+
+  if (progress) {
+    progress.textContent = correct + " of " + total + " correct (need at least " + COMPLETION_REQUIRED + ")";
+  }
+
+  if (box && value) {
+    if (correct >= COMPLETION_REQUIRED) {
+      value.textContent = COMPLETION_CODE;
+      box.style.display = "block";
+    } else {
+      box.style.display = "none";
+    }
+  }
+}
+
+document.querySelectorAll(".practice").forEach((card) => {
+  const button = card.querySelector("button");
+  const feedback = card.querySelector(".practice-feedback");
+  const answer = card.dataset.answer;
+
+  button.addEventListener("click", () => {
+    const selected = card.querySelector("input[type='radio']:checked");
+    card.classList.remove("is-correct", "is-incorrect");
+    card.querySelectorAll("label").forEach((label) => {
+      label.classList.remove("correct-choice", "incorrect-choice");
+    });
+
+    if (!selected) {
+      card.classList.add("is-incorrect");
+      feedback.textContent = "Choose an answer first, then check it.";
+      updateCompletion();
+      return;
+    }
+
+    const selectedLabel = selected.closest("label");
+    const correctInput = card.querySelector(`input[value="${answer}"]`);
+    const correctLabel = correctInput ? correctInput.closest("label") : null;
+
+    if (selected.value === answer) {
+      card.classList.add("is-correct");
+      selectedLabel.classList.add("correct-choice");
+      feedback.textContent = feedback.dataset.correct;
+    } else {
+      card.classList.add("is-incorrect");
+      selectedLabel.classList.add("incorrect-choice");
+      if (correctLabel) correctLabel.classList.add("correct-choice");
+      feedback.textContent = feedback.dataset.incorrect;
+    }
+
+    updateCompletion();
+  });
+});
+
+updateCompletion();
+</script>

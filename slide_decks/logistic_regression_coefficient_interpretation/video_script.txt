@@ -1,0 +1,99 @@
+Interpreting Logistic Regression Coefficients
+===
+
+GRAPH Courses Team-1: [00:00:00] Hello and welcome back. In a previous video, I introduced you to the basics of logistic regression. In this video, we're going to learn how to interpret and report the coefficients that come out of that model.
+
+Let's get started
+
+
+
+GRAPH Courses Team: Let's start by remembering where we left off in the last lesson. We were trying to model the probability of having a weak grip in this dataset from South Korea of men aged forty-five and above.
+
+So here we read in the data, and here is that model fit with the GLM function predicting weak grip based on age, family binomial, data closer
+
+And we call the summary of that function. Here is a little bit of that summary, and here is the probability curve. Hopefully, you remember this from our last slide.
+
+on this figure on the right-hand side, just to quickly remind you, each dot here represents one man
+
+And these are men with weak grip [00:01:00] at their different ages. And these dots represent men without a weak grip at their different ages. And this gold curve is the model that was fitted by our GLM function
+
+Now importantly, as you notice, the change in probability per year is not the same everywhere. It is small at young ages, larger in the middle, and then small again at old ages. So at the beginning, we have a gentle slope, then a steep slope, and then the slope starts to get, uh, gentle again at the top
+
+And we also introduced you to the logistic regression equation that looks like this. The generic form is one over one plus E raised to the negative X And then you can parameterize this function by changing the values of X. that is you can change the exact shape of this curve, of this S curve in the logistic function by changing the values inside of this parentheses, this X here.
+
+So what logistic regression does is it gives us this intercept and this slope, or if you do multiple regression, then multiple slopes [00:02:00] that we can then add to this expression
+
+To parameterize this curve, to draw this curve in such a way that it fits our data and that we can then use to calculate an output probability.So all of that was just revision of what we have done so far
+
+but then we had said that this summary is giving us one number for the H coefficient, zero point one one six eight, and 
+
+What we can say is that for every one year increase in the age, we have a zero point one one six eight increase in the log odds
+
+And it's this log odds that we're going to focus on to try to understand what that means
+
+So it turns out that if you try to extract this expression here and have it be alone in this equation, such that we can say something like beta zero plus beta one age, that is a straight line, is equal to something, the expression that you have remaining
+
+Is gonna be equal to the log, The natural log of P [00:03:00] over one minus P, where P is the probability of the outcome. And this thing here is what we call the log odds
+
+Let's show that a bit more clearly on this next slide 
+
+Now below, I'm gonna show a sequence of equations that help us derive the log odds form from the probability form of the logistic equation
+
+GRAPH Courses Team-1: But it's not super important that you remember this. When we get to the part that I want you to remember, I will flag that for you. But for those of you who are mathematically inclined, you can go through these on your own time
+
+Now here's just the part that I want to flag, which is what I said earlier, that if we take just this linear equation that we have fit Then you will notice that on the left-hand side, the thing we are modeling now is the natural log of P over one minus P, and that happens to be what we call the log odds.
+
+So here is the log, and this is the odds. The probability over one minus probability is the [00:04:00] odds.
+
+What this means is that we can read the slope of our line by thinking about what it does to this expression, to the log odds. So each extra year adds zero point one one six eight to the log odds, and that can be fit as a single straight line. Now let's look at that transformation. from the probability form of this fit to the log odds form of the fit. So here's our familiar S-shaped curve, which is the probability fit. And in these dotted lines, we can see we marked out a bunch of specific probabilities.
+
+This is where the probability is 50%, 0.5. This is a probability of 0.25, and so on and so forth. Then we have what that represents in odds and then also what that represents in log odds.
+
+now let's transform this from probability to log odds.
+
+Notice that we have gone from an S-shaped curve to a straight line
+
+and so in terms of log odds, whatever your age is, whether you are around age forty or age eighty, if we increase our age by [00:05:00] one year The increase in the log odds stays fixed. It happens to be that value of zero point one one six eight.
+
+and what you can also see here are specific log odds values. So a probability of zero point zero five happens to be a log odds of around negative three, whereas a probability of zero point nine five is a log odds of about positive three. So you can see that there's a nice symmetry to the log odds. 
+
+So if you have a more than fifty percent chance of having some outcome, your log odds will be positive.
+
+If you have a less than fifty percent chance of having the outcome, your log odds will be negative. So I'm spending some time trying to give you some intuition for this log odds scale. However, I must tell you that when you're reporting your regressions, usually you will not actually be reporting the log odds. So although you can think of the model as being fit in terms of log odds, what we report usually in our papers is not actually the log odds. What we report is going to be the odds ratio, and for that, I'll go to the next slide.
+
+So now let's move on to our next slide. Like I said, even [00:06:00] though the log odds have some nice properties
+
+They're a little bit hard to interpret, at least for a lay audience. And so usually rather than reporting differences in log odds, you're going to report ratios of odds. And as it turns out, a difference in a log odd and a ratio of odds, that's an odds ratio, are basically the same thing. 
+
+And here's how you can extract an odds ratio. We can use the tidy function from the broom package, and we set exponentiate equals true. If we set exponentiate equals true, then it'll take our usual estimate, which I think was, uh, zero point one one six eight, it'll use that to calculate this odds ratio.
+
+How does it do that? It just says E. E is the number two point seven one eight, that's Euler's number, raised to the power of this calculated, uh, log odds coefficient, and that will give us this odds ratio. And this odds ratio is what we usually actually report, both in our tables and in the [00:07:00] results text.
+
+Here's how you can interpret it. We can say that a one-year difference in age is associated with one point one two five times the odds or twelve point four higher odds of weak grip
+
+Or here's the full thing that you may report. You would say each additional year of age was associated with twelve percent higher odds of weak grip. Here's our odds ratio. Here is the ninety-five percent confidence interval of that odds ratio, and here is our P value. So this is equivalent to saying was associated with a zero point one one six eight increase in log odds.
+
+But like I mentioned, log odds is a bit hard to understand. so instead of reporting this difference, this increase in log odds, we report the percentage change in the odds ratio
+
+Now on this right-hand side of the slide, I have another kind of predictor that we could have where instead of a continuous predictor, now we have a categorical predictor, one with multiple values. That's a polytomous categorical predictor. [00:08:00] And to create that, all I did was I converted age into a bunch of age groups.
+
+So now we have three age groups from forty-five to sixty-five, from sixty-five to seventy-five, and then seventy-five plus and we can fit another model, weak grip as predicted by age group. And R will use the first level, forty-five to sixty-four years, as the reference. And it'll give us two coefficients and two odds ratios, similar to how it works with linear regression.
+
+When we call the tidy function from broom on this output of mod_three with exponentiate set to true and confint set to true, we get an output that looks something like this. And the two main things I want to focus on is this coefficient for the group sixty-five to seventy-four and for the group seventy-five plus.
+
+So what this means is that compared to our reference of forty-five to sixty-four, this group of sixty-five to seventy-four had five point two two times the odds, 
+
+Here's how we might say that in a paper: compared with men aged forty-five to sixty-four, men aged sixty-five to seventy-four had five point two [00:09:00] two times the odds of weak grip, while men aged seventy-five plus had fourteen point four four times the odds.
+
+And we put our ninety-five percent CI in parentheses in both cases
+
+now over in this panel at the bottom, I've arranged a bunch of odds ratios and how we would typically report them in a paper. So here's the one that we just did. With an odds ratio of one point one two, we say twelve percent higher odds.
+
+With an odds ratio of one point five, you say fifty percent higher odds. Two point zero, you have a hundred percent higher or twice the odds. By the time you get to four point zero, it's a bit weird to say four hundred percent higher, so you just say four times the odds. Then if your odds ratio is below one, you could say here twenty percent lower odds or fifty percent lower odds or half the odds, and then this is seventy-five percent lower odds.
+
+So congratulations on this introduction to odds, log odds, and odds ratios. It's a tricky topic, so you're probably not going to get it fully until you do lots of
+
+We'll try to make sure you get a lot of practice with these [00:10:00] ideas over the coming week. For now, congrats on getting through, and I'll see you soon.
+
+
+

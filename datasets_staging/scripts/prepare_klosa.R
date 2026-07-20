@@ -94,7 +94,7 @@ klosa <- raw |>
       region2 == 2 ~ 0L,
       TRUE ~ NA_integer_
     ),
-    bmi = if_else(bmi > 0 & bmi < 80, bmi, NA_real_)
+    bmi = if_else(bmi > 0 & bmi < 80, round(bmi, 1), NA_real_)
   ) |>
   select(
     age, grip, weak_grip,
@@ -106,6 +106,18 @@ stopifnot(nrow(klosa) == 4184L)
 
 out_csv <- file.path(cleaned, "28_klosa_men_grip.csv")
 write_csv(klosa, out_csv)
+
+# Keep the course data/ folder in sync (CSV + zip for easy download)
+data_dir <- normalizePath(file.path(root, "..", "data"), mustWork = FALSE)
+if (dir.exists(data_dir)) {
+  data_csv <- file.path(data_dir, "28_klosa_men_grip.csv")
+  data_zip <- file.path(data_dir, "28_klosa_men_grip.zip")
+  file.copy(out_csv, data_csv, overwrite = TRUE)
+  owd <- setwd(data_dir)
+  on.exit(setwd(owd), add = TRUE)
+  if (file.exists(data_zip)) file.remove(data_zip)
+  utils::zip("28_klosa_men_grip.zip", "28_klosa_men_grip.csv")
+}
 
 # Thumbnail: observed weak-grip rate by age band (logistic story)
 bands <- klosa |>
