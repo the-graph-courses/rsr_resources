@@ -1,0 +1,106 @@
+Interpreting the Age Coefficient: Log-Odds and Odds Ratios
+===
+
+[DRAFT narration. It follows the three panels. Rewrite freely in your own voice while
+recording. The wording is kept simple and direct, with no em dashes, because many
+viewers are learning in English. Numbers use the same rounding as the R summary output
+(0.1168), so viewers can match them by eye. Timings are placeholders.]
+
+[00:00:00]
+
+Welcome back. In the last video we fit our logistic regression. We stopped at an open
+question. Here again is the figure we finished with. Each dot is one man in the data. A dot
+at the top, at one, means the person had a weak grip. A dot at the bottom, at zero, means
+they did not. The gold curve is the model we fit. And in the summary output there was one
+number for age, zero point one one six eight. We said this number explains the whole
+relationship, but we did not say what it means. That is what we will do in this video.
+
+--- PANEL 1 : the model, and the number 0.1168 --------------------------------
+
+First, look at the curve. The change in probability for each extra year is not the same
+everywhere. At young ages the curve is almost flat, so one more year changes the probability
+very little. In the middle the curve is steep, so one more year changes it a lot. At the top
+it is flat again. So we cannot give a single number for the change in probability per year.
+It is different at every age.
+
+But the summary gives us just one number for age, zero point one one six eight. Here is the
+model written in its probability form, first with the general symbols and then with our
+numbers, minus eight point eight two four and zero point one one six eight. So one fixed
+number is doing the work, even though the change in probability is not fixed. The reason is
+that zero point one one six eight is not a change in probability. It is a change in the
+log-odds. Let us see what a log-odds is, on the next panel.
+
+--- PANEL 2 : the same model on two scales ------------------------------------
+
+We start with the probability form. p equals one over one plus e to the minus eta, where eta
+is beta-zero plus beta-one times age. Now we change it one step at a time.
+
+First we find one minus p. We write one as the fraction one plus e-to-the-minus-eta over
+itself, then subtract. This gives e-to-the-minus-eta over one plus e-to-the-minus-eta. Next
+we divide p by one minus p. To divide by a fraction, we flip it and multiply. The parts
+cancel, and we are left with one over e-to-the-minus-eta, which is e-to-the-eta. Finally we
+take the natural log of both sides. The log of p over one minus p equals eta, which is
+beta-zero plus beta-one times age.
+
+Now I want you to see that these two forms are the same model. On the right is the
+probability curve, inside the box from zero to one. Watch the plot when I press the right
+arrow. The y-axis changes from probability to log-odds, and as it does, the curve becomes a
+straight line. It is the same data and the same model. Only the vertical scale changed.
+
+Look at what each dashed line did. Each line is one probability moving to its log-odds value.
+To convert, first find the odds, which is p over one minus p, then take the natural log. A
+probability of one half gives odds of one, and the log of one is zero, so it sits in the
+middle. A probability of zero point seven five gives odds of three and a log-odds of about
+plus one point one. A probability of zero point nine five gives odds of nineteen and a
+log-odds of about plus two point nine. Values above one half are positive. Values below one
+half are negative. And notice the box is gone. A probability must stay between zero and one.
+A log-odds can be any value from minus infinity to plus infinity. That extra room is why a
+straight line can fit on the log-odds scale.
+
+--- PANEL 3 : beta-one is a log odds ratio ------------------------------------
+
+Now we can say what beta-one means. From panel two, the log-odds is a straight line in age.
+Let us write it at age a, and then again one year later at age a plus one. At age a plus one
+we get beta-zero plus beta-one times a, plus one more beta-one. Now subtract the first line
+from the second. Everything cancels except beta-one. The left side is the log-odds at a plus
+one minus the log-odds at a. A difference of logs is the log of a ratio, so this is the log
+of the ratio of the two odds. So the log of the odds ratio equals beta-one.
+
+To get the odds ratio by itself, we undo the log by raising e to each side. e to the zero
+point one one six eight is one point one two four. This is the number we report. It means
+each extra year of age multiplies the odds of a weak grip by one point one two four, which
+is a twelve point four percent increase in the odds. The multiplier is the same at every
+age. You can see this on the bars, from age seventy to age eighty. Each single year
+multiplies the odds by the same one point one two four. Ten of these steps together give
+about three point two, so the odds are about three times larger over ten years.
+
+This is why we kept the same rounding. The zero point one one six eight in the log-odds
+column of the summary and the one point one two four odds ratio are the same fact on two
+scales. In R, exp of coef of the model gives one point one two four, and exp of confint of
+the model gives the confidence interval.
+
+--- PANEL 4 : which form to use, and why --------------------------------------
+
+Let us step back. Regression has two main jobs, and the two forms of the equation match
+them.
+
+The first job is prediction. If you want to predict a probability, you use the probability
+form, the logistic function. You put in an age and you read out a probability. But on the
+probability scale there is no single effect, because the change per year depends on the age.
+
+The second job is understanding the effect of a variable. For that we use the log-odds form,
+the straight line. On this scale the effect is a single number, beta-one, which is zero
+point one one six eight added to the log-odds for each year.
+
+The last problem is that a change in log-odds is hard to picture. So we exponentiate it.
+There is nothing tricky here. Yes, e to the power of a log removes the log. The one point to
+notice is that the change in log-odds is a difference of two logs, and when you exponentiate
+a difference you get a ratio, because e to the A minus B equals e to the A divided by e to
+the B. So exponentiating the change in log-odds gives the ratio of the two odds, which is the
+odds ratio, one point one two four. It is a multiplier, not an added amount.
+
+So we have one coefficient understood in three ways. It adds on the log-odds scale, it
+multiplies on the odds scale, and on the probability scale the amount of change depends on
+age. In the next videos we will use odds ratios with more than one predictor. See you there.
+
+[END]

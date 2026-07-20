@@ -1,12 +1,12 @@
-# Open-access health datasets for OLS linear regression practice
+# Open-access health datasets for regression practice
 
-Curated teaching datasets for ordinary least squares. **27** resources are downloaded (or pulled from permissive R packages): **25** numbered cleaning pipelines with tidy `snake_case` CSVs **plus** the OpenIntro NHANES adult-500 extract (original column names) **and** AIS athletes exported from `DAAG`. Each gets a quick-view thumbnail.
+Curated teaching datasets for **linear (OLS)** and **logistic** regression. The linear section has **27** resources downloaded (or pulled from permissive R packages): **25** numbered cleaning pipelines with tidy `snake_case` CSVs **plus** the OpenIntro NHANES adult-500 extract (original column names) **and** AIS athletes exported from `DAAG`. The logistic section currently has **1** KLoSA teaching extract (see license note below). Each entry gets a quick-view thumbnail.
 
-All processing lives in [datasets_staging/scripts/prepare_datasets.R](scripts/prepare_datasets.R). Raw source files are in [datasets_staging/raw/](raw/), cleaned CSVs in [datasets_staging/cleaned/](cleaned/), and thumbnails in [datasets_staging/thumbnails/](thumbnails/).
+OLS processing lives in [datasets_staging/scripts/prepare_datasets.R](scripts/prepare_datasets.R). The KLoSA logistic extract is built by [datasets_staging/scripts/prepare_klosa.R](scripts/prepare_klosa.R). Raw source files are in [datasets_staging/raw/](raw/), cleaned CSVs in [datasets_staging/cleaned/](cleaned/), and thumbnails in [datasets_staging/thumbnails/](thumbnails/).
 
-## Summary tables
+## Part 1 — Linear regression (OLS)
 
-The datasets fall into two natural groups. **Study datasets** are the raw data from a specific published research paper — the numbers you find in the resource correspond directly to the numbers analysed in that paper. **Teaching datasets** were curated, sampled, or aggregated specifically for a textbook or teaching package; they come from real public sources (NHANES, ACS, NCHS, UN, NLSY) but the rows/columns you see were selected for pedagogical convenience, not to reproduce a specific paper.
+The OLS datasets fall into two natural groups. **Study datasets** are the raw data from a specific published research paper — the numbers you find in the resource correspond directly to the numbers analysed in that paper. **Teaching datasets** were curated, sampled, or aggregated specifically for a textbook or teaching package; they come from real public sources (NHANES, ACS, NCHS, UN, NLSY) but the rows/columns you see were selected for pedagogical convenience, not to reproduce a specific paper.
 
 ### A. Datasets from published research studies
 
@@ -45,7 +45,17 @@ The datasets fall into two natural groups. **Study datasets** are the raw data f
 | 24 | US county-level socio-economic data (usdata) | 3142 × 15 | `unemployment_rate` \~ `poverty_rate` | <img src="thumbnails/24_county.png" width="180"/> | `data(county, package = "usdata")` | [24_county.csv](cleaned/24_county.csv) | GPL-3 (usdata); Census/ACS public domain |
 | 27 | NHANES adult 500 — labs & demographics (OpenIntro) | 500 × 76 | `Testosterone` \~ `Weight` | <img src="thumbnails/openintro_nhanes_samp_adult_500.png" width="180"/> | `read_csv("cleaned/openintro_nhanes_samp_adult_500.csv")` | [openintro_nhanes_samp_adult_500.csv](cleaned/openintro_nhanes_samp_adult_500.csv) | CC-BY-SA 4.0 (openintro); NHANES public domain |
 
-## Load-everything snippet
+## Part 2 — Logistic regression
+
+Binary-outcome teaching extracts. Keep the covariate list small so files stay classroom-friendly on GitHub.
+
+| \# | Dataset | N × p | Outcome \~ main predictors | Quick view | R load | Cleaned CSV | License |
+|---------|---------|---------|---------|---------|---------|-----------|---------|
+| 28 | KLoSA men grip / weak grip (Wave 1, 2006) | 4184 × 10 | `weak_grip` \~ `age` (+ education, smoking, BMI, hypertension, diabetes) | <img src="thumbnails/28_klosa_men_grip.png" width="180"/> | `read_csv("cleaned/28_klosa_men_grip.csv")` | [28_klosa_men_grip.csv](cleaned/28_klosa_men_grip.csv) | ⚠️ KEIS registration-gated; ask before redistributing |
+
+Same rows as the slim `klosa_men_grip_45plus.csv` used in the logistic slide decks (`age`, `grip`, `weak_grip`), plus a few covariates useful for multivariable logistic models.
+
+## Load-everything snippet (OLS)
 
 ``` r
 library(readr)
@@ -77,9 +87,12 @@ data(county,               package = "usdata");     county_df            <- coun
 data(Boston,               package = "ISLR2");      boston_df            <- Boston
 ais_athletes        <- read_csv("cleaned/26_ais.csv")
 nhanes_adult_500    <- read_csv("cleaned/openintro_nhanes_samp_adult_500.csv")
+
+# Logistic
+klosa_men_grip      <- read_csv("cleaned/28_klosa_men_grip.csv")
 ```
 
-## Dataset details
+## Dataset details (OLS)
 
 Each section below lists the cleaned columns, primary paper/source, and the outcome + predictor used in the thumbnail. **Most** numbered CSVs (`01`–`25`) use `snake_case`. **`26_ais.csv`** mirrors **`DAAG::ais`** (short column names as in the package). **`openintro_nhanes_samp_adult_500.csv`** keeps **original** OpenIntro / NHANES-style names (`Weight`, `Gender`, …). Categorical variables are stored as factors with readable labels whenever the original coding was numeric.
 
@@ -472,6 +485,29 @@ Each section below lists the cleaned columns, primary paper/source, and the outc
 -   **Columns (76):** identifiers and survey fields plus `Age`, `Height`, `Weight`, `BMI`, vitals, lipids, `Testosterone`, self-reported health, sleep, activity, substance use, etc. — see `read.csv(..., nrows = 1)` for the full header.
 -   **Notes:** larger than `oibiostat`'s 135-row adult NHANES extract; strong teaching example for **sex as confounder** with continuous labs (`lm(Testosterone ~ Weight + sex)` vs pooled `Weight` slope). Filter to complete cases for specific outcomes.
 
+------------------------------------------------------------------------
+
+## Dataset details (logistic)
+
+### 28 — KLoSA men, grip strength & weak grip (Wave 1, 2006)
+
+<img src="thumbnails/28_klosa_men_grip.png" width="360"/>
+
+-   **N × p:** 4,184 × 10 (Korean men aged 45+ with measured grip)
+-   **Study:** [Korean Longitudinal Study of Aging (KLoSA)](https://survey.keis.or.kr/eng/klosa/klosa01.jsp), Wave 1 (2006), KEIS
+-   **Local raw file:** [raw/klosa_wave1/Lt01_e.dta](raw/klosa_wave1/Lt01_e.dta) (gitignored; see [raw/klosa_wave1/README.md](raw/klosa_wave1/README.md))
+-   **Prep script:** [scripts/prepare_klosa.R](scripts/prepare_klosa.R)
+-   **License:** ⚠️ **Not open-access.** Registration-gated microdata; KEIS copyright policy prohibits unauthorized redistribution. Education use by the registrant is fine; bundling in a public GitHub repo needs written KEIS permission (or ship a download + prep script / synthetic data instead).
+-   **Cleaned CSV:** [28_klosa_men_grip.csv](cleaned/28_klosa_men_grip.csv)
+-   **Columns:** `age, grip, weak_grip, education, smoking, bmi, hypertension, diabetes, married, urban`
+-   **Coding notes:**
+    -   `weak_grip`: 1 if `grip <= 27` kg (EWGSOP2 cut for men), else 0
+    -   `education`: elementary_or_less / middle_school / high_school / college_or_more
+    -   `smoking`: never / former / current
+    -   `hypertension`, `diabetes`, `married`, `urban`: 0/1 (NA if refused/unknown)
+-   **Teaching uses:** simple `glm(weak_grip ~ age, binomial)`; then add education, smoking, BMI, or chronic disease; compare continuous `lm(grip ~ age)` on the same rows
+-   **Source path on this machine (original download):** `~/Dropbox/Mac (2)/Downloads/KLoSA 1-9th wave (STATA)/Lt01_e.dta`
+
 ## License check for the "can we ship it in a package?" question
 
 | \# | Redistribute in an R data package? |
@@ -503,8 +539,9 @@ Each section below lists the cleaned columns, primary paper/source, and the outc
 | 25 | ✅ Already in `ISLR2` (GPL-2). |
 | 26 | ✅ Already in `DAAG` (GPL-2). |
 | 27 | ⚠️ Same **CC-BY-SA 4.0** share-alike note as row 21 (OpenIntro); underlying NHANES is public domain — you can also rebuild the extract from CDC files. |
+| 28 | ❌ **Do not ship** KLoSA microdata (even a thin extract) without written KEIS permission. Prefer a student download script + local prep, or ask KEIS for an educational redistribution license. |
 
-**Short version for a public, non-commercial, teaching-oriented package on GitHub:** all 27 are usable. For a more general-purpose package (CRAN-compatible, any licence), you'd want to:
+**Short version for a public, non-commercial, teaching-oriented package on GitHub:** rows 1–27 are usable with the caveats above; **row 28 (KLoSA) should stay out of a public package until KEIS says yes**. For a more general-purpose package (CRAN-compatible, any licence), you'd want to:
 
 - **Drop or link-only** rows 1, 3, 5 (non-commercial / no licence).
 - **Suggest rather than re-bundle** rows 18, 19, 20 (no explicit data licence — let users load them from the upstream package).

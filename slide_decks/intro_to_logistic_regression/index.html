@@ -84,6 +84,12 @@
     .practice-q p{margin:0 0 3px;color:var(--ink);font-size:8.8px;font-weight:600;line-height:1.18;}
     .practice-options{display:flex;gap:4px;}
     .practice-options span{flex:1;padding:2px 4px;border-radius:2px;background:var(--soft);color:var(--ink-2);font-size:8.3px;line-height:1.15;}
+    /* display:flex on .practice-set would otherwise override the hidden attribute */
+    #board [data-step][hidden]{display:none !important;}
+    #panel2 .practice-set{flex:none;gap:3px;}
+    #panel2 .practice-q{padding:3px 4px;}
+    #panel2 .practice-q p{margin:0 0 2px;font-size:8.2px;line-height:1.15;}
+    #panel2 .practice-options span{font-size:7.8px;padding:2px 3px;}
     .concept-slot{flex:none;height:86px;}
     .concept-box{height:100%;padding:5px 6px;border-left:2px solid var(--gold);border-radius:2px;background:var(--soft);overflow:hidden;}
     .concept-box ul{margin:0;padding-left:14px;color:var(--ink);font-size:8.8px;line-height:1.2;}
@@ -222,6 +228,20 @@ summary(band_lm)</pre>
               <div class="main-viz">
                 <div class="plotwrap"><svg id="svg2" viewBox="0 0 460 380" preserveAspectRatio="xMidYMid meet"></svg></div>
               </div>
+              <div class="practice-set" data-step="16">
+                <div class="practice-q">
+                  <p>1. The fitted line predicts a probability of weak grip below zero for younger men. What is wrong with that?</p>
+                  <div class="practice-options"><span>A. Probabilities must lie between 0 and 1</span><span>B. The slope should be negative, not positive</span></div>
+                </div>
+                <div class="practice-q">
+                  <p>2. When using a continuous predictor (e.g. age) to predict the probability of a yes/no outcome, what shape usually fits best?</p>
+                  <div class="practice-options"><span>A. A straight line</span><span>B. A sigmoid curve</span></div>
+                </div>
+                <div class="practice-q">
+                  <p>3. Which outcome would you model with logistic regression?</p>
+                  <div class="practice-options"><span>A. Probability of being cured of a disease</span><span>B. Number of individuals who fell ill in a given year</span><span>C. Average heart rate after exercise</span></div>
+                </div>
+              </div>
             </div>
           </section>
           <!-- 3: right column -->
@@ -232,15 +252,15 @@ summary(band_lm)</pre>
               <div class="p-sub">S-curve for the probability of weak grip.</div>
               <!-- EDIT PANEL 3 HERE. Logistic regression now follows panel 2 directly. -->
               <div class="panel-explain stack" id="notes3">
-                <p class="frag bullet" data-step="17">Fit a logistic regression.</p>
-                <pre class="frag code" data-step="17">weak_glm &lt;- glm(weak_grip ~ age, family = binomial, data = klosa)
+                <p class="frag bullet" data-step="18">Fit a logistic regression.</p>
+                <pre class="frag code" data-step="18">weak_glm &lt;- glm(weak_grip ~ age, family = binomial, data = klosa)
 summary(weak_glm)</pre>
-                <pre class="frag out" data-step="17">#&gt;             Estimate Std. Error z value Pr(&gt;|z|)
+                <pre class="frag out" data-step="18">#&gt;             Estimate Std. Error z value Pr(&gt;|z|)
 #&gt; (Intercept) <span class="hi">-8.82431</span>    0.31925  -27.64   &lt;2e-16 ***
 #&gt; age          <span class="hi">0.11683</span>    0.00476   24.57   &lt;2e-16 ***</pre>
-                <div class="frag inline-eq" data-step="18">$p = \dfrac{1}{1 + e^{-(\beta_0 + \beta_1\,\text{age})}}$</div>
-                <div class="frag inline-eq" data-step="18">$\widehat p = \dfrac{1}{1 + e^{-(-8.82431 + 0.11683\,\text{age})}}$</div>
-                <div class="practice-set" data-step="19">
+                <div class="frag inline-eq" data-step="19">$p = \dfrac{1}{1 + e^{-(\beta_0 + \beta_1\,\text{age})}}$</div>
+                <div class="frag inline-eq" data-step="19">$\widehat p = \dfrac{1}{1 + e^{-(-8.82431 + 0.11683\,\text{age})}}$</div>
+                <div class="practice-set" data-step="20">
                   <div class="practice-q">
                     <p>1. Can this logistic equation produce a probability greater than 1?</p>
                     <div class="practice-options"><span>A. Yes</span><span>B. No</span></div>
@@ -259,12 +279,12 @@ summary(weak_glm)</pre>
             <div class="panel-main">
               <div class="eqbox" id="eq3"></div>
               <div class="concept-slot">
-                <div class="concept-box" data-step="20">
+                <div class="concept-box" data-step="21">
                   <ul>
-                    <li data-step="20">Regression helps us <strong>predict</strong> and <strong>understand effects</strong>.</li>
-                    <li data-step="21">Prediction is easy: substitute age to obtain a predicted probability.</li>
-                    <li data-step="22">Understanding (and explaining) effects: Harder! There is no fixed probability change for a one-year increase in age.</li>
-                    <li data-step="23">Instead, each year adds a fixed <strong>$\beta_1$</strong> to the <strong>log odds.</strong></li>
+                    <li data-step="21">Regression helps us <strong>predict</strong> and <strong>understand effects</strong>.</li>
+                    <li data-step="22">Prediction is easy: substitute age to obtain a predicted probability.</li>
+                    <li data-step="23">Understanding (and explaining) effects: Harder! There is no fixed probability change for a one-year increase in age.</li>
+                    <li data-step="24">Instead, each year adds a fixed <strong>$\beta_1$</strong> to the <strong>log odds.</strong></li>
                   </ul>
                 </div>
               </div>
@@ -280,9 +300,9 @@ summary(weak_glm)</pre>
               <div class="p-title">Learning objectives</div>
               <div class="panel-explain">
                 <ul>
-                  <li data-step="24">Distinguish <strong>continuous</strong> and <strong>binary</strong> outcomes.</li>
-                  <li data-step="24">Explain why a straight line is unsuitable for modeling probabilities.</li>
-                  <li data-step="24">Fit a logistic regression and understand how it can be used to predict probabilities.</li>
+                  <li data-step="25">Distinguish <strong>continuous</strong> and <strong>binary</strong> outcomes.</li>
+                  <li data-step="25">Explain why a straight line is unsuitable for modeling probabilities.</li>
+                  <li data-step="25">Fit a logistic regression and understand how it can be used to predict probabilities.</li>
                 </ul>
               </div>
             </div>
@@ -465,6 +485,7 @@ summary(weak_glm)</pre>
     {},
     {vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2bands','g2bars'],dotsFade:true,bars:1},
     {vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2bands','g2bars','g2line']},
+    {},
     {panel:3,vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2bands','g2bars','g2line','g3bars']},
     {},
     {vis:['g1dots','g1ols','g1cut','g2rows','g2dots','g2bands','g2bars','g2line','g3bars','g3sig'],sigv:1},
@@ -481,7 +502,7 @@ summary(weak_glm)</pre>
   },[]);
   const N=STEPS.length;
   const ALL_GROUPS=['g1dots','g1ols','g1cut','g2cut','g2rows','g2dots','g2bands','g2bars','g2line','g3bars','g3sig'];
-  const PANEL_FIRST={1:0,2:8,3:15,4:23};   // step at which each panel lights up
+  const PANEL_FIRST={1:0,2:8,3:16,4:24};   // step at which each panel lights up
   const eqEls={1:document.getElementById('eq1'),2:document.getElementById('eq2'),3:document.getElementById('eq3'),4:document.getElementById('eq4')};
   const PANEL_IDS=[1,2,3,4];
 

@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intro to Logistic Regression</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #dfe8ea;
+      --paper: #f7f4ed;
+      --white: #fffef9;
+      --ink: #101418;
+      --muted: #665f51;
+      --chapter: #4b4e9f;
+      --chapter-dark: #373a7a;
+      --chapter-soft: #ececf8;
+      --teal: #0d7377;
+      --teal-dark: #0a5d61;
+      --teal-soft: #e3f3f3;
+      --gold: #f0c808;
+      --gold-soft: #fff3cc;
+      --rose: #b83b5e;
+      --rose-soft: #fdeef1;
+      --green: #2c8a4a;
+      --navy: #2f5f98;
+      --navy-soft: #e7eef7;
+      --orange: #d97706;
+      --orange-soft: #fff1dc;
+      --border: #101418;
+      --shadow: rgba(16, 20, 24, 0.42);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Space Grotesk', Arial, Helvetica, sans-serif;
+      font-size: 8.35pt;
+      line-height: 1.22;
+    }
+    .toolbar {
+      width: 210mm;
+      max-width: calc(100vw - 24px);
+      margin: 24px auto 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      line-height: 1.35;
+    }
+    .toolbar-intro { flex: 1; min-width: 0; font-size: 9pt; }
+    .toolbar-intro .title {
+      color: var(--chapter);
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 10pt;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .toolbar-intro .descr { color: #3a4a4f; max-width: 132mm; }
+    .toolbar-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+    button, .zoom-group {
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: 7px;
+      padding: 7px 11px;
+      font: inherit;
+      font-weight: 800;
+      line-height: 1.2;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 var(--shadow);
+    }
+    button.primary { background: var(--chapter); color: #fff; border-color: var(--ink); }
+    .print-button { display: inline-flex; align-items: center; gap: 5px; }
+    .print-button svg { width: 13px; height: 13px; display: block; }
+    .zoom-group { display: inline-flex; align-items: stretch; padding: 0; overflow: visible; }
+    .zoom-group button { border: 0; border-radius: 0; padding: 6px 10px; background: transparent; box-shadow: none; }
+    .zoom-group button + button, .zoom-group .zoom-label { border-left: 2px solid var(--ink); }
+    .zoom-label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      padding: 0 9px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-weight: 900;
+    }
+    .page-wrap { display: flex; flex-direction: column; align-items: center; }
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto 18px;
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: 10px;
+      padding: 3mm 7mm 2.2mm;
+      box-shadow: 8px 8px 0 rgba(16, 20, 24, 0.13), 0 14px 36px rgba(16, 20, 24, 0.14);
+      display: flex;
+      flex-direction: column;
+      gap: 1.65mm;
+      transform-origin: top center;
+    }
+    header {
+      border-bottom: 1mm solid var(--gold);
+      padding-bottom: 0.85mm;
+      line-height: 1.1;
+    }
+    h1 {
+      margin: 0;
+      color: var(--chapter);
+      font-size: 18.3pt;
+      font-weight: 800;
+      line-height: 0.98;
+    }
+    .subtitle {
+      margin-top: 0.5mm;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 7.3pt;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .group-label {
+      display: flex;
+      align-items: center;
+      gap: 2.7mm;
+      color: var(--ink);
+      font-size: 7.8pt;
+      font-weight: 900;
+      margin: 0.05mm 0;
+      break-after: avoid;
+    }
+    .group-label::before, .group-label::after { content: ""; flex: 1; border-top: 2px solid var(--ink); height: 0; }
+    .group-label span { background: var(--paper); border: 2px solid var(--ink); border-radius: 5px; padding: 0.38mm 1.7mm; white-space: nowrap; }
+    .row { display: grid; gap: 2.4mm; align-items: stretch; }
+    .row.cols-2 { grid-template-columns: 1fr 1fr; }
+    .row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .row.split-56-44 { grid-template-columns: 56fr 44fr; }
+    .row.split-55-45 { grid-template-columns: 55fr 45fr; }
+    .row.split-52-48 { grid-template-columns: 52fr 48fr; }
+    .row.split-48-52 { grid-template-columns: 48fr 52fr; }
+    .box, .box-body, .row > *, .fig, .contrast-card { min-width: 0; }
+    .box {
+      background: var(--white);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      box-shadow: 4px 4px 0 var(--shadow);
+      overflow: visible;
+      display: flex;
+      flex-direction: column;
+    }
+    .box-tag {
+      background: var(--chapter);
+      color: white;
+      border-bottom: 2px solid var(--ink);
+      border-radius: 6px 6px 0 0;
+      font-size: 8pt;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      padding: 0.65mm 2.2mm 0.52mm;
+      line-height: 1.15;
+    }
+    .box-body {
+      border-radius: 0 0 6px 6px;
+      padding: 0.9mm 1.8mm 1mm;
+      gap: 0.48mm;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--chapter-soft);
+      overflow: visible;
+    }
+    .box-body p { margin: 0; overflow-wrap: break-word; }
+    .box-body ul { margin: 0; padding-left: 3.2mm; display: flex; flex-direction: column; gap: 0.3mm; }
+    .tag-teal .box-tag { background: var(--teal); }
+    .tag-teal .box-body { background: var(--teal-soft); }
+    .tag-rose .box-tag { background: var(--rose); }
+    .tag-rose .box-body { background: var(--rose-soft); }
+    .tag-gold .box-tag { background: var(--gold); color: var(--ink); }
+    .tag-gold .box-body { background: var(--gold-soft); }
+    .tag-navy .box-tag { background: var(--navy); }
+    .tag-navy .box-body { background: var(--navy-soft); }
+    .tag-orange .box-tag { background: var(--orange); }
+    .tag-orange .box-body { background: var(--orange-soft); }
+    .chapter { color: var(--chapter); }
+    .teal { color: var(--teal); }
+    .rose { color: var(--rose); }
+    .orange { color: var(--orange); }
+    code, .code, .formula, .r-code, .metric { font-family: 'JetBrains Mono', Consolas, Menlo, monospace; }
+    .formula {
+      border: 1.5px solid var(--ink);
+      border-radius: 6px;
+      background: var(--white);
+      padding: 1mm 1.6mm;
+      text-align: center;
+      font-size: 9.6pt;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .formula.large { font-size: 11.8pt; }
+    .formula .coef0 { color: var(--navy); }
+    .formula .coef1 { color: var(--rose); }
+    .mini-note {
+      border-left: 2.5px solid var(--chapter);
+      background: rgba(255,255,255,0.64);
+      padding: 0.65mm 1.2mm;
+      border-radius: 0 4px 4px 0;
+    }
+    .mini-note.rose { border-left-color: var(--rose); color: var(--ink); }
+    .mini-note.teal { border-left-color: var(--teal); color: var(--ink); }
+    .contrast-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2mm; }
+    .contrast-card { border: 1.3px solid var(--ink); border-radius: 5px; background: rgba(255,255,255,0.65); padding: 0.9mm 1.1mm; }
+    .contrast-card b { display: block; margin-bottom: 0.3mm; }
+    .pill {
+      display: inline-block;
+      border: 1px solid var(--ink);
+      border-radius: 999px;
+      background: var(--white);
+      padding: 0.15mm 1mm;
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 6.8pt;
+      font-weight: 800;
+    }
+    .r-code {
+      border: 1.5px solid var(--ink);
+      border-radius: 6px;
+      background: #111a20;
+      color: #edf7f7;
+      padding: 1.15mm 1.5mm;
+      white-space: pre-wrap;
+      font-size: 6.65pt;
+      line-height: 1.28;
+      overflow-wrap: anywhere;
+    }
+    .r-code .fn { color: #62d6d8; }
+    .r-code .ar { color: #f5d55f; }
+    .r-code .num { color: #f09ab2; }
+    .r-code .cm { color: #aebdc3; }
+    .metric-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1mm; }
+    .metric {
+      border: 1.3px solid var(--ink);
+      border-radius: 5px;
+      background: var(--white);
+      padding: 0.8mm 0.7mm;
+      text-align: center;
+      font-size: 7pt;
+      font-weight: 800;
+    }
+    .metric strong { display: block; color: var(--chapter); font-size: 11pt; }
+    .fig {
+      border: 1.4px solid var(--ink);
+      border-radius: 6px;
+      background: var(--white);
+      padding: 0.7mm 1mm 0.45mm;
+    }
+    .fig svg { width: 100%; height: auto; display: block; }
+    .fig-caption { color: var(--muted); font-size: 6.5pt; font-weight: 700; text-align: center; margin-top: 0.2mm; }
+    .quick-checks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2mm; }
+    .check {
+      border: 1.3px solid var(--ink);
+      border-radius: 5px;
+      background: rgba(255,255,255,0.7);
+      padding: 0.8mm 1.1mm;
+    }
+    .check .q { font-weight: 800; margin-bottom: 0.45mm; }
+    .b { display: inline-flex; position: relative; flex-direction: column; align-items: center; vertical-align: text-bottom; margin: 0 0.2mm; }
+    .fill {
+      border: 0;
+      border-bottom: 1.6px solid var(--chapter);
+      border-radius: 0;
+      padding: 0 0.3mm 0.35px;
+      color: var(--ink);
+      background: transparent;
+      font: inherit;
+      font-weight: 800;
+      line-height: 1;
+      text-align: center;
+      min-width: 2mm;
+      max-width: 100%;
+      transition: width 0.18s ease-out;
+    }
+    .fill.code { font-family: 'JetBrains Mono', Consolas, Menlo, monospace; }
+    .fill:focus { outline: none; border-bottom-color: var(--chapter-dark); border-bottom-width: 1.9px; }
+    .hint { display: block; color: var(--muted); font-size: 5.65pt; font-weight: 600; line-height: 1.02; white-space: nowrap; margin-top: 0.25mm; }
+    .solved .hint { visibility: hidden; }
+    .hints-hidden .hint { display: none; }
+    .fill.wrong-pick { color: var(--rose); border-bottom-color: var(--rose); animation: shake 0.27s ease-in-out; }
+    .fill.correct-flash { animation: correctFlash 0.78s ease-out; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-2px)} 75%{transform:translateX(2px)} }
+    @keyframes correctFlash { 0%{background-color:rgba(44,138,74,0)} 25%{background-color:rgba(44,138,74,0.28);border-bottom-color:var(--green)} 65%{background-color:rgba(44,138,74,0.16);border-bottom-color:var(--green)} 100%{background-color:rgba(44,138,74,0)} }
+    footer { margin-top: auto; text-align: right; font-size: 6.7pt; font-weight: 800; }
+    footer a { color: var(--chapter); text-decoration: none; }
+    @media (max-width: 820px) {
+      .toolbar { align-items: stretch; flex-direction: column; }
+      .toolbar-actions { justify-content: flex-start; }
+      .page { width: calc(100vw - 20px); min-height: 0; padding: 4mm; }
+      .row, .row.cols-2, .row.cols-3, .row.split-56-44, .row.split-55-45, .row.split-52-48, .row.split-48-52 { grid-template-columns: 1fr; }
+      .quick-checks, .metric-row { grid-template-columns: 1fr; }
+    }
+    @page { size: A4; margin: 0; }
+    @media print {
+      html, body { width: 210mm; height: 297mm; background: var(--paper); }
+      body { font-size: 8.05pt; }
+      .toolbar { display: none !important; }
+      .page-wrap { display: block; min-height: 0 !important; }
+      .page {
+        width: 210mm;
+        height: 297mm;
+        min-height: 297mm;
+        max-height: 297mm;
+        margin: 0;
+        padding: 3mm 6mm 1.6mm;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        overflow: hidden;
+        gap: 1.35mm;
+        transform: none !important;
+      }
+      .hint { display: none !important; }
+      .box-body { padding: 0.75mm 1.5mm 0.85mm; }
+      .row { gap: 2mm; }
+      .fill.wrong-pick { color: var(--ink); border-bottom-color: var(--chapter) !important; animation: none; }
+      .fill, .box, .box-tag, .box-body, .fig, .formula, .r-code, .metric, .pill, footer { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="toolbar-intro">
+      <div class="title">GRAPH Courses cheat sheet</div>
+      <div class="descr">Type your answers into the blanks. Hint options appear in small grey text below each blank. When finished, click Print / Save on the right.</div>
+    </div>
+    <div class="toolbar-actions">
+      <div class="zoom-group" role="group" aria-label="Zoom controls">
+        <button type="button" id="zoomOut" aria-label="Zoom out">Zoom -</button>
+        <button type="button" id="zoomIn" aria-label="Zoom in">Zoom +</button>
+        <span class="zoom-label" id="zoomLabel">100%</span>
+      </div>
+      <button type="button" id="toggleHints">Hide hints</button>
+      <button type="button" id="clearAnswers">Clear</button>
+      <button type="button" class="primary print-button" onclick="window.print()" aria-label="Print or save cheat sheet">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 3h10v5H7V3Zm10 14h2a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5h2v4h10v-4Zm-8 2v-6h6v6H9Zm9-7.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>
+        Print / Save
+      </button>
+    </div>
+  </div>
+
+  <div class="page-wrap" id="pageWrap">
+    <section class="page" id="sheet">
+      <header>
+        <h1>Intro to Logistic Regression</h1>
+        <div class="subtitle">Model a binary outcome by predicting the probability that the outcome equals 1</div>
+      </header>
+
+      <div class="group-label"><span>From a continuous outcome to a binary outcome</span></div>
+
+      <div class="row split-55-45">
+        <div class="box">
+          <div class="box-tag">The big idea</div>
+          <div class="box-body">
+            <p><b>Linear regression</b> models a <span class="b"><input class="fill" data-answer="continuous" data-alt="numeric"><span class="hint">continuous / binary / nominal</span></span> outcome. <b>Logistic regression</b> models a <span class="b"><input class="fill" data-answer="binary" data-alt="yes/no|0/1"><span class="hint">binary / continuous / count</span></span> outcome, such as disease yes/no, cured/not cured, or alive/dead.</p>
+            <p>The model predicts the <span class="b"><input class="fill" data-answer="probability" data-alt="predicted probability"><span class="hint">probability / mean difference / sample size</span></span> that the outcome equals <b>1</b>. That prediction must stay between <span class="b"><input class="fill code" data-answer="0"><span class="hint">0 / -1 / 50</span></span> and <span class="b"><input class="fill code" data-answer="1"><span class="hint">1 / 2 / 100</span></span>.</p>
+            <div class="mini-note"><b>Two regression jobs:</b> make <span class="b"><input class="fill" data-answer="predictions" data-alt="prediction"><span class="hint">predictions / categories / samples</span></span> and understand how predictors relate to the outcome.</div>
+          </div>
+        </div>
+        <div class="box tag-teal">
+          <div class="box-tag">Worked example: KLoSA grip strength</div>
+          <div class="box-body">
+            <p>In 4,184 Korean men aged 45+, <b>grip strength</b> in kg is continuous. The lesson turns it into a binary outcome:</p>
+            <div class="formula"><span class="pill">weak_grip</span> = 1 if grip &le; <span class="b"><input class="fill code" data-answer="27"><span class="hint">27 / 45 / 55.7</span></span> kg, otherwise 0</div>
+            <p>A value of 1 means <span class="b"><input class="fill" data-answer="weak grip" data-alt="weak"><span class="hint">weak grip / strong grip / missing grip</span></span>; a value of 0 means <span class="b"><input class="fill" data-answer="not weak" data-alt="no weak grip|normal grip"><span class="hint">not weak / unknown / older</span></span>.</p>
+            <div class="r-code">klosa &lt;- klosa |&gt;
+  <span class="fn">mutate</span>(weak_grip = <span class="fn">as.integer</span>(grip &lt;= <span class="num">27</span>))</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-label"><span>Why an ordinary straight line is the wrong tool</span></div>
+
+      <div class="row split-48-52">
+        <div class="box tag-rose">
+          <div class="box-tag">The linear probability problem</div>
+          <div class="box-body">
+            <p>Within five-year age bands, the proportion with weak grip estimates a <span class="b"><input class="fill" data-answer="probability" data-alt="risk"><span class="hint">probability / residual / coefficient</span></span>. It rises from about 3% at ages 45 to 50 to about <span class="b"><input class="fill code" data-answer="79%" data-alt="79 percent|0.79"><span class="hint">79% / 27% / 3%</span></span> at ages 85 to 90.</p>
+            <p>A straight line fails for two reasons:</p>
+            <ul>
+              <li>It can predict values below 0 or above <span class="b"><input class="fill code" data-answer="1"><span class="hint">1 / 0 / -1</span></span>, which are impossible probabilities.</li>
+              <li>It imposes a <span class="b"><input class="fill" data-answer="constant" data-alt="fixed"><span class="hint">constant / changing / curved</span></span> slope, even though probability often rises slowly, then quickly, then slowly again.</li>
+            </ul>
+            <div class="mini-note rose"><b>Needed:</b> an S-shaped <span class="b"><input class="fill" data-answer="sigmoid" data-alt="sigmoid curve|S-curve|S curve"><span class="hint">sigmoid / straight / quadratic</span></span> curve that stays within the probability bounds.</div>
+          </div>
+        </div>
+        <div class="box tag-gold">
+          <div class="box-tag">Straight line versus logistic curve</div>
+          <div class="box-body">
+            <div class="fig">
+              <svg viewBox="0 0 430 158" role="img" aria-label="Age plotted against probability of weak grip, comparing an unbounded straight line with a bounded logistic curve">
+                <rect x="42" y="12" width="374" height="118" fill="#fffef9"/>
+                <g stroke="#d8d3c8" stroke-width="1">
+                  <line x1="42" y1="28" x2="416" y2="28"/><line x1="42" y1="79" x2="416" y2="79"/><line x1="42" y1="130" x2="416" y2="130"/>
+                  <line x1="86" y1="12" x2="86" y2="130"/><line x1="196" y1="12" x2="196" y2="130"/><line x1="306" y1="12" x2="306" y2="130"/><line x1="416" y1="12" x2="416" y2="130"/>
+                </g>
+                <g stroke="#101418" stroke-width="1.4">
+                  <line x1="42" y1="12" x2="42" y2="130"/><line x1="42" y1="130" x2="416" y2="130"/>
+                </g>
+                <g fill="#665f51" font-size="8" font-family="Space Grotesk, sans-serif" font-weight="700">
+                  <text x="34" y="133" text-anchor="end">0</text><text x="34" y="82" text-anchor="end">0.5</text><text x="34" y="31" text-anchor="end">1</text>
+                  <text x="86" y="143" text-anchor="middle">45</text><text x="196" y="143" text-anchor="middle">60</text><text x="306" y="143" text-anchor="middle">75</text><text x="416" y="143" text-anchor="middle">90</text>
+                  <text x="229" y="155" text-anchor="middle">age (years)</text>
+                </g>
+                <g fill="#0d7377" stroke="#101418" stroke-width="0.8">
+                  <circle cx="101" cy="126" r="3.4"/><circle cx="141" cy="123" r="3.4"/><circle cx="181" cy="120" r="3.4"/><circle cx="222" cy="112" r="3.4"/><circle cx="262" cy="103" r="3.4"/><circle cx="302" cy="86" r="3.4"/><circle cx="343" cy="76" r="3.4"/><circle cx="383" cy="67" r="3.4"/><circle cx="416" cy="49" r="3.4"/>
+                </g>
+                <line x1="42" y1="143" x2="430" y2="22" stroke="#b83b5e" stroke-width="2.2" stroke-dasharray="6 4"/>
+                <path d="M42 129 C105 129, 154 126, 198 119 C247 111, 282 96, 309 78 C341 57, 365 39, 416 29" fill="none" stroke="#4b4e9f" stroke-width="3.2"/>
+                <g font-size="8.3" font-family="Space Grotesk, sans-serif" font-weight="800">
+                  <text x="55" y="148" fill="#b83b5e">linear: below 0</text><text x="305" y="21" fill="#b83b5e">linear: can exceed 1</text>
+                  <text x="305" y="61" fill="#4b4e9f">logistic: bounded S-curve</text>
+                </g>
+              </svg>
+              <div class="fig-caption">The logistic curve approaches 0 and 1 without crossing either boundary.</div>
+            </div>
+            <p>The curve is relatively <span class="b"><input class="fill" data-answer="flat" data-alt="shallow|gentle"><span class="hint">flat / steep / linear</span></span> near probabilities 0 and 1, and steepest through the middle.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-label"><span>Fit the curve and use it for prediction</span></div>
+
+      <div class="row split-52-48">
+        <div class="box">
+          <div class="box-tag">The logistic function</div>
+          <div class="box-body">
+            <div class="formula large">p = <span style="display:inline-flex;flex-direction:column;vertical-align:middle;line-height:1.05"><span style="border-bottom:1.4px solid #101418;padding:0 1mm">1</span><span>1 + e<sup>&minus;(<span class="coef0">&beta;<sub>0</sub></span> + <span class="coef1">&beta;<sub>1</sub></span>x)</sup></span></span></div>
+            <div class="contrast-grid">
+              <div class="contrast-card"><b class="chapter">Output</b>The function turns any number into a probability between <span class="b"><input class="fill code" data-answer="0"><span class="hint">0 / -1 / 1</span></span> and <span class="b"><input class="fill code" data-answer="1"><span class="hint">1 / 2 / 100</span></span>.</div>
+              <div class="contrast-card"><b class="chapter">Shape</b><span class="coef0"><b>&beta;<sub>0</sub></b></span> shifts the curve; <span class="coef1"><b>&beta;<sub>1</sub></b></span> controls its direction and <span class="b"><input class="fill" data-answer="steepness" data-alt="slope"><span class="hint">steepness / ceiling / units</span></span>.</div>
+            </div>
+            <p>For the grip data, the fitted function is:</p>
+            <div class="formula">p&#770; = 1 / [1 + e<sup>&minus;(&minus;8.82431 + 0.11683 age)</sup>]</div>
+            <p>Because the age coefficient is <span class="b"><input class="fill" data-answer="positive" data-alt="above zero"><span class="hint">positive / negative / zero</span></span>, older ages have a higher predicted probability of weak grip. If &beta;<sub>1</sub> were zero, the probability would stay <span class="b"><input class="fill" data-answer="constant" data-alt="the same|unchanged"><span class="hint">constant / increasing / decreasing</span></span> across age.</p>
+          </div>
+        </div>
+        <div class="box tag-navy">
+          <div class="box-tag">Fit it in R with glm()</div>
+          <div class="box-body">
+            <div class="r-code">weak_glm &lt;- <span class="fn">glm</span>(
+  weak_grip ~ age,
+  <span class="ar">family</span> = <span class="fn">binomial</span>, <span class="ar">data</span> = klosa)
+
+<span class="fn">summary</span>(weak_glm)
+<span class="cm">#             Estimate Std. Error z value  Pr(&gt;|z|)</span>
+<span class="cm"># (Intercept)  -8.82431   0.31925 -27.64   &lt;2e-16</span>
+<span class="cm"># age           0.11683   0.00476  24.57   &lt;2e-16</span></div>
+            <p>Use <span class="b"><input class="fill code" data-answer="glm()" data-alt="glm"><span class="hint">glm() / lm() / aov()</span></span>, short for generalized linear model, and set the family to <span class="b"><input class="fill code" data-answer="binomial" data-alt="binomial()"><span class="hint">binomial / gaussian / poisson</span></span>.</p>
+            <p>The familiar table contains <b>Estimate</b>, <b>Std. Error</b>, a <span class="b"><input class="fill" data-answer="z value" data-alt="z-value|z statistic"><span class="hint">z value / t value / F value</span></span>, and a p-value. The rows are the intercept and predictor coefficients.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="row split-56-44">
+        <div class="box tag-teal">
+          <div class="box-tag">Predicted probabilities</div>
+          <div class="box-body">
+            <p>Substitute an age into the fitted equation, or use <code>predict()</code>, to obtain a predicted probability.</p>
+            <div class="metric-row">
+              <div class="metric"><strong>14%</strong>age 60</div>
+              <div class="metric"><strong>62%</strong>age 80</div>
+              <div class="metric"><strong>95%</strong>age 100</div>
+            </div>
+            <p>According to the fitted model, an 80-year-old has a <span class="b"><input class="fill" data-answer="higher" data-alt="greater"><span class="hint">higher / lower / equal</span></span> predicted probability than a 50-year-old. Predictions far beyond observed ages are still <span class="b"><input class="fill" data-answer="extrapolations" data-alt="extrapolation"><span class="hint">extrapolations / residuals / categories</span></span> and require caution.</p>
+          </div>
+        </div>
+        <div class="box tag-orange">
+          <div class="box-tag">Interpreting the age coefficient</div>
+          <div class="box-body">
+            <p>Unlike a straight line, the logistic curve has no fixed change in <span class="b"><input class="fill" data-answer="probability"><span class="hint">probability / age / sample size</span></span> for each one-year increase. The change depends on where you are on the curve.</p>
+            <p>Instead, each one-year increase adds the fixed coefficient &beta;<sub>1</sub> = 0.11683 to the <span class="b"><input class="fill" data-answer="log odds" data-alt="log-odds|logodds"><span class="hint">log odds / probability / intercept</span></span>. Odds and odds ratios are the next step.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-label"><span>Quick retrieval check</span></div>
+
+      <div class="box tag-gold">
+        <div class="box-tag">Can you retrieve the three take-home ideas?</div>
+        <div class="box-body">
+          <div class="quick-checks">
+            <div class="check"><div class="q">Outcome type</div>Logistic regression is for a <span class="b"><input class="fill" data-answer="binary" data-alt="yes/no|0/1"><span class="hint">binary / continuous / count</span></span> outcome.</div>
+            <div class="check"><div class="q">Curve shape</div>A probability model needs a bounded <span class="b"><input class="fill" data-answer="sigmoid" data-alt="S-curve|S curve"><span class="hint">sigmoid / straight / U-shaped</span></span> curve.</div>
+            <div class="check"><div class="q">Coefficient scale</div>&beta;<sub>1</sub> is a fixed change in <span class="b"><input class="fill" data-answer="log odds" data-alt="log-odds|logodds"><span class="hint">log odds / probability / outcome</span></span>, not probability.</div>
+          </div>
+        </div>
+      </div>
+
+      <footer><a href="https://thegraphcourses.org" target="_blank" rel="noopener">thegraphcourses.org</a></footer>
+    </section>
+  </div>
+
+  <script>
+    const sheet = document.getElementById("sheet");
+    const pageWrap = document.getElementById("pageWrap");
+    const blanks = Array.from(document.querySelectorAll(".b"));
+
+    function fingerprint(str) {
+      let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+      for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      return (h2 >>> 0).toString(36) + (h1 >>> 0).toString(36);
+    }
+
+    const fp = fingerprint(blanks.map(blank => {
+      const input = blank.querySelector(".fill");
+      return (input.dataset.answer || "") + "|" + (input.dataset.alt || "");
+    }).join("\n"));
+    const storageKey = "intro-logistic-regression-cheatsheet-" + fp;
+
+    blanks.forEach(blank => {
+      const hint = blank.querySelector(".hint");
+      if (!hint) return;
+      const options = hint.textContent.split(/\s*\/\s*/).filter(Boolean);
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+      hint.textContent = options.join(" / ");
+    });
+
+    const measureCanvas = document.createElement("canvas");
+    const measureContext = measureCanvas.getContext("2d");
+    function fontShorthand(element) {
+      const style = getComputedStyle(element);
+      return `${style.fontStyle || "normal"} ${style.fontWeight || "400"} ${style.fontSize} ${style.fontFamily}`;
+    }
+    function measure(text, input) {
+      measureContext.font = fontShorthand(input);
+      return measureContext.measureText(text).width;
+    }
+    function defaultWidth(input) {
+      const answers = [input.dataset.answer || "", ...(input.dataset.alt ? input.dataset.alt.split("|") : [])];
+      return Math.max(...answers.map(answer => measure(answer, input)), 10) + 12;
+    }
+    function applyWidth(input, solved) {
+      input.style.width = `${solved ? Math.max(measure(input.value, input) + 6, 12) : defaultWidth(input)}px`;
+    }
+    blanks.forEach(blank => applyWidth(blank.querySelector(".fill"), false));
+
+    const norm = value => String(value)
+      .replace(/[−–]/g, "-")
+      .replace(/₀/g, "0").replace(/₁/g, "1").replace(/₂/g, "2").replace(/₃/g, "3").replace(/₄/g, "4")
+      .replace(/β/g, "beta")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+    const answersFor = input => [input.dataset.answer || "", ...(input.dataset.alt ? input.dataset.alt.split("|") : [])].map(norm);
+    const matches = (value, input) => answersFor(input).includes(norm(value));
+
+    function flash(input, className) {
+      input.classList.remove(className);
+      void input.offsetWidth;
+      input.classList.add(className);
+      if (className === "correct-flash") setTimeout(() => input.classList.remove(className), 800);
+    }
+    function save() {
+      localStorage.setItem(storageKey, JSON.stringify(blanks.map(blank => blank.querySelector(".fill").value)));
+    }
+    function restore() {
+      try {
+        const values = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        blanks.forEach((blank, index) => {
+          const input = blank.querySelector(".fill");
+          if (!values[index]) return;
+          input.value = values[index];
+          if (matches(input.value, input)) {
+            blank.classList.add("solved");
+            applyWidth(input, true);
+          } else {
+            input.classList.add("wrong-pick");
+          }
+        });
+      } catch {
+        localStorage.removeItem(storageKey);
+      }
+    }
+
+    blanks.forEach(blank => {
+      const input = blank.querySelector(".fill");
+      input.addEventListener("input", () => {
+        const wasSolved = blank.classList.contains("solved");
+        input.classList.remove("wrong-pick");
+        const correct = input.value !== "" && matches(input.value, input);
+        if (correct && !wasSolved) {
+          blank.classList.add("solved");
+          applyWidth(input, true);
+          flash(input, "correct-flash");
+        } else if (correct) {
+          applyWidth(input, true);
+        } else if (wasSolved) {
+          blank.classList.remove("solved");
+          applyWidth(input, false);
+        }
+        save();
+      });
+      input.addEventListener("blur", () => {
+        if (input.value.trim() && !matches(input.value, input)) flash(input, "wrong-pick");
+      });
+    });
+    restore();
+
+    document.getElementById("toggleHints").addEventListener("click", event => {
+      sheet.classList.toggle("hints-hidden");
+      event.currentTarget.textContent = sheet.classList.contains("hints-hidden") ? "Show hints" : "Hide hints";
+    });
+    document.getElementById("clearAnswers").addEventListener("click", () => {
+      blanks.forEach(blank => {
+        const input = blank.querySelector(".fill");
+        input.value = "";
+        input.classList.remove("wrong-pick", "correct-flash");
+        blank.classList.remove("solved");
+        applyWidth(input, false);
+      });
+      save();
+    });
+
+    const zoomLevels = [0.1, 0.25, 0.5, 0.75, 0.85, 1, 1.15, 1.3, 1.5, 2, 2.5, 3, 3.5, 4];
+    const zoomKey = "intro-logistic-regression-cheatsheet-zoom";
+    const defaultZoomIndex = zoomLevels.indexOf(1);
+    let zoomIndex = parseInt(localStorage.getItem(zoomKey) || String(defaultZoomIndex), 10);
+    if (Number.isNaN(zoomIndex) || zoomIndex < 0 || zoomIndex >= zoomLevels.length) zoomIndex = defaultZoomIndex;
+    const zoomLabel = document.getElementById("zoomLabel");
+    function applyZoom() {
+      const zoom = zoomLevels[zoomIndex];
+      sheet.style.transform = zoom === 1 ? "" : `scale(${zoom})`;
+      pageWrap.style.minHeight = zoom === 1 ? "" : `${297 * zoom + 20}mm`;
+      zoomLabel.textContent = Math.round(zoom * 100) + "%";
+      localStorage.setItem(zoomKey, String(zoomIndex));
+    }
+    document.getElementById("zoomOut").addEventListener("click", () => {
+      if (zoomIndex > 0) { zoomIndex -= 1; applyZoom(); }
+    });
+    document.getElementById("zoomIn").addEventListener("click", () => {
+      if (zoomIndex < zoomLevels.length - 1) { zoomIndex += 1; applyZoom(); }
+    });
+    applyZoom();
+  </script>
+</body>
+</html>

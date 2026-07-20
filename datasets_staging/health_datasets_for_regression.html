@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>health_datasets_linear_regression</title>
+<title>health_datasets_for_regression</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -57,16 +57,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="health_datasets_linear_regression_files/libs/clipboard/clipboard.min.js"></script>
-<script src="health_datasets_linear_regression_files/libs/quarto-html/quarto.js"></script>
-<script src="health_datasets_linear_regression_files/libs/quarto-html/popper.min.js"></script>
-<script src="health_datasets_linear_regression_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="health_datasets_linear_regression_files/libs/quarto-html/anchor.min.js"></script>
-<link href="health_datasets_linear_regression_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="health_datasets_linear_regression_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="health_datasets_linear_regression_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="health_datasets_linear_regression_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="health_datasets_linear_regression_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="health_datasets_for_regression_files/libs/clipboard/clipboard.min.js"></script>
+<script src="health_datasets_for_regression_files/libs/quarto-html/quarto.js"></script>
+<script src="health_datasets_for_regression_files/libs/quarto-html/popper.min.js"></script>
+<script src="health_datasets_for_regression_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="health_datasets_for_regression_files/libs/quarto-html/anchor.min.js"></script>
+<link href="health_datasets_for_regression_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="health_datasets_for_regression_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="health_datasets_for_regression_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="health_datasets_for_regression_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="health_datasets_for_regression_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
 
 
 </head>
@@ -80,13 +80,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<section id="open-access-health-datasets-for-ols-linear-regression-practice" class="level1">
-<h1>Open-access health datasets for OLS linear regression practice</h1>
-<p>Curated teaching datasets for ordinary least squares. <strong>27</strong> resources are downloaded (or pulled from permissive R packages): <strong>25</strong> numbered cleaning pipelines with tidy <code>snake_case</code> CSVs <strong>plus</strong> the OpenIntro NHANES adult-500 extract (original column names) <strong>and</strong> AIS athletes exported from <code>DAAG</code>. Each gets a quick-view thumbnail.</p>
-<p>All processing lives in <a href="scripts/prepare_datasets.R">datasets_staging/scripts/prepare_datasets.R</a>. Raw source files are in <a href="raw/">datasets_staging/raw/</a>, cleaned CSVs in <a href="cleaned/">datasets_staging/cleaned/</a>, and thumbnails in <a href="thumbnails/">datasets_staging/thumbnails/</a>.</p>
-<section id="summary-tables" class="level2">
-<h2 class="anchored" data-anchor-id="summary-tables">Summary tables</h2>
-<p>The datasets fall into two natural groups. <strong>Study datasets</strong> are the raw data from a specific published research paper — the numbers you find in the resource correspond directly to the numbers analysed in that paper. <strong>Teaching datasets</strong> were curated, sampled, or aggregated specifically for a textbook or teaching package; they come from real public sources (NHANES, ACS, NCHS, UN, NLSY) but the rows/columns you see were selected for pedagogical convenience, not to reproduce a specific paper.</p>
+<section id="open-access-health-datasets-for-regression-practice" class="level1">
+<h1>Open-access health datasets for regression practice</h1>
+<p>Curated teaching datasets for <strong>linear (OLS)</strong> and <strong>logistic</strong> regression. The linear section has <strong>27</strong> resources downloaded (or pulled from permissive R packages): <strong>25</strong> numbered cleaning pipelines with tidy <code>snake_case</code> CSVs <strong>plus</strong> the OpenIntro NHANES adult-500 extract (original column names) <strong>and</strong> AIS athletes exported from <code>DAAG</code>. The logistic section currently has <strong>1</strong> KLoSA teaching extract (see license note below). Each entry gets a quick-view thumbnail.</p>
+<p>OLS processing lives in <a href="scripts/prepare_datasets.R">datasets_staging/scripts/prepare_datasets.R</a>. The KLoSA logistic extract is built by <a href="scripts/prepare_klosa.R">datasets_staging/scripts/prepare_klosa.R</a>. Raw source files are in <a href="raw/">datasets_staging/raw/</a>, cleaned CSVs in <a href="cleaned/">datasets_staging/cleaned/</a>, and thumbnails in <a href="thumbnails/">datasets_staging/thumbnails/</a>.</p>
+<section id="part-1-linear-regression-ols" class="level2">
+<h2 class="anchored" data-anchor-id="part-1-linear-regression-ols">Part 1 — Linear regression (OLS)</h2>
+<p>The OLS datasets fall into two natural groups. <strong>Study datasets</strong> are the raw data from a specific published research paper — the numbers you find in the resource correspond directly to the numbers analysed in that paper. <strong>Teaching datasets</strong> were curated, sampled, or aggregated specifically for a textbook or teaching package; they come from real public sources (NHANES, ACS, NCHS, UN, NLSY) but the rows/columns you see were selected for pedagogical convenience, not to reproduce a specific paper.</p>
 <section id="a.-datasets-from-published-research-studies" class="level3">
 <h3 class="anchored" data-anchor-id="a.-datasets-from-published-research-studies">A. Datasets from published research studies</h3>
 <table class="caption-top table">
@@ -396,8 +396,39 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 </section>
 </section>
-<section id="load-everything-snippet" class="level2">
-<h2 class="anchored" data-anchor-id="load-everything-snippet">Load-everything snippet</h2>
+<section id="part-2-logistic-regression" class="level2">
+<h2 class="anchored" data-anchor-id="part-2-logistic-regression">Part 2 — Logistic regression</h2>
+<p>Binary-outcome teaching extracts. Keep the covariate list small so files stay classroom-friendly on GitHub.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Dataset</th>
+<th>N × p</th>
+<th>Outcome ~ main predictors</th>
+<th>Quick view</th>
+<th>R load</th>
+<th>Cleaned CSV</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>28</td>
+<td>KLoSA men grip / weak grip (Wave 1, 2006)</td>
+<td>4184 × 10</td>
+<td><code>weak_grip</code> ~ <code>age</code> (+ education, smoking, BMI, hypertension, diabetes)</td>
+<td><img src="thumbnails/28_klosa_men_grip.png" width="180"></td>
+<td><code>read_csv("cleaned/28_klosa_men_grip.csv")</code></td>
+<td><a href="cleaned/28_klosa_men_grip.csv">28_klosa_men_grip.csv</a></td>
+<td>⚠️ KEIS registration-gated; ask before redistributing</td>
+</tr>
+</tbody>
+</table>
+<p>Same rows as the slim <code>klosa_men_grip_45plus.csv</code> used in the logistic slide decks (<code>age</code>, <code>grip</code>, <code>weak_grip</code>), plus a few covariates useful for multivariable logistic models.</p>
+</section>
+<section id="load-everything-snippet-ols" class="level2">
+<h2 class="anchored" data-anchor-id="load-everything-snippet-ols">Load-everything snippet (OLS)</h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readr)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>bodyfat_johnson     <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/01_bodyfat_johnson.csv"</span>)</span>
@@ -426,10 +457,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(county,               <span class="at">package =</span> <span class="st">"usdata"</span>);     county_df            <span class="ot">&lt;-</span> county</span>
 <span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(Boston,               <span class="at">package =</span> <span class="st">"ISLR2"</span>);      boston_df            <span class="ot">&lt;-</span> Boston</span>
 <span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>ais_athletes        <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/26_ais.csv"</span>)</span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>nhanes_adult_500    <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/openintro_nhanes_samp_adult_500.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>nhanes_adult_500    <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/openintro_nhanes_samp_adult_500.csv"</span>)</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Logistic</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>klosa_men_grip      <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"cleaned/28_klosa_men_grip.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="dataset-details" class="level2">
-<h2 class="anchored" data-anchor-id="dataset-details">Dataset details</h2>
+<section id="dataset-details-ols" class="level2">
+<h2 class="anchored" data-anchor-id="dataset-details-ols">Dataset details (OLS)</h2>
 <p>Each section below lists the cleaned columns, primary paper/source, and the outcome + predictor used in the thumbnail. <strong>Most</strong> numbered CSVs (<code>01</code>–<code>25</code>) use <code>snake_case</code>. <strong><code>26_ais.csv</code></strong> mirrors <strong><code>DAAG::ais</code></strong> (short column names as in the package). <strong><code>openintro_nhanes_samp_adult_500.csv</code></strong> keeps <strong>original</strong> OpenIntro / NHANES-style names (<code>Weight</code>, <code>Gender</code>, …). Categorical variables are stored as factors with readable labels whenever the original coding was numeric.</p>
 <hr>
 <section id="body-fat-252-men-johnsonpenrose-jse-1996" class="level3">
@@ -819,6 +853,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Columns (76):</strong> identifiers and survey fields plus <code>Age</code>, <code>Height</code>, <code>Weight</code>, <code>BMI</code>, vitals, lipids, <code>Testosterone</code>, self-reported health, sleep, activity, substance use, etc. — see <code>read.csv(..., nrows = 1)</code> for the full header.</li>
 <li><strong>Notes:</strong> larger than <code>oibiostat</code>’s 135-row adult NHANES extract; strong teaching example for <strong>sex as confounder</strong> with continuous labs (<code>lm(Testosterone ~ Weight + sex)</code> vs pooled <code>Weight</code> slope). Filter to complete cases for specific outcomes.</li>
 </ul>
+<hr>
+</section>
+</section>
+<section id="dataset-details-logistic" class="level2">
+<h2 class="anchored" data-anchor-id="dataset-details-logistic">Dataset details (logistic)</h2>
+<section id="klosa-men-grip-strength-weak-grip-wave-1-2006" class="level3">
+<h3 class="anchored" data-anchor-id="klosa-men-grip-strength-weak-grip-wave-1-2006">28 — KLoSA men, grip strength &amp; weak grip (Wave 1, 2006)</h3>
+<p><img src="thumbnails/28_klosa_men_grip.png" width="360"></p>
+<ul>
+<li><strong>N × p:</strong> 4,184 × 10 (Korean men aged 45+ with measured grip)</li>
+<li><strong>Study:</strong> <a href="https://survey.keis.or.kr/eng/klosa/klosa01.jsp">Korean Longitudinal Study of Aging (KLoSA)</a>, Wave 1 (2006), KEIS</li>
+<li><strong>Local raw file:</strong> <a href="raw/klosa_wave1/Lt01_e.dta">raw/klosa_wave1/Lt01_e.dta</a> (gitignored; see <a href="raw/klosa_wave1/README.md">raw/klosa_wave1/README.md</a>)</li>
+<li><strong>Prep script:</strong> <a href="scripts/prepare_klosa.R">scripts/prepare_klosa.R</a></li>
+<li><strong>License:</strong> ⚠️ <strong>Not open-access.</strong> Registration-gated microdata; KEIS copyright policy prohibits unauthorized redistribution. Education use by the registrant is fine; bundling in a public GitHub repo needs written KEIS permission (or ship a download + prep script / synthetic data instead).</li>
+<li><strong>Cleaned CSV:</strong> <a href="cleaned/28_klosa_men_grip.csv">28_klosa_men_grip.csv</a></li>
+<li><strong>Columns:</strong> <code>age, grip, weak_grip, education, smoking, bmi, hypertension, diabetes, married, urban</code></li>
+<li><strong>Coding notes:</strong>
+<ul>
+<li><code>weak_grip</code>: 1 if <code>grip &lt;= 27</code> kg (EWGSOP2 cut for men), else 0</li>
+<li><code>education</code>: elementary_or_less / middle_school / high_school / college_or_more</li>
+<li><code>smoking</code>: never / former / current</li>
+<li><code>hypertension</code>, <code>diabetes</code>, <code>married</code>, <code>urban</code>: 0/1 (NA if refused/unknown)</li>
+</ul></li>
+<li><strong>Teaching uses:</strong> simple <code>glm(weak_grip ~ age, binomial)</code>; then add education, smoking, BMI, or chronic disease; compare continuous <code>lm(grip ~ age)</code> on the same rows</li>
+<li><strong>Source path on this machine (original download):</strong> <code>~/Dropbox/Mac (2)/Downloads/KLoSA 1-9th wave (STATA)/Lt01_e.dta</code></li>
+</ul>
 </section>
 </section>
 <section id="license-check-for-the-can-we-ship-it-in-a-package-question" class="level2">
@@ -943,9 +1003,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>27</td>
 <td>⚠️ Same <strong>CC-BY-SA 4.0</strong> share-alike note as row 21 (OpenIntro); underlying NHANES is public domain — you can also rebuild the extract from CDC files.</td>
 </tr>
+<tr class="even">
+<td>28</td>
+<td>❌ <strong>Do not ship</strong> KLoSA microdata (even a thin extract) without written KEIS permission. Prefer a student download script + local prep, or ask KEIS for an educational redistribution license.</td>
+</tr>
 </tbody>
 </table>
-<p><strong>Short version for a public, non-commercial, teaching-oriented package on GitHub:</strong> all 27 are usable. For a more general-purpose package (CRAN-compatible, any licence), you’d want to:</p>
+<p><strong>Short version for a public, non-commercial, teaching-oriented package on GitHub:</strong> rows 1–27 are usable with the caveats above; <strong>row 28 (KLoSA) should stay out of a public package until KEIS says yes</strong>. For a more general-purpose package (CRAN-compatible, any licence), you’d want to:</p>
 <ul>
 <li><strong>Drop or link-only</strong> rows 1, 3, 5 (non-commercial / no licence).</li>
 <li><strong>Suggest rather than re-bundle</strong> rows 18, 19, 20 (no explicit data licence — let users load them from the upstream package).</li>

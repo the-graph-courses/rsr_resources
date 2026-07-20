@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Interpreting the age coefficient (animated)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <style>
+    :root{
+      --gold:#e5b44f; --mist:#c4d8db; --teal:#035f6c; --alarm:#b5451f; --brown:#7a6212;
+      --ink:#073b42; --ink-2:#3a555a; --stage:#0d2b30; --paper:#ffffff; --soft:#f2f7f7;
+      --warm:#fbeecb; --coral:#e58b73; --violet:#8c7ab8;
+      --sans:"Space Grotesk","Helvetica Neue",Arial,sans-serif;
+      --mono:"IBM Plex Mono","SF Mono",Menlo,monospace;
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;height:100%;overflow:hidden;background:var(--stage);color:var(--ink);font-family:var(--sans);}
+    #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:28px 10px 22px;overflow:hidden;}
+    #deck{position:relative;width:1600px;height:900px;flex:none;container-type:size;transform-origin:center center;overflow:hidden;border-radius:2px;background:var(--paper);box-shadow:0 18px 60px rgba(0,0,0,.55);}
+    .chrome-top{position:absolute;top:0;left:0;right:0;height:8px;background:var(--gold);z-index:4;}
+    .chrome-bottom{position:absolute;bottom:0;left:0;right:0;height:8px;background:var(--teal);z-index:4;}
+    #board{position:absolute;inset:8px 0 8px 0;display:flex;flex-direction:column;padding:10px 26px 6px;}
+    header.head{flex:none;}
+    .head-row{display:flex;align-items:stretch;gap:16px;}
+    .head-text{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;}
+    .kicker{margin-bottom:2px;color:var(--brown);font-size:10px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;}
+    h1{margin:0;color:var(--teal);font-size:22px;line-height:1.05;font-weight:600;letter-spacing:-.01em;}
+    .title-line{width:300px;height:3px;margin-top:4px;border-radius:2px;background:var(--gold);}
+
+    /* 2×2, read top-left → bottom-left → top-right → bottom-right */
+    .panels{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px;margin-top:8px;}
+    #panel1{grid-column:1;grid-row:1;}
+    #panel2{grid-column:1;grid-row:2;}
+    #panel3{grid-column:2;grid-row:1;}
+    #panel4{grid-column:2;grid-row:2;}
+    .read-card{flex:none;display:flex;flex-direction:column;gap:4px;padding:6px 8px;border:1px solid var(--mist);border-radius:3px;background:#fff;}
+    .read-title{color:var(--brown);font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
+    .read-strip{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;}
+    .read-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 3px;border-radius:2px;background:var(--soft);text-align:center;}
+    .read-cell .or{font-family:var(--mono);font-weight:700;color:var(--teal);font-size:11px;line-height:1;}
+    .read-cell .w{color:var(--ink-2);font-size:7.8px;line-height:1.15;}
+    .read-cell.hi{background:var(--warm);}
+    .read-cell.hi .or{color:var(--alarm);}
+    .read-cell.hi .w{color:var(--ink);font-weight:600;}
+    #panel3{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;gap:8px;}
+    #panel3 .panel-top{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;}
+    #panel3 .panel-side,#panel3 .panel-main{overflow:auto;}
+    /* how-to-report note + practice questions */
+    .panel-explain.stack .report-note{margin:2px 0;padding:6px 8px;border:1px solid var(--mist);border-left:3px solid var(--teal);border-radius:2px;background:var(--soft);color:var(--ink-2);font-size:9.4px;line-height:1.36;}
+    .panel-explain.stack .report-note strong{color:var(--teal);}
+    .panel-explain.stack .report-note .ex{font-family:var(--mono);font-size:8.6px;color:var(--ink);}
+    .practice-q{flex:none;margin-top:4px;padding:6px 9px;border:1px solid var(--mist);border-top:3px solid var(--gold);border-radius:3px;background:#fff;}
+    .practice-q .qlab{display:block;margin-bottom:2px;color:var(--brown);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;}
+    .practice-q .q{margin:0 0 5px;color:var(--ink);font-size:10.5px;font-weight:600;line-height:1.2;}
+    .practice-options{display:flex;gap:7px;}
+    .practice-options span{flex:1;padding:4px 6px;border-radius:2px;background:var(--soft);color:var(--ink-2);font-size:9.5px;line-height:1.2;text-align:center;}
+    .practice-options span.ans{background:var(--warm);color:var(--teal);font-weight:700;border:1px solid var(--gold);}
+    .practice-stack{display:flex;flex-direction:column;gap:6px;flex:none;}
+    .practice-stack .practice-q{margin-top:0;}
+    .report-card{padding:9px 11px;border:1px solid var(--mist);border-left:4px solid var(--gold);border-radius:3px;background:#fff;}
+    .report-card .report-lab{display:block;margin-bottom:5px;color:var(--brown);font-size:8px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;}
+    .report-card p{margin:0;color:var(--ink);font-size:10.5px;line-height:1.42;}
+    .report-card .num{color:var(--alarm);font-weight:700;}
+    .report-parts{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+    .report-part{padding:5px 6px;border-radius:2px;background:var(--soft);color:var(--ink-2);font-size:9px;line-height:1.2;}
+    .report-part strong{display:block;color:var(--teal);font-size:8.5px;}
+    .example-label{display:block;margin-bottom:2px;color:var(--brown);font-size:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+    .or-result{padding:5px 6px;border-left:3px solid var(--gold);border-radius:2px;background:var(--warm);color:var(--teal);font-size:10px;font-weight:600;line-height:1.3;}
+    .contrast{padding:5px 6px;border:1px solid var(--mist);border-radius:2px;background:#fff;color:var(--ink-2);font-size:9.2px;line-height:1.3;}
+    .contrast strong{color:var(--alarm);}
+    .mini-report{padding:5px 6px;border-left:3px solid var(--teal);border-radius:2px;background:#fff;color:var(--ink);font-size:8.7px;line-height:1.3;}
+    .mini-report strong{color:var(--teal);}
+    #panel3 .panel-explain.stack{gap:3px;}
+    #panel3 .panel-explain.stack pre.frag{font-size:7.8px;line-height:1.15;}
+    .paper-example{flex:none;display:flex;flex-direction:column;gap:3px;min-height:0;}
+    .paper-example .paper-lab{color:var(--brown);font-size:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+    .paper-example .paper-note{margin:0;color:var(--ink-2);font-size:8.2px;line-height:1.25;}
+    .paper-example .paper-note a{color:var(--teal);text-decoration:none;}
+    .paper-example .paper-note a:hover{text-decoration:underline;}
+    .paper-example img{display:block;width:100%;height:auto;max-height:118px;object-fit:contain;object-position:left center;border:1px solid var(--mist);border-radius:2px;background:#fff;}
+    #panel4.blank-panel,
+    #panel4.blank-panel.lit,
+    #panel4.blank-panel.active{background:transparent;border-color:transparent;box-shadow:none;}
+    #panel4.blank-panel .p-num{display:none;}
+    .panel{position:relative;min-width:0;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;border:1px solid transparent;border-radius:3px;background:transparent;padding:10px 10px 8px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .4s ease,box-shadow .4s ease,border-color .4s ease,background .4s ease;}
+    .panel.lit{opacity:1;visibility:visible;pointer-events:auto;border-color:var(--mist);background:var(--paper);}
+    .panel.active{border-color:var(--gold);box-shadow:0 0 0 2px rgba(229,180,79,.35),0 8px 22px rgba(7,59,66,.10);}
+    .panel .p-num{position:absolute;top:-10px;left:10px;width:20px;height:20px;border-radius:50%;background:var(--teal);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.2);z-index:2;}
+    .panel.active .p-num{background:var(--gold);color:#0d2b30;}
+    .panel-side{min-width:0;min-height:0;display:flex;flex-direction:column;gap:4px;}
+    .panel-main{min-width:0;min-height:0;display:flex;flex-direction:column;gap:4px;}
+    .main-viz{flex:1;min-width:0;min-height:0;display:flex;gap:8px;align-items:stretch;}
+    .main-viz .plotwrap{flex:1;}
+    .p-title{margin:2px 0 0;color:var(--teal);font-size:13.5px;font-weight:600;line-height:1.15;}
+    .p-sub{margin:0;color:var(--ink-2);font-size:10px;line-height:1.2;}
+    .panel-explain{flex:1;min-height:0;padding:5px 6px;background:var(--soft);border-left:2px solid var(--gold);border-radius:2px;}
+    .panel-explain strong{color:var(--teal);font-weight:600;}
+    .panel-explain .bad{color:var(--alarm);font-weight:600;}
+    /* Stacked reveal fragments: bullets, code, output, and equations. */
+    #panel1 .panel-side,#panel2 .panel-side,#panel3 .panel-side,#panel4 .panel-side{overflow:auto;min-height:0;}
+    .panel-explain.stack{flex:1;display:flex;flex-direction:column;gap:4px;overflow:auto;}
+    .panel-explain.stack .frag{margin:0;color:var(--ink);font-size:9.8px;line-height:1.28;}
+    .panel-explain.stack .frag.bullet{padding-left:13px;position:relative;}
+    .panel-explain.stack .frag.bullet::before{content:"•";position:absolute;left:0;color:var(--teal);}
+    .panel-explain.stack .frag.bullet.bad::before{color:var(--alarm);}
+    .panel-explain.stack pre.frag{margin:0;padding:5px 7px;border:1px solid var(--mist);border-left:2px solid var(--gold);border-radius:2px;background:#fff;font-family:var(--mono);font-size:8.4px;line-height:1.2;white-space:pre;overflow:auto;}
+    .panel-explain.stack pre.frag.code{color:var(--ink);}
+    .panel-explain.stack pre.frag.out{color:var(--ink-2);border-left-color:var(--mist);}
+    .panel-explain.stack .hi{color:var(--teal);font-weight:600;}
+    .panel-explain.stack .hi-or{color:var(--alarm);font-weight:600;}
+    .panel-explain.stack .cm{color:#7f9296;}
+    .panel-explain.stack .inline-eq{padding:3px 6px;border-left:2px solid var(--gold);border-radius:2px;background:var(--warm);color:var(--teal);font-size:10px;text-align:center;}
+    .panel-explain.stack .inline-eq.big{font-size:11.5px;}
+    .panel-explain.stack .inline-eq.tight{padding:2px 6px;}
+    .panel-explain.stack .step-note{margin:0;padding-left:3px;font-style:italic;color:var(--ink-2);font-size:8.6px;line-height:1.15;}
+    /* panel 2: give the derivation more width and denser equations so it fits without scrolling */
+    #panel2{grid-template-columns:minmax(0,1.22fr) minmax(0,.78fr);}
+    #panel2 .panel-explain.stack{gap:2px;padding:3px 4px;}
+    #panel2 .panel-explain.stack .frag{font-size:9.3px;line-height:1.22;}
+    #panel2 .panel-explain.stack .inline-eq{padding:1px 3px;font-size:9.2px;}
+    #panel2 .panel-explain.stack .inline-eq.tight{padding:1px 3px;}
+    #panel2 .panel-explain.stack .step-note{font-size:8.2px;line-height:1.12;}
+    #panel2 .panel-explain.stack .katex{font-size:1.05em;}
+    .plotwrap{flex:1;min-width:0;min-height:0;position:relative;}
+    .plotwrap svg{width:100%;height:100%;display:block;overflow:hidden;}
+    .eqbox{flex:none;display:none;margin:0;padding:2px 5px;border-left:2px solid var(--gold);background:var(--warm);border-radius:2px;color:var(--teal);font-size:10px;text-align:center;}
+    .eqbox.vis{display:block;}
+    /* svg element styling */
+    .axis{stroke:#9fb7bb;stroke-width:1;}
+    .axis-lbl{fill:var(--ink-2);font-family:var(--sans);font-size:11px;}
+    .axis-title{fill:var(--brown);font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.03em;}
+    .grp{opacity:0;transition:opacity .45s ease;}
+    .grp.vis{opacity:1;}
+    .icurve{stroke:var(--gold);stroke-width:3.4;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+    .probbar{fill:var(--teal);}
+    .bar-lbl{fill:var(--brown);font-family:var(--sans);font-size:9.5px;font-weight:600;}
+    .banddot{fill:var(--ink);stroke:#fff;stroke-width:1;}
+    .dotweak{fill:var(--alarm);}      /* raw data point, weak grip = 1 */
+    .dotok{fill:#2f5b61;}             /* raw data point, weak grip = 0 */
+    .oddsbar{fill:var(--teal);}
+    .oddsval{fill:var(--ink-2);font-family:var(--mono);font-size:10px;font-weight:600;}
+    .multarc{stroke:var(--alarm);stroke-width:1.8;fill:none;}
+    .multlab{fill:var(--alarm);font-family:var(--mono);font-size:10px;font-weight:700;}
+    .brace{stroke:var(--brown);stroke-width:1.4;fill:none;}
+    .bracelab{fill:var(--brown);font-family:var(--sans);font-size:10px;font-weight:600;}
+    .refline{stroke:#9fb7bb;stroke-width:1;stroke-dasharray:2 4;}
+    .reftag{fill:#7f9296;font-family:var(--mono);font-size:10px;}
+    /* panel-2 morph */
+    .mcurve{stroke:var(--gold);stroke-width:3.6;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+    .gridln{stroke:var(--teal);stroke-width:1;stroke-dasharray:3 4;opacity:.45;}
+    .gridlab{fill:var(--ink-2);font-family:var(--mono);font-size:9.5px;}
+    .boundln{stroke:var(--alarm);stroke-width:1.4;stroke-dasharray:6 4;}
+    .boundlab{fill:var(--alarm);font-family:var(--mono);font-size:10px;font-weight:600;}
+    .mtitle{fill:var(--brown);font-family:var(--sans);font-size:12px;font-weight:700;text-anchor:middle;}
+    .mhint{fill:#7f9296;font-family:var(--sans);font-size:10px;font-style:italic;text-anchor:middle;}
+    .axis-end{fill:#5c757a;font-family:var(--mono);font-size:13px;font-weight:700;}
+
+    #tools{position:fixed;top:14px;right:16px;z-index:22;display:flex;gap:8px;align-items:center;color:var(--mist);font-family:var(--sans);font-size:13px;}
+    #tools button{border:1px solid #4d747a;border-radius:2px;padding:6px 9px;background:#153d43;color:var(--mist);font:inherit;cursor:pointer;}
+    #tools button.on{border-color:var(--gold);background:var(--gold);color:#0d2b30;}
+    #hint{position:fixed;bottom:12px;left:0;right:0;z-index:20;text-align:center;color:var(--mist);font-size:13px;letter-spacing:.5px;opacity:.72;}
+    #counter{position:fixed;right:16px;bottom:12px;z-index:20;color:var(--mist);font-family:var(--mono);font-size:13px;opacity:.85;}
+    #ink{position:absolute;inset:0;z-index:15;width:100%;height:100%;pointer-events:none;touch-action:none;}
+    #deck.drawing #ink{pointer-events:auto;cursor:crosshair;}
+  </style>
+</head>
+<body>
+  <div id="tools">
+    <button id="pencil" type="button">Pencil: off</button>
+    <button id="undo" type="button">Undo</button>
+    <button id="clear" type="button">Clear</button>
+  </div>
+
+  <div id="stage">
+    <main id="deck" aria-live="polite">
+      <div class="chrome-top"></div>
+      <div id="board">
+        <header class="head">
+          <div class="head-row">
+            <div class="head-text">
+              <div class="kicker">KLoSA &middot; glm(weak_grip ~ age, binomial) &middot; age estimate = 0.11683</div>
+              <h1>Interpreting the age coefficient</h1>
+              <div class="title-line"></div>
+            </div>
+          </div>
+        </header>
+
+        <div class="panels">
+          <!-- 1: top left — recall -->
+          <section class="panel" id="panel1">
+            <div class="p-num">1</div>
+            <div class="panel-side">
+              <div class="p-title">Weak grip by age: summary output</div>
+              <!-- EDIT PANEL 1 HERE. -->
+              <div class="panel-explain stack" id="notes1">
+                <pre class="frag code" data-step="2">klosa &lt;- read_csv("klosa_men_grip_45plus.csv")</pre>
+                <pre class="frag code" data-step="3">mod1 &lt;- glm(weak_grip ~ age, family = binomial, data = klosa)
+summary(mod1)</pre>
+                <pre class="frag out" data-step="4">#&gt;             Estimate Std. Error z value Pr(&gt;|z|)
+#&gt; (Intercept) -8.82431    0.31925  -27.64   &lt;2e-16 ***
+#&gt; age          <span class="hi">0.11683</span>    0.00476   24.57   &lt;2e-16 ***</pre>
+                <p class="frag bullet" data-step="5">Each <strong>dot</strong> is one man in the data, at <strong>1</strong> (weak grip) or <strong>0</strong> (not weak).</p>
+                <p class="frag bullet" data-step="6">The <strong>gold curve</strong> is the fitted model. The change in probability per year is <strong>not the same everywhere</strong>: small at young ages, larger in the middle, and small again at old ages.</p>
+                <div class="frag inline-eq" data-step="7">$p = \dfrac{1}{1 + e^{-(\beta_0 + \beta_1\,\text{age})}}$</div>
+                <div class="frag inline-eq tight" data-step="8">$\widehat p = \dfrac{1}{1 + e^{-(-8.824 + 0.1168\,\text{age})}}$</div>
+                <p class="frag bullet" data-step="9">The summary gives <strong>one number</strong> for age, $\beta_1 = 0.1168$. It is the change in the <strong>log-odds</strong> for each extra year, not a change in probability. The next panel shows what that means.</p>
+              </div>
+            </div>
+            <div class="panel-main">
+              <div class="eqbox" id="eq1"></div>
+              <div class="main-viz">
+                <div class="plotwrap"><svg id="svg1" viewBox="0 0 460 380" preserveAspectRatio="xMidYMid meet"></svg></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 2: bottom left — the transformation -->
+          <section class="panel" id="panel2">
+            <div class="p-num">2</div>
+            <div class="panel-side">
+              <div class="p-title">The same model on two scales</div>
+              <!-- EDIT PANEL 2 HERE. -->
+              <div class="panel-explain stack" id="notes2">
+                <p class="frag bullet" data-step="10">Below we show the derivation of the log-odds form from the probability form of the logistic equation.</p>
+                <div class="frag inline-eq tight" data-step="11">$p = \dfrac{1}{1 + e^{-(\beta_0 + \beta_1\,\text{age})}}$</div>
+                <p class="frag step-note" data-step="12"><em>Let's let $\eta$ (eta) be the linear part in the exponent:</em></p>
+                <div class="frag inline-eq tight" data-step="13">$\eta = \beta_0 + \beta_1\,\text{age}$</div>
+                <div class="frag inline-eq tight" data-step="14">$p = \dfrac{1}{1+e^{-\eta}}$</div>
+                <p class="frag step-note" data-step="15"><em>Subtract $p$ from 1:</em></p>
+                <div class="frag inline-eq tight" data-step="16">$1-p = \dfrac{1+e^{-\eta}}{1+e^{-\eta}} - \dfrac{1}{1+e^{-\eta}} = \dfrac{e^{-\eta}}{1+e^{-\eta}}$</div>
+                <p class="frag step-note" data-step="17"><em>We now have two identities for $p$ and $1-p$. Substitute them into $p/(1-p)$ (to divide by a fraction, flip it and multiply):</em></p>
+                <div class="frag inline-eq tight" data-step="18">$\dfrac{p}{1-p} = \dfrac{1}{1+e^{-\eta}} \div \dfrac{e^{-\eta}}{1+e^{-\eta}}$</div>
+                <div class="frag inline-eq tight" data-step="19">$= \dfrac{1}{1+e^{-\eta}}\cdot\dfrac{1+e^{-\eta}}{e^{-\eta}} = \dfrac{1}{e^{-\eta}} = e^{\eta}$</div>
+                <p class="frag step-note" data-step="20"><em>Take the natural log of both sides:</em></p>
+                <div class="frag inline-eq" data-step="21">$\ln\!\dfrac{p}{1-p} = \ln\!\left(e^{\eta}\right) = \beta_0 + \beta_1\,\text{age}$</div>
+                <div class="frag inline-eq" data-step="22">$\ln\!\dfrac{p}{1-p} = \beta_0 + \beta_1\,\text{age} = -8.824 + 0.1168\,\text{age}$</div>
+                <p class="frag bullet" data-step="23">The age effect is the <strong>slope</strong> of that line: each extra year adds <strong>+0.1168</strong> to the log-odds. That is $\beta_1$ from the summary.</p>
+              </div>
+            </div>
+            <div class="panel-main">
+              <div class="eqbox" id="eq2"></div>
+              <div class="main-viz">
+                <div class="plotwrap"><svg id="svg2" viewBox="0 0 400 346" preserveAspectRatio="xMidYMid meet"></svg></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3: top right — continuous and categorical comparisons + OR reading strip -->
+          <section class="panel" id="panel3">
+            <div class="p-num">3</div>
+            <div class="panel-top">
+              <div class="panel-side">
+                <div class="p-title">Odds ratios are comparisons</div>
+                <div class="panel-explain stack" id="notes3">
+                  <span class="example-label frag" data-step="24">Continuous predictor: age</span>
+                  <pre class="frag code" data-step="25">mod2 &lt;- glm(weak_grip ~ age,
+  family = binomial, data = klosa)
+broom::tidy(mod2, exponentiate = TRUE, conf.int = TRUE)</pre>
+                  <pre class="frag out" data-step="25">#&gt; term        estimate std.error statistic p.value conf.low conf.high
+#&gt; (Intercept) 0.000147   0.319      -27.6  &lt;2e-16  7.83e-5  2.73e-4
+#&gt; age         <span class="hi-or">1.124</span>      0.00476    24.6   &lt;2e-16  1.114    1.135</pre>
+                  <div class="or-result frag" data-step="26">$e^{0.1168}=1.124$</div>
+                  <div class="contrast frag" data-step="26">A <strong>one-year difference in age</strong> is associated with <strong>1.124 times the odds</strong>, or <strong>12.4% higher odds</strong>, of weak grip.</div>
+                  <div class="mini-report frag" data-step="27"><strong>Report:</strong> “Each additional year of age was associated with 12% higher odds of weak grip (OR 1.12, 95% CI 1.11–1.13, p &lt; 0.001).”</div>
+                </div>
+              </div>
+              <div class="panel-main">
+                <div class="p-title">Polytomous predictor: age group</div>
+                <div class="panel-explain stack">
+                  <span class="example-label frag" data-step="28">Same KLoSA data, three levels</span>
+                  <pre class="frag code" data-step="28">klosa &lt;- klosa |&gt;
+  mutate(age_group = cut(age,
+    breaks = c(45, 65, 75, Inf),
+    right = FALSE))
+
+mod3 &lt;- glm(weak_grip ~ age_group,
+  family = binomial, data = klosa)</pre>
+                  <p class="frag bullet" data-step="29">R uses the first level, <strong>45–64 years</strong>, as the reference. With three levels, the model gives <strong>two coefficients and two odds ratios</strong>.</p>
+                  <pre class="frag code" data-step="30">broom::tidy(mod3, exponentiate = TRUE, conf.int = TRUE)</pre>
+                  <pre class="frag out" data-step="30">#&gt; term           estimate std.error statistic p.value conf.low conf.high
+#&gt; (Intercept)      0.0958    0.0693     -33.8  &lt;2e-16   0.0834     0.110
+#&gt; age_group65-74   <span class="hi-or">5.22</span>      0.0936      17.7  &lt;2e-16   4.35       6.28
+#&gt; age_group75+    <span class="hi-or">14.4</span>       0.119       22.5  &lt;2e-16  11.5       18.3</pre>
+                  <div class="contrast frag" data-step="30"><strong>65–74 vs 45–64:</strong> 5.22 times the odds.<br><strong>75+ vs 45–64:</strong> 14.44 times the odds.</div>
+                  <div class="mini-report frag" data-step="31"><strong>Report:</strong> “Compared with men aged 45–64, men aged 65–74 had 5.22 times the odds of weak grip (95% CI 4.35–6.28), while men aged 75+ had 14.44 times the odds (95% CI 11.44–18.22).”</div>
+                </div>
+              </div>
+            </div>
+            <div class="read-card frag" data-step="32">
+              <div class="read-title">odds ratio → plain words</div>
+              <div class="read-strip">
+                <div class="read-cell"><span class="or">0.25</span><span class="w">75% lower odds<br>¼ the odds</span></div>
+                <div class="read-cell"><span class="or">0.5</span><span class="w">50% lower odds<br>half the odds</span></div>
+                <div class="read-cell"><span class="or">0.8</span><span class="w">20% lower odds</span></div>
+                <div class="read-cell"><span class="or">1.0</span><span class="w">no change</span></div>
+                <div class="read-cell hi"><span class="or">1.12</span><span class="w">12% higher odds<br>(age, per year)</span></div>
+                <div class="read-cell"><span class="or">1.5</span><span class="w">50% higher odds</span></div>
+                <div class="read-cell"><span class="or">2.0</span><span class="w">100% higher<br>twice the odds</span></div>
+                <div class="read-cell"><span class="or">4.0</span><span class="w">4 times the odds</span></div>
+              </div>
+            </div>
+            <div class="paper-example frag" data-step="33">
+              <div class="paper-lab">How papers often present OR tables</div>
+              <p class="paper-note">Forest plot of odds ratios and 95% CIs from a logistic model (univariable vs multivariable). From <a href="https://www.nature.com/articles/s41467-021-25946-0/figures/2" target="_blank" rel="noopener">Mansuy et al., Nature Communications (2021), Fig. 2</a>.</p>
+              <img src="images/nature_or_forest_plot.png" alt="Forest plot of odds ratios and 95% confidence intervals for SARS-CoV-2 IgG seropositivity risk factors">
+            </div>
+          </section>
+
+          <!-- 4: bottom right — intentionally blank -->
+          <section class="panel blank-panel" id="panel4">
+            <div class="p-num">4</div>
+          </section>
+        </div>
+      </div>
+      <div class="chrome-bottom"></div>
+      <canvas id="ink"></canvas>
+    </main>
+  </div>
+
+  <div id="hint">&larr;/&rarr; step &middot; &uarr;/&darr; jump panel &middot; P pencil &middot; U undo &middot; C clear &middot; R reset</div>
+  <div id="counter"></div>
+
+  <script>
+  // ============================ DATA ============================
+  const GLM = {b0:-8.824312, b1:0.116834};              // glm(weak_grip ~ age, binomial)
+  const BANDS = [
+    {mid:47.07,p:0.0346,lab:'3%'},  {mid:52.03,p:0.0631,lab:'6%'},  {mid:57.04,p:0.0966,lab:'10%'},
+    {mid:61.96,p:0.1717,lab:'17%'}, {mid:67.00,p:0.2612,lab:'26%'}, {mid:71.69,p:0.4295,lab:'43%'},
+    {mid:76.73,p:0.5265,lab:'53%'}, {mid:81.72,p:0.6194,lab:'62%'}, {mid:86.70,p:0.7907,lab:'79%'}
+  ];
+  const PLV = [0.05,0.10,0.25,0.50,0.75,0.90,0.95];      // probability grid lines on the morph (0.05 … 0.95)
+  // raw KLoSA sample used in the intro deck: [age, grip, weak_grip(0/1)] — panel 1 plots the actual 0/1 points
+  const PTS = [[52,35,0],[60,34.5,0],[60,23.25,1],[59,34,0],[48,43.25,0],[54,38.25,0],[52,33,0],[46,40,0],[67,38.25,0],[79,24.5,1],[54,35.75,0],[60,35,0],[67,29.5,0],[56,29.5,0],[66,33.75,0],[80,26.5,1],[75,30,0],[72,28.5,0],[64,30,0],[67,28.5,0],[56,31.5,0],[68,27,1],[70,30,0],[63,30.25,0],[61,36.75,0],[59,40.25,0],[53,36.25,0],[67,34.5,0],[71,24.75,1],[58,27,1],[49,33.5,0],[63,34,0],[77,29.75,0],[54,30.5,0],[51,29.5,0],[47,34.25,0],[68,30,0],[50,39,0],[48,30.75,0],[82,7,1],[52,30.5,0],[67,40,0],[67,27.25,0],[83,29.25,0],[55,33,0],[52,40.25,0],[54,30,0],[60,31.5,0],[70,19.5,1],[55,35.25,0],[55,23.5,1],[72,39,0],[63,30.75,0],[72,32,0],[59,36,0],[57,39.75,0],[75,35.25,0],[46,37.5,0],[73,29.75,0],[70,38,0],[64,39,0],[56,40,0],[68,21.75,1],[90,23,1],[45,37.5,0],[63,30,0],[50,34.5,0],[57,43.25,0],[57,43.75,0],[81,14,1],[45,39,0],[45,35.5,0],[69,17.5,1],[69,30.25,0],[47,32,0],[83,27,1],[78,17.5,1],[62,37.25,0],[51,40,0],[48,42.5,0],[74,21.5,1],[63,35.25,0],[58,29.75,0],[67,35.75,0],[60,39.5,0],[56,35,0],[80,16,1],[67,20,1],[56,46.75,0],[66,22.5,1],[59,45.75,0],[55,37,0],[49,37,0],[54,39.5,0],[62,26.75,1],[49,36.5,0],[69,30,0],[46,30.25,0],[45,39.25,0],[57,30.5,0],[49,39.5,0],[73,17.5,1],[60,37.5,0],[72,16,1],[67,21.5,1],[55,37.25,0],[80,17.5,1],[72,30.5,0],[60,33.5,0],[55,26.5,1],[45,33.5,0],[70,28.25,0],[57,40,0],[67,34.5,0],[63,29.75,0],[54,32.75,0],[49,35,0],[74,30.75,0],[46,40.75,0],[47,38,0],[70,28.5,0],[50,38,0],[65,36.75,0],[49,39,0],[45,39.75,0],[83,22.75,1],[69,18,1],[80,24.5,1],[75,20.5,1],[64,29.5,0],[62,21.5,1],[80,21.75,1],[60,32.25,0],[69,34.5,0],[72,33.25,0],[49,34.25,0],[73,29.125,0],[56,36.375,0],[50,33.25,0],[58,38.5,0],[61,32.75,0],[72,8.5,1],[71,27.25,0],[47,29,0],[68,21.025,1],[60,37,0],[46,41.5,0],[46,39.75,0],[53,38.575,0],[64,29.5,0],[58,29.05,0],[49,34.75,0],[60,30.25,0],[76,32.25,0],[68,29.25,0],[47,33,0],[66,29.25,0],[52,46.25,0],[57,29.25,0],[76,35.25,0],[59,32.5,0],[53,44,0],[63,29.25,0],[72,32.5,0],[63,27.25,0],[61,36.5,0],[64,30.875,0],[65,33.25,0],[81,29.5,0],[48,31.5,0],[56,25,1],[68,36.625,0],[76,9.25,1],[65,38.75,0],[54,35.5,0],[62,39,0],[74,27.25,0],[74,18.25,1],[48,30.5,0],[73,26.75,1],[71,29.5,0],[67,33,0],[79,28.25,0],[51,47.5,0],[65,32.5,0],[68,32.5,0],[64,35.25,0],[49,33.75,0],[68,19.25,1],[51,39,0],[48,40.25,0],[55,33.25,0],[59,39.5,0],[70,39.25,0],[49,35,0],[62,36.375,0],[72,25.5,1],[45,34.75,0],[66,30,0],[62,29,0],[53,32.25,0],[72,25.25,1],[67,35,0],[62,31.25,0],[72,26.25,1],[74,30.5,0],[70,13.5,1],[54,39.5,0],[54,35.75,0],[71,25.25,1],[91,23.75,1],[59,26.5,1],[70,46.5,0],[49,37,0],[51,48.25,0],[48,32.5,0],[76,27.75,0],[70,20.25,1],[50,34,0],[46,45.75,0],[63,30,0],[55,33.75,0],[55,32.5,0],[69,30.5,0],[61,31,0],[49,31.5,0],[48,40.75,0],[46,40,0],[58,35.5,0],[57,30,0],[48,38.5,0],[59,27.5,0],[52,41.5,0],[64,32.25,0],[56,37.5,0],[63,24.25,1],[60,41.75,0],[57,29.5,0],[53,39.5,0],[65,33.5,0],[52,44,0],[79,29,0],[61,26.5,1],[48,41.5,0],[59,29.75,0],[62,34.5,0],[56,39.25,0],[53,30,0],[52,31,0],[62,32.5,0],[56,38.5,0],[49,39.5,0],[46,45.25,0],[64,36.5,0],[71,34.5,0],[76,35.5,0],[58,35.25,0],[73,32,0],[56,29.5,0],[58,46.5,0],[51,30,0],[56,37,0],[65,28.5,0],[58,33.25,0],[68,31.5,0],[69,31.5,0],[70,28.5,0],[70,26.375,1],[55,31.875,0],[53,31.25,0],[65,27.25,0],[51,26.125,1],[57,37.125,0],[67,36.375,0],[53,29.125,0],[61,9.75,1],[46,41,0],[45,16.25,1],[78,29.5,0],[63,34,0],[75,31,0],[52,37.25,0],[75,37.5,0],[49,28.25,0],[54,35.25,0],[48,33.5,0],[68,24,1],[59,38,0],[63,20,1],[55,32.5,0],[66,29.5,0],[77,20,1],[55,29.5,0],[46,29.25,0],[50,39.5,0],[68,33.75,0],[47,43.25,0],[67,32.25,0],[79,19.75,1],[69,35.75,0],[65,44.5,0],[57,21,1],[47,31.75,0],[61,36,0],[73,30.5,0],[69,27.5,0],[85,19,1],[62,38.75,0],[63,34.25,0],[65,30.5,0],[72,29,0],[61,33,0],[48,43,0],[63,31.75,0],[61,42.5,0],[45,38.25,0],[45,34,0],[76,26,1],[62,36.5,0],[57,38.75,0],[62,29,0],[58,44.75,0],[73,32.75,0],[64,20.5,1],[48,37,0],[68,36,0],[81,29.5,0],[70,30.5,0],[63,35.75,0],[74,31.25,0],[64,29.25,0],[54,37.25,0],[46,30.25,0],[59,38,0],[54,36.5,0],[68,29,0],[73,27.5,0],[71,32.5,0],[67,35,0],[87,19.5,1],[72,31.5,0],[48,41.75,0],[72,30,0],[61,25.625,1],[50,38.5,0],[47,39,0],[84,36.75,0],[72,22.625,1],[65,40.25,0],[46,38.5,0],[45,41.375,0],[89,20.5,1],[46,37.25,0],[49,42,0],[66,27,1],[78,26.75,1],[49,24.25,1],[52,40,0],[50,29,0],[45,28.75,0],[65,37,0],[73,19,1],[74,30,0],[80,29,0],[53,26.25,1],[62,26,1],[51,32.5,0],[60,31.25,0],[46,36.25,0],[45,34.75,0],[55,31.75,0],[69,28.5,0],[79,29,0],[46,28,0],[55,28.75,0],[67,32,0],[67,21.5,1],[66,27,1],[83,25.25,1],[70,32.5,0],[65,32.25,0],[81,29,0],[85,24,1],[69,17.25,1],[65,35.75,0],[90,13.5,1],[50,40,0],[64,32,0],[48,31,0],[46,37,0],[57,35,0],[76,28,0],[52,31.25,0],[55,33.5,0],[56,33,0],[49,29,0],[68,24,1],[56,35.5,0],[47,32.5,0],[69,38.5,0],[51,35.5,0],[52,30.5,0],[73,33,0],[74,17,1],[65,27.75,0],[58,35,0],[72,26.25,1],[86,29.5,0],[69,29.25,0],[71,31.5,0],[74,28.75,0],[73,34,0],[56,34.75,0],[60,33,0],[49,30.5,0],[48,42.75,0],[46,40.5,0],[74,32.25,0],[60,42.25,0],[63,31,0],[47,41.5,0],[63,28.75,0],[77,30,0],[72,32,0],[64,37.25,0],[78,22.25,1],[48,43.5,0],[77,26.5,1],[65,24,1],[48,34.5,0],[65,31,0],[77,19.75,1],[68,30.625,0],[69,33.125,0],[56,29.5,0],[75,24,1],[61,40,0],[59,26.25,1],[62,35,0],[47,30,0],[57,37,0],[60,42.5,0],[60,39.5,0],[50,35.75,0],[51,38.75,0],[57,30,0],[71,22,1],[66,43.5,0],[58,41,0],[83,13.5,1],[68,34.5,0],[56,29,0],[66,24.75,1],[52,35,0],[59,31.5,0],[83,18.875,1],[75,25.5,1],[47,43.5,0],[52,49.75,0],[74,28,0],[70,26.25,1],[57,41.5,0],[51,31.75,0],[52,36,0],[73,29.25,0],[60,35.375,0],[56,33.75,0],[58,37,0],[45,31,0],[56,37.25,0],[59,40.5,0],[70,20.25,1],[55,30.75,0],[62,27.5,0],[60,33.25,0],[84,19.875,1],[47,29.125,0],[64,22.75,1],[48,35,0],[51,37,0],[68,29.5,0],[51,45.625,0],[66,32.5,0],[57,39.25,0],[64,16.25,1],[73,34.5,0],[62,37,0],[83,18,1],[70,25,1],[50,32.25,0],[67,28.5,0],[52,40.25,0],[56,32,0],[55,33.5,0],[58,38.25,0],[79,36,0],[57,39.25,0],[61,32.75,0],[76,22,1],[48,32.75,0],[55,28.25,0],[58,39.25,0],[62,17.75,1],[45,43,0],[67,31.75,0],[63,32.25,0],[56,31.5,0],[51,37.5,0],[73,23.5,1],[66,35,0],[65,28,0],[45,37.5,0],[72,30.25,0],[64,25,1],[60,36,0],[46,43.25,0],[49,28.25,0],[51,33,0],[55,33.5,0],[55,27.75,0],[50,48.25,0],[46,48,0],[69,27,1]];
+
+  // ============================ HELPERS ============================
+  const NS='http://www.w3.org/2000/svg';
+  const lerp=(a,b,t)=>a+(b-a)*t;
+  const sc=(v,d0,d1,r0,r1)=>r0+(v-d0)/(d1-d0)*(r1-r0);
+  const lod  = age=>GLM.b0+GLM.b1*age;
+  const sig  = age=>1/(1+Math.exp(-lod(age)));
+  const odds = age=>Math.exp(lod(age));
+  const logit= p=>Math.log(p/(1-p));
+  function el(tag,a){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);return e;}
+  function line(g,x1,y1,x2,y2,cls){g.appendChild(el('line',{x1,y1,x2,y2,class:cls}));}
+  function txt(g,x,y,s,cls,anchor){const t=el('text',{x,y,class:cls,'text-anchor':anchor||'middle'});t.textContent=s;g.appendChild(t);return t;}
+  function grp(svg,id){const g=el('g',{class:'grp',id});svg.appendChild(g);return g;}
+
+  const svg1=document.getElementById('svg1'), svg2=document.getElementById('svg2');
+
+  // ============================ PANEL 1: recalled closing figure (teal bars, gold curve, data dots) ============================
+  (function(){
+    const ML=48,MR=16,MT=20,MB=34, X0=ML,X1=460-MR,YT=MT,YB=380-MB;
+    const AGE=[44,92], ax=v=>sc(v,AGE[0],AGE[1],X0,X1), py=v=>sc(v,-0.05,1.05,YB,YT);
+    const g=el('g',{}); svg1.appendChild(g);
+    line(g,X0,YT,X0,YB,'axis'); line(g,X0,YB,X1,YB,'axis');
+    [50,60,70,80,90].forEach(v=>{const x=ax(v);line(g,x,YB,x,YB+4,'axis');txt(g,x,YB+15,v,'axis-lbl');});
+    txt(g,(X0+X1)/2,376,'age (years)','axis-title');
+    [{v:0,t:'0'},{v:.5,t:'.5'},{v:1,t:'1'}].forEach(o=>{const y=py(o.v);line(g,X0-4,y,X0,y,'axis');txt(g,X0-7,y+3.5,o.t,'axis-lbl','end');});
+    const yt=txt(g,0,0,'probability of weak grip','axis-title'); yt.setAttribute('transform',`translate(13,${(YT+YB)/2}) rotate(-90)`);
+    const g1bars=grp(svg1,'g1bars'), g1curve=grp(svg1,'g1curve'), g1dots=grp(svg1,'g1dots');
+    const BW=15;
+    BANDS.forEach(b=>{
+      g1bars.appendChild(el('rect',{x:ax(b.mid)-BW/2,y:py(b.p),width:BW,height:Math.max(0,py(0)-py(b.p)),rx:1.5,class:'probbar','fill-opacity':.85}));
+      txt(g1bars,ax(b.mid),py(b.p)-4,b.lab,'bar-lbl');
+    });
+    let d='M'; for(let a=AGE[0];a<=AGE[1]+0.01;a+=0.5) d+=` ${ax(a).toFixed(1)} ${py(sig(a)).toFixed(1)}`;
+    const path=el('path',{d,class:'icurve'}); g1curve.appendChild(path);
+    const L=path.getTotalLength(); path.style.strokeDasharray=L; path.style.strokeDashoffset=L;
+    window.__p1curve=()=>{ path.style.strokeDashoffset = L*(1-A.c1); };
+    // actual data: every man is one point, jittered near y = 1 (weak grip) or y = 0 (not weak)
+    PTS.forEach(p=>{
+      const age=p[0], weak=p[2];
+      const cx=ax(age)+(Math.random()-0.5)*3;
+      const cy=py(weak)+(weak?1:-1)*(4+Math.random()*15);
+      g1dots.appendChild(el('circle',{cx,cy,r:1.7,class:(weak?'dotweak':'dotok'),'fill-opacity':.42}));
+    });
+  })();
+
+  // ============================ PANEL 2: the morph  (probability curve  <->  log-odds line) ============================
+  // landscape (squished) plot; log-odds range chosen so p = 0.05 … 0.95 and the whole curve show
+  const M={x0:50,x1:388,yTop:52,yBot:300, lo:[-4,4]};
+  const xM=a=>sc(a,44,92,M.x0,M.x1);
+  const yP=p=>sc(p,0,1,M.yBot,M.yTop);
+  const yL=v=>sc(v,M.lo[0],M.lo[1],M.yBot,M.yTop);
+  const AG=[]; for(let a=44;a<=92.001;a+=0.5)AG.push(a);
+  (function(){
+    const g=el('g',{}); svg2.appendChild(g);
+    line(g,M.x0,M.yBot,M.x1,M.yBot,'axis');           // x axis
+    line(g,M.x0,M.yTop,M.x0,M.yBot,'axis');           // y axis
+    [50,60,70,80,90].forEach(v=>{const x=xM(v);line(g,x,M.yBot,x,M.yBot+4,'axis');txt(g,x,M.yBot+15,v,'axis-lbl');});
+    txt(g,(M.x0+M.x1)/2,M.yBot+29,'age (years)','axis-title');
+  })();
+  const g2plot=grp(svg2,'g2plot'), g2lab=grp(svg2,'g2lab');
+  const hint2=txt(g2plot,(M.x0+M.x1)/2,18,'press →','mhint');
+  // y-axis tick marks (shared) + numbers and title that switch probability -> log-odds during the morph
+  [-4,-2,0,2,4].forEach(v=>line(g2plot,M.x0-4,yL(v),M.x0,yL(v),'axis'));
+  const probNums=[{v:0,t:'0'},{v:.5,t:'.5'},{v:1,t:'1'}].map(o=>txt(g2plot,M.x0-7,yP(o.v)+3.5,o.t,'axis-lbl','end'));
+  const logNums=[{v:-4,t:'-4'},{v:-2,t:'-2'},{v:0,t:'0'},{v:2,t:'2'},{v:4,t:'4'}].map(o=>txt(g2plot,M.x0-7,yL(o.v)+3.5,o.t,'axis-lbl','end'));
+  const yTitleP=txt(g2plot,0,0,'probability','axis-title'); yTitleP.setAttribute('transform',`translate(14,${(M.yTop+M.yBot)/2}) rotate(-90)`);
+  const yTitleL=txt(g2plot,0,0,'log-odds','axis-title'); yTitleL.setAttribute('transform',`translate(14,${(M.yTop+M.yBot)/2}) rotate(-90)`);
+  // bounds of the probability box (fade out during morph)
+  const bound0=el('line',{x1:M.x0,y1:yP(0),x2:M.x1,y2:yP(0),class:'boundln'});
+  const bound1=el('line',{x1:M.x0,y1:yP(1),x2:M.x1,y2:yP(1),class:'boundln'}); g2plot.appendChild(bound0); g2plot.appendChild(bound1);
+  // probability grid lines + travelling calc labels
+  const grid=PLV.map(p=>{
+    const o=p/(1-p), l=logit(p);
+    const ln=el('line',{x1:M.x0,y1:yP(p),x2:M.x1,y2:yP(p),class:'gridln'}); g2plot.appendChild(ln);
+    const lab=txt(g2lab,M.x0+5,yP(p)-3,`p ${p.toFixed(2)} → odds ${o.toFixed(2)} → ln ${Math.abs(l)<0.005?'0.00':(l>0?'+':'')+l.toFixed(2)}`,'gridlab','start');
+    return {p,l,ln,lab};
+  });
+  // observed band dots (travel with the morph)
+  const bdots=BANDS.map(b=>{const c=el('circle',{cx:xM(b.mid),cy:yP(b.p),r:3,class:'banddot'}); g2plot.appendChild(c); return {b,c};});
+  // the morphing curve
+  const mcurve=el('path',{class:'mcurve'}); g2plot.appendChild(mcurve);
+  function drawMorph(t){
+    let d='M'; AG.forEach((a,i)=>{ const y=lerp(yP(sig(a)),yL(lod(a)),t); d+=(i?' L ':' ')+xM(a).toFixed(1)+' '+y.toFixed(1); });
+    mcurve.setAttribute('d',d);
+    grid.forEach(o=>{ const y=lerp(yP(o.p),yL(o.l),t); o.ln.setAttribute('y1',y); o.ln.setAttribute('y2',y); o.lab.setAttribute('y',y-3); });
+    bdots.forEach(o=>o.c.setAttribute('cy',lerp(yP(o.b.p),yL(logit(o.b.p)),t)));
+    hint2.setAttribute('opacity',Math.max(0,1-3*t));
+    bound0.setAttribute('opacity',1-t); bound1.setAttribute('opacity',1-t);
+    probNums.forEach(e=>e.setAttribute('opacity',1-t)); logNums.forEach(e=>e.setAttribute('opacity',t));
+    yTitleP.setAttribute('opacity',1-t); yTitleL.setAttribute('opacity',t);
+  }
+
+  // ============================ ANIMATION STATE ============================
+  const A ={c1:0,t:0};       // current: p1 curve draw, p2 morph
+  const AT={c1:0,t:0};       // targets
+  let raf=null;
+  function drawCont(){ window.__p1curve(); drawMorph(A.t); }
+  function tick(){
+    let moving=false;
+    for(const k of ['c1','t']){
+      const d=AT[k]-A[k];
+      if(Math.abs(d)>0.0012){A[k]+=d*0.13;moving=true;} else A[k]=AT[k];
+    }
+    drawCont();
+    raf = moving ? requestAnimationFrame(tick) : null;
+  }
+  function animateTo(){ if(!raf) raf=requestAnimationFrame(tick); }
+
+  // ============================ STEP SCRIPT ============================
+  const DEFAULT_STEP={ vis:[], panel:1, c1:0, t:0 };
+  const P1=['g1bars','g1dots','g1curve'];
+  const P2=[...P1,'g2plot','g2lab'];
+  const STEP_CHANGES=[
+    {},                                                        // 0  intro
+    {},                                                        // 1  read_csv
+    {},                                                        // 2  glm + summary()
+    {vis:['g1bars']},                                          // 3  coefficient table + age-band bars
+    {vis:['g1bars','g1dots']},                                 // 4  raw 0/1 dots
+    {vis:[...P1],c1:1},                                        // 5  gold curve draw
+    {},                                                        // 6  logistic form
+    {},                                                        // 7  fitted equation
+    {},                                                        // 8  0.1168 = a log-odds change
+    {panel:2,vis:[...P2],t:0},                                 // 9  derivation intro
+    {},                                                        // 10 full logistic form
+    {},                                                        // 11 let eta be
+    {},                                                        // 12 eta =
+    {},                                                        // 13 compact p
+    {},                                                        // 14 subtract p from 1
+    {},                                                        // 15 1-p identity
+    {},                                                        // 16 substitute into p/(1-p)
+    {},                                                        // 17 p/(1-p) as division
+    {},                                                        // 18 = e^eta
+    {},                                                        // 19 take ln
+    {},                                                        // 20 ln(...) = beta0 + beta1 age
+    {t:1},                                                     // 21 MORPH + fitted equation
+    {},                                                        // 22 slope = beta1
+    {panel:3},                                                 // 23 continuous comparison
+    {},                                                        // 24 continuous model + OR output
+    {},                                                        // 25 continuous interpretation
+    {},                                                        // 26 report continuous OR
+    {},                                                        // 27 create age groups + fit model
+    {},                                                        // 28 reference group
+    {},                                                        // 29 categorical OR output + interpretation
+    {},                                                        // 30 report categorical ORs
+    {},                                                        // 31 OR plain-words strip
+    {},                                                        // 32 Nature Communications OR figure
+    {panel:4}                                                  // 33 blank panel
+  ];
+  const STEPS=STEP_CHANGES.reduce((steps,change)=>{ steps.push({...DEFAULT_STEP,...steps.at(-1),...change}); return steps; },[]);
+  const N=STEPS.length;
+  const ALL_GROUPS=['g1bars','g1dots','g1curve','g2plot','g2lab'];
+  const PANEL_FIRST={1:0,2:9,3:23,4:33};
+  const PANEL_IDS=[1,2,3,4];
+
+  let step=0;
+  const counter=document.getElementById('counter');
+  const panelEls={1:document.getElementById('panel1'),2:document.getElementById('panel2'),3:document.getElementById('panel3'),4:document.getElementById('panel4')};
+
+  function apply(k){
+    step=(k+N)%N;
+    const s=STEPS[step];
+    const on=new Set(s.vis);
+    ALL_GROUPS.forEach(id=>document.getElementById(id).classList.toggle('vis',on.has(id)));
+    AT.c1=s.c1; AT.t=s.t;
+    if(window.__STILL__){A.c1=AT.c1;A.t=AT.t;drawCont();} else animateTo();
+    PANEL_IDS.forEach(pn=>{
+      panelEls[pn].classList.toggle('lit', step>=PANEL_FIRST[pn]);
+      panelEls[pn].classList.toggle('active', s.panel===pn);
+    });
+    document.querySelectorAll('#board [data-step]').forEach(el=>{ el.hidden=Number(el.dataset.step)>step+1; });
+    counter.textContent=`step ${step+1} / ${N}`;
+    if(window.renderMathInElement) renderMathInElement(document.getElementById('board'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false});
+  }
+  function next(){ if(step<N-1) apply(step+1); }
+  function prev(){ if(step>0) apply(step-1); }
+  function jumpPanel(dir){
+    const order=PANEL_IDS.map(pn=>PANEL_FIRST[pn]);
+    if(dir>0){const nx=order.find(o=>o>step); apply(nx!==undefined?nx:N-1);}
+    else{const pr=[...order].reverse().find(o=>o<step); apply(pr!==undefined?pr:0);}
+  }
+
+  // ============================ FIT / CHROME ============================
+  const stage=document.getElementById('stage'), deck=document.getElementById('deck');
+  function fitDeck(){
+    const st=getComputedStyle(stage);
+    const aw=stage.clientWidth-parseFloat(st.paddingLeft)-parseFloat(st.paddingRight);
+    const ah=stage.clientHeight-parseFloat(st.paddingTop)-parseFloat(st.paddingBottom);
+    deck.style.transform=`scale(${Math.min(aw/1600,ah/900)})`;
+  }
+  window.addEventListener('resize',fitDeck); fitDeck();
+
+  // ============================ PENCIL ============================
+  const canvas=document.getElementById('ink'), cx=canvas.getContext('2d');
+  const CW=1920,CH=1080; canvas.width=CW; canvas.height=CH;
+  let pencil=false,penW=1.75,stroke=null; const strokes=[];
+  const pBtn=document.getElementById('pencil'),uBtn=document.getElementById('undo'),cBtn=document.getElementById('clear');
+  function setPencil(v){pencil=v;deck.classList.toggle('drawing',v);pBtn.classList.toggle('on',v);pBtn.textContent=`Pencil: ${v?'on':'off'}`;}
+  function pt(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*CW/r.width,y:(e.clientY-r.top)*CH/r.height};}
+  function redraw(){cx.clearRect(0,0,CW,CH);strokes.forEach(s=>{if(s.points.length<2)return;cx.save();cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle=s.color;cx.lineWidth=s.width;cx.beginPath();cx.moveTo(s.points[0].x,s.points[0].y);s.points.slice(1).forEach(p=>cx.lineTo(p.x,p.y));cx.stroke();cx.restore();});}
+  canvas.addEventListener('pointerdown',e=>{if(!pencil)return;e.preventDefault();canvas.setPointerCapture(e.pointerId);stroke={color:'#e07a2f',width:penW,points:[pt(e)]};strokes.push(stroke);});
+  canvas.addEventListener('pointermove',e=>{if(!stroke||!pencil)return;stroke.points.push(pt(e));redraw();});
+  function endStroke(){stroke=null;} canvas.addEventListener('pointerup',endStroke);canvas.addEventListener('pointercancel',endStroke);
+  function undo(){strokes.pop();redraw();} function clearAll(){strokes.length=0;redraw();}
+  pBtn.onclick=e=>{e.stopPropagation();setPencil(!pencil);}; uBtn.onclick=e=>{e.stopPropagation();undo();}; cBtn.onclick=e=>{e.stopPropagation();clearAll();};
+  window.addEventListener('resize',redraw);
+
+  document.addEventListener('keydown',e=>{
+    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return;}
+    if(e.metaKey||e.ctrlKey||e.altKey)return;
+    const k=e.key.toLowerCase();
+    if(['ArrowRight',' ','PageDown','Enter'].includes(e.key)){e.preventDefault();next();}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}
+    else if(e.key==='ArrowDown'){e.preventDefault();jumpPanel(1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();jumpPanel(-1);}
+    else if(k==='p'){e.preventDefault();setPencil(!pencil);}
+    else if(k==='u'){e.preventDefault();undo();}
+    else if(k==='c'||k==='e'){e.preventDefault();clearAll();}
+    else if(e.key==='['){e.preventDefault();penW=Math.max(1,penW-1);}
+    else if(e.key===']'){e.preventDefault();penW=Math.min(18,penW+1);}
+    else if(k==='r'){e.preventDefault();apply(0);}
+  });
+
+  // ============================ GO ============================
+  const _q=new URLSearchParams(location.search);
+  window.__STILL__ = _q.get('still')==='1';
+  const _s=parseInt(_q.get('step'),10);
+  function boot(){ apply(Number.isFinite(_s)?_s:0); }
+  if(window.renderMathInElement) boot();
+  else window.addEventListener('load',boot);
+  </script>
+</body>
+</html>
