@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<!-- RSR Week 10 Blooket-style quiz · build: cursor-grok-4.5-k7m2 -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RSR Week 10 · Logistic Regression · Blooket</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #dfe8ea;
+      --paper: #f7f4ed;
+      --white: #fffef9;
+      --ink: #101418;
+      --muted: #665f51;
+      --teal: #0d7377;
+      --teal-soft: #e3f3f3;
+      --chapter: #4338a6;
+      --chapter-soft: #edebfa;
+      --gold: #f0c808;
+      --rose: #b83b5e;
+      --rose-soft: #fdeef1;
+      --navy: #2f5f98;
+      --navy-soft: #e7eef7;
+      --shadow: rgba(16, 20, 24, 0.42);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Space Grotesk', Arial, Helvetica, sans-serif;
+      font-size: 10pt;
+      line-height: 1.35;
+    }
+    .toolbar {
+      width: 210mm;
+      max-width: calc(100vw - 24px);
+      margin: 18px auto 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+    }
+    .toolbar .title {
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 10pt;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--chapter);
+    }
+    .toolbar .descr { color: #3a4a4f; font-size: 9pt; max-width: 130mm; }
+    button {
+      border: 2px solid var(--ink);
+      background: var(--chapter);
+      color: #fff;
+      border-radius: 7px;
+      padding: 7px 12px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 var(--shadow);
+    }
+    .page-wrap { display: flex; flex-direction: column; align-items: center; }
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto 16px;
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: 10px;
+      padding: 8mm 9mm 7mm;
+      box-shadow: 8px 8px 0 rgba(16,20,24,0.12);
+      display: flex;
+      flex-direction: column;
+      gap: 3.5mm;
+    }
+    header {
+      border-bottom: 1.1mm solid var(--gold);
+      padding-bottom: 2mm;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 4mm;
+      align-items: end;
+    }
+    h1 {
+      margin: 0;
+      color: var(--teal);
+      font-size: 18pt;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+    }
+    .subtitle {
+      margin-top: 1.2mm;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 7.4pt;
+      font-weight: 700;
+    }
+    .meta-box {
+      border: 2px solid var(--ink);
+      border-radius: 7px;
+      background: var(--white);
+      padding: 1.5mm 2.5mm;
+      font-size: 8pt;
+      font-weight: 700;
+      box-shadow: 3px 3px 0 var(--shadow);
+      min-width: 42mm;
+    }
+    .meta-box div { margin: 0.6mm 0; border-bottom: 1px solid #ccc; min-height: 4.2mm; }
+    .meta-box span { color: var(--muted); font-weight: 600; }
+    .banner {
+      background: var(--chapter-soft);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      padding: 2mm 3mm;
+      font-size: 8.4pt;
+      box-shadow: 3px 3px 0 var(--shadow);
+    }
+    .q {
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: 4px 4px 0 var(--shadow);
+      overflow: hidden;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .q-head {
+      display: flex;
+      gap: 2.5mm;
+      align-items: flex-start;
+      padding: 2.2mm 2.8mm 1.6mm;
+      background: var(--teal-soft);
+      border-bottom: 1.5px solid var(--ink);
+    }
+    .q-num {
+      flex-shrink: 0;
+      width: 7.5mm;
+      height: 7.5mm;
+      border-radius: 999px;
+      background: var(--teal);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 9.5pt;
+      border: 1.5px solid var(--ink);
+    }
+    .q-text { font-size: 9.6pt; font-weight: 650; line-height: 1.32; margin: 0; padding-top: 0.4mm; }
+    .q-body { padding: 2.2mm 2.8mm 2.4mm; display: flex; flex-direction: column; gap: 2mm; }
+    .fig {
+      border: 1.6px solid var(--ink);
+      border-radius: 7px;
+      background: #fff;
+      padding: 1.2mm 1.5mm 1mm;
+    }
+    .fig svg { display: block; width: 100%; height: auto; }
+    .options { display: grid; gap: 1.3mm; }
+    .opt {
+      border: 1.5px solid #c9c2b2;
+      border-radius: 6px;
+      padding: 1.4mm 2mm;
+      background: #fbfaf6;
+      font-size: 8.7pt;
+      line-height: 1.28;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 1.8mm;
+      align-items: start;
+    }
+    .opt .letter {
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-weight: 800;
+      color: var(--chapter);
+      min-width: 4mm;
+    }
+    .r-code {
+      border: 1.6px solid var(--ink);
+      border-radius: 7px;
+      background: #1d2229;
+      color: #f0ecdf;
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 7.2pt;
+      line-height: 1.4;
+      padding: 2mm 2.4mm;
+      white-space: pre;
+      overflow: hidden;
+    }
+    .r-code .cm { color: #a8b3b4; font-style: italic; }
+    .r-code .fn { color: #8fd5d2; }
+    .r-code .hl { background: rgba(240, 200, 8, 0.28); border-radius: 2px; padding: 0 2px; }
+    .eq-box {
+      border: 1.6px solid var(--ink);
+      border-radius: 7px;
+      background: var(--navy-soft);
+      padding: 2.4mm 3mm;
+      text-align: center;
+      font-size: 12pt;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+    .eq-box .note {
+      margin-top: 1.2mm;
+      font-size: 8.2pt;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .key-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.2mm;
+    }
+    .key-item {
+      border: 1.5px solid var(--ink);
+      border-radius: 7px;
+      background: var(--white);
+      padding: 1.5mm 2mm;
+      font-size: 8pt;
+      line-height: 1.28;
+      box-shadow: 2px 2px 0 var(--shadow);
+    }
+    .key-item .ans {
+      display: inline-block;
+      background: var(--gold);
+      border: 1.3px solid var(--ink);
+      border-radius: 999px;
+      padding: 0.2mm 1.8mm;
+      font-weight: 900;
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      margin-right: 1.5mm;
+    }
+    .key-item .why { color: var(--muted); margin-top: 0.8mm; }
+    footer {
+      margin-top: auto;
+      background: var(--teal);
+      color: #fff;
+      border-radius: 7px;
+      text-align: center;
+      padding: 1.4mm 2mm;
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 7.2pt;
+      font-weight: 800;
+      box-shadow: 3px 3px 0 var(--shadow);
+    }
+    footer a { color: #fff; text-decoration: none; }
+    @page { size: A4; margin: 0; }
+    @media print {
+      body { background: white; }
+      .toolbar { display: none; }
+      .page {
+        width: 210mm;
+        min-height: 297mm;
+        height: 297mm;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 8mm 10mm 7mm;
+        page-break-after: always;
+        break-after: page;
+        overflow: hidden;
+      }
+      .page:last-child { page-break-after: auto; break-after: auto; }
+      .q, .banner, .meta-box, .key-item, footer { box-shadow: none; }
+      .q, .key-item, .banner, .fig, .r-code, .eq-box, footer {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+    }
+    @media screen and (max-width: 820px) {
+      .page, .toolbar { width: calc(100vw - 16px); }
+      .page { min-height: auto; padding: 16px; }
+      .key-grid, header { grid-template-columns: 1fr; }
+      .r-code { white-space: pre-wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div>
+      <div class="title">GRAPH Courses · Blooket set</div>
+      <div class="descr">Week 10 logistic regression quiz (8 questions). Correct answers are on the last page.</div>
+    </div>
+    <button type="button" onclick="window.print()">Print / Save PDF</button>
+  </div>
+
+  <div class="page-wrap">
+
+    <!-- ===================== PAGE 1 ===================== -->
+    <section class="page">
+      <header>
+        <div>
+          <h1>RSR Week 10 · Logistic Regression</h1>
+          <div class="subtitle">Blooket question set · 8 questions · thegraphcourses.org</div>
+        </div>
+        <div class="meta-box">
+          <div><span>Name</span></div>
+          <div><span>Date</span></div>
+          <div><span>Class</span></div>
+        </div>
+      </header>
+
+      <div class="banner">
+        Conceptual quiz. Any example data or model output is introduced inside the question.
+      </div>
+
+      <!-- Q1 (was 1) -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">1</div>
+          <p class="q-text">Which outcome is best modeled with logistic regression?</p>
+        </div>
+        <div class="q-body">
+          <div class="fig">
+            <svg viewBox="0 0 520 118" role="img" aria-label="Three outcome types compared">
+              <rect width="520" height="118" rx="8" fill="#fffef9"/>
+              <rect x="12" y="14" width="158" height="90" rx="8" fill="#e7eef7" stroke="#101418" stroke-width="1.4"/>
+              <text x="91" y="34" text-anchor="middle" font-size="11" font-weight="800" fill="#2f5f98">Continuous</text>
+              <line x1="28" y1="78" x2="154" y2="48" stroke="#0d7377" stroke-width="2.2"/>
+              <g fill="#f0c808" stroke="#101418" stroke-width="0.8">
+                <circle cx="40" cy="74" r="3.2"/><circle cx="62" cy="68" r="3.2"/><circle cx="84" cy="61" r="3.2"/>
+                <circle cx="106" cy="55" r="3.2"/><circle cx="128" cy="50" r="3.2"/><circle cx="146" cy="46" r="3.2"/>
+              </g>
+              <text x="91" y="96" text-anchor="middle" font-size="9" font-weight="700" fill="#665f51">e.g. blood pressure (mmHg)</text>
+              <rect x="181" y="14" width="158" height="90" rx="8" fill="#edebfa" stroke="#101418" stroke-width="2"/>
+              <text x="260" y="34" text-anchor="middle" font-size="11" font-weight="800" fill="#4338a6">Binary (yes/no)</text>
+              <g font-family="JetBrains Mono, monospace" font-size="18" font-weight="800">
+                <text x="220" y="68" fill="#4338a6">0</text>
+                <text x="285" y="68" fill="#b83b5e">1</text>
+              </g>
+              <text x="260" y="96" text-anchor="middle" font-size="9" font-weight="700" fill="#665f51">e.g. disease: no / yes</text>
+              <rect x="350" y="14" width="158" height="90" rx="8" fill="#fdeef1" stroke="#101418" stroke-width="1.4"/>
+              <text x="429" y="34" text-anchor="middle" font-size="11" font-weight="800" fill="#b83b5e">Count</text>
+              <text x="429" y="68" text-anchor="middle" font-size="16" font-weight="800" fill="#101418">0, 1, 2, 3…</text>
+              <text x="429" y="96" text-anchor="middle" font-size="9" font-weight="700" fill="#665f51">e.g. clinic visits / year</text>
+            </svg>
+          </div>
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>Average resting heart rate after a 6-minute walk</span></div>
+            <div class="opt"><span class="letter">B</span><span>Whether a patient is cured of a disease (yes or no)</span></div>
+            <div class="opt"><span class="letter">C</span><span>Number of malaria cases reported in a district in one year</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q2 (was 2, reworded) -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">2</div>
+          <p class="q-text">What does a logistic regression model predict?</p>
+        </div>
+        <div class="q-body">
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>The residual for each observation</span></div>
+            <div class="opt"><span class="letter">B</span><span>The probability of the outcome</span></div>
+            <div class="opt"><span class="letter">C</span><span>The sample size needed for 80% power</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q3 (was 5, no figure) -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">3</div>
+          <p class="q-text">You want to model a binary outcome <code>cured</code> from a continuous predictor <code>dose</code>. Which R call is correct?</p>
+        </div>
+        <div class="q-body">
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span><code>lm(cured ~ dose, data = trial)</code></span></div>
+            <div class="opt"><span class="letter">B</span><span><code>glm(cured ~ dose, family = binomial, data = trial)</code></span></div>
+            <div class="opt"><span class="letter">C</span><span><code>glm(cured ~ dose, family = gaussian, data = trial)</code></span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q4 (was 9, with example numbers) -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">4</div>
+          <p class="q-text">A logistic model for weak grip from age was fit as:</p>
+        </div>
+        <div class="q-body">
+          <div class="eq-box">
+            ln( p / (1 − p) ) = −8.82 + 0.117 × age
+            <div class="note">β₀ = −8.82 &nbsp;·&nbsp; β₁ = 0.117</div>
+          </div>
+          <p style="margin:0; font-size:9pt; font-weight:650;">What does the coefficient 0.117 represent?</p>
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>The change in the probability p for each extra year of age</span></div>
+            <div class="opt"><span class="letter">B</span><span>The change in the log odds for each extra year of age</span></div>
+            <div class="opt"><span class="letter">C</span><span>The residual standard error of the model</span></div>
+          </div>
+        </div>
+      </article>
+
+      <footer><a href="https://thegraphcourses.org">thegraphcourses.org</a> · Week 10 · page 1 of 3</footer>
+    </section>
+
+    <!-- ===================== PAGE 2 ===================== -->
+    <section class="page">
+      <header>
+        <div>
+          <h1>RSR Week 10 · Logistic Regression</h1>
+          <div class="subtitle">Questions 5–8 · odds, odds ratios, and reporting language</div>
+        </div>
+      </header>
+
+      <!-- Q5 (was 10) -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">5</div>
+          <p class="q-text">If the predicted probability of an outcome is p = 0.80, what are the odds of that outcome?</p>
+        </div>
+        <div class="q-body">
+          <div class="fig">
+            <svg viewBox="0 0 480 95" role="img" aria-label="Ladder from probability to odds to log odds">
+              <rect width="480" height="95" rx="8" fill="#fffef9"/>
+              <rect x="16" y="18" width="130" height="58" rx="8" fill="#edebfa" stroke="#101418" stroke-width="1.4"/>
+              <text x="81" y="42" text-anchor="middle" font-size="11" font-weight="800" fill="#4338a6">probability</text>
+              <text x="81" y="62" text-anchor="middle" font-size="14" font-weight="800" fill="#101418">p = 0.80</text>
+              <text x="160" y="52" font-size="18" font-weight="800" fill="#665f51">→</text>
+              <rect x="180" y="18" width="130" height="58" rx="8" fill="#fff3cc" stroke="#101418" stroke-width="1.4"/>
+              <text x="245" y="42" text-anchor="middle" font-size="11" font-weight="800" fill="#6f5200">odds</text>
+              <text x="245" y="62" text-anchor="middle" font-size="13" font-weight="800" fill="#101418">p / (1 − p)</text>
+              <text x="324" y="52" font-size="18" font-weight="800" fill="#665f51">→</text>
+              <rect x="344" y="18" width="120" height="58" rx="8" fill="#e3f3f3" stroke="#101418" stroke-width="1.4"/>
+              <text x="404" y="42" text-anchor="middle" font-size="11" font-weight="800" fill="#0d7377">log odds</text>
+              <text x="404" y="62" text-anchor="middle" font-size="13" font-weight="800" fill="#101418">ln(odds)</text>
+            </svg>
+          </div>
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>0.20</span></div>
+            <div class="opt"><span class="letter">B</span><span>0.80</span></div>
+            <div class="opt"><span class="letter">C</span><span>4.0</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q6 (was 11, positive b + summary output) -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">6</div>
+          <p class="q-text">A logistic model predicts weak grip from age. Part of <code>summary(mod)</code> is shown below. What is the odds ratio for a 1-year increase in age, and how do you get it?</p>
+        </div>
+        <div class="q-body">
+          <div class="r-code"><span class="cm"># glm(weak_grip ~ age, family = binomial, data = klosa)</span>
+             Estimate  Std. Error  z value  Pr(&gt;|z|)
+(Intercept)   -8.8243      0.3193   -27.64   &lt;2e-16 ***
+<span class="hl">age            0.1168      0.0048    24.57   &lt;2e-16 ***</span></div>
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>OR ≈ 0.117; report the coefficient as-is</span></div>
+            <div class="opt"><span class="letter">B</span><span>OR ≈ 1.12; exponentiate the age coefficient (e<sup>0.1168</sup>)</span></div>
+            <div class="opt"><span class="letter">C</span><span>OR ≈ 0.50; take 1 minus the age coefficient</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q7 (was 12, no figure) -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">7</div>
+          <p class="q-text">An odds ratio of 0.75 for a binary exposure (exposed vs not) is best described as:</p>
+        </div>
+        <div class="q-body">
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>25% higher odds of the outcome among the exposed</span></div>
+            <div class="opt"><span class="letter">B</span><span>25% lower odds of the outcome among the exposed</span></div>
+            <div class="opt"><span class="letter">C</span><span>The probability falls by exactly 0.75 percentage points</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q8 (was 13, no figure) -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">8</div>
+          <p class="q-text">A paper reports: “Each extra year of age was associated with 12% higher odds of the outcome (OR = 1.12).” Which statement is a misconception?</p>
+        </div>
+        <div class="q-body">
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>Each extra year multiplies the odds by about 1.12</span></div>
+            <div class="opt"><span class="letter">B</span><span>The probability of the outcome rises by 12 percentage points each year</span></div>
+            <div class="opt"><span class="letter">C</span><span>An OR of 1.12 is the same idea as adding a fixed amount on the log-odds scale</span></div>
+          </div>
+        </div>
+      </article>
+
+      <footer><a href="https://thegraphcourses.org">thegraphcourses.org</a> · Week 10 · page 2 of 3</footer>
+    </section>
+
+    <!-- ===================== PAGE 3: ANSWER KEY ===================== -->
+    <section class="page">
+      <header>
+        <div>
+          <h1>Answer Key · Week 10</h1>
+          <div class="subtitle">Blooket / classroom key · cursor-grok-4.5-k7m2</div>
+        </div>
+      </header>
+
+      <div class="banner">
+        Correct option is marked first. Keep this page out of the student Blooket set.
+      </div>
+
+      <div class="key-grid">
+        <div class="key-item">
+          <span class="ans">1B</span> Binary yes/no outcome (cured or not).
+          <div class="why">Continuous and count outcomes need other models.</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">2B</span> Logistic regression predicts the probability of the outcome.
+          <div class="why"></div>
+        </div>
+        <div class="key-item">
+          <span class="ans">3B</span> <code>glm(..., family = binomial)</code>
+          <div class="why"><code>lm</code> / gaussian is for continuous outcomes.</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">4B</span> 0.117 is the change in log odds per extra year of age.
+          <div class="why">ln(p/(1−p)) = −8.82 + 0.117 × age</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">5C</span> Odds = 0.80 / 0.20 = 4.0
+          <div class="why">Odds = p / (1 − p)</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">6B</span> OR = e<sup>0.1168</sup> ≈ 1.12
+          <div class="why">Positive age coefficient → OR &gt; 1</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">7B</span> OR 0.75 → 25% lower odds among the exposed.
+          <div class="why">1 − 0.75 = 0.25</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">8B</span> Misconception: OR 1.12 ≠ +12 percentage points in probability.
+          <div class="why">It is a 12% change in odds, not probability.</div>
+        </div>
+      </div>
+
+      <footer><a href="https://thegraphcourses.org">thegraphcourses.org</a> · Week 10 · page 3 of 3 · answer key</footer>
+    </section>
+
+  </div>
+</body>
+</html>

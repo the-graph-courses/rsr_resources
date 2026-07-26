@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deviance in Logistic Regression – Visual Explainer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#FAFAF7;--surface:#fff;--text:#1C1C28;--muted:#6B6B80;
+  --accent:#4A5FC1;--accent-light:#E9EDFA;
+  --coral:#E8644A;--coral-light:#FDF0ED;
+  --teal:#2BA89C;--teal-light:#E6F6F4;
+  --amber:#D4940A;--amber-light:#FFF8E6;
+  --purple:#8B5CF6;--purple-light:#F1ECFE;
+  --code-bg:#1A1B2E;--code-text:#CBD5F0;--code-comment:#555B78;
+  --code-kw:#C4A7F5;--code-str:#86D9A0;--code-num:#F5B882;--code-fn:#7DAFE5;
+  --border:#DDD9D0;--script-bg:#F2F0EA;
+  --p-yes:#4A5FC1;--p-no:#E8644A;
+}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* TOP BAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 24px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.topbar-title{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.topbar-counter{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* LAYOUT */
+.main{display:flex;flex:1;min-height:0}
+.slide-area{flex:1;display:flex;flex-direction:column;min-width:0}
+.viewport{flex:1;overflow-y:auto;padding:36px 44px 28px}
+.viewport::-webkit-scrollbar{width:4px}
+.viewport::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.slide{display:none}.slide.active{display:block}
+
+/* SCRIPT PANEL */
+.panel{width:320px;flex-shrink:0;background:var(--script-bg);border-left:1px solid var(--border);display:flex;flex-direction:column}
+.panel-head{padding:12px 18px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-body{flex:1;overflow-y:auto;padding:18px}
+.panel-body::-webkit-scrollbar{width:4px}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.script{display:none}.script.active{display:block}
+.script p{font-family:'Crimson Pro',serif;font-size:16px;line-height:1.65;color:#3a3a3a;margin-bottom:13px}
+.script p em{font-style:italic;color:var(--accent)}
+
+/* NAV */
+.nav{display:flex;align-items:center;justify-content:center;gap:14px;padding:12px 24px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.nbtn{background:var(--accent);color:#fff;border:none;padding:7px 20px;font-size:12px;font-weight:600;border-radius:5px;cursor:pointer;font-family:inherit;transition:opacity .15s}
+.nbtn:hover{opacity:.85}.nbtn:disabled{opacity:.25;cursor:default}
+.dots{display:flex;gap:5px;align-items:center;flex-wrap:wrap;max-width:320px;justify-content:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--border);border:none;cursor:pointer;padding:0;transition:all .2s}
+.dot.active{background:var(--accent);transform:scale(1.35)}
+
+/* TYPOGRAPHY */
+.slide h1{font-size:30px;font-weight:700;line-height:1.2;margin-bottom:6px}
+.slide .sub{font-size:15px;color:var(--muted);margin-bottom:28px}
+.slide h2{font-size:21px;font-weight:700;margin-bottom:14px}
+.slide h3{font-size:16px;font-weight:700;margin-bottom:8px;color:var(--accent)}
+.slide p,.slide li{font-size:14.5px;line-height:1.7;margin-bottom:10px}
+
+/* TAGS */
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;padding:3px 10px;border-radius:4px;text-transform:uppercase;margin-bottom:10px}
+.tag.setup{background:var(--accent-light);color:var(--accent)}
+.tag.step{background:var(--coral-light);color:var(--coral)}
+.tag.key{background:var(--teal-light);color:var(--teal)}
+.tag.analogy{background:var(--amber-light);color:var(--amber)}
+.tag.recap{background:var(--purple-light);color:var(--purple)}
+
+/* CODE */
+.codeblock{background:var(--code-bg);border-radius:7px;padding:14px 16px;margin:12px 0;overflow-x:auto;position:relative}
+.codeblock code{font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.7;color:var(--code-text)}
+.codeblock .lbl{position:absolute;top:6px;right:10px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--code-comment);font-family:'IBM Plex Mono',monospace}
+.cm{color:var(--code-comment)}.kw{color:var(--code-kw)}.st{color:var(--code-str)}.nb{color:var(--code-num)}.fn{color:var(--code-fn)}.op{color:#6DD9C5}
+
+.rout{background:#F3F2EE;border:1px solid var(--border);border-radius:7px;padding:12px 16px;margin:12px 0;overflow-x:auto;position:relative}
+.rout code{font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.7;color:#333;white-space:pre}
+.rout .lbl{position:absolute;top:6px;right:10px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+
+/* VISUAL HELPERS */
+.flex{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
+.flex>*{flex:1;min-width:200px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;margin:8px 0}
+.callout{border-radius:8px;padding:14px 16px;margin:14px 0;font-size:13.5px;line-height:1.6}
+.callout.blue{background:var(--accent-light)}.callout.coral{background:var(--coral-light)}
+.callout.teal{background:var(--teal-light)}.callout.amber{background:var(--amber-light)}
+.callout.purple{background:var(--purple-light)}
+
+.formula{background:var(--purple-light);border-radius:8px;padding:16px 20px;margin:14px 0;text-align:center;font-family:'Crimson Pro',serif;font-size:17px;line-height:1.8}
+.mono{font-family:'IBM Plex Mono',monospace;font-size:.9em}
+.math{font-family:'Crimson Pro',serif;font-style:italic}
+
+/* VISUAL BARS */
+.prob-bar-wrap{margin:6px 0;display:flex;align-items:center;gap:10px}
+.prob-bar-label{font-size:12px;font-weight:600;width:72px;text-align:right;flex-shrink:0}
+.prob-bar-track{flex:1;height:22px;background:#EEECEA;border-radius:4px;overflow:hidden;position:relative}
+.prob-bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.prob-bar-val{font-size:11px;font-weight:700;width:52px;flex-shrink:0;font-family:'IBM Plex Mono',monospace}
+
+/* COLOR CODED FORMULA */
+.cf{display:inline-block;padding:2px 6px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;line-height:1.5}
+.cf.blue{background:#DBEAFE;color:#1E40AF}
+.cf.coral{background:#FEE2E2;color:#B91C1C}
+.cf.teal{background:#D1FAE5;color:#065F46}
+.cf.purple{background:#EDE9FE;color:#6D28D9}
+.cf.amber{background:#FEF3C7;color:#92400E}
+
+/* STUDENT CARDS */
+.student-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:16px 0}
+.student-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:16px;text-align:center;transition:border-color .2s}
+.student-card.fail{border-color:var(--coral)}
+.student-card.pass{border-color:var(--teal)}
+.student-icon{width:48px;height:48px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.student-card.fail .student-icon{background:var(--coral-light)}
+.student-card.pass .student-icon{background:var(--teal-light)}
+.student-name{font-size:13px;font-weight:600;margin-bottom:4px}
+.student-detail{font-size:12px;color:var(--muted)}
+.student-result{font-size:12px;font-weight:700;margin-top:6px;padding:3px 8px;border-radius:4px;display:inline-block}
+.student-card.fail .student-result{background:var(--coral-light);color:var(--coral)}
+.student-card.pass .student-result{background:var(--teal-light);color:var(--teal)}
+
+/* SCORE CARD */
+.score-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;margin:6px 0;background:var(--surface);border:1px solid var(--border)}
+.score-who{width:80px;flex-shrink:0;font-size:13px;font-weight:600}
+.score-pred{flex:1;font-size:13px}
+.score-result{width:100px;flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;text-align:right}
+.score-result.good{color:var(--teal)}.score-result.bad{color:var(--coral)}
+
+/* GAUGE */
+.gauge-wrap{text-align:center;margin:16px 0}
+
+/* TITLE SLIDE */
+.title-area{display:flex;flex-direction:column;justify-content:center;min-height:55vh}
+.title-area h1{font-size:34px;margin-bottom:10px}
+.title-area .sub{font-size:17px;margin-bottom:24px}
+.title-tags{display:flex;gap:8px;flex-wrap:wrap}
+.title-tags span{font-size:11px;font-weight:600;padding:5px 13px;border-radius:20px;background:var(--accent-light);color:var(--accent)}
+
+/* COMPARE COLUMNS */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:14px 0}
+.compare .col{border-radius:10px;padding:18px;border:1.5px solid var(--border)}
+.compare .col h3{margin-bottom:10px;font-size:14px}
+.compare .col.null{border-color:var(--coral);background:var(--coral-light)}
+.compare .col.full{border-color:var(--teal);background:var(--teal-light)}
+
+.vs-label{display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:var(--muted);padding:10px 0}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">Deviance in Logistic Regression</div>
+  <div class="topbar-counter" id="counter">1 / 19</div>
+</div>
+
+<div class="main">
+<div class="slide-area">
+<div class="viewport">
+
+<!-- ============== SLIDE 1: TITLE ============== -->
+<div class="slide active" data-s="1">
+<div class="title-area">
+  <h1>How Do We Know If a Logistic Model Fits?</h1>
+  <p class="sub">A visual, analogy-first walkthrough of deviance, maximum likelihood, and the likelihood ratio test</p>
+  <div class="title-tags">
+    <span>4 data points</span>
+    <span>No matrix algebra</span>
+    <span>Every number traced by hand</span>
+  </div>
+</div>
+</div>
+
+<!-- ============== SLIDE 2: THE DATA ============== -->
+<div class="slide" data-s="2">
+<div class="tag setup">The Setup</div>
+<h2>Meet Our Four Students</h2>
+<p>Each studied for a different number of hours before an exam. Each either passed or failed.</p>
+
+<div class="student-grid">
+  <div class="student-card fail">
+    <div class="student-icon">📖</div>
+    <div class="student-name">Student A</div>
+    <div class="student-detail">1 hour</div>
+    <div class="student-result">✗ Failed</div>
+  </div>
+  <div class="student-card fail">
+    <div class="student-icon">📖</div>
+    <div class="student-name">Student B</div>
+    <div class="student-detail">2 hours</div>
+    <div class="student-result">✗ Failed</div>
+  </div>
+  <div class="student-card pass">
+    <div class="student-icon">📖</div>
+    <div class="student-name">Student C</div>
+    <div class="student-detail">3 hours</div>
+    <div class="student-result">✓ Passed</div>
+  </div>
+  <div class="student-card pass">
+    <div class="student-icon">📖</div>
+    <div class="student-name">Student D</div>
+    <div class="student-detail">4 hours</div>
+    <div class="student-result">✓ Passed</div>
+  </div>
+</div>
+
+<div class="codeblock"><span class="lbl">R</span><code><span class="fn">hours</span> <span class="op">&lt;-</span> <span class="fn">c</span>(<span class="nb">1</span>, <span class="nb">2</span>, <span class="nb">3</span>, <span class="nb">4</span>)
+<span class="fn">pass</span>  <span class="op">&lt;-</span> <span class="fn">c</span>(<span class="nb">0</span>, <span class="nb">0</span>, <span class="nb">1</span>, <span class="nb">1</span>)
+<span class="fn">df</span>    <span class="op">&lt;-</span> <span class="fn">data.frame</span>(<span class="fn">hours</span>, <span class="fn">pass</span>)</code></div>
+</div>
+
+<!-- ============== SLIDE 3: THE ANALOGY ============== -->
+<div class="slide" data-s="3">
+<div class="tag analogy">The Analogy</div>
+<h2>Think of It as a Prediction Contest</h2>
+<p>Imagine two forecasters are competing. Before each student's result is revealed, each forecaster announces their <strong>confidence</strong> that the student will pass.</p>
+
+<div class="compare">
+  <div class="col null" style="text-align:center;">
+    <h3 style="color:var(--coral);">🎯 The Lazy Forecaster</h3>
+    <p style="font-size:13px;">"I don't care how many hours they studied. My prediction is always <strong>50%</strong>."</p>
+    <svg width="120" height="120" viewBox="0 0 120 120" style="margin:10px auto;display:block;">
+      <circle cx="60" cy="60" r="50" fill="none" stroke="#f0c0b0" stroke-width="8"/>
+      <circle cx="60" cy="60" r="50" fill="none" stroke="var(--coral)" stroke-width="8" stroke-dasharray="157 157" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+      <text x="60" y="66" text-anchor="middle" font-size="22" font-weight="700" fill="var(--coral)" font-family="IBM Plex Mono">50%</text>
+    </svg>
+    <p style="font-size:12px;color:var(--muted);">Same prediction for everyone</p>
+  </div>
+  <div class="col full" style="text-align:center;">
+    <h3 style="color:var(--teal);">🔬 The Smart Forecaster</h3>
+    <p style="font-size:13px;">"More hours = higher chance of passing. Let me give <strong>tailored</strong> predictions."</p>
+    <svg width="120" height="120" viewBox="0 0 120 120" style="margin:10px auto;display:block;">
+      <circle cx="60" cy="60" r="50" fill="none" stroke="#b0e0d8" stroke-width="8"/>
+      <circle cx="60" cy="60" r="50" fill="none" stroke="var(--teal)" stroke-width="8" stroke-dasharray="220 157" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+      <text x="60" y="58" text-anchor="middle" font-size="16" font-weight="700" fill="var(--teal)" font-family="IBM Plex Mono">10-79%</text>
+      <text x="60" y="78" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="IBM Plex Sans">varies</text>
+    </svg>
+    <p style="font-size:12px;color:var(--muted);">Different prediction per student</p>
+  </div>
+</div>
+
+<div class="callout amber">
+  <strong>The central question:</strong> Is the Smart Forecaster meaningfully better than the Lazy one, or is the improvement just noise? That is exactly what deviance and the Likelihood Ratio Test measure.
+</div>
+</div>
+
+<!-- ============== SLIDE 4: SIGMOID VISUAL ============== -->
+<div class="slide" data-s="4">
+<div class="tag step">The Model</div>
+<h2>The S-Curve: Turning Numbers into Probabilities</h2>
+<p>Logistic regression uses a <strong>sigmoid function</strong> to map any input to a probability between 0 and 1. Think of it as a dial that starts near 0, rises through a tipping point, and levels off near 1.</p>
+
+<svg viewBox="0 0 600 280" style="width:100%;max-width:600px;display:block;margin:16px auto;">
+  <!-- Grid -->
+  <line x1="70" y1="240" x2="570" y2="240" stroke="#DDD9D0" stroke-width="1"/>
+  <line x1="70" y1="40" x2="70" y2="240" stroke="#DDD9D0" stroke-width="1"/>
+  <!-- Y labels -->
+  <text x="60" y="244" text-anchor="end" font-size="11" fill="#6B6B80" font-family="IBM Plex Mono">0</text>
+  <text x="60" y="144" text-anchor="end" font-size="11" fill="#6B6B80" font-family="IBM Plex Mono">0.5</text>
+  <text x="60" y="48" text-anchor="end" font-size="11" fill="#6B6B80" font-family="IBM Plex Mono">1.0</text>
+  <!-- Dashed 0.5 line -->
+  <line x1="70" y1="140" x2="570" y2="140" stroke="#DDD9D0" stroke-width="1" stroke-dasharray="4,4"/>
+  <!-- X labels -->
+  <text x="120" y="258" text-anchor="middle" font-size="11" fill="#6B6B80" font-family="IBM Plex Mono">1</text>
+  <text x="245" y="258" text-anchor="middle" font-size="11" fill="#6B6B80" font-family="IBM Plex Mono">2</text>
+  <text x="370" y="258" text-anchor="middle" font-size="11" fill="#6B6B80" font-family="IBM Plex Mono">3</text>
+  <text x="495" y="258" text-anchor="middle" font-size="11" fill="#6B6B80" font-family="IBM Plex Mono">4</text>
+  <text x="320" y="278" text-anchor="middle" font-size="12" fill="#6B6B80" font-family="IBM Plex Sans">Hours studied</text>
+  <text x="26" y="140" text-anchor="middle" font-size="12" fill="#6B6B80" font-family="IBM Plex Sans" transform="rotate(-90 26 140)">P(pass)</text>
+  <!-- S-curve path (fitted: -3.572 + 1.429x) -->
+  <path d="M70,219 C120,218 160,213 200,205 C240,192 280,172 320,140 C360,108 400,78 440,60 C480,48 520,43 570,41" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>
+  <!-- Data points -->
+  <circle cx="120" cy="240" r="8" fill="var(--coral)" opacity=".9"/>
+  <text x="120" y="230" text-anchor="middle" font-size="9" font-weight="700" fill="var(--coral)" font-family="IBM Plex Sans" dy="-6">FAIL</text>
+  <circle cx="245" cy="240" r="8" fill="var(--coral)" opacity=".9"/>
+  <text x="245" y="230" text-anchor="middle" font-size="9" font-weight="700" fill="var(--coral)" font-family="IBM Plex Sans" dy="-6">FAIL</text>
+  <circle cx="370" cy="40" r="8" fill="var(--teal)" opacity=".9"/>
+  <text x="370" y="34" text-anchor="middle" font-size="9" font-weight="700" fill="var(--teal)" font-family="IBM Plex Sans" dy="-6">PASS</text>
+  <circle cx="495" cy="40" r="8" fill="var(--teal)" opacity=".9"/>
+  <text x="495" y="34" text-anchor="middle" font-size="9" font-weight="700" fill="var(--teal)" font-family="IBM Plex Sans" dy="-6">PASS</text>
+  <!-- Predicted prob annotations -->
+  <line x1="120" y1="219" x2="120" y2="240" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <circle cx="120" cy="219" r="4" fill="var(--accent)"/>
+  <text x="132" y="217" font-size="10" fill="var(--accent)" font-family="IBM Plex Mono" font-weight="600">0.105</text>
+  <line x1="245" y1="197" x2="245" y2="240" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <circle cx="245" cy="197" r="4" fill="var(--accent)"/>
+  <text x="257" y="195" font-size="10" fill="var(--accent)" font-family="IBM Plex Mono" font-weight="600">0.269</text>
+  <line x1="370" y1="107" x2="370" y2="40" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <circle cx="370" cy="107" r="4" fill="var(--accent)"/>
+  <text x="382" y="112" font-size="10" fill="var(--accent)" font-family="IBM Plex Mono" font-weight="600">0.536</text>
+  <line x1="495" y1="62" x2="495" y2="40" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <circle cx="495" cy="62" r="4" fill="var(--accent)"/>
+  <text x="455" y="70" font-size="10" fill="var(--accent)" font-family="IBM Plex Mono" font-weight="600">0.788</text>
+</svg>
+
+<div class="callout blue">
+  The <span style="color:var(--accent);font-weight:600;">blue curve</span> is the fitted model. The <span style="color:var(--accent);font-weight:600;">blue dots</span> on the curve are the model's predicted probabilities. The <span style="color:var(--coral);font-weight:600;">red</span> and <span style="color:var(--teal);font-weight:600;">green</span> dots are where the actual outcomes sit (0 or 1).
+</div>
+</div>
+
+<!-- ============== SLIDE 5: FORMULA BREAKDOWN ============== -->
+<div class="slide" data-s="5">
+<div class="tag step">Deconstructing the Formula</div>
+<h2>What Each Piece Actually Does</h2>
+<p>The logistic regression formula has layers. Let's peel them apart visually.</p>
+
+<div class="card" style="margin:16px 0;">
+  <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">LAYER 1: The linear prediction</p>
+  <div style="text-align:center;padding:8px 0;">
+    <span class="cf blue">β₀</span>
+    <span style="font-size:18px;margin:0 4px;">+</span>
+    <span class="cf coral">β₁</span>
+    <span style="font-size:18px;margin:0 4px;">×</span>
+    <span class="cf teal">x</span>
+    <span style="font-size:18px;margin:0 8px;">=</span>
+    <span class="cf purple">linear predictor</span>
+  </div>
+  <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:120px;font-size:12px;"><span class="cf blue">β₀</span> = baseline. Where do you start when hours = 0?</div>
+    <div style="flex:1;min-width:120px;font-size:12px;"><span class="cf coral">β₁</span> = slope. How much does each hour shift you?</div>
+    <div style="flex:1;min-width:120px;font-size:12px;"><span class="cf teal">x</span> = input. Hours studied.</div>
+  </div>
+</div>
+
+<div class="card" style="margin:16px 0;">
+  <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">LAYER 2: Squash it through the sigmoid</p>
+  <div style="text-align:center;padding:8px 0;">
+    <span style="font-size:17px;font-family:'Crimson Pro',serif;">p = 1 / (1 + exp(</span>
+    <span style="font-size:17px;font-family:'Crimson Pro',serif;">−</span>
+    <span class="cf purple">linear predictor</span>
+    <span style="font-size:17px;font-family:'Crimson Pro',serif;">))</span>
+  </div>
+  <p style="font-size:13px;margin-top:10px;">The sigmoid is just a <strong>squashing machine</strong>. Feed in any number from −∞ to +∞, and it spits out a number between 0 and 1. Negative inputs produce values below 0.5. Positive inputs produce values above 0.5.</p>
+</div>
+
+<div class="card" style="margin:16px 0;background:var(--amber-light);border-color:var(--amber);">
+  <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">CONCRETE EXAMPLE: Student D (4 hours)</p>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:2;">
+    <span class="cf blue">−3.572</span> + <span class="cf coral">1.429</span> × <span class="cf teal">4</span> = <span class="cf purple">2.144</span><br>
+    p = 1 / (1 + exp(−<span class="cf purple">2.144</span>)) = <strong>0.895 → ~0.788</strong>
+  </div>
+  <p style="font-size:12px;color:var(--muted);margin-top:6px;">A positive linear predictor means the probability lands above 0.5.</p>
+</div>
+</div>
+
+<!-- ============== SLIDE 6: WHAT IS FITTING? ============== -->
+<div class="slide" data-s="6">
+<div class="tag analogy">Analogy</div>
+<h2>Fitting = Tuning a Radio Dial</h2>
+<p>Imagine two knobs on a radio. One knob is <span class="cf blue">β₀</span> (shifts the curve left/right) and the other is <span class="cf coral">β₁</span> (makes the curve steeper/flatter). "Fitting" means twisting both knobs until you find the position where the curve best matches the data.</p>
+
+<svg viewBox="0 0 600 200" style="width:100%;max-width:600px;display:block;margin:16px auto;">
+  <!-- Bad curve -->
+  <path d="M30,160 C80,158 140,150 200,130 C260,110 320,80 380,50 C440,30 500,22 570,20" fill="none" stroke="#DDD9D0" stroke-width="2.5" stroke-dasharray="6,4"/>
+  <text x="540" y="16" font-size="10" fill="#aaa" font-family="IBM Plex Sans">too early</text>
+  <!-- Bad curve 2 -->
+  <path d="M30,180 C120,179 200,178 280,174 C360,165 420,140 480,95 C520,65 550,40 570,25" fill="none" stroke="#DDD9D0" stroke-width="2.5" stroke-dasharray="6,4"/>
+  <text x="540" y="45" font-size="10" fill="#aaa" font-family="IBM Plex Sans">too late</text>
+  <!-- Good curve (fitted) -->
+  <path d="M30,168 C80,166 140,160 200,148 C260,130 320,100 380,68 C440,44 500,30 570,26" fill="none" stroke="var(--accent)" stroke-width="3"/>
+  <text x="540" y="68" font-size="10" fill="var(--accent)" font-weight="600" font-family="IBM Plex Sans">← best fit</text>
+  <!-- Data points -->
+  <circle cx="105" cy="180" r="7" fill="var(--coral)"/><text x="105" y="198" text-anchor="middle" font-size="9" fill="var(--coral)" font-family="IBM Plex Sans" font-weight="600">0</text>
+  <circle cx="220" cy="180" r="7" fill="var(--coral)"/><text x="220" y="198" text-anchor="middle" font-size="9" fill="var(--coral)" font-family="IBM Plex Sans" font-weight="600">0</text>
+  <circle cx="345" cy="20" r="7" fill="var(--teal)"/><text x="345" y="15" text-anchor="middle" font-size="9" fill="var(--teal)" font-family="IBM Plex Sans" font-weight="600">1</text>
+  <circle cx="465" cy="20" r="7" fill="var(--teal)"/><text x="465" y="15" text-anchor="middle" font-size="9" fill="var(--teal)" font-family="IBM Plex Sans" font-weight="600">1</text>
+</svg>
+
+<p>But how do we define "best"? We need a <strong>scoring rule</strong> that measures how well a particular curve matches the observed outcomes. That scoring rule is the <strong>likelihood</strong>.</p>
+
+<div class="codeblock"><span class="lbl">R</span><code><span class="cm"># R tunes the knobs for us</span>
+<span class="fn">model</span> <span class="op">&lt;-</span> <span class="fn">glm</span>(<span class="fn">pass</span> <span class="op">~</span> <span class="fn">hours</span>, <span class="fn">family</span> <span class="op">=</span> <span class="fn">binomial</span>, <span class="fn">data</span> <span class="op">=</span> <span class="fn">df</span>)
+<span class="fn">coef</span>(<span class="fn">model</span>)
+<span class="cm"># (Intercept)    hours</span>
+<span class="cm">#   -3.57178  1.42871</span></code></div>
+</div>
+
+<!-- ============== SLIDE 7: LIKELIHOOD GAME ============== -->
+<div class="slide" data-s="7">
+<div class="tag key">Key Concept</div>
+<h2>The Confidence Scoring Game</h2>
+<p>Here is the intuition behind <strong>likelihood</strong>. Before each result is revealed, the model announces how confident it is. Then we score it:</p>
+
+<div class="card" style="margin:14px 0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:200px;text-align:center;padding:12px;background:var(--teal-light);border-radius:8px;">
+      <p style="font-size:13px;font-weight:600;color:var(--teal);margin-bottom:4px;">If the student PASSED</p>
+      <p style="font-size:14px;">Score = <span class="mono" style="color:var(--teal);">predicted probability</span></p>
+      <p style="font-size:12px;color:var(--muted);margin-top:4px;">"You said 79%? Your score is 0.79."</p>
+    </div>
+    <div style="flex:1;min-width:200px;text-align:center;padding:12px;background:var(--coral-light);border-radius:8px;">
+      <p style="font-size:13px;font-weight:600;color:var(--coral);margin-bottom:4px;">If the student FAILED</p>
+      <p style="font-size:14px;">Score = <span class="mono" style="color:var(--coral);">1 − predicted probability</span></p>
+      <p style="font-size:12px;color:var(--muted);margin-top:4px;">"You said 27% chance of passing? That means 73% chance of failing. Score: 0.73."</p>
+    </div>
+  </div>
+</div>
+
+<p>The overall score is the <strong>product</strong> of all individual scores. A perfect forecaster who always predicted 100% for pass and 0% for fail would score 1.0. A terrible one approaches 0.</p>
+
+<div class="formula">
+  Likelihood = score₁ × score₂ × score₃ × score₄
+</div>
+
+<div class="callout amber">
+  <strong>Why multiply?</strong> Think of it like AND logic. The model needs to get student A right <em>and</em> student B right <em>and</em> student C right... If any single prediction is terrible (near 0), it drags the whole product down.
+</div>
+</div>
+
+<!-- ============== SLIDE 8: SCORING EACH STUDENT ============== -->
+<div class="slide" data-s="8">
+<div class="tag step">Scoring Round by Round</div>
+<h2>The Smart Forecaster's Scorecard</h2>
+<p>Using the fitted probabilities from our logistic model:</p>
+
+<div class="score-row">
+  <div class="score-who" style="color:var(--coral);">Student A</div>
+  <div class="score-pred">
+    Predicted <span class="mono">10.5%</span> pass → actual: <strong>Failed</strong>
+    <div class="prob-bar-wrap" style="margin-top:4px;">
+      <div class="prob-bar-track">
+        <div class="prob-bar-fill" style="width:89.5%;background:var(--teal);opacity:.7;"></div>
+      </div>
+    </div>
+    <span style="font-size:11px;color:var(--muted);">Confident it would fail (89.5% for fail) → good call!</span>
+  </div>
+  <div class="score-result good">0.895</div>
+</div>
+
+<div class="score-row">
+  <div class="score-who" style="color:var(--coral);">Student B</div>
+  <div class="score-pred">
+    Predicted <span class="mono">26.9%</span> pass → actual: <strong>Failed</strong>
+    <div class="prob-bar-wrap" style="margin-top:4px;">
+      <div class="prob-bar-track">
+        <div class="prob-bar-fill" style="width:73.1%;background:var(--teal);opacity:.7;"></div>
+      </div>
+    </div>
+    <span style="font-size:11px;color:var(--muted);">Leaning toward fail (73.1%) → decent call</span>
+  </div>
+  <div class="score-result good">0.731</div>
+</div>
+
+<div class="score-row">
+  <div class="score-who" style="color:var(--teal);">Student C</div>
+  <div class="score-pred">
+    Predicted <span class="mono">53.6%</span> pass → actual: <strong>Passed</strong>
+    <div class="prob-bar-wrap" style="margin-top:4px;">
+      <div class="prob-bar-track">
+        <div class="prob-bar-fill" style="width:53.6%;background:var(--teal);opacity:.7;"></div>
+      </div>
+    </div>
+    <span style="font-size:11px;color:var(--muted);">Barely above coin flip → not very confident</span>
+  </div>
+  <div class="score-result" style="color:var(--amber);">0.536</div>
+</div>
+
+<div class="score-row">
+  <div class="score-who" style="color:var(--teal);">Student D</div>
+  <div class="score-pred">
+    Predicted <span class="mono">78.8%</span> pass → actual: <strong>Passed</strong>
+    <div class="prob-bar-wrap" style="margin-top:4px;">
+      <div class="prob-bar-track">
+        <div class="prob-bar-fill" style="width:78.8%;background:var(--teal);opacity:.7;"></div>
+      </div>
+    </div>
+    <span style="font-size:11px;color:var(--muted);">Fairly confident in pass → solid call</span>
+  </div>
+  <div class="score-result good">0.788</div>
+</div>
+
+<div class="card" style="text-align:center;margin-top:14px;background:var(--accent-light);border-color:var(--accent);">
+  <p style="font-size:13px;color:var(--muted);margin-bottom:4px;">TOTAL LIKELIHOOD</p>
+  <p style="font-size:20px;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--accent);">
+    0.895 × 0.731 × 0.536 × 0.788 = 0.276
+  </p>
+</div>
+</div>
+
+<!-- ============== SLIDE 9: WHY LOGS ============== -->
+<div class="slide" data-s="9">
+<div class="tag key">Key Concept</div>
+<h2>Why Take the Log?</h2>
+<p>Products of small numbers shrink fast. With 100 students instead of 4, you would be multiplying 100 numbers between 0 and 1. That product quickly becomes astronomically tiny (like 10<sup>−47</sup>). Computers can not handle that.</p>
+
+<svg viewBox="0 0 580 180" style="width:100%;max-width:580px;display:block;margin:16px auto;">
+  <!-- Product shrinking -->
+  <text x="10" y="20" font-size="12" font-weight="600" fill="var(--coral)" font-family="IBM Plex Sans">Multiplying (products shrink fast)</text>
+  <rect x="10" y="32" width="250" height="20" rx="3" fill="#f0c0b0" opacity=".4"/>
+  <rect x="10" y="32" width="250" height="20" rx="3" fill="var(--coral)" opacity=".6"/>
+  <text x="265" y="47" font-size="11" fill="var(--coral)" font-family="IBM Plex Mono" font-weight="600">0.895</text>
+  <rect x="10" y="56" width="183" height="20" rx="3" fill="var(--coral)" opacity=".6"/>
+  <text x="198" y="71" font-size="11" fill="var(--coral)" font-family="IBM Plex Mono" font-weight="600">× 0.731 = 0.654</text>
+  <rect x="10" y="80" width="98" height="20" rx="3" fill="var(--coral)" opacity=".6"/>
+  <text x="113" y="95" font-size="11" fill="var(--coral)" font-family="IBM Plex Mono" font-weight="600">× 0.536 = 0.350</text>
+  <rect x="10" y="104" width="77" height="20" rx="3" fill="var(--coral)" opacity=".6"/>
+  <text x="92" y="119" font-size="11" fill="var(--coral)" font-family="IBM Plex Mono" font-weight="600">× 0.788 = 0.276</text>
+  <text x="10" y="150" font-size="11" fill="var(--muted)" font-family="IBM Plex Sans">With 100 students: ≈ 0.000...0001</text>
+
+  <!-- Log addition -->
+  <text x="330" y="20" font-size="12" font-weight="600" fill="var(--teal)" font-family="IBM Plex Sans">Adding logs (stays manageable)</text>
+  <rect x="330" y="32" width="100" height="16" rx="3" fill="var(--teal)" opacity=".5"/>
+  <text x="435" y="45" font-size="11" fill="var(--teal)" font-family="IBM Plex Mono">−0.111</text>
+  <rect x="330" y="52" width="100" height="16" rx="3" fill="var(--teal)" opacity=".5"/>
+  <text x="435" y="65" font-size="11" fill="var(--teal)" font-family="IBM Plex Mono">−0.313</text>
+  <rect x="330" y="72" width="100" height="16" rx="3" fill="var(--teal)" opacity=".5"/>
+  <text x="435" y="85" font-size="11" fill="var(--teal)" font-family="IBM Plex Mono">−0.624</text>
+  <rect x="330" y="92" width="100" height="16" rx="3" fill="var(--teal)" opacity=".5"/>
+  <text x="435" y="105" font-size="11" fill="var(--teal)" font-family="IBM Plex Mono">−0.238</text>
+  <line x1="330" y1="115" x2="500" y2="115" stroke="var(--teal)" stroke-width="1.5"/>
+  <text x="435" y="132" font-size="12" fill="var(--teal)" font-family="IBM Plex Mono" font-weight="700">−1.286*</text>
+  <text x="330" y="155" font-size="10" fill="var(--muted)" font-family="IBM Plex Sans">*Rounded. Full precision: −1.910</text>
+</svg>
+
+<div class="callout teal">
+  <strong>The log transform is purely practical.</strong> It does not change which model is best. Maximizing the likelihood is the same as maximizing the log-likelihood. It just makes the math tractable.
+</div>
+
+<div class="codeblock"><span class="lbl">R</span><code><span class="fn">logLik</span>(<span class="fn">model</span>)
+<span class="cm"># 'log Lik.' -1.909548 (df=2)</span></code></div>
+</div>
+
+<!-- ============== SLIDE 10: MLE SUMMARY ============== -->
+<div class="slide" data-s="10">
+<div class="tag key">Key Concept</div>
+<h2>Maximum Likelihood Estimation (MLE)</h2>
+<p>We can now state what "fitting" means precisely:</p>
+
+<div class="card" style="text-align:center;border-color:var(--accent);background:var(--accent-light);">
+  <p style="font-size:15px;font-weight:600;color:var(--accent);margin-bottom:6px;">MLE finds the β₀ and β₁ that produce the highest possible total score (likelihood)</p>
+  <p style="font-size:13px;color:var(--muted);">Equivalently: the least negative log-likelihood</p>
+</div>
+
+<p style="margin-top:14px;">Think of it as an exhaustive search through all possible S-curves, scoring each one, and picking the winner. R does this iteratively using an algorithm called IRLS.</p>
+
+<div class="codeblock"><span class="lbl">R</span><code><span class="fn">summary</span>(<span class="fn">model</span>)</code></div>
+<div class="rout"><span class="lbl">R output</span><code>Coefficients:
+            Estimate Std. Error z value Pr(>|z|)
+(Intercept)  -3.572      3.236  -1.104    0.270
+hours         1.429      1.263   1.131    0.258
+
+    Null deviance: 5.5452  on 3  degrees of freedom
+Residual deviance: 3.8191  on 2  degrees of freedom</code></div>
+
+<div class="callout amber" style="margin-top:10px;">
+  See those two deviance numbers at the bottom? <strong>That is where we are headed.</strong> We now know what likelihood is, so we are ready to understand what deviance measures and what those numbers mean.
+</div>
+</div>
+
+<!-- ============== SLIDE 11: DEVIANCE INTRO ============== -->
+<div class="slide" data-s="11">
+<div class="tag key">The Big Idea</div>
+<h2>Deviance = A Penalty Score for Bad Fit</h2>
+<p>Likelihood tells us "how good is this model?" Deviance flips that into "how bad is this model?" Think of it as a <strong>golf score</strong>: lower is better, and zero means perfection.</p>
+
+<div class="formula">
+  Deviance = −2 × log-likelihood
+</div>
+
+<svg viewBox="0 0 560 120" style="width:100%;max-width:560px;display:block;margin:20px auto;">
+  <!-- Scale bar -->
+  <defs>
+    <linearGradient id="grd" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="var(--teal)"/>
+      <stop offset="100%" stop-color="var(--coral)"/>
+    </linearGradient>
+  </defs>
+  <rect x="40" y="30" width="480" height="24" rx="12" fill="url(#grd)" opacity=".25"/>
+  <rect x="40" y="30" width="480" height="24" rx="12" fill="none" stroke="#ccc" stroke-width="1"/>
+  <!-- Perfect -->
+  <circle cx="40" cy="42" r="8" fill="var(--teal)" stroke="#fff" stroke-width="2"/>
+  <text x="40" y="75" text-anchor="middle" font-size="11" font-weight="600" fill="var(--teal)" font-family="IBM Plex Sans">0</text>
+  <text x="40" y="90" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="IBM Plex Sans">Perfect fit</text>
+  <!-- Our model -->
+  <circle cx="373" cy="42" r="10" fill="var(--accent)" stroke="#fff" stroke-width="2.5"/>
+  <text x="373" y="19" text-anchor="middle" font-size="12" font-weight="700" fill="var(--accent)" font-family="IBM Plex Mono">3.82</text>
+  <text x="373" y="75" text-anchor="middle" font-size="11" font-weight="600" fill="var(--accent)" font-family="IBM Plex Sans">Our model</text>
+  <!-- Null -->
+  <circle cx="467" cy="42" r="10" fill="var(--coral)" stroke="#fff" stroke-width="2.5"/>
+  <text x="467" y="19" text-anchor="middle" font-size="12" font-weight="700" fill="var(--coral)" font-family="IBM Plex Mono">5.55</text>
+  <text x="467" y="75" text-anchor="middle" font-size="11" font-weight="600" fill="var(--coral)" font-family="IBM Plex Sans">Null model</text>
+  <!-- Arrow showing improvement -->
+  <line x1="395" y1="95" x2="450" y2="95" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrowL)"/>
+  <text x="423" y="112" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="IBM Plex Sans">gap = 1.73</text>
+</svg>
+
+<div class="codeblock"><span class="lbl">R</span><code><span class="cm"># Computing deviance from log-likelihood</span>
+<span class="op">-</span><span class="nb">2</span> <span class="op">*</span> <span class="fn">as.numeric</span>(<span class="fn">logLik</span>(<span class="fn">model</span>))
+<span class="cm"># [1] 3.819096</span>
+
+<span class="cm"># R stores it directly</span>
+<span class="fn">model</span><span class="op">$</span><span class="fn">deviance</span>
+<span class="cm"># [1] 3.819096</span></code></div>
+</div>
+
+<!-- ============== SLIDE 12: WHY -2 ============== -->
+<div class="slide" data-s="12">
+<div class="tag step">Deconstructing −2</div>
+<h2>Why Multiply by Negative Two?</h2>
+<p>Each part of the "−2" does a specific job:</p>
+
+<div class="card" style="margin:14px 0;">
+  <div style="display:flex;gap:20px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:200px;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <span style="display:inline-block;width:48px;height:48px;line-height:48px;text-align:center;border-radius:50%;background:var(--coral-light);font-size:24px;font-weight:700;color:var(--coral);font-family:'IBM Plex Mono';">−</span>
+      </div>
+      <h3 style="text-align:center;font-size:14px;color:var(--coral);">The negative sign</h3>
+      <p style="font-size:13px;text-align:center;">Log-likelihoods are always ≤ 0 (because we are logging numbers between 0 and 1). Negating flips the scale so <strong>bigger = worse fit</strong>.</p>
+    </div>
+    <div style="flex:1;min-width:200px;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <span style="display:inline-block;width:48px;height:48px;line-height:48px;text-align:center;border-radius:50%;background:var(--accent-light);font-size:24px;font-weight:700;color:var(--accent);font-family:'IBM Plex Mono';">2</span>
+      </div>
+      <h3 style="text-align:center;font-size:14px;color:var(--accent);">The factor of 2</h3>
+      <p style="font-size:13px;text-align:center;">This is a mathematical convenience. When you take the <em>difference</em> of two deviances, it follows a <strong>chi-squared distribution</strong>, which lets us compute p-values.</p>
+    </div>
+  </div>
+</div>
+
+<div class="callout blue">
+  <strong>An analogy:</strong> temperature can be measured in Celsius or Fahrenheit. The underlying heat is the same; the scale just makes certain comparisons easier. The "−2" rescales the log-likelihood onto a scale where statistical theory gives us clean hypothesis tests.
+</div>
+</div>
+
+<!-- ============== SLIDE 13: SATURATED MODEL ============== -->
+<div class="slide" data-s="13">
+<div class="tag step">A Subtlety</div>
+<h2>The Perfect Forecaster (Saturated Model)</h2>
+<p>Technically, deviance is measured as a gap between your model and a <strong>saturated model</strong> that fits every single data point perfectly.</p>
+
+<div class="compare">
+  <div class="col" style="border-color:var(--purple);background:var(--purple-light);">
+    <h3 style="color:var(--purple);font-size:14px;">🏆 Saturated Model</h3>
+    <p style="font-size:13px;">One free parameter per observation. Predicts each outcome with 100% confidence.</p>
+    <p style="font-size:13px;">Likelihood = 1.0<br>Log-likelihood = 0</p>
+  </div>
+  <div class="col" style="border-color:var(--accent);background:var(--accent-light);">
+    <h3 style="color:var(--accent);font-size:14px;">📊 Our Model</h3>
+    <p style="font-size:13px;">Two parameters (β₀, β₁). Imperfect predictions.</p>
+    <p style="font-size:13px;">Likelihood = 0.276<br>Log-likelihood = −1.910</p>
+  </div>
+</div>
+
+<div class="formula">
+  Deviance = −2 × (ℓ<sub>our model</sub> − ℓ<sub>saturated</sub>)<br>
+  <span style="font-size:15px;">= −2 × (−1.910 − 0) = 3.82</span>
+</div>
+
+<div class="callout teal">
+  <strong>For binary outcomes, this simplifies.</strong> When every observation is 0 or 1, the saturated model's log-likelihood is exactly 0. So deviance just equals −2 × log-likelihood. That is why you will see both formulas in textbooks, and they are equivalent here.
+</div>
+</div>
+
+<!-- ============== SLIDE 14: NULL VS RESIDUAL ============== -->
+<div class="slide" data-s="14">
+<div class="tag step">The Comparison</div>
+<h2>Two Models, Two Deviances</h2>
+<p>Now we score both forecasters from our analogy using deviance:</p>
+
+<div class="compare" style="margin:16px 0;">
+  <div class="col null">
+    <h3 style="color:var(--coral);font-size:14px;">🎯 Lazy Forecaster (Null Model)</h3>
+    <p style="font-size:13px;">Predicts 50% for everyone. Ignores hours.</p>
+    <div style="text-align:center;margin:10px 0;">
+      <div class="prob-bar-wrap"><div class="prob-bar-label" style="font-size:11px;">A (1hr)</div><div class="prob-bar-track"><div class="prob-bar-fill" style="width:50%;background:var(--coral);opacity:.6;"></div></div><div class="prob-bar-val" style="color:var(--coral);">50%</div></div>
+      <div class="prob-bar-wrap"><div class="prob-bar-label" style="font-size:11px;">B (2hr)</div><div class="prob-bar-track"><div class="prob-bar-fill" style="width:50%;background:var(--coral);opacity:.6;"></div></div><div class="prob-bar-val" style="color:var(--coral);">50%</div></div>
+      <div class="prob-bar-wrap"><div class="prob-bar-label" style="font-size:11px;">C (3hr)</div><div class="prob-bar-track"><div class="prob-bar-fill" style="width:50%;background:var(--coral);opacity:.6;"></div></div><div class="prob-bar-val" style="color:var(--coral);">50%</div></div>
+      <div class="prob-bar-wrap"><div class="prob-bar-label" style="font-size:11px;">D (4hr)</div><div class="prob-bar-track"><div class="prob-bar-fill" style="width:50%;background:var(--coral);opacity:.6;"></div></div><div class="prob-bar-val" style="color:var(--coral);">50%</div></div>
+    </div>
+    <p style="font-size:14px;font-weight:700;text-align:center;color:var(--coral);margin-top:6px;">Null Deviance = 5.545</p>
+  </div>
+  <div class="col full">
+    <h3 style="color:var(--teal);font-size:14px;">🔬 Smart Forecaster (Full Model)</h3>
+    <p style="font-size:13px;">Uses hours to give tailored predictions.</p>
+    <div style="text-align:center;margin:10px 0;">
+      <div class="prob-bar-wrap"><div class="prob-bar-label" style="font-size:11px;">A (1hr)</div><div class="prob-bar-track"><div class="prob-bar-fill" style="width:10.5%;background:var(--teal);opacity:.6;"></div></div><div class="prob-bar-val" style="color:var(--teal);">10.5%</div></div>
+      <div class="prob-bar-wrap"><div class="prob-bar-label" style="font-size:11px;">B (2hr)</div><div class="prob-bar-track"><div class="prob-bar-fill" style="width:26.9%;background:var(--teal);opacity:.6;"></div></div><div class="prob-bar-val" style="color:var(--teal);">26.9%</div></div>
+      <div class="prob-bar-wrap"><div class="prob-bar-label" style="font-size:11px;">C (3hr)</div><div class="prob-bar-track"><div class="prob-bar-fill" style="width:53.6%;background:var(--teal);opacity:.6;"></div></div><div class="prob-bar-val" style="color:var(--teal);">53.6%</div></div>
+      <div class="prob-bar-wrap"><div class="prob-bar-label" style="font-size:11px;">D (4hr)</div><div class="prob-bar-track"><div class="prob-bar-fill" style="width:78.8%;background:var(--teal);opacity:.6;"></div></div><div class="prob-bar-val" style="color:var(--teal);">78.8%</div></div>
+    </div>
+    <p style="font-size:14px;font-weight:700;text-align:center;color:var(--teal);margin-top:6px;">Residual Deviance = 3.819</p>
+  </div>
+</div>
+
+<div class="codeblock"><span class="lbl">R</span><code><span class="fn">null_model</span> <span class="op">&lt;-</span> <span class="fn">glm</span>(<span class="fn">pass</span> <span class="op">~</span> <span class="nb">1</span>, <span class="fn">family</span> <span class="op">=</span> <span class="fn">binomial</span>, <span class="fn">data</span> <span class="op">=</span> <span class="fn">df</span>)
+<span class="fn">null_model</span><span class="op">$</span><span class="fn">deviance</span>  <span class="cm"># 5.545</span>
+<span class="fn">model</span><span class="op">$</span><span class="fn">deviance</span>       <span class="cm"># 3.819</span></code></div>
+</div>
+
+<!-- ============== SLIDE 15: THE DROP ============== -->
+<div class="slide" data-s="15">
+<div class="tag key">The Key Question</div>
+<h2>The Deviance Drop: Is It Real?</h2>
+<p>Adding <span class="mono">hours</span> reduced deviance from 5.545 to 3.819. That is a drop of <strong>1.726</strong>. But here is the catch:</p>
+
+<div class="card" style="border-color:var(--amber);background:var(--amber-light);">
+  <p style="font-size:14px;"><strong>Adding any predictor will almost always reduce deviance at least a little</strong>, even a totally random one. The question is whether the drop is large enough that it is unlikely to have happened by chance.</p>
+</div>
+
+<svg viewBox="0 0 500 160" style="width:100%;max-width:500px;display:block;margin:20px auto;">
+  <!-- Null bar -->
+  <rect x="100" y="20" width="330" height="36" rx="6" fill="var(--coral)" opacity=".2"/>
+  <rect x="100" y="20" width="330" height="36" rx="6" fill="none" stroke="var(--coral)" stroke-width="1.5"/>
+  <text x="90" y="43" text-anchor="end" font-size="12" font-weight="600" fill="var(--coral)" font-family="IBM Plex Sans">Null</text>
+  <text x="270" y="43" text-anchor="middle" font-size="14" font-weight="700" fill="var(--coral)" font-family="IBM Plex Mono">5.545</text>
+  <!-- Full bar -->
+  <rect x="100" y="72" width="227" height="36" rx="6" fill="var(--teal)" opacity=".2"/>
+  <rect x="100" y="72" width="227" height="36" rx="6" fill="none" stroke="var(--teal)" stroke-width="1.5"/>
+  <text x="90" y="95" text-anchor="end" font-size="12" font-weight="600" fill="var(--teal)" font-family="IBM Plex Sans">Full</text>
+  <text x="214" y="95" text-anchor="middle" font-size="14" font-weight="700" fill="var(--teal)" font-family="IBM Plex Mono">3.819</text>
+  <!-- Drop bracket -->
+  <line x1="327" y1="78" x2="430" y2="78" stroke="var(--accent)" stroke-width="1.5"/>
+  <line x1="430" y1="26" x2="430" y2="78" stroke="var(--accent)" stroke-width="1.5"/>
+  <line x1="327" y1="78" x2="327" y2="102" stroke="var(--accent)" stroke-width="1.5"/>
+  <rect x="350" y="44" width="110" height="28" rx="6" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="1"/>
+  <text x="405" y="63" text-anchor="middle" font-size="13" font-weight="700" fill="var(--accent)" font-family="IBM Plex Mono">Δ = 1.726</text>
+  <!-- Question -->
+  <text x="250" y="145" text-anchor="middle" font-size="14" font-weight="600" fill="var(--text)" font-family="IBM Plex Sans">Is this drop big enough to matter?</text>
+  <text x="250" y="160" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="IBM Plex Sans">We need a reference distribution to compare against.</text>
+</svg>
+</div>
+
+<!-- ============== SLIDE 16: LRT ============== -->
+<div class="slide" data-s="16">
+<div class="tag key">Likelihood Ratio Test</div>
+<h2>Comparing Against What Chance Would Produce</h2>
+
+<p>The <strong>Likelihood Ratio Test</strong> asks: if hours truly had no effect, how often would we see a deviance drop of 1.726 or more, purely by luck?</p>
+
+<p>Under the null hypothesis (no real effect), the deviance drop follows a <strong>chi-squared distribution</strong> with degrees of freedom = number of parameters added (here, 1).</p>
+
+<svg viewBox="0 0 520 200" style="width:100%;max-width:520px;display:block;margin:14px auto;">
+  <!-- Chi-sq curve (df=1, approximate) -->
+  <text x="260" y="18" text-anchor="middle" font-size="12" font-weight="600" fill="var(--muted)" font-family="IBM Plex Sans">χ² distribution (df = 1)</text>
+  <path d="M60,170 C65,168 70,155 80,130 C90,108 100,90 120,72 C140,58 170,44 200,38 C230,33 270,31 310,30 C350,30 400,30 440,30 C470,30 490,30 500,30" fill="none" stroke="var(--muted)" stroke-width="2"/>
+  <!-- Fill area for p-value region -->
+  <path d="M245,32 C270,31 310,30 350,30 C400,30 440,30 480,30 L480,170 L245,170 Z" fill="var(--accent)" opacity=".12"/>
+  <!-- Our value line -->
+  <line x1="245" y1="25" x2="245" y2="175" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="5,4"/>
+  <text x="245" y="192" text-anchor="middle" font-size="11" font-weight="700" fill="var(--accent)" font-family="IBM Plex Mono">1.726</text>
+  <!-- Critical value -->
+  <line x1="355" y1="25" x2="355" y2="175" stroke="var(--coral)" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="355" y="192" text-anchor="middle" font-size="11" font-weight="600" fill="var(--coral)" font-family="IBM Plex Mono">3.84</text>
+  <text x="355" y="22" text-anchor="middle" font-size="10" fill="var(--coral)" font-family="IBM Plex Sans">α = 0.05 cutoff</text>
+  <!-- Labels -->
+  <text x="300" y="100" text-anchor="middle" font-size="11" fill="var(--accent)" font-family="IBM Plex Sans" opacity=".8">p = 0.189</text>
+  <text x="420" y="100" text-anchor="middle" font-size="10" fill="var(--coral)" font-family="IBM Plex Sans" opacity=".8">p = 0.05</text>
+</svg>
+
+<p>Our value (1.726) falls well to the left of the 3.84 cutoff. That means a drop this large could easily happen by chance.</p>
+
+<div class="codeblock"><span class="lbl">R</span><code><span class="fn">diff_dev</span> <span class="op">&lt;-</span> <span class="fn">null_model</span><span class="op">$</span><span class="fn">deviance</span> <span class="op">-</span> <span class="fn">model</span><span class="op">$</span><span class="fn">deviance</span>
+<span class="fn">pchisq</span>(<span class="fn">diff_dev</span>, <span class="fn">df</span> <span class="op">=</span> <span class="nb">1</span>, <span class="fn">lower.tail</span> <span class="op">=</span> <span class="kw">FALSE</span>)
+<span class="cm"># [1] 0.1889</span></code></div>
+</div>
+
+<!-- ============== SLIDE 17: INTERPRETING ============== -->
+<div class="slide" data-s="17">
+<div class="tag analogy">Interpreting the Result</div>
+<h2>What Does p = 0.189 Mean Here?</h2>
+
+<div class="card" style="border-color:var(--accent);margin:14px 0;">
+  <p style="font-size:14px;">If hours truly had <em>zero</em> relationship with passing, there is about a <strong>19% chance</strong> we would see a deviance improvement at least this large, just from random noise in 4 data points.</p>
+</div>
+
+<p>That is not rare enough to be convincing (we typically need &lt; 5%). So we say:</p>
+
+<div class="callout coral">
+  <strong>We fail to reject the null hypothesis.</strong> We cannot conclude that hours significantly improves model fit. The Lazy Forecaster might be doing just as well as the Smart one.
+</div>
+
+<p style="margin-top:14px;">But wait, the pattern is clearly 0, 0, 1, 1. So what happened?</p>
+
+<div class="callout amber">
+  <strong>Low power.</strong> With only 4 observations, even a real effect is hard to detect. The LRT needs a sufficient sample size to distinguish signal from noise. With 40 students showing the same pattern, the p-value would be tiny.
+</div>
+
+<div class="codeblock"><span class="lbl">R</span><code><span class="cm"># Same pattern but with 10× more data</span>
+<span class="fn">hours_big</span> <span class="op">&lt;-</span> <span class="fn">rep</span>(<span class="fn">c</span>(<span class="nb">1</span>,<span class="nb">2</span>,<span class="nb">3</span>,<span class="nb">4</span>), <span class="fn">each</span> <span class="op">=</span> <span class="nb">10</span>)
+<span class="fn">pass_big</span>  <span class="op">&lt;-</span> <span class="fn">rep</span>(<span class="fn">c</span>(<span class="nb">0</span>,<span class="nb">0</span>,<span class="nb">1</span>,<span class="nb">1</span>), <span class="fn">each</span> <span class="op">=</span> <span class="nb">10</span>)
+<span class="fn">big_model</span> <span class="op">&lt;-</span> <span class="fn">glm</span>(<span class="fn">pass_big</span> <span class="op">~</span> <span class="fn">hours_big</span>, <span class="fn">family</span> <span class="op">=</span> <span class="fn">binomial</span>)
+<span class="fn">anova</span>(<span class="fn">big_model</span>, <span class="fn">test</span> <span class="op">=</span> <span class="st">"Chisq"</span>)
+<span class="cm"># Deviance drop: 17.26, p = 0.0000325</span></code></div>
+</div>
+
+<!-- ============== SLIDE 18: R SHORTCUT ============== -->
+<div class="slide" data-s="18">
+<div class="tag step">Practical R Usage</div>
+<h2>The One-Line Shortcut</h2>
+<p>You never have to compute any of this manually. R's <span class="mono">anova()</span> runs the entire Likelihood Ratio Test:</p>
+
+<div class="codeblock"><span class="lbl">R</span><code><span class="fn">anova</span>(<span class="fn">null_model</span>, <span class="fn">model</span>, <span class="fn">test</span> <span class="op">=</span> <span class="st">"LRT"</span>)</code></div>
+<div class="rout"><span class="lbl">R output</span><code>Analysis of Deviance Table
+
+Model 1: pass ~ 1
+Model 2: pass ~ hours
+  Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+1         3     5.5452
+2         2     3.8191  1   1.7261   0.1889</code></div>
+
+<p>Every column maps to a concept we have already covered:</p>
+<div style="margin:12px 0;display:flex;flex-wrap:wrap;gap:8px;">
+  <div style="background:var(--coral-light);padding:8px 12px;border-radius:6px;font-size:12px;"><strong>Resid. Dev</strong> = deviance of each model</div>
+  <div style="background:var(--accent-light);padding:8px 12px;border-radius:6px;font-size:12px;"><strong>Deviance</strong> = the drop (Δ)</div>
+  <div style="background:var(--purple-light);padding:8px 12px;border-radius:6px;font-size:12px;"><strong>Df</strong> = extra parameters added</div>
+  <div style="background:var(--amber-light);padding:8px 12px;border-radius:6px;font-size:12px;"><strong>Pr(>Chi)</strong> = p-value from χ² test</div>
+</div>
+
+<div class="callout teal">
+  <strong>Shortcut with one model:</strong> <span class="mono">anova(model, test = "Chisq")</span> tests each predictor sequentially against the null. With a single predictor, this gives the same result.
+</div>
+</div>
+
+<!-- ============== SLIDE 19: RECAP FLOW ============== -->
+<div class="slide" data-s="19">
+<div class="tag recap">The Full Picture</div>
+<h2>From Data to Decision</h2>
+<p>Here is the entire chain of reasoning we have walked through:</p>
+
+<svg viewBox="0 0 600 420" style="width:100%;max-width:600px;display:block;margin:16px auto;">
+  <!-- Step 1 -->
+  <rect x="20" y="10" width="200" height="52" rx="8" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="1.5"/>
+  <text x="120" y="32" text-anchor="middle" font-size="11" font-weight="700" fill="var(--accent)" font-family="IBM Plex Sans">FIT TWO MODELS</text>
+  <text x="120" y="48" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="IBM Plex Sans">Null (intercept) vs Full (+ hours)</text>
+  <line x1="120" y1="62" x2="120" y2="82" stroke="var(--border)" stroke-width="1.5" marker-end="none"/>
+  <polygon points="114,80 126,80 120,88" fill="var(--border)"/>
+
+  <!-- Step 2 -->
+  <rect x="20" y="90" width="200" height="52" rx="8" fill="var(--teal-light)" stroke="var(--teal)" stroke-width="1.5"/>
+  <text x="120" y="112" text-anchor="middle" font-size="11" font-weight="700" fill="var(--teal)" font-family="IBM Plex Sans">SCORE EACH MODEL</text>
+  <text x="120" y="128" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="IBM Plex Sans">Likelihood → Log-Likelihood</text>
+  <line x1="120" y1="142" x2="120" y2="162" stroke="var(--border)" stroke-width="1.5"/>
+  <polygon points="114,160 126,160 120,168" fill="var(--border)"/>
+
+  <!-- Step 3 -->
+  <rect x="20" y="170" width="200" height="52" rx="8" fill="var(--purple-light)" stroke="var(--purple)" stroke-width="1.5"/>
+  <text x="120" y="192" text-anchor="middle" font-size="11" font-weight="700" fill="var(--purple)" font-family="IBM Plex Sans">CONVERT TO DEVIANCE</text>
+  <text x="120" y="208" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="IBM Plex Sans">Deviance = −2 × Log-Lik</text>
+  <line x1="120" y1="222" x2="120" y2="242" stroke="var(--border)" stroke-width="1.5"/>
+  <polygon points="114,240 126,240 120,248" fill="var(--border)"/>
+
+  <!-- Step 4 -->
+  <rect x="20" y="250" width="200" height="52" rx="8" fill="var(--amber-light)" stroke="var(--amber)" stroke-width="1.5"/>
+  <text x="120" y="272" text-anchor="middle" font-size="11" font-weight="700" fill="var(--amber)" font-family="IBM Plex Sans">MEASURE THE DROP</text>
+  <text x="120" y="288" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="IBM Plex Sans">Δ Deviance = Null − Full</text>
+  <line x1="120" y1="302" x2="120" y2="322" stroke="var(--border)" stroke-width="1.5"/>
+  <polygon points="114,320 126,320 120,328" fill="var(--border)"/>
+
+  <!-- Step 5 -->
+  <rect x="20" y="330" width="200" height="52" rx="8" fill="var(--coral-light)" stroke="var(--coral)" stroke-width="1.5"/>
+  <text x="120" y="352" text-anchor="middle" font-size="11" font-weight="700" fill="var(--coral)" font-family="IBM Plex Sans">TEST AGAINST χ²</text>
+  <text x="120" y="368" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="IBM Plex Sans">p-value → Significant?</text>
+
+  <!-- Right side annotations -->
+  <text x="250" y="32" font-size="11" fill="var(--accent)" font-family="IBM Plex Mono" font-weight="500">glm(pass ~ 1) vs glm(pass ~ hours)</text>
+  <text x="250" y="112" font-size="11" fill="var(--teal)" font-family="IBM Plex Mono" font-weight="500">logLik() → −2.773  vs  −1.910</text>
+  <text x="250" y="192" font-size="11" fill="var(--purple)" font-family="IBM Plex Mono" font-weight="500">5.545  vs  3.819</text>
+  <text x="250" y="272" font-size="11" fill="var(--amber)" font-family="IBM Plex Mono" font-weight="500">5.545 − 3.819 = 1.726</text>
+  <text x="250" y="352" font-size="11" fill="var(--coral)" font-family="IBM Plex Mono" font-weight="500">pchisq(1.726, df=1) → p = 0.189</text>
+
+  <!-- Final answer -->
+  <rect x="260" y="378" width="310" height="34" rx="8" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>
+  <text x="415" y="400" text-anchor="middle" font-size="12" font-weight="600" fill="var(--text)" font-family="IBM Plex Sans">Not significant → hours may not help here</text>
+</svg>
+
+<div class="callout purple" style="margin-top:8px;">
+  Every concept we covered connects to a single R function. The entire workflow runs in 3 lines: fit the null, fit the full model, call <span class="mono">anova(null, full, test = "Chisq")</span>.
+</div>
+</div>
+
+</div><!-- /viewport -->
+</div><!-- /slide-area -->
+
+<!-- ==================== SCRIPT PANEL ==================== -->
+<div class="panel">
+<div class="panel-head">Presenter Script</div>
+<div class="panel-body">
+
+<div class="script active" data-sc="1">
+  <p>Welcome. This deck is about a specific, practical question: when you fit a logistic regression model, how do you know if it actually fits the data well?</p>
+  <p>The tool we will learn is called <em>deviance</em>. But deviance is built on top of <em>maximum likelihood estimation</em>, and the test we use to interpret it is the <em>likelihood ratio test</em>. So we will build up from first principles.</p>
+  <p>Everything uses just 4 data points. That is intentional. With 4 points, nothing is hidden and you can trace every number by hand.</p>
+</div>
+
+<div class="script" data-sc="2">
+  <p>Here is the data. Four students studied for an exam. Students A and B studied less and failed. Students C and D studied more and passed.</p>
+  <p>The pattern is clean: more hours, more likely to pass. But with only 4 observations, can we actually be confident that hours matters? That is the question deviance will help us answer.</p>
+</div>
+
+<div class="script" data-sc="3">
+  <p>Think of this as a prediction contest between two forecasters.</p>
+  <p>The <em>Lazy Forecaster</em> does not even look at hours. Since 2 out of 4 students passed overall, the lazy forecaster just says "50-50" for everyone. This corresponds to the <em>null model</em>, which only has an intercept.</p>
+  <p>The <em>Smart Forecaster</em> uses hours. Students with more hours get a higher predicted probability. This is our <em>logistic regression model</em>.</p>
+  <p>Our goal: determine whether the smart forecaster is meaningfully better than the lazy one, or whether the improvement could just be noise.</p>
+</div>
+
+<div class="script" data-sc="4">
+  <p>Here is the logistic regression curve fitted to our data. The S-shape is the key feature. It starts near 0 for low hours and rises toward 1 for high hours.</p>
+  <p>The blue dots on the curve are the model's predicted probabilities. For Student A with 1 hour, the model predicts only a 10.5% chance of passing. For Student D with 4 hours, it predicts 78.8%.</p>
+  <p>Notice how the actual outcomes (the red and green dots at 0 and 1) are separate from the predictions (the blue dots on the curve). The gap between them is what we are measuring.</p>
+</div>
+
+<div class="script" data-sc="5">
+  <p>Let's break the formula into layers, because this is where most people's eyes glaze over.</p>
+  <p>Layer 1 is just a straight line: intercept plus slope times hours. That is familiar from ordinary regression. It can spit out any number, including negatives.</p>
+  <p>Layer 2 wraps that straight line inside a sigmoid function, which squashes it to a number between 0 and 1. That is how we get a probability.</p>
+  <p>The concrete example at the bottom makes it tangible. For Student D with 4 hours, the linear predictor is about 2.1, and the sigmoid converts that to roughly 79%.</p>
+</div>
+
+<div class="script" data-sc="6">
+  <p>I like the radio tuning analogy here. You have two knobs: the intercept shifts the entire curve left or right, and the slope makes it steeper or flatter.</p>
+  <p>"Fitting" the model means twisting both knobs until the curve passes as close to the data as possible. The dashed curves show positions that do not match the data as well.</p>
+  <p>But "close to the data" is vague. We need a precise scoring system, and that is what the likelihood function provides.</p>
+</div>
+
+<div class="script" data-sc="7">
+  <p>This is the core idea. For every student, the model puts a stake in the ground: a predicted probability of passing. Then we score it based on what actually happened.</p>
+  <p>If the student passed, your score equals your predicted probability. So predicting 80% and being right earns you 0.80. If the student failed, your score is 1 minus your prediction. Predicting 10% chance of passing, and they indeed fail, earns you 0.90, because you were 90% confident in the correct outcome.</p>
+  <p>The total likelihood is the product of all four scores. Multiplying makes sense because you need to get every student right, not just one of them.</p>
+</div>
+
+<div class="script" data-sc="8">
+  <p>Here is the scorecard in action. Walk through each row.</p>
+  <p>Student A: the model said only 10.5% chance of passing. The student failed. So the model was 89.5% confident in the right answer. Score: 0.895. Great.</p>
+  <p>Student C is the weak spot. The model said 53.6% chance of passing, and the student passed. Score: 0.536. That is barely better than a coin flip. The model was not very confident here.</p>
+  <p>Multiply all four scores together: 0.895 times 0.731 times 0.536 times 0.788 equals 0.276. That is the total likelihood of the data under this model.</p>
+</div>
+
+<div class="script" data-sc="9">
+  <p>This slide explains why we take the logarithm. The visual tells the story: when you multiply numbers less than 1, the product shrinks rapidly. With 100 students, the product would be something like 10 to the negative 47th power. Computers round that to zero.</p>
+  <p>Taking the log converts multiplication into addition. Now instead of multiplying 0.895 times 0.731, we add negative 0.111 plus negative 0.313. The numbers stay in a manageable range no matter how many students we have.</p>
+  <p>The important thing is that the log does not change which model wins. It is a monotonic transformation. Whatever maximizes the likelihood also maximizes the log-likelihood.</p>
+</div>
+
+<div class="script" data-sc="10">
+  <p>Now we can state MLE precisely. Maximum Likelihood Estimation finds the values of beta-0 and beta-1 that produce the highest log-likelihood, or equivalently the least negative value.</p>
+  <p>R's glm function does this automatically. The output shows our fitted coefficients and, critically, those two deviance numbers at the bottom: 5.545 and 3.819. We are now ready to understand what those mean.</p>
+</div>
+
+<div class="script" data-sc="11">
+  <p>Deviance flips the log-likelihood into a penalty score. Instead of "higher is better," now "lower is better." Zero would mean a perfect fit.</p>
+  <p>The formula is simple: multiply the log-likelihood by negative 2. For our model, that is negative 2 times negative 1.91, which equals 3.82.</p>
+  <p>The visual scale shows where our model sits. Closer to zero is better. The null model is further out at 5.55. Our model is closer to zero at 3.82. The gap between them, 1.73, represents the improvement from using hours as a predictor.</p>
+</div>
+
+<div class="script" data-sc="12">
+  <p>A common question: why negative 2, specifically? Each piece does a job.</p>
+  <p>The negative sign flips the direction. Log-likelihoods are always zero or negative (because you are logging probabilities, which are between 0 and 1). Negating makes bigger numbers mean worse fit.</p>
+  <p>The factor of 2 is a mathematical convenience. It arranges things so that when you take the difference of two deviances, that difference follows a chi-squared distribution. Without the 2, you would need to adjust the chi-squared tables.</p>
+</div>
+
+<div class="script" data-sc="13">
+  <p>Here is a subtlety that often confuses people. Deviance is technically the gap between your model and a <em>saturated model</em>. The saturated model has one parameter per observation and fits the data perfectly.</p>
+  <p>For binary data, this simplifies beautifully. A perfect prediction means predicting 1.0 for every student who passed and 0.0 for every student who failed. The likelihood of that is 1.0, and log of 1 is 0. So the saturated model's log-likelihood is exactly zero.</p>
+  <p>That is why the deviance formula collapses to just negative 2 times the log-likelihood. This is specific to binary outcomes. For other types of GLMs, the saturated model's log-likelihood is not zero, and the full formula matters.</p>
+</div>
+
+<div class="script" data-sc="14">
+  <p>Now we put the two forecasters side by side. The lazy forecaster predicts 50% for everyone. The smart forecaster gives tailored predictions.</p>
+  <p>Look at the probability bars. The lazy forecaster's bars are all the same length. The smart forecaster's bars vary: short for students who failed, long for students who passed. That differentiation is exactly what a good model should do.</p>
+  <p>The deviance scores quantify this: 5.545 for the null versus 3.819 for the full model. Lower is better, so the full model wins. But by how much?</p>
+</div>
+
+<div class="script" data-sc="15">
+  <p>The deviance drop is 1.726. But here is the critical insight: even a random, meaningless predictor will usually reduce deviance at least a little bit. Adding any variable gives the model more flexibility, and more flexibility means a better fit to the specific data you have, even if the variable is noise.</p>
+  <p>So the question is not "did deviance drop?" It is "did it drop by more than we would expect from chance alone?"</p>
+</div>
+
+<div class="script" data-sc="16">
+  <p>This is the Likelihood Ratio Test. We compare our observed deviance drop of 1.726 against a chi-squared distribution with 1 degree of freedom.</p>
+  <p>The visual shows where our value falls on the chi-squared curve. The critical cutoff for alpha equals 0.05 is 3.84. Our value of 1.726 is well to the left of that cutoff, deep inside the "could happen by chance" region.</p>
+  <p>The p-value is 0.189. That means: if hours truly had no effect, there is about a 19% chance you would see a deviance improvement at least this large just by luck. That is too common to be convincing.</p>
+</div>
+
+<div class="script" data-sc="17">
+  <p>So what do we conclude? With p equals 0.189, we cannot reject the null hypothesis. The smart forecaster was not significantly better than the lazy one.</p>
+  <p>This might feel counterintuitive since the data is perfectly separated: 0, 0, 1, 1. But four data points is simply not enough evidence. The LRT needs sufficient sample size to distinguish a real pattern from noise.</p>
+  <p>The R code at the bottom shows what happens with 10 times as many students in the same pattern. The deviance drop scales up to 17.26, and the p-value drops to 0.00003. Same pattern, same effect, but now we have the power to detect it.</p>
+</div>
+
+<div class="script" data-sc="18">
+  <p>In practice, you use R's anova function to do everything in one call. The output table gives you both models' residual deviance, the deviance drop, the degrees of freedom, and the p-value.</p>
+  <p>Each column maps directly to a concept we have covered. The presenter can point to each column header and recall the corresponding analogy or formula.</p>
+</div>
+
+<div class="script" data-sc="19">
+  <p>Here is the full chain from start to finish. We fit two models, score each one with the likelihood, convert to deviance, measure the drop, and test it against a chi-squared distribution.</p>
+  <p>Every step has a clear job, and every step maps to a one-line R function. The entire workflow is three lines of code: fit the null, fit the full model, and call anova.</p>
+  <p>With a larger dataset, this exact same logic applies. The formulas do not change. The only difference is that you have more statistical power, making it easier to detect real effects.</p>
+</div>
+
+</div>
+</div>
+</div><!-- /main -->
+
+<div class="nav">
+  <button class="nbtn" id="prevBtn" disabled onclick="go(-1)">← Prev</button>
+  <div class="dots" id="dots"></div>
+  <button class="nbtn" id="nextBtn" onclick="go(1)">Next →</button>
+</div>
+
+<script>
+const N=19;let cur=1;
+const dots=document.getElementById('dots');
+for(let i=1;i<=N;i++){const d=document.createElement('button');d.className='dot'+(i===1?' active':'');d.dataset.s=i;d.onclick=()=>jump(i);dots.appendChild(d);}
+function jump(n){
+  document.querySelector(`.slide[data-s="${cur}"]`).classList.remove('active');
+  document.querySelector(`.script[data-sc="${cur}"]`).classList.remove('active');
+  cur=n;
+  document.querySelector(`.slide[data-s="${cur}"]`).classList.add('active');
+  document.querySelector(`.script[data-sc="${cur}"]`).classList.add('active');
+  document.querySelector('.viewport').scrollTop=0;
+  document.querySelector('.panel-body').scrollTop=0;
+  document.querySelectorAll('.dot').forEach(d=>d.classList.remove('active'));
+  document.querySelector(`.dot[data-s="${cur}"]`).classList.add('active');
+  document.getElementById('counter').textContent=`${cur} / ${N}`;
+  document.getElementById('prevBtn').disabled=cur===1;
+  document.getElementById('nextBtn').disabled=cur===N;
+}
+function go(d){const n=cur+d;if(n>=1&&n<=N)jump(n);}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(-1);});
+</script>
+</body>
+</html>

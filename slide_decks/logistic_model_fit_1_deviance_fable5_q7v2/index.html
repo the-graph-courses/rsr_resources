@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Model fit 1: null deviance, residual deviance, AIC (animated)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <style>
+    :root{
+      --gold:#e5b44f; --mist:#c4d8db; --teal:#035f6c; --alarm:#b5451f; --brown:#7a6212;
+      --pass:#2e7d4f;
+      --ink:#073b42; --ink-2:#3a555a; --stage:#0d2b30; --paper:#ffffff; --soft:#f2f7f7;
+      --warm:#fbeecb; --coral:#e58b73; --violet:#8c7ab8;
+      --sans:"Space Grotesk","Helvetica Neue",Arial,sans-serif;
+      --mono:"IBM Plex Mono","SF Mono",Menlo,monospace;
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;height:100%;overflow:hidden;background:var(--stage);color:var(--ink);font-family:var(--sans);}
+    #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:28px 10px 22px;overflow:hidden;}
+    #deck{position:relative;width:2560px;height:1440px;flex:none;container-type:size;transform-origin:center center;overflow:hidden;border-radius:2px;background:var(--paper);box-shadow:0 18px 60px rgba(0,0,0,.55);}
+    .chrome-top{position:absolute;top:0;left:0;right:0;height:10px;background:var(--gold);z-index:4;}
+    .chrome-bottom{position:absolute;bottom:0;left:0;right:0;height:10px;background:var(--teal);z-index:4;}
+    #board{position:absolute;inset:10px 0 10px 0;display:flex;flex-direction:column;padding:16px 40px 12px;}
+    header.head{flex:none;}
+    .head-row{display:flex;align-items:stretch;gap:16px;}
+    .head-text{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;}
+    .kicker{margin-bottom:3px;color:var(--brown);font-size:15px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;}
+    h1{margin:0;color:var(--teal);font-size:34px;line-height:1.05;font-weight:600;letter-spacing:-.01em;}
+    .title-line{width:460px;height:4px;margin-top:6px;border-radius:2px;background:var(--gold);}
+
+    /* 2×2 grid, read top-left → bottom-left → top-right → bottom-right */
+    .panels{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:18px;margin-top:12px;}
+    #panel1{grid-column:1;grid-row:1;}
+    #panel2{grid-column:1;grid-row:2;}
+    #panel3{grid-column:2;grid-row:1;}
+    #panel4{grid-column:2;grid-row:2;}
+    .panel{position:relative;min-width:0;min-height:0;display:grid;grid-template-columns:minmax(0,.48fr) minmax(0,.52fr);grid-template-rows:minmax(0,1fr) auto;gap:12px;border:1px solid transparent;border-radius:4px;background:transparent;padding:16px 16px 12px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .4s ease,box-shadow .4s ease,border-color .4s ease,background .4s ease;}
+    .panel.lit{opacity:1;visibility:visible;pointer-events:auto;border-color:var(--mist);background:var(--paper);}
+    .panel.active{border-color:var(--gold);box-shadow:0 0 0 3px rgba(229,180,79,.35),0 8px 22px rgba(7,59,66,.10);}
+    .panel .p-num{position:absolute;top:-13px;left:14px;width:28px;height:28px;border-radius:50%;background:var(--teal);color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.2);z-index:2;}
+    .panel.active .p-num{background:var(--gold);color:#0d2b30;}
+    .panel-side{grid-column:1;grid-row:1;min-width:0;min-height:0;display:flex;flex-direction:column;gap:6px;overflow:auto;}
+    .panel-mainv{grid-column:2;grid-row:1;min-width:0;min-height:0;display:flex;flex-direction:column;gap:8px;}
+    .ppractice{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .s-tag{display:inline-block;margin-bottom:1px;color:var(--brown);font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+    .s-tag.practice{color:var(--alarm);}
+    .p-title{margin:0;color:var(--teal);font-size:22px;font-weight:600;line-height:1.15;}
+    .panel-explain{padding:7px 8px;background:var(--soft);border-left:3px solid var(--gold);border-radius:2px;}
+    .panel-explain strong{color:var(--teal);font-weight:600;}
+    .panel-explain .bad{color:var(--alarm);font-weight:600;}
+    .panel-explain.stack{flex:1;display:flex;flex-direction:column;gap:6px;overflow:auto;}
+    .panel-explain.stack .frag{flex:0 0 auto;margin:0;color:var(--ink);font-size:15.5px;line-height:1.35;}
+    .panel-explain.stack .frag.bullet{padding-left:16px;position:relative;}
+    .panel-explain.stack .frag.bullet::before{content:"•";position:absolute;left:0;color:var(--teal);}
+    .panel-explain.stack pre.frag{margin:0;padding:8px 10px;border:1px solid var(--mist);border-left:3px solid var(--gold);border-radius:2px;background:#fff;font-family:var(--mono);font-size:13px;line-height:1.4;white-space:pre;overflow:auto;}
+    .panel-explain.stack pre.frag.code{color:var(--ink);}
+    .panel-explain.stack pre.frag.out{color:var(--ink-2);border-left-color:var(--mist);}
+    .panel-explain.stack .hi{color:var(--teal);font-weight:600;}
+    .panel-explain.stack .hi-or{color:var(--alarm);font-weight:600;}
+    .panel-explain.stack .cm{color:#7f9296;}
+    .panel-explain.stack .inline-eq{padding:5px 8px;border-left:3px solid var(--gold);border-radius:2px;background:var(--warm);color:var(--teal);font-size:15.5px;text-align:center;}
+    .panel-explain.stack .inline-eq.big{font-size:17.5px;}
+    .panel-explain.stack .inline-eq.tight{font-size:14.5px;}
+    .panel-explain.stack pre.frag.out.fullsum{font-size:11.5px;line-height:1.32;padding:7px 9px;}
+    .panel-explain.stack .step-note{margin:0;padding-left:3px;font-style:italic;color:var(--ink-2);font-size:12.5px;line-height:1.3;}
+    .plotwrap{flex:1;min-width:0;min-height:0;position:relative;}
+    .plotwrap svg{width:100%;height:100%;display:block;overflow:hidden;}
+    /* tables */
+    .dtable{border-collapse:collapse;font-family:var(--mono);font-size:14px;width:100%;}
+    .dtable th{font-family:var(--sans);font-size:11.5px;font-weight:700;color:var(--brown);text-transform:uppercase;letter-spacing:.05em;padding:4px 12px;border-bottom:1.5px solid var(--mist);text-align:right;}
+    .dtable th:first-child,.dtable td:first-child{text-align:left;}
+    .dtable td{padding:4px 12px;border-bottom:1px solid var(--soft);text-align:right;color:var(--ink);}
+    .dtable td.pass{color:var(--pass);font-weight:600;}
+    .dtable td.fail{color:var(--alarm);font-weight:600;}
+    .dtable tr.sumrow td{border-top:1.5px solid var(--mist);border-bottom:none;font-weight:700;color:var(--teal);}
+    .dtable tr.dots td{color:#7f9296;border-bottom:1px solid var(--soft);text-align:center;}
+    .tbl-card{flex:none;padding:9px 11px;border:1px solid var(--mist);border-radius:3px;background:#fff;}
+    .tbl-lab{display:block;margin-bottom:4px;color:var(--brown);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+    .nullstrip{flex:none;padding:8px 11px;border:1px solid var(--mist);border-left:4px solid var(--alarm);border-radius:2px;background:#fff;font-family:var(--mono);font-size:13px;line-height:1.5;color:var(--ink-2);}
+    .nullstrip strong{color:var(--alarm);font-weight:600;}
+    .outcard{flex:none;margin:0;padding:8px 10px;border:1px solid var(--mist);border-radius:2px;background:#fff;font-family:var(--mono);font-size:13px;line-height:1.4;white-space:pre;color:var(--ink-2);overflow:auto;}
+    .outcard .hi{color:var(--teal);font-weight:600;}
+    /* practice questions */
+    .practice-q{flex:none;padding:9px 12px;border:1px solid var(--mist);border-top:3px solid var(--gold);border-radius:3px;background:#fff;}
+    .practice-q .qlab{display:block;margin-bottom:2px;color:var(--brown);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;}
+    .practice-q .q{margin:0 0 6px;color:var(--ink);font-size:14.5px;font-weight:600;line-height:1.25;}
+    .practice-options{display:flex;gap:9px;}
+    .practice-options span{flex:1;padding:6px 9px;border-radius:2px;background:var(--soft);color:var(--ink-2);font-size:13.5px;line-height:1.3;text-align:center;}
+    .ppractice.revealed .practice-options span.ans{background:var(--warm);color:var(--teal);font-weight:700;border:1px solid var(--gold);}
+    /* svg element styling */
+    .axis{stroke:#9fb7bb;stroke-width:1;}
+    .axis-lbl{fill:var(--ink-2);font-family:var(--sans);font-size:12.5px;}
+    .axis-title{fill:var(--brown);font-family:var(--sans);font-size:13px;font-weight:600;letter-spacing:.03em;}
+    .grp{opacity:0;transition:opacity .45s ease;}
+    .grp.vis{opacity:1;}
+    .icurve{stroke:var(--gold);stroke-width:3.4;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+    .shadepass{fill:var(--pass);fill-opacity:.20;stroke:none;}
+    .shadefail{fill:var(--alarm);fill-opacity:.12;stroke:none;}
+    .shadelab-pass{fill:var(--pass);font-family:var(--sans);font-size:14px;font-weight:700;}
+    .shadelab-fail{fill:var(--alarm);font-family:var(--sans);font-size:14px;font-weight:700;}
+    .dotfail{fill:var(--alarm);}
+    .dotpass{fill:var(--pass);}
+    .stu-lbl{fill:var(--ink-2);font-family:var(--sans);font-size:12px;font-weight:600;text-anchor:middle;}
+    .seg-pass{stroke:var(--pass);stroke-width:5;stroke-linecap:round;opacity:.85;}
+    .seg-fail{stroke:var(--alarm);stroke-width:5;stroke-linecap:round;opacity:.85;}
+    .probdot{fill:var(--gold);stroke:#fff;stroke-width:1;}
+    .problab{fill:var(--brown);font-family:var(--mono);font-size:11px;font-weight:600;}
+    .score-head{fill:var(--brown);font-family:var(--sans);font-size:12.5px;font-weight:600;}
+    .score-val{font-family:var(--mono);font-size:13px;font-weight:700;text-anchor:middle;}
+    .score-good{fill:var(--pass);}
+    .score-bad{fill:var(--alarm);}
+    .nullln{stroke:var(--alarm);stroke-width:2.2;stroke-dasharray:7 5;fill:none;}
+    .nulllab{fill:var(--alarm);font-family:var(--sans);font-size:12.5px;font-weight:600;}
+    .scale-track{fill:var(--soft);stroke:var(--mist);}
+    .scale-lbl{fill:var(--ink-2);font-family:var(--sans);font-size:11.5px;font-weight:600;text-anchor:middle;}
+    .scale-val{font-family:var(--mono);font-size:12.5px;font-weight:700;text-anchor:middle;}
+    .brace{stroke:var(--brown);stroke-width:1.4;fill:none;}
+    .bracelab{fill:var(--brown);font-family:var(--sans);font-size:11.5px;font-weight:600;text-anchor:middle;}
+    .ghostlab{fill:#7f9296;font-family:var(--sans);font-size:11.5px;font-style:italic;}
+
+    #tools{position:fixed;top:14px;right:16px;z-index:22;display:flex;gap:8px;align-items:center;color:var(--mist);font-family:var(--sans);font-size:13px;}
+    #tools button{border:1px solid #4d747a;border-radius:2px;padding:6px 9px;background:#153d43;color:var(--mist);font:inherit;cursor:pointer;}
+    #tools button.on{border-color:var(--gold);background:var(--gold);color:#0d2b30;}
+    #hint{position:fixed;bottom:12px;left:0;right:0;z-index:20;text-align:center;color:var(--mist);font-size:13px;letter-spacing:.5px;opacity:.72;}
+    #counter{position:fixed;right:16px;bottom:12px;z-index:20;color:var(--mist);font-family:var(--mono);font-size:13px;opacity:.85;}
+    #ink{position:absolute;inset:0;z-index:15;width:100%;height:100%;pointer-events:none;touch-action:none;}
+    #deck.drawing #ink{pointer-events:auto;cursor:crosshair;}
+  </style>
+</head>
+<body>
+  <div id="tools">
+    <button id="pencil" type="button">Pencil: off</button>
+    <button id="undo" type="button">Undo</button>
+    <button id="clear" type="button">Clear</button>
+  </div>
+
+  <div id="stage">
+    <main id="deck" aria-live="polite">
+      <div class="chrome-top"></div>
+      <div id="board">
+        <header class="head">
+          <div class="head-row">
+            <div class="head-text">
+              <div class="kicker">Model fit &amp; model building &middot; part 1 of 2 &middot; logistic regression</div>
+              <h1>The bottom of summary(): null deviance, residual deviance, AIC</h1>
+              <div class="title-line"></div>
+            </div>
+          </div>
+        </header>
+
+        <div class="panels">
+
+          <!-- ============ PANEL 1: KLoSA re-intro ============ -->
+          <section class="panel" id="panel1">
+            <div class="p-num">1</div>
+            <div class="panel-side">
+              <span class="s-tag">Real data</span>
+              <div class="p-title">Weak grip by age: summary output</div>
+              <!-- EDIT PANEL 1 HERE. -->
+              <div class="panel-explain stack">
+                <pre class="frag code" data-step="2">klosa &lt;- read_csv("klosa_men_grip_45plus.csv")
+mod1 &lt;- glm(weak_grip ~ age, family = binomial, data = klosa)
+summary(mod1)</pre>
+                <pre class="frag out fullsum" data-step="3">#&gt; Call:
+#&gt; glm(formula = weak_grip ~ age, family = binomial, data = klosa)
+#&gt;
+#&gt; Coefficients:
+#&gt;              Estimate Std. Error z value Pr(&gt;|z|)
+#&gt; (Intercept) -8.824312   0.319252  -27.64   &lt;2e-16 ***
+#&gt; age          <span class="hi">0.116834</span>   0.004755   24.57   &lt;2e-16 ***
+#&gt;
+#&gt;     <span class="hi">Null deviance: 4259.0</span>  on 4183  degrees of freedom
+#&gt; <span class="hi">Residual deviance: 3455.1</span>  on 4182  degrees of freedom
+#&gt; <span class="hi">AIC: 3459.1</span>
+#&gt;
+#&gt; Number of Fisher Scoring iterations: 5</pre>
+                <p class="frag bullet" data-step="4">Each <strong>dot</strong> is one man in the data, at <strong>1</strong> (weak grip) or <strong>0</strong> (not weak).</p>
+                <p class="frag bullet" data-step="5">The <strong>gold curve</strong> is the fitted model. The change in probability per year is <strong>not the same everywhere</strong>: small at young ages, larger in the middle, and small again at old ages.</p>
+                <div class="frag inline-eq" data-step="6">$p = \dfrac{1}{1 + e^{-(\beta_0 + \beta_1\,\text{age})}}$</div>
+                <div class="frag inline-eq tight" data-step="7">$\widehat p = \dfrac{1}{1 + e^{-(-8.824 + 0.1168\,\text{age})}}$</div>
+                <p class="frag bullet" data-step="8">The age coefficient $\beta_1 = 0.1168$ is a change in the <strong>log-odds</strong> per year, not in probability. Below the coefficients, <code>summary()</code> also prints <strong>null deviance</strong>, <strong>residual deviance</strong>, and <strong>AIC</strong>. That is what this lesson explains.</p>
+              </div>
+            </div>
+            <div class="panel-mainv">
+              <div class="plotwrap"><svg id="svgKlosa" viewBox="0 0 620 480" preserveAspectRatio="xMidYMid meet"></svg></div>
+            </div>
+            <div class="ppractice frag" data-step="8" data-reveal="9">
+              <div class="practice-q">
+                <span class="qlab">Practice</span>
+                <p class="q">The age estimate 0.1168 is a change in&hellip;</p>
+                <div class="practice-options"><span class="ans">log-odds</span><span>probability</span></div>
+              </div>
+              <div class="practice-q">
+                <span class="qlab">Practice</span>
+                <p class="q">Residual deviance for mod1 is&hellip;</p>
+                <div class="practice-options"><span class="ans">3455.1</span><span>4259.0</span></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============ PANEL 2: toy example, scoring the predictions ============ -->
+          <section class="panel" id="panel2">
+            <div class="p-num">2</div>
+            <div class="panel-side">
+              <span class="s-tag">Small example</span>
+              <div class="p-title">Scoring the model's predictions</div>
+              <!-- EDIT PANEL 2 HERE. -->
+              <div class="panel-explain stack">
+                <p class="frag bullet" data-step="10">Six students, one exam. Each dot: <strong>1</strong> = passed, <strong>0</strong> = failed.</p>
+                <pre class="frag code" data-step="10">hours &lt;- c(1, 2, 3, 4, 5, 6)
+pass  &lt;- c(0, 0, 1, 0, 1, 1)</pre>
+                <pre class="frag code" data-step="11">mod &lt;- glm(pass ~ hours, family = binomial)
+coef(mod)   <span class="cm">#&gt; intercept -4.249,  hours 1.214</span></pre>
+                <p class="frag bullet" data-step="12">Gold curve: predicted P(pass). <strong style="color:var(--pass);">Green area</strong> below it: probability of <strong>passing</strong>.</p>
+                <p class="frag bullet" data-step="13"><span class="bad">Red area</span> above the curve: probability of <strong>failing</strong>. Green + red = 1.</p>
+                <div class="frag inline-eq" data-step="14">$\text{passed: score} = P(\text{pass}) \qquad \text{failed: score} = P(\text{fail}) = 1 - p$</div>
+                <p class="frag bullet" data-step="15">A failed: score <strong>0.954</strong>. D failed: score only <span class="bad">0.353</span>.</p>
+                <div class="frag inline-eq" data-step="16">$L = .954 \times .861 \times .353 \times .353 \times .861 \times .954 = 0.084$</div>
+                <p class="frag bullet" data-step="16">This product is the <strong>likelihood</strong>. Higher = better fit.</p>
+              </div>
+            </div>
+            <div class="panel-mainv">
+              <div class="plotwrap"><svg id="svgToy" viewBox="0 0 620 480" preserveAspectRatio="xMidYMid meet"></svg></div>
+            </div>
+            <div class="ppractice frag" data-step="16" data-reveal="17">
+              <div class="practice-q">
+                <span class="qlab">Practice</span>
+                <p class="q">Student B failed. The model said P(pass) = 0.139. B's score is&hellip;</p>
+                <div class="practice-options"><span class="ans">0.861</span><span>0.139</span></div>
+              </div>
+              <div class="practice-q">
+                <span class="qlab">Practice</span>
+                <p class="q">Model X has likelihood 0.05. Model Y has 0.09. Which fits better?</p>
+                <div class="practice-options"><span class="ans">Model Y</span><span>Model X</span></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============ PANEL 3: from scores to deviance ============ -->
+          <section class="panel" id="panel3">
+            <div class="p-num">3</div>
+            <div class="panel-side">
+              <span class="s-tag">Small example</span>
+              <div class="p-title">From scores to deviance</div>
+              <!-- EDIT PANEL 3 HERE. -->
+              <div class="panel-explain stack">
+                <p class="frag bullet" data-step="18">With thousands of people, the product becomes too small to store.</p>
+                <p class="frag bullet" data-step="18">So we add <strong>logarithms</strong> of the scores instead.</p>
+                <p class="frag bullet" data-step="19">The table adds ln(score) over all six students.</p>
+                <pre class="frag code" data-step="19">logLik(mod)   <span class="cm">#&gt; 'log Lik.' -2.477987 (df=2)</span></pre>
+                <div class="frag inline-eq big" data-step="20">$\text{Deviance} = -2 \times \text{log-likelihood}$</div>
+                <div class="frag inline-eq" data-step="20">$-2 \times (-2.478) = 4.956$</div>
+                <p class="frag bullet" data-step="20">Lower deviance = better fit. A perfect model has deviance 0.</p>
+                <p class="frag step-note" data-step="20">The &times;(&minus;2) makes deviance differences follow a chi-squared distribution (next lesson).</p>
+                <p class="frag bullet" data-step="21">Now a model with <strong>no predictors</strong>:</p>
+                <pre class="frag code" data-step="21">mod0 &lt;- glm(pass ~ 1, family = binomial)
+fitted(mod0)   <span class="cm">#&gt; 0.5 0.5 0.5 0.5 0.5 0.5</span></pre>
+                <p class="frag bullet" data-step="21">It predicts 0.5 for everyone, because 3 of 6 passed.</p>
+                <p class="frag bullet" data-step="22"><strong>Null deviance</strong> = deviance of the no-predictor model.</p>
+                <p class="frag bullet" data-step="22"><strong>Residual deviance</strong> = deviance of your model.</p>
+                <p class="frag step-note" data-step="22">Degrees of freedom = number of people &minus; number of model parameters.</p>
+              </div>
+            </div>
+            <div class="panel-mainv">
+              <div class="tbl-card frag" data-step="19">
+                <span class="tbl-lab">Scores for mod: pass ~ hours</span>
+                <table class="dtable">
+                  <thead><tr><th>Student</th><th>Hours</th><th>Result</th><th>P(pass)</th><th>Score</th><th>ln(Score)</th></tr></thead>
+                  <tbody>
+                    <tr><td>A</td><td>1</td><td class="fail">failed</td><td>0.046</td><td>0.954</td><td>&minus;0.047</td></tr>
+                    <tr><td>B</td><td>2</td><td class="fail">failed</td><td>0.139</td><td>0.861</td><td>&minus;0.150</td></tr>
+                    <tr><td>C</td><td>3</td><td class="pass">passed</td><td>0.353</td><td>0.353</td><td>&minus;1.041</td></tr>
+                    <tr><td>D</td><td>4</td><td class="fail">failed</td><td>0.647</td><td>0.353</td><td>&minus;1.041</td></tr>
+                    <tr><td>E</td><td>5</td><td class="pass">passed</td><td>0.861</td><td>0.861</td><td>&minus;0.150</td></tr>
+                    <tr><td>F</td><td>6</td><td class="pass">passed</td><td>0.954</td><td>0.954</td><td>&minus;0.047</td></tr>
+                    <tr class="sumrow"><td colspan="4">Product / sum</td><td>L = 0.084</td><td>&minus;2.478</td></tr>
+                    <tr class="sumrow"><td colspan="4">Deviance = &minus;2 &times; (&minus;2.478)</td><td colspan="2">4.956</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="nullstrip frag" data-step="21"><strong>Null model (pass ~ 1):</strong> every prediction = 0.5 &middot; every score = 0.5 &middot; ln(0.5) = &minus;0.693 &middot; sum = &minus;4.159 &middot; deviance = <strong>8.318</strong></div>
+              <pre class="outcard frag" data-step="22">#&gt; summary(mod) shows:
+#&gt;     <span class="hi">Null deviance: 8.3178</span>  on 5  degrees of freedom
+#&gt; <span class="hi">Residual deviance: 4.9560</span>  on 4  degrees of freedom</pre>
+              <div class="plotwrap" style="flex:none;height:130px;"><svg id="svgScale" viewBox="0 0 620 120" preserveAspectRatio="xMidYMid meet"></svg></div>
+            </div>
+            <div class="ppractice frag" data-step="23" data-reveal="24">
+              <div class="practice-q">
+                <span class="qlab">Practice</span>
+                <p class="q">A model has log-likelihood &minus;10. Its deviance is&hellip;</p>
+                <div class="practice-options"><span class="ans">20</span><span>&minus;20</span></div>
+              </div>
+              <div class="practice-q">
+                <span class="qlab">Practice</span>
+                <p class="q">Model A: deviance 50. Model B: deviance 40. Same data. Better fit?</p>
+                <div class="practice-options"><span class="ans">Model B</span><span>Model A</span></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============ PANEL 4: KLoSA, the numbers ============ -->
+          <section class="panel" id="panel4">
+            <div class="p-num">4</div>
+            <div class="panel-side">
+              <span class="s-tag">Real data</span>
+              <div class="p-title">The same table, with 4,184 men</div>
+              <!-- EDIT PANEL 4 HERE. -->
+              <div class="panel-explain stack">
+                <p class="frag bullet" data-step="25"><strong>Null deviance 4259.0</strong>: the model without age.</p>
+                <p class="frag bullet" data-step="25"><strong>Residual deviance 3455.1</strong>: the model with age.</p>
+                <div class="frag inline-eq" data-step="26">$\mathrm{AIC} = \text{residual deviance} + 2 \times \text{number of parameters}$</div>
+                <div class="frag inline-eq" data-step="26">$\mathrm{AIC} = 3455.1 + 2 \times 2 = 3459.1$</div>
+                <p class="frag bullet" data-step="26">AIC is used to compare models. More on this next lesson.</p>
+                <p class="frag bullet" data-step="27">Adding age reduced the deviance by <strong>803.8</strong>.</p>
+                <p class="frag bullet" data-step="27">Is this reduction more than chance? Next lesson: the <strong>likelihood-ratio test</strong>.</p>
+              </div>
+            </div>
+            <div class="panel-mainv">
+              <div class="tbl-card frag" data-step="25">
+                <span class="tbl-lab">Scores for mod1: weak_grip ~ age</span>
+                <table class="dtable">
+                  <thead><tr><th>Man</th><th>Age</th><th>Weak grip</th><th>P(weak)</th><th>Score</th><th>ln(Score)</th></tr></thead>
+                  <tbody>
+                    <tr><td>1</td><td>52</td><td class="pass">no</td><td>0.060</td><td>0.940</td><td>&minus;0.062</td></tr>
+                    <tr><td>2</td><td>71</td><td class="fail">yes</td><td>0.371</td><td>0.371</td><td>&minus;0.992</td></tr>
+                    <tr><td>3</td><td>64</td><td class="pass">no</td><td>0.206</td><td>0.794</td><td>&minus;0.231</td></tr>
+                    <tr class="dots"><td colspan="6">&hellip; 4,181 more men &hellip;</td></tr>
+                    <tr class="sumrow"><td colspan="4">Sum of ln(Score) = &minus;1727.6</td><td colspan="2">Deviance = 3455.1</td></tr>
+                    <tr class="sumrow"><td colspan="4">Null model (0.206 for all): sum = &minus;2129.5</td><td colspan="2">Deviance = 4259.0</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="ppractice frag" data-step="27" data-reveal="28">
+              <div class="practice-q">
+                <span class="qlab">Practice</span>
+                <p class="q">Residual deviance 3455.1 measures the fit of&hellip;</p>
+                <div class="practice-options"><span class="ans">weak_grip ~ age</span><span>weak_grip ~ 1</span></div>
+              </div>
+              <div class="practice-q">
+                <span class="qlab">Practice</span>
+                <p class="q">mod1 has 2 parameters and deviance 3455.1. AIC = ?</p>
+                <div class="practice-options"><span class="ans">3459.1</span><span>3457.1</span></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="chrome-bottom"></div>
+      <canvas id="ink"></canvas>
+    </main>
+  </div>
+
+  <div id="hint">&larr;/&rarr; step &middot; &uarr;/&darr; jump panel &middot; P pencil &middot; U undo &middot; C clear &middot; R reset</div>
+  <div id="counter"></div>
+
+  <script src="deck-config.js"></script>
+  <script>
+  // ============================ DATA ============================
+  const TOY = {b0:-4.24910, b1:1.21403};   // glm(pass ~ hours, binomial), six students
+  const STU = [
+    {n:'A',h:1,y:0},{n:'B',h:2,y:0},{n:'C',h:3,y:1},{n:'D',h:4,y:0},{n:'E',h:5,y:1},{n:'F',h:6,y:1}
+  ];
+  const sigAt=(b0,b1,x)=>1/(1+Math.exp(-(b0+b1*x)));
+  const psig=h=>sigAt(TOY.b0,TOY.b1,h);
+  STU.forEach(s=>{ s.p=psig(s.h); s.score=s.y? s.p : 1-s.p; });
+  const KG = {b0:-8.824312, b1:0.116834, rate:0.2063};   // glm(weak_grip ~ age, binomial), KLoSA
+  const ksig=a=>sigAt(KG.b0,KG.b1,a);
+  // raw KLoSA sample (same sample as the earlier decks): [age, grip, weak_grip]
+  const PTS = [[52,35,0],[60,34.5,0],[60,23.25,1],[59,34,0],[48,43.25,0],[54,38.25,0],[52,33,0],[46,40,0],[67,38.25,0],[79,24.5,1],[54,35.75,0],[60,35,0],[67,29.5,0],[56,29.5,0],[66,33.75,0],[80,26.5,1],[75,30,0],[72,28.5,0],[64,30,0],[67,28.5,0],[56,31.5,0],[68,27,1],[70,30,0],[63,30.25,0],[61,36.75,0],[59,40.25,0],[53,36.25,0],[67,34.5,0],[71,24.75,1],[58,27,1],[49,33.5,0],[63,34,0],[77,29.75,0],[54,30.5,0],[51,29.5,0],[47,34.25,0],[68,30,0],[50,39,0],[48,30.75,0],[82,7,1],[52,30.5,0],[67,40,0],[67,27.25,0],[83,29.25,0],[55,33,0],[52,40.25,0],[54,30,0],[60,31.5,0],[70,19.5,1],[55,35.25,0],[55,23.5,1],[72,39,0],[63,30.75,0],[72,32,0],[59,36,0],[57,39.75,0],[75,35.25,0],[46,37.5,0],[73,29.75,0],[70,38,0],[64,39,0],[56,40,0],[68,21.75,1],[90,23,1],[45,37.5,0],[63,30,0],[50,34.5,0],[57,43.25,0],[57,43.75,0],[81,14,1],[45,39,0],[45,35.5,0],[69,17.5,1],[69,30.25,0],[47,32,0],[83,27,1],[78,17.5,1],[62,37.25,0],[51,40,0],[48,42.5,0],[74,21.5,1],[63,35.25,0],[58,29.75,0],[67,35.75,0],[60,39.5,0],[56,35,0],[80,16,1],[67,20,1],[56,46.75,0],[66,22.5,1],[59,45.75,0],[55,37,0],[49,37,0],[54,39.5,0],[62,26.75,1],[49,36.5,0],[69,30,0],[46,30.25,0],[45,39.25,0],[57,30.5,0],[49,39.5,0],[73,17.5,1],[60,37.5,0],[72,16,1],[67,21.5,1],[55,37.25,0],[80,17.5,1],[72,30.5,0],[60,33.5,0],[55,26.5,1],[45,33.5,0],[70,28.25,0],[57,40,0],[67,34.5,0],[63,29.75,0],[54,32.75,0],[49,35,0],[74,30.75,0],[46,40.75,0],[47,38,0],[70,28.5,0],[50,38,0],[65,36.75,0],[49,39,0],[45,39.75,0],[83,22.75,1],[69,18,1],[80,24.5,1],[75,20.5,1],[64,29.5,0],[62,21.5,1],[80,21.75,1],[60,32.25,0],[69,34.5,0],[72,33.25,0],[49,34.25,0],[73,29.125,0],[56,36.375,0],[50,33.25,0],[58,38.5,0],[61,32.75,0],[72,8.5,1],[71,27.25,0],[47,29,0],[68,21.025,1],[60,37,0],[46,41.5,0],[46,39.75,0],[53,38.575,0],[64,29.5,0],[58,29.05,0],[49,34.75,0],[60,30.25,0],[76,32.25,0],[68,29.25,0],[47,33,0],[66,29.25,0],[52,46.25,0],[57,29.25,0],[76,35.25,0],[59,32.5,0],[53,44,0],[63,29.25,0],[72,32.5,0],[63,27.25,0],[61,36.5,0],[64,30.875,0],[65,33.25,0],[81,29.5,0],[48,31.5,0],[56,25,1],[68,36.625,0],[76,9.25,1],[65,38.75,0],[54,35.5,0],[62,39,0],[74,27.25,0],[74,18.25,1],[48,30.5,0],[73,26.75,1],[71,29.5,0],[67,33,0],[79,28.25,0],[51,47.5,0],[65,32.5,0],[68,32.5,0],[64,35.25,0],[49,33.75,0],[68,19.25,1],[51,39,0],[48,40.25,0],[55,33.25,0],[59,39.5,0],[70,39.25,0],[49,35,0],[62,36.375,0],[72,25.5,1],[45,34.75,0],[66,30,0],[62,29,0],[53,32.25,0],[72,25.25,1],[67,35,0],[62,31.25,0],[72,26.25,1],[74,30.5,0],[70,13.5,1],[54,39.5,0],[54,35.75,0],[71,25.25,1],[91,23.75,1],[59,26.5,1],[70,46.5,0],[49,37,0],[51,48.25,0],[48,32.5,0],[76,27.75,0],[70,20.25,1],[50,34,0],[46,45.75,0],[63,30,0],[55,33.75,0],[55,32.5,0],[69,30.5,0],[61,31,0],[49,31.5,0],[48,40.75,0],[46,40,0],[58,35.5,0],[57,30,0],[48,38.5,0],[59,27.5,0],[52,41.5,0],[64,32.25,0],[56,37.5,0],[63,24.25,1],[60,41.75,0],[57,29.5,0],[53,39.5,0],[65,33.5,0],[52,44,0],[79,29,0],[61,26.5,1],[48,41.5,0],[59,29.75,0],[62,34.5,0],[56,39.25,0],[53,30,0],[52,31,0],[62,32.5,0],[56,38.5,0],[49,39.5,0],[46,45.25,0],[64,36.5,0],[71,34.5,0],[76,35.5,0],[58,35.25,0],[73,32,0],[56,29.5,0],[58,46.5,0],[51,30,0],[56,37,0],[65,28.5,0],[58,33.25,0],[68,31.5,0],[69,31.5,0],[70,28.5,0],[70,26.375,1],[55,31.875,0],[53,31.25,0],[65,27.25,0],[51,26.125,1],[57,37.125,0],[67,36.375,0],[53,29.125,0],[61,9.75,1],[46,41,0],[45,16.25,1],[78,29.5,0],[63,34,0],[75,31,0],[52,37.25,0],[75,37.5,0],[49,28.25,0],[54,35.25,0],[48,33.5,0],[68,24,1],[59,38,0],[63,20,1],[55,32.5,0],[66,29.5,0],[77,20,1],[55,29.5,0],[46,29.25,0],[50,39.5,0],[68,33.75,0],[47,43.25,0],[67,32.25,0],[79,19.75,1],[69,35.75,0],[65,44.5,0],[57,21,1],[47,31.75,0],[61,36,0],[73,30.5,0],[69,27.5,0],[85,19,1],[62,38.75,0],[63,34.25,0],[65,30.5,0],[72,29,0],[61,33,0],[48,43,0],[63,31.75,0],[61,42.5,0],[45,38.25,0],[45,34,0],[76,26,1],[62,36.5,0],[57,38.75,0],[62,29,0],[58,44.75,0],[73,32.75,0],[64,20.5,1],[48,37,0],[68,36,0],[81,29.5,0],[70,30.5,0],[63,35.75,0],[74,31.25,0],[64,29.25,0],[54,37.25,0],[46,30.25,0],[59,38,0],[54,36.5,0],[68,29,0],[73,27.5,0],[71,32.5,0],[67,35,0],[87,19.5,1],[72,31.5,0],[48,41.75,0],[72,30,0],[61,25.625,1],[50,38.5,0],[47,39,0],[84,36.75,0],[72,22.625,1],[65,40.25,0],[46,38.5,0],[45,41.375,0],[89,20.5,1],[46,37.25,0],[49,42,0],[66,27,1],[78,26.75,1],[49,24.25,1],[52,40,0],[50,29,0],[45,28.75,0],[65,37,0],[73,19,1],[74,30,0],[80,29,0],[53,26.25,1],[62,26,1],[51,32.5,0],[60,31.25,0],[46,36.25,0],[45,34.75,0],[55,31.75,0],[69,28.5,0],[79,29,0],[46,28,0],[55,28.75,0],[67,32,0],[67,21.5,1],[66,27,1],[83,25.25,1],[70,32.5,0],[65,32.25,0],[81,29,0],[85,24,1],[69,17.25,1],[65,35.75,0],[90,13.5,1],[50,40,0],[64,32,0],[48,31,0],[46,37,0],[57,35,0],[76,28,0],[52,31.25,0],[55,33.5,0],[56,33,0],[49,29,0],[68,24,1],[56,35.5,0],[47,32.5,0],[69,38.5,0],[51,35.5,0],[52,30.5,0],[73,33,0],[74,17,1],[65,27.75,0],[58,35,0],[72,26.25,1],[86,29.5,0],[69,29.25,0],[71,31.5,0],[74,28.75,0],[73,34,0],[56,34.75,0],[60,33,0],[49,30.5,0],[48,42.75,0],[46,40.5,0],[74,32.25,0],[60,42.25,0],[63,31,0],[47,41.5,0],[63,28.75,0],[77,30,0],[72,32,0],[64,37.25,0],[78,22.25,1],[48,43.5,0],[77,26.5,1],[65,24,1],[48,34.5,0],[65,31,0],[77,19.75,1],[68,30.625,0],[69,33.125,0],[56,29.5,0],[75,24,1],[61,40,0],[59,26.25,1],[62,35,0],[47,30,0],[57,37,0],[60,42.5,0],[60,39.5,0],[50,35.75,0],[51,38.75,0],[57,30,0],[71,22,1],[66,43.5,0],[58,41,0],[83,13.5,1],[68,34.5,0],[56,29,0],[66,24.75,1],[52,35,0],[59,31.5,0],[83,18.875,1],[75,25.5,1],[47,43.5,0],[52,49.75,0],[74,28,0],[70,26.25,1],[57,41.5,0],[51,31.75,0],[52,36,0],[73,29.25,0],[60,35.375,0],[56,33.75,0],[58,37,0],[45,31,0],[56,37.25,0],[59,40.5,0],[70,20.25,1],[55,30.75,0],[62,27.5,0],[60,33.25,0],[84,19.875,1],[47,29.125,0],[64,22.75,1],[48,35,0],[51,37,0],[68,29.5,0],[51,45.625,0],[66,32.5,0],[57,39.25,0],[64,16.25,1],[73,34.5,0],[62,37,0],[83,18,1],[70,25,1],[50,32.25,0],[67,28.5,0],[52,40.25,0],[56,32,0],[55,33.5,0],[58,38.25,0],[79,36,0],[57,39.25,0],[61,32.75,0],[76,22,1],[48,32.75,0],[55,28.25,0],[58,39.25,0],[62,17.75,1],[45,43,0],[67,31.75,0],[63,32.25,0],[56,31.5,0],[51,37.5,0],[73,23.5,1],[66,35,0],[65,28,0],[45,37.5,0],[72,30.25,0],[64,25,1],[60,36,0],[46,43.25,0],[49,28.25,0],[51,33,0],[55,33.5,0],[55,27.75,0],[50,48.25,0],[46,48,0],[69,27,1]];
+
+  // ============================ HELPERS ============================
+  const NS='http://www.w3.org/2000/svg';
+  const sc=(v,d0,d1,r0,r1)=>r0+(v-d0)/(d1-d0)*(r1-r0);
+  function el(tag,a){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);return e;}
+  function line(g,x1,y1,x2,y2,cls){g.appendChild(el('line',{x1,y1,x2,y2,class:cls}));}
+  function txt(g,x,y,s,cls,anchor){const t=el('text',{x,y,class:cls,'text-anchor':anchor||'middle'});t.textContent=s;g.appendChild(t);return t;}
+  function mkgrp(svg,id,always){const g=el('g',{class:'grp'+(always?' vis':''),...(id?{id}:{})});svg.appendChild(g);return g;}
+
+  // ============================ BUILDER: toy plot ============================
+  function buildToyPlot(svg, prefix, always){
+    const X0=66,X1=596,YT=78,YB=436;
+    const ax=h=>sc(h,0.4,6.6,X0,X1), py=p=>sc(p,-0.045,1.045,YB,YT);
+    const base=el('g',{}); svg.appendChild(base);
+    line(base,X0,YT,X0,YB,'axis'); line(base,X0,YB,X1,YB,'axis');
+    for(let h=1;h<=6;h++){const x=ax(h);line(base,x,YB,x,YB+4,'axis');txt(base,x,YB+17,h,'axis-lbl');}
+    txt(base,(X0+X1)/2,YB+34,'hours studied','axis-title');
+    [{v:0,t:'0'},{v:.5,t:'.5'},{v:1,t:'1'}].forEach(o=>{const y=py(o.v);line(base,X0-4,y,X0,y,'axis');txt(base,X0-8,y+3.5,o.t,'axis-lbl','end');});
+    const yt=txt(base,0,0,'probability of passing','axis-title'); yt.setAttribute('transform',`translate(16,${(YT+YB)/2}) rotate(-90)`);
+
+    const gDots=mkgrp(svg,prefix?prefix+'dots':null,always), gGreen=mkgrp(svg,prefix?prefix+'green':null,always),
+          gRed=mkgrp(svg,prefix?prefix+'red':null,always), gCurve=mkgrp(svg,prefix?prefix+'curve':null,always),
+          gSeg=mkgrp(svg,prefix?prefix+'seg':null,always);
+    let up='';
+    for(let h=0.4;h<=6.6001;h+=0.05){const x=ax(h).toFixed(1),y=py(psig(h)).toFixed(1);up+=(up?' L ':'M ')+x+' '+y;}
+    gGreen.appendChild(el('path',{d:up+` L ${ax(6.6).toFixed(1)} ${py(0).toFixed(1)} L ${ax(0.4).toFixed(1)} ${py(0).toFixed(1)} Z`,class:'shadepass'}));
+    gRed.appendChild(el('path',{d:up+` L ${ax(6.6).toFixed(1)} ${py(1).toFixed(1)} L ${ax(0.4).toFixed(1)} ${py(1).toFixed(1)} Z`,class:'shadefail'}));
+    txt(gGreen,ax(5.6),py(0.30),'P(pass)','shadelab-pass');
+    txt(gRed,ax(1.55),py(0.72),'P(fail)','shadelab-fail');
+    const cpath=el('path',{d:up,class:'icurve'}); gCurve.appendChild(cpath);
+    STU.forEach(s=>{
+      gCurve.appendChild(el('circle',{cx:ax(s.h),cy:py(s.p),r:4,class:'probdot'}));
+      const right=s.h<=3;
+      txt(gCurve,ax(s.h)+(right?9:-9),py(s.p)+3.5,'.'+Math.round(s.p*1000).toString().padStart(3,'0'),'problab',right?'start':'end');
+    });
+    STU.forEach(s=>{
+      gDots.appendChild(el('circle',{cx:ax(s.h),cy:py(s.y),r:6.5,class:s.y?'dotpass':'dotfail'}));
+      if(s.y) txt(gDots,ax(s.h),py(1)-13,s.n,'stu-lbl');
+      else    txt(gDots,ax(s.h)-16,py(0)+4.5,s.n,'stu-lbl');
+    });
+    STU.forEach(s=>{
+      if(s.y) gSeg.appendChild(el('line',{x1:ax(s.h),y1:py(0),x2:ax(s.h),y2:py(s.p),class:'seg-pass'}));
+      else    gSeg.appendChild(el('line',{x1:ax(s.h),y1:py(s.p),x2:ax(s.h),y2:py(1),class:'seg-fail'}));
+    });
+    txt(gSeg,X0,32,'score for each student = length of the matching color','score-head','start');
+    STU.forEach(s=>{
+      txt(gSeg,ax(s.h),52,'.'+Math.round(s.score*1000),'score-val '+(s.score>=0.6?'score-good':'score-bad'));
+    });
+    if(!always){
+      const L=cpath.getTotalLength(); cpath.style.strokeDasharray=L; cpath.style.strokeDashoffset=L;
+      window.__toycurve=()=>{ cpath.style.strokeDashoffset=L*(1-A.c1); };
+    }
+  }
+  buildToyPlot(document.getElementById('svgToy'),'t_',false);
+
+  // ============================ BUILDER: deviance scale ============================
+  function buildScale(svg, yMid, always, prefix){
+    const SX0=70,SX1=560;
+    const sx=v=>sc(v,0,10,SX0,SX1);
+    const gA=mkgrp(svg,prefix?prefix+'scale':null,always), gB=mkgrp(svg,prefix?prefix+'null':null,always);
+    gA.appendChild(el('rect',{x:SX0,y:yMid-7,width:SX1-SX0,height:14,rx:7,class:'scale-track'}));
+    line(gA,sx(0),yMid-12,sx(0),yMid+12,'axis');
+    txt(gA,sx(0),yMid+28,'0 = perfect fit','scale-lbl');
+    txt(gA,(SX0+SX1)/2,yMid+46,'deviance — lower is better','axis-title');
+    gA.appendChild(el('circle',{cx:sx(4.956),cy:yMid,r:8,class:'probdot','stroke-width':2}));
+    txt(gA,sx(4.956),yMid-16,'pass ~ hours','scale-lbl');
+    const v1=txt(gA,sx(4.956),yMid+28,'4.956','scale-val'); v1.setAttribute('fill','#7a6212');
+    const nd=el('circle',{cx:sx(8.318),cy:yMid,r:8,class:'dotfail'}); nd.setAttribute('stroke','#fff'); nd.setAttribute('stroke-width',2); gB.appendChild(nd);
+    txt(gB,sx(8.318),yMid-16,'pass ~ 1','scale-lbl');
+    const v0=txt(gB,sx(8.318),yMid+28,'8.318','scale-val'); v0.setAttribute('fill','#b5451f');
+    const bx1=sx(4.956),bx2=sx(8.318),by=yMid-34;
+    gB.appendChild(el('path',{d:`M ${bx1} ${by+8} L ${bx1} ${by} L ${bx2} ${by} L ${bx2} ${by+8}`,class:'brace'}));
+    txt(gB,(bx1+bx2)/2,by-6,'difference = 3.362','bracelab');
+  }
+  buildScale(document.getElementById('svgScale'),58,false,'d_');
+
+  // ============================ BUILDER: KLoSA plot ============================
+  function buildKlosaPlot(svg){
+    const X0=64,X1=596,YT=40,YB=420;
+    const ax=a=>sc(a,44,92,X0,X1), py=p=>sc(p,-0.06,1.06,YB,YT);
+    const base=el('g',{}); svg.appendChild(base);
+    line(base,X0,YT,X0,YB,'axis'); line(base,X0,YB,X1,YB,'axis');
+    [50,60,70,80,90].forEach(v=>{const x=ax(v);line(base,x,YB,x,YB+4,'axis');txt(base,x,YB+16,v,'axis-lbl');});
+    txt(base,(X0+X1)/2,YB+34,'age (years)','axis-title');
+    [{v:0,t:'0'},{v:.5,t:'.5'},{v:1,t:'1'}].forEach(o=>{const y=py(o.v);line(base,X0-4,y,X0,y,'axis');txt(base,X0-8,y+3.5,o.t,'axis-lbl','end');});
+    const yt=txt(base,0,0,'P(weak grip)','axis-title'); yt.setAttribute('transform',`translate(15,${(YT+YB)/2}) rotate(-90)`);
+    const gDots=mkgrp(svg,'k_dots',false), gCurve=mkgrp(svg,'k_curve',false);
+    PTS.forEach((p,i)=>{
+      const jx=((i*37)%11-5)*0.35, jy=4+((i*61)%17);
+      const cx=ax(p[0])+jx, cy=py(p[2])+(p[2]?1:-1)*jy;
+      gDots.appendChild(el('circle',{cx,cy,r:1.8,class:p[2]?'dotfail':'dotpass','fill-opacity':.4}));
+    });
+    let d='';
+    for(let a=44;a<=92.001;a+=0.5){const x=ax(a).toFixed(1),y=py(ksig(a)).toFixed(1);d+=(d?' L ':'M ')+x+' '+y;}
+    gCurve.appendChild(el('path',{d,class:'icurve'}));
+  }
+  buildKlosaPlot(document.getElementById('svgKlosa'));
+
+  // ============================ ANIMATION STATE ============================
+  const A ={c1:0};       // toy curve draw
+  const AT={c1:0};
+  let raf=null;
+  function drawCont(){ window.__toycurve(); }
+  function tick(){
+    let moving=false;
+    for(const k of ['c1']){
+      const d=AT[k]-A[k];
+      if(Math.abs(d)>0.0012){A[k]+=d*0.13;moving=true;} else A[k]=AT[k];
+    }
+    drawCont();
+    raf = moving ? requestAnimationFrame(tick) : null;
+  }
+  function animateTo(){ if(!raf) raf=requestAnimationFrame(tick); }
+
+  // ============================ STEP SCRIPT ============================
+  const DEFAULT_STEP={ vis:[], panel:1, c1:0 };
+  const K1=['k_dots'];
+  const K2=[...K1,'k_curve'];
+  const T1=[...K2,'t_dots'];
+  const T2=[...T1,'t_curve'];
+  const T3=[...T2,'t_green'];
+  const T4=[...T3,'t_red'];
+  const T5=[...T4,'t_seg'];
+  const D1=[...T5,'d_scale'];
+  const D2=[...D1,'d_null'];
+  const STEP_CHANGES=[
+    {},                                                        // 0  panel title
+    {},                                                        // 1  read_csv + glm
+    {},                                                        // 2  full summary()
+    {vis:[...K1]},                                             // 3  dots
+    {vis:[...K2]},                                             // 4  gold curve
+    {},                                                        // 5  logistic form
+    {},                                                        // 6  fitted equation
+    {},                                                        // 7  log-odds note + practice questions
+    {},                                                        // 8  practice answers
+    {panel:2,vis:[...T1]},                                     // 9  six students + dots
+    {vis:[...T2],c1:1},                                        // 10 glm + curve
+    {vis:[...T3]},                                             // 11 green area = P(pass)
+    {vis:[...T4]},                                             // 12 red area = P(fail)
+    {vis:[...T5]},                                             // 13 scoring rule + segments
+    {},                                                        // 14 A vs D
+    {},                                                        // 15 likelihood product + practice questions
+    {},                                                        // 16 practice answers
+    {panel:3},                                                 // 17 logs
+    {},                                                        // 18 the table + logLik
+    {vis:[...D1]},                                             // 19 deviance + scale
+    {vis:[...D2]},                                             // 20 null model + null marker
+    {},                                                        // 21 summary lines + df note
+    {},                                                        // 22 practice questions (panel 3)
+    {},                                                        // 23 practice answers
+    {panel:4},                                                 // 24 null/residual meaning + table
+    {},                                                        // 25 AIC
+    {},                                                        // 26 the 803.8 question + practice questions
+    {}                                                         // 27 practice answers
+  ];
+  const STEPS=STEP_CHANGES.reduce((steps,change)=>{ steps.push({...DEFAULT_STEP,...steps.at(-1),...change}); return steps; },[]);
+  const N=STEPS.length;
+  const ALL_GROUPS=['k_dots','k_curve','t_dots','t_curve','t_green','t_red','t_seg','d_scale','d_null'];
+  const PANEL_FIRST={1:0,2:9,3:17,4:24};
+  const PANEL_IDS=[1,2,3,4];
+
+  let step=0;
+  const counter=document.getElementById('counter');
+  const panelEls={}; PANEL_IDS.forEach(n=>panelEls[n]=document.getElementById('panel'+n));
+
+  function apply(k){
+    step=(k+N)%N;
+    const s=STEPS[step];
+    const on=new Set(s.vis);
+    ALL_GROUPS.forEach(id=>document.getElementById(id).classList.toggle('vis',on.has(id)));
+    AT.c1=s.c1;
+    if(window.__STILL__){A.c1=AT.c1;drawCont();} else animateTo();
+    PANEL_IDS.forEach(n=>{
+      panelEls[n].classList.toggle('lit', step>=PANEL_FIRST[n]);
+      panelEls[n].classList.toggle('active', s.panel===n);
+    });
+    document.querySelectorAll('#deck [data-step]').forEach(el=>{ el.hidden=Number(el.dataset.step)>step+1; });
+    document.querySelectorAll('.ppractice[data-reveal]').forEach(el=>{
+      el.classList.toggle('revealed', Number(el.dataset.reveal)<=step+1);
+    });
+    counter.textContent=`step ${step+1} / ${N}`;
+    if(window.renderMathInElement) renderMathInElement(document.getElementById('deck'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false});
+  }
+  const REVEAL=!!window.DECK_REVEAL_ALL;
+  function panelLast(p){
+    const i=PANEL_IDS.indexOf(p);
+    return i<PANEL_IDS.length-1 ? PANEL_FIRST[PANEL_IDS[i+1]]-1 : N-1;
+  }
+  function next(){
+    if(REVEAL){
+      const i=PANEL_IDS.indexOf(STEPS[step].panel);
+      if(i<PANEL_IDS.length-1) apply(panelLast(PANEL_IDS[i+1]));
+      return;
+    }
+    if(step<N-1) apply(step+1);
+  }
+  function prev(){
+    if(REVEAL){
+      const i=PANEL_IDS.indexOf(STEPS[step].panel);
+      if(i>0) apply(panelLast(PANEL_IDS[i-1]));
+      return;
+    }
+    if(step>0) apply(step-1);
+  }
+  function jumpPanel(dir){
+    if(REVEAL){
+      const i=PANEL_IDS.indexOf(STEPS[step].panel);
+      const j=Math.max(0,Math.min(PANEL_IDS.length-1,i+dir));
+      apply(panelLast(PANEL_IDS[j]));
+      return;
+    }
+    const order=PANEL_IDS.map(n=>PANEL_FIRST[n]);
+    if(dir>0){const nx=order.find(o=>o>step); apply(nx!==undefined?nx:N-1);}
+    else{const pr=[...order].reverse().find(o=>o<step); apply(pr!==undefined?pr:0);}
+  }
+
+  // ============================ FIT / CHROME ============================
+  const stage=document.getElementById('stage'), deck=document.getElementById('deck');
+  function fitDeck(){
+    const st=getComputedStyle(stage);
+    const aw=stage.clientWidth-parseFloat(st.paddingLeft)-parseFloat(st.paddingRight);
+    const ah=stage.clientHeight-parseFloat(st.paddingTop)-parseFloat(st.paddingBottom);
+    deck.style.transform=`scale(${Math.min(aw/2560,ah/1440)})`;
+  }
+  window.addEventListener('resize',fitDeck); fitDeck();
+
+  // ============================ PENCIL ============================
+  const canvas=document.getElementById('ink'), cx=canvas.getContext('2d');
+  const CW=2560,CH=1440; canvas.width=CW; canvas.height=CH;
+  let pencil=false,penW=2.4,stroke=null; const strokes=[];
+  const pBtn=document.getElementById('pencil'),uBtn=document.getElementById('undo'),cBtn=document.getElementById('clear');
+  function setPencil(v){pencil=v;deck.classList.toggle('drawing',v);pBtn.classList.toggle('on',v);pBtn.textContent=`Pencil: ${v?'on':'off'}`;}
+  function pt(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*CW/r.width,y:(e.clientY-r.top)*CH/r.height};}
+  function redraw(){cx.clearRect(0,0,CW,CH);strokes.forEach(s=>{if(s.points.length<2)return;cx.save();cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle=s.color;cx.lineWidth=s.width;cx.beginPath();cx.moveTo(s.points[0].x,s.points[0].y);s.points.slice(1).forEach(p=>cx.lineTo(p.x,p.y));cx.stroke();cx.restore();});}
+  canvas.addEventListener('pointerdown',e=>{if(!pencil)return;e.preventDefault();canvas.setPointerCapture(e.pointerId);stroke={color:'#e07a2f',width:penW,points:[pt(e)]};strokes.push(stroke);});
+  canvas.addEventListener('pointermove',e=>{if(!stroke||!pencil)return;stroke.points.push(pt(e));redraw();});
+  function endStroke(){stroke=null;} canvas.addEventListener('pointerup',endStroke);canvas.addEventListener('pointercancel',endStroke);
+  function undo(){strokes.pop();redraw();} function clearAll(){strokes.length=0;redraw();}
+  pBtn.onclick=e=>{e.stopPropagation();setPencil(!pencil);}; uBtn.onclick=e=>{e.stopPropagation();undo();}; cBtn.onclick=e=>{e.stopPropagation();clearAll();};
+  window.addEventListener('resize',redraw);
+
+  document.addEventListener('keydown',e=>{
+    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return;}
+    if(e.metaKey||e.ctrlKey||e.altKey)return;
+    const k=e.key.toLowerCase();
+    if(['ArrowRight',' ','PageDown','Enter'].includes(e.key)){e.preventDefault();next();}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}
+    else if(e.key==='ArrowDown'){e.preventDefault();jumpPanel(1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();jumpPanel(-1);}
+    else if(k==='p'){e.preventDefault();setPencil(!pencil);}
+    else if(k==='u'){e.preventDefault();undo();}
+    else if(k==='c'||k==='e'){e.preventDefault();clearAll();}
+    else if(e.key==='['){e.preventDefault();penW=Math.max(1,penW-1);}
+    else if(e.key===']'){e.preventDefault();penW=Math.min(18,penW+1);}
+    else if(k==='r'){e.preventDefault();apply(0);}
+  });
+
+  // ============================ GO ============================
+  const _q=new URLSearchParams(location.search);
+  window.__STILL__ = _q.get('still')==='1' || REVEAL;
+  const _s=parseInt(_q.get('step'),10);
+  function boot(){ apply(Number.isFinite(_s)?_s:(REVEAL?panelLast(1):0)); }
+  if(window.renderMathInElement) boot();
+  else window.addEventListener('load',boot);
+  </script>
+</body>
+</html>
