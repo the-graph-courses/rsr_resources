@@ -47,8 +47,7 @@
     .panel-side{grid-column:1;grid-row:1;min-width:0;min-height:0;display:flex;flex-direction:column;gap:6px;overflow:auto;}
     .panel-mainv{grid-column:2;grid-row:1;min-width:0;min-height:0;display:flex;flex-direction:column;gap:8px;}
     .ppractice{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-    .s-tag{display:inline-block;margin-bottom:1px;color:var(--brown);font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
-    .s-tag.practice{color:var(--alarm);}
+    .ppractice[hidden]{display:none !important;}
     .p-title{margin:0;color:var(--teal);font-size:22px;font-weight:600;line-height:1.15;}
     .panel-explain{padding:7px 8px;background:var(--soft);border-left:3px solid var(--gold);border-radius:2px;}
     .panel-explain strong{color:var(--teal);font-weight:600;}
@@ -94,12 +93,20 @@
     .mini-report{flex:none;padding:7px 9px;border-left:4px solid var(--teal);border-radius:2px;background:#fff;color:var(--ink);font-size:13px;line-height:1.35;}
     .mini-report strong{color:var(--teal);}
     /* practice questions */
-    .practice-q{flex:none;padding:9px 12px;border:1px solid var(--mist);border-top:3px solid var(--gold);border-radius:3px;background:#fff;}
-    .practice-q .qlab{display:block;margin-bottom:2px;color:var(--brown);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;}
-    .practice-q .q{margin:0 0 6px;color:var(--ink);font-size:14.5px;font-weight:600;line-height:1.25;}
-    .practice-options{display:flex;gap:9px;}
-    .practice-options span{flex:1;padding:6px 9px;border-radius:2px;background:var(--soft);color:var(--ink-2);font-size:13.5px;line-height:1.3;text-align:center;}
-    .ppractice.revealed .practice-options span.ans{background:var(--warm);color:var(--teal);font-weight:700;border:1px solid var(--gold);}
+    .practice-q{position:relative;flex:none;padding:7px 130px 7px 12px;border:1px solid var(--mist);border-top:3px solid var(--gold);border-radius:3px;background:#fff;}
+    .practice-q .qlab{display:inline;margin-right:8px;color:var(--brown);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;}
+    .practice-q .q{display:inline;margin:0;color:var(--ink);font-size:14.5px;font-weight:600;line-height:1.25;}
+    .practice-options{display:inline;margin-left:10px;color:var(--ink-2);font-size:13.5px;line-height:1.3;white-space:nowrap;}
+    .practice-options .opt + .opt{margin-left:12px;}
+    .practice-options .opt::before{font-weight:700;color:var(--brown);margin-right:4px;}
+    .practice-options .opt:nth-child(1)::before{content:"(a) ";}
+    .practice-options .opt:nth-child(2)::before{content:"(b) ";}
+    .practice-ans{position:absolute;right:10px;top:50%;transform:translateY(-50%) rotate(180deg);font-size:12.5px;font-weight:700;color:var(--teal);opacity:0;transition:opacity .35s ease;max-width:116px;text-align:center;line-height:1.15;}
+    .practice-ans::before{content:"Answer: ";font-weight:600;}
+    .ppractice.revealed .practice-ans{opacity:1;}
+    @media print{
+      .practice-ans{opacity:1 !important;}
+    }
     /* svg element styling */
     .axis{stroke:#9fb7bb;stroke-width:1;}
     .axis-lbl{fill:var(--ink-2);font-family:var(--sans);font-size:12.5px;}
@@ -170,7 +177,6 @@
           <section class="panel" id="panel1">
             <div class="p-num">1</div>
             <div class="panel-side">
-              <span class="s-tag">Recap</span>
               <div class="p-title">Last time: null and residual deviance</div>
               <!-- EDIT PANEL 1 HERE. -->
               <div class="panel-explain stack">
@@ -204,16 +210,16 @@ m1 &lt;- glm(weak_grip ~ age, family = binomial, data = klosa)</pre>
                 </table>
               </div>
             </div>
-            <div class="ppractice frag" data-step="4" data-reveal="5">
+            <div class="ppractice frag" data-step="5" data-reveal="6">
               <div class="practice-q">
                 <span class="qlab">Practice</span>
                 <p class="q">The null model glm(weak_grip ~ 1) predicts&hellip;</p>
-                <div class="practice-options"><span class="ans">0.206 for every man</span><span>0 for every man</span></div>
+                <span class="practice-options"><span class="opt">0.206 for every man</span><span class="opt">0 for every man</span></span><span class="practice-ans">0.206 for every man</span>
               </div>
               <div class="practice-q">
                 <span class="qlab">Practice</span>
                 <p class="q">Which model has deviance 3455.1?</p>
-                <div class="practice-options"><span class="ans">weak_grip ~ age</span><span>weak_grip ~ 1</span></div>
+                <span class="practice-options"><span class="opt">weak_grip ~ age</span><span class="opt">weak_grip ~ 1</span></span><span class="practice-ans">weak_grip ~ age</span>
               </div>
             </div>
           </section>
@@ -222,20 +228,19 @@ m1 &lt;- glm(weak_grip ~ age, family = binomial, data = klosa)</pre>
           <section class="panel" id="panel2">
             <div class="p-num">2</div>
             <div class="panel-side">
-              <span class="s-tag">Test</span>
               <div class="p-title">The likelihood-ratio test</div>
               <!-- EDIT PANEL 2 HERE. -->
               <div class="panel-explain stack">
-                <p class="frag bullet" data-step="6">Suppose age had <strong>no real effect</strong>. The drop would still not be zero.</p>
-                <p class="frag bullet" data-step="6">Its distribution is known: <strong>chi-squared</strong>, df = number of added parameters.</p>
-                <p class="frag bullet" data-step="7">The 5% cutoff is <strong>3.84</strong>. Our drop is <strong>803.8</strong> — far beyond it.</p>
-                <pre class="frag code" data-step="8">anova(m0, m1, test = "LRT")</pre>
-                <pre class="frag out" data-step="8">#&gt; Model 1: weak_grip ~ 1
+                <p class="frag bullet" data-step="7">Suppose age had <strong>no real effect</strong>. The drop would still not be zero.</p>
+                <p class="frag bullet" data-step="7">Its distribution is known: <strong>chi-squared</strong>, df = number of added parameters.</p>
+                <p class="frag bullet" data-step="8">The 5% cutoff is <strong>3.84</strong>. Our drop is <strong>803.8</strong> — far beyond it.</p>
+                <pre class="frag code" data-step="9">anova(m0, m1, test = "LRT")</pre>
+                <pre class="frag out" data-step="9">#&gt; Model 1: weak_grip ~ 1
 #&gt; Model 2: weak_grip ~ age
 #&gt;   Resid. Df Resid. Dev Df Deviance  Pr(&gt;Chi)
 #&gt; 1      4183     4259.0
 #&gt; 2      4182     3455.1  1   <span class="hi">803.85</span> <span class="hi">&lt; 2.2e-16</span> ***</pre>
-                <div class="read-card frag" data-step="9">
+                <div class="read-card frag" data-step="10">
                   <div class="read-title">what each column means</div>
                   <div class="read-strip">
                     <div class="read-cell"><span class="or">Resid. Dev</span><span class="w">each model's deviance</span></div>
@@ -244,22 +249,22 @@ m1 &lt;- glm(weak_grip ~ age, family = binomial, data = klosa)</pre>
                     <div class="read-cell"><span class="or">Pr(&gt;Chi)</span><span class="w">probability of such a drop by chance</span></div>
                   </div>
                 </div>
-                <div class="mini-report frag" data-step="9"><strong>Report:</strong> &ldquo;Age significantly improved model fit (likelihood-ratio &chi;&sup2;(1) = 803.8, p &lt; 0.001).&rdquo;</div>
+                <div class="mini-report frag" data-step="10"><strong>Report:</strong> &ldquo;Age significantly improved model fit (likelihood-ratio &chi;&sup2;(1) = 803.8, p &lt; 0.001).&rdquo;</div>
               </div>
             </div>
             <div class="panel-mainv">
               <div class="plotwrap"><svg id="svgChi" viewBox="0 0 620 440" preserveAspectRatio="xMidYMid meet"></svg></div>
             </div>
-            <div class="ppractice frag" data-step="9" data-reveal="10">
+            <div class="ppractice frag" data-step="11" data-reveal="12">
               <div class="practice-q">
                 <span class="qlab">Practice</span>
                 <p class="q">The LRT compares the drop with which distribution?</p>
-                <div class="practice-options"><span class="ans">chi-squared</span><span>normal</span></div>
+                <span class="practice-options"><span class="opt">chi-squared</span><span class="opt">normal</span></span><span class="practice-ans">chi-squared</span>
               </div>
               <div class="practice-q">
                 <span class="qlab">Practice</span>
                 <p class="q">We added one parameter (age). Df for the test = ?</p>
-                <div class="practice-options"><span class="ans">1</span><span>4182</span></div>
+                <span class="practice-options"><span class="opt">1</span><span class="opt">4182</span></span><span class="practice-ans">1</span>
               </div>
             </div>
           </section>
@@ -268,42 +273,41 @@ m1 &lt;- glm(weak_grip ~ age, family = binomial, data = klosa)</pre>
           <section class="panel" id="panel3">
             <div class="p-num">3</div>
             <div class="panel-side">
-              <span class="s-tag">More predictors</span>
               <div class="p-title">Comparing models with anova()</div>
               <!-- EDIT PANEL 3 HERE. -->
               <div class="panel-explain stack">
-                <pre class="frag code" data-step="11">klosa2 &lt;- klosa |&gt; drop_na(bmi, smoking)   <span class="cm"># 4,134 men</span>
+                <pre class="frag code" data-step="13">klosa2 &lt;- klosa |&gt; drop_na(bmi, smoking)   <span class="cm"># 4,134 men</span>
 m1 &lt;- glm(weak_grip ~ age, family = binomial, data = klosa2)
 m2 &lt;- glm(weak_grip ~ age + bmi, family = binomial, data = klosa2)
 m3 &lt;- glm(weak_grip ~ age + bmi + smoking,
           family = binomial, data = klosa2)</pre>
-                <p class="frag step-note" data-step="11">Compare models only on the same rows — so remove missing BMI / smoking first.</p>
-                <pre class="frag code" data-step="12">anova(m1, m2, test = "LRT")   <span class="cm"># does BMI improve the fit?</span></pre>
-                <pre class="frag out" data-step="12">#&gt;   Resid. Df Resid. Dev Df Deviance  Pr(&gt;Chi)
+                <p class="frag step-note" data-step="13">Compare models only on the same rows — so remove missing BMI / smoking first.</p>
+                <pre class="frag code" data-step="14">anova(m1, m2, test = "LRT")   <span class="cm"># does BMI improve the fit?</span></pre>
+                <pre class="frag out" data-step="14">#&gt;   Resid. Df Resid. Dev Df Deviance  Pr(&gt;Chi)
 #&gt; 1      4132     3381.7
 #&gt; 2      4131     3303.0  1   <span class="hi">78.619</span> <span class="hi">&lt; 2.2e-16</span> ***</pre>
-                <pre class="frag code" data-step="13">anova(m3, test = "LRT")   <span class="cm"># one row per term, in order</span></pre>
-                <pre class="frag out" data-step="13">#&gt;         Df Deviance Resid. Df Resid. Dev Pr(&gt;Chi)
+                <pre class="frag code" data-step="15">anova(m3, test = "LRT")   <span class="cm"># one row per term, in order</span></pre>
+                <pre class="frag out" data-step="15">#&gt;         Df Deviance Resid. Df Resid. Dev Pr(&gt;Chi)
 #&gt; NULL                     4133     4151.7
 #&gt; age      1  <span class="hi">770.05</span>      4132     3381.7   &lt;2e-16 ***
 #&gt; bmi      1   <span class="hi">78.62</span>      4131     3303.0   &lt;2e-16 ***
 #&gt; smoking  2    <span class="hi-or">2.56</span>      4129     3300.5   <span class="hi-or">0.2776</span></pre>
-                <p class="frag bullet" data-step="14">BMI improves the fit. smoking: drop 2.56, p = 0.28 — <span class="bad">no clear improvement</span>.</p>
+                <p class="frag bullet" data-step="16">BMI improves the fit. smoking: drop 2.56, p = 0.28 — <span class="bad">no clear improvement</span>.</p>
               </div>
             </div>
             <div class="panel-mainv">
               <div class="plotwrap"><svg id="svgLad" viewBox="0 0 620 440" preserveAspectRatio="xMidYMid meet"></svg></div>
             </div>
-            <div class="ppractice frag" data-step="14" data-reveal="15">
+            <div class="ppractice frag" data-step="17" data-reveal="18">
               <div class="practice-q">
                 <span class="qlab">Practice</span>
                 <p class="q">anova(m1, m2) requires the two models to be fitted on&hellip;</p>
-                <div class="practice-options"><span class="ans">the same rows</span><span>different rows</span></div>
+                <span class="practice-options"><span class="opt">the same rows</span><span class="opt">different rows</span></span><span class="practice-ans">the same rows</span>
               </div>
               <div class="practice-q">
                 <span class="qlab">Practice</span>
                 <p class="q">The smoking row tests smoking after&hellip;</p>
-                <div class="practice-options"><span class="ans">age and bmi</span><span>no other terms</span></div>
+                <span class="practice-options"><span class="opt">age and bmi</span><span class="opt">no other terms</span></span><span class="practice-ans">age and bmi</span>
               </div>
             </div>
           </section>
@@ -312,40 +316,39 @@ m3 &lt;- glm(weak_grip ~ age + bmi + smoking,
           <section class="panel" id="panel4">
             <div class="p-num">4</div>
             <div class="panel-side">
-              <span class="s-tag">Model choice</span>
               <div class="p-title">AIC: deviance plus a penalty for parameters</div>
               <!-- EDIT PANEL 4 HERE. -->
               <div class="panel-explain stack">
-                <p class="frag bullet" data-step="16">Deviance always goes down when we add terms.</p>
-                <p class="frag bullet" data-step="16">So deviance alone cannot choose between models.</p>
-                <div class="frag inline-eq big" data-step="16">$\mathrm{AIC} = \text{residual deviance} + 2k$</div>
-                <p class="frag step-note" data-step="16">k = number of parameters. A term helps only if it removes more than 2 deviance per parameter.</p>
-                <pre class="frag code" data-step="17">m0 &lt;- glm(weak_grip ~ 1, family = binomial, data = klosa2)
+                <p class="frag bullet" data-step="19">Deviance always goes down when we add terms.</p>
+                <p class="frag bullet" data-step="19">So deviance alone cannot choose between models.</p>
+                <div class="frag inline-eq big" data-step="19">$\mathrm{AIC} = \text{residual deviance} + 2k$</div>
+                <p class="frag step-note" data-step="19">k = number of parameters. A term helps only if it removes more than 2 deviance per parameter.</p>
+                <pre class="frag code" data-step="20">m0 &lt;- glm(weak_grip ~ 1, family = binomial, data = klosa2)
 AIC(m0, m1, m2, m3)</pre>
-                <pre class="frag out" data-step="17">#&gt;    df      AIC
+                <pre class="frag out" data-step="20">#&gt;    df      AIC
 #&gt; m0  1 4153.704
 #&gt; m1  2 3385.656
 #&gt; m2  3 <span class="hi">3309.037</span>
 #&gt; m3  5 3310.474</pre>
-                <p class="frag bullet" data-step="18">smoking removes 2.56 deviance but adds 2 parameters: +4. AIC goes up.</p>
-                <p class="frag bullet" data-step="18">Lowest AIC: <strong>m2 (age + bmi)</strong>.</p>
-                <p class="frag bullet" data-step="18">Differences under 2 are ties. Then choose the simpler model.</p>
-                <p class="frag bullet" data-step="18">AIC can also compare <strong>non-nested</strong> models. The LRT cannot.</p>
+                <p class="frag bullet" data-step="21">smoking removes 2.56 deviance but adds 2 parameters: +4. AIC goes up.</p>
+                <p class="frag bullet" data-step="21">Lowest AIC: <strong>m2 (age + bmi)</strong>.</p>
+                <p class="frag bullet" data-step="21">Differences under 2 are ties. Then choose the simpler model.</p>
+                <p class="frag bullet" data-step="21">AIC can also compare <strong>non-nested</strong> models. The LRT cannot.</p>
               </div>
             </div>
             <div class="panel-mainv">
               <div class="plotwrap"><svg id="svgAic" viewBox="0 0 620 300" preserveAspectRatio="xMidYMid meet"></svg></div>
             </div>
-            <div class="ppractice frag" data-step="18" data-reveal="19">
+            <div class="ppractice frag" data-step="22" data-reveal="23">
               <div class="practice-q">
                 <span class="qlab">Practice</span>
                 <p class="q">m3: deviance 3300.5, 5 parameters. AIC = ?</p>
-                <div class="practice-options"><span class="ans">3310.5</span><span>3305.5</span></div>
+                <span class="practice-options"><span class="opt">3310.5</span><span class="opt">3305.5</span></span><span class="practice-ans">3310.5</span>
               </div>
               <div class="practice-q">
                 <span class="qlab">Practice</span>
                 <p class="q">m2 AIC 3309.0, m3 AIC 3310.5. Choose&hellip;</p>
-                <div class="practice-options"><span class="ans">m2</span><span>m3</span></div>
+                <span class="practice-options"><span class="opt">m2</span><span class="opt">m3</span></span><span class="practice-ans">m2</span>
               </div>
             </div>
           </section>
@@ -527,52 +530,59 @@ AIC(m0, m1, m2, m3)</pre>
     {},                                                        // 0  recap: two models
     {vis:[...R1]},                                             // 1  the plot + null line
     {},                                                        // 2  the table + drop 803.8
-    {},                                                        // 3  is it chance? + practice questions
-    {},                                                        // 4  practice answers
-    {panel:2,vis:[...C1],c1:1},                                // 5  chi-squared curve
-    {vis:[...C2]},                                             // 6  cutoff + our drop
-    {},                                                        // 7  anova(m0, m1) output
-    {},                                                        // 8  columns + report + practice questions
-    {},                                                        // 9  practice answers
-    {panel:3},                                                 // 10 klosa2 + m1, m2, m3
-    {},                                                        // 11 anova(m1, m2) + report
-    {vis:[...L1]},                                             // 12 anova(m3) + ladder
-    {},                                                        // 13 reading the ladder + practice questions
-    {},                                                        // 14 practice answers
-    {panel:4},                                                 // 15 why AIC + formula
-    {vis:[...A1]},                                             // 16 AIC() output + dot plot
-    {},                                                        // 17 interpretation + practice questions
-    {}                                                         // 18 practice answers
+    {},                                                        // 3  is it chance?
+    {},                                                        // 4  practice questions
+    {},                                                        // 5  practice answers
+    {panel:2,vis:[...C1],c1:1},                                // 6  chi-squared curve
+    {vis:[...C2]},                                             // 7  cutoff + our drop
+    {},                                                        // 8  anova(m0, m1) output
+    {},                                                        // 9  columns + report
+    {},                                                        // 10 practice questions
+    {},                                                        // 11 practice answers
+    {panel:3},                                                 // 12 klosa2 + m1, m2, m3
+    {},                                                        // 13 anova(m1, m2) + report
+    {vis:[...L1]},                                             // 14 anova(m3) + ladder
+    {},                                                        // 15 reading the ladder
+    {},                                                        // 16 practice questions
+    {},                                                        // 17 practice answers
+    {panel:4},                                                 // 18 why AIC + formula
+    {vis:[...A1]},                                             // 19 AIC() output + dot plot
+    {},                                                        // 20 interpretation
+    {},                                                        // 21 practice questions
+    {}                                                         // 22 practice answers
   ];
   const STEPS=STEP_CHANGES.reduce((steps,change)=>{ steps.push({...DEFAULT_STEP,...steps.at(-1),...change}); return steps; },[]);
   const N=STEPS.length;
   const ALL_GROUPS=['r_plot','c_curve','c_mark','l_lad','a_aic'];
-  const PANEL_FIRST={1:0,2:5,3:10,4:15};
+  const PANEL_FIRST={1:0,2:6,3:12,4:18};
   const PANEL_IDS=[1,2,3,4];
 
   let step=0;
   const counter=document.getElementById('counter');
   const panelEls={}; PANEL_IDS.forEach(n=>panelEls[n]=document.getElementById('panel'+n));
 
+  const REVEAL=!!window.DECK_REVEAL_ALL;
   function apply(k){
     step=(k+N)%N;
     const s=STEPS[step];
-    const on=new Set(s.vis);
+    const view=REVEAL?STEPS[N-1]:s;
+    const on=new Set(view.vis);
     ALL_GROUPS.forEach(id=>document.getElementById(id).classList.toggle('vis',on.has(id)));
-    AT.c1=s.c1;
+    AT.c1=view.c1;
     if(window.__STILL__){A.c1=AT.c1;drawCont();} else animateTo();
     PANEL_IDS.forEach(n=>{
-      panelEls[n].classList.toggle('lit', step>=PANEL_FIRST[n]);
+      panelEls[n].classList.toggle('lit', REVEAL || step>=PANEL_FIRST[n]);
       panelEls[n].classList.toggle('active', s.panel===n);
     });
-    document.querySelectorAll('#deck [data-step]').forEach(el=>{ el.hidden=Number(el.dataset.step)>step+1; });
+    document.querySelectorAll('#deck [data-step]').forEach(el=>{
+      el.hidden=REVEAL?false:Number(el.dataset.step)>step+1;
+    });
     document.querySelectorAll('.ppractice[data-reveal]').forEach(el=>{
-      el.classList.toggle('revealed', Number(el.dataset.reveal)<=step+1);
+      el.classList.toggle('revealed', REVEAL || Number(el.dataset.reveal)<=step+1);
     });
     counter.textContent=`step ${step+1} / ${N}`;
     if(window.renderMathInElement) renderMathInElement(document.getElementById('deck'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false});
   }
-  const REVEAL=!!window.DECK_REVEAL_ALL;
   function panelLast(p){
     const i=PANEL_IDS.indexOf(p);
     return i<PANEL_IDS.length-1 ? PANEL_FIRST[PANEL_IDS[i+1]]-1 : N-1;

@@ -11,6 +11,7 @@ Interactive teaching tools for statistics concepts, built by [The GRAPH Courses]
 | Least Squares Explorer | `explorers/least-squares-explorer.html` | Drag sliders to fit a regression line and minimize the sum of squared residuals |
 | Slope Standard Error | `explorers/slope-standard-error.html` | Explore what affects the precision of the slope estimate through simulation |
 | Regression Assumptions Explorer | `explorers/regression-diagnostics.html` | Explore regression diagnostics, assumptions, and practical fixes |
+| Odds Ratio Explorer | `explorers/odds-ratio-explorer.html` | Enter an odds ratio and see how the probability change depends on the starting probability |
 
 ## Usage
 

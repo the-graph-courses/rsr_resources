@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Odds ratio</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+    background: #fafaf9;
+    color: #1c1917;
+    padding: 24px 20px 60px;
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: 960px; margin: 0 auto; }
+
+  h1 {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+  h1 .gold { color: #c8962e; }
+  h1 .teal { color: #006D77; }
+
+  .hint {
+    text-align: center;
+    font-size: 15px;
+    color: #a8a29e;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: #fff;
+    border: 2px solid #e7e5e4;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+  }
+
+  .card h2 {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    color: #57534e;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  /* ---- OR control ---- */
+  .or-row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .or-readout {
+    font-family: 'Outfit', sans-serif;
+    font-size: 34px;
+    font-weight: 700;
+    min-width: 150px;
+    white-space: nowrap;
+  }
+  .or-readout small { font-size: 18px; font-weight: 600; color: #78716c; margin-right: 6px; }
+  .or-slider { flex: 1; min-width: 220px; accent-color: #0097a7; height: 28px; }
+  .or-input {
+    width: 84px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    padding: 6px 8px;
+    border: 1px solid #d6d3d1;
+    border-radius: 6px;
+    text-align: center;
+  }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .chip {
+    padding: 5px 12px;
+    border: 1px solid #d6d3d1;
+    border-radius: 999px;
+    background: #fff;
+    color: #78716c;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .chip:hover { background: #f5f5f4; }
+  .chip.active { background: #006D77; border-color: #006D77; color: #fff; }
+  .or-sentence { margin-top: 12px; font-size: 15px; color: #57534e; }
+  .or-sentence b { color: #1c1917; }
+
+  /* ---- canvases ---- */
+  .canvas-wrap {
+    background: #fff;
+    border: 2px solid #e7e5e4;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  canvas { display: block; width: 100%; height: auto; }
+
+  .under-canvas {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 4px 2px 18px;
+    font-size: 15px;
+    color: #57534e;
+  }
+  .under-canvas label { font-weight: 600; }
+  .p-slider { flex: 1; min-width: 200px; accent-color: #0097a7; height: 28px; }
+  .p-readout { font-weight: 700; font-family: 'Outfit', sans-serif; font-size: 18px; min-width: 46px; text-align: right; }
+
+  /* ---- walkthrough ---- */
+  .steps {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .step {
+    flex: 1;
+    min-width: 160px;
+    background: #fafaf9;
+    border: 1px solid #e7e5e4;
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .step .step-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #a8a29e;
+    margin-bottom: 6px;
+  }
+  .step .step-main {
+    font-family: 'Outfit', sans-serif;
+    font-size: 21px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .step .step-sub { font-size: 13px; color: #78716c; }
+  .step.start .step-main { color: #0097a7; }
+  .step.end .step-main { color: #b07d1a; }
+  .step-arrow {
+    align-self: center;
+    font-size: 22px;
+    color: #a8a29e;
+    flex: 0 0 auto;
+  }
+  .result-line {
+    margin-top: 14px;
+    font-size: 16px;
+    color: #1c1917;
+  }
+  .result-line b { font-family: 'Outfit', sans-serif; }
+  .result-note { font-size: 14px; color: #78716c; margin-top: 4px; }
+
+  /* ---- icon arrays ---- */
+  .arrays {
+    display: flex;
+    gap: 36px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+  .array-block { flex: 1; min-width: 240px; }
+  .array-title { font-size: 14px; font-weight: 600; color: #57534e; margin-bottom: 8px; }
+  .array-title b { font-family: 'Outfit', sans-serif; font-size: 16px; }
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 4px;
+    max-width: 280px;
+  }
+  .icon-grid span {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #e7e5e4;
+  }
+  .icon-grid span.before { background: #0097a7; }
+  .icon-grid span.after  { background: #b07d1a; }
+  .icon-grid span.lost   { background: #fff; border: 2px solid #b07d1a; }
+  .array-caption { font-size: 13px; color: #78716c; margin-top: 8px; }
+  .array-caption .sw {
+    display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+    margin: 0 3px -1px 6px;
+  }
+  .sw.teal { background: #0097a7; }
+  .sw.gold { background: #b07d1a; }
+  .sw.hollow { background: #fff; border: 2px solid #b07d1a; width: 8px; height: 8px; }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Odds ratio</h1>
+  <p class="hint">Enter an odds ratio and see how the probability changes at different starting probabilities.</p>
+
+  <div class="card">
+    <h2>Odds ratio</h2>
+    <div class="or-row">
+      <div class="or-readout"><small>OR&nbsp;=</small><span id="or-value">2.00</span></div>
+      <input type="range" class="or-slider" id="or-slider" min="0" max="200" value="130">
+      <input type="text" class="or-input" id="or-input" value="2" inputmode="decimal" aria-label="odds ratio">
+    </div>
+    <div class="chips" id="chips"></div>
+    <p class="or-sentence" id="or-sentence"></p>
+  </div>
+
+  <div class="card" style="padding-bottom:10px;">
+    <h2>Probability before and after</h2>
+    <div class="canvas-wrap"><canvas id="bars" width="1800" height="820"></canvas></div>
+    <div class="under-canvas">
+      <label for="p-slider">Starting probability:</label>
+      <input type="range" class="p-slider" id="p-slider" min="1" max="99" value="30">
+      <span class="p-readout" id="p-readout">30%</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 id="walk-title">Calculation</h2>
+    <div class="steps" id="steps"></div>
+    <p class="result-line" id="result-line"></p>
+    <p class="result-note" id="result-note"></p>
+    <div class="arrays">
+      <div class="array-block">
+        <div class="array-title" id="before-title"></div>
+        <div class="icon-grid" id="grid-before"></div>
+      </div>
+      <div class="array-block">
+        <div class="array-title" id="after-title"></div>
+        <div class="icon-grid" id="grid-after"></div>
+        <div class="array-caption" id="after-caption"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ---------- state & math ---------- */
+const state = { or: 2, selP: 30 };          // selP is a whole-number percent
+const BASELINES = [1, 10, 30, 50, 70, 90, 99];
+const TEAL = '#0097a7', GOLD = '#b07d1a';
+const INK = '#1c1917', INK2 = '#57534e', INK3 = '#78716c', MUTE = '#a8a29e';
+const GRID = '#e7e5e4';
+const FONT = '"DM Sans", "Helvetica Neue", sans-serif';
+const NUMFONT = '"Outfit", "DM Sans", sans-serif';
+
+const toOdds = p => p / (100 - p);                       // p in percent
+const toP    = o => 100 * o / (1 + o);
+const applyOR = (p, or) => toP(toOdds(p) * or);
+
+function fmtPct(x) {
+  if (x >= 99.95) return '>99.9%';
+  if (x < 0.1) return x.toFixed(2) + '%';
+  if (x < 10)  return x.toFixed(1).replace(/\.0$/, '') + '%';
+  return x.toFixed(1).replace(/\.0$/, '') + '%';
+}
+function fmtOdds(o) {
+  if (o >= 100) return o.toFixed(0);
+  if (o >= 10) return o.toFixed(1);
+  if (o >= 0.1) return o.toFixed(2);
+  return o.toFixed(3);
+}
+function fmtOR(o) {
+  if (o >= 10) return o.toFixed(1);
+  return o.toFixed(2);
+}
+function fmtPP(d) {
+  const a = Math.abs(d);
+  const s = a < 0.1 ? a.toFixed(2) : a.toFixed(1).replace(/\.0$/, '');
+  if (Math.abs(d) < 0.005) return 'no change';
+  return (d > 0 ? '+' : '−') + s + ' pp';
+}
+
+/* ---------- OR controls ---------- */
+const orSlider = document.getElementById('or-slider');
+const orInput  = document.getElementById('or-input');
+const orValue  = document.getElementById('or-value');
+const orSentence = document.getElementById('or-sentence');
+const PRESETS = [0.25, 0.5, 1, 1.5, 2, 3, 5, 10];
+const chipsEl = document.getElementById('chips');
+
+PRESETS.forEach(v => {
+  const b = document.createElement('button');
+  b.className = 'chip';
+  b.textContent = v;
+  b.addEventListener('click', () => { setOR(v); });
+  chipsEl.appendChild(b);
+});
+
+function sliderToOR(v) { return Math.pow(10, (v - 100) / 100); }   // 0.1 … 10, log scale
+function orToSlider(or) { return Math.round(100 * Math.log10(or) + 100); }
+
+function setOR(or, opts = {}) {
+  or = Math.min(100, Math.max(0.01, or));
+  state.or = or;
+  if (!opts.fromSlider) orSlider.value = Math.min(200, Math.max(0, orToSlider(or)));
+  if (!opts.fromInput) orInput.value = (or >= 10 ? or.toFixed(1) : +or.toFixed(2)).toString().replace(/\.00$/, '');
+  orValue.textContent = fmtOR(or);
+  document.querySelectorAll('.chip').forEach((c, i) =>
+    c.classList.toggle('active', Math.abs(PRESETS[i] - or) < 1e-9));
+  if (Math.abs(or - 1) < 1e-9) {
+    orSentence.innerHTML = 'If the odds ratio is 1, the odds and the probability do not change.';
+  } else if (or > 1) {
+    orSentence.innerHTML = 'An odds ratio of <b>' + fmtOR(or) + '</b> multiplies the starting odds by <b>' + fmtOR(or) + '</b>. The change in probability depends on the starting probability.';
+  } else {
+    orSentence.innerHTML = 'An odds ratio of <b>' + fmtOR(or) + '</b> multiplies the starting odds by <b>' + fmtOR(or) + '</b>. The change in probability depends on the starting probability.';
+  }
+  renderAll();
+}
+
+orSlider.addEventListener('input', () => setOR(sliderToOR(+orSlider.value), { fromSlider: true }));
+orInput.addEventListener('change', () => {
+  const v = parseFloat(orInput.value);
+  if (isFinite(v) && v > 0) setOR(v, { fromInput: true });
+  else orInput.value = fmtOR(state.or);
+});
+
+/* ---------- baseline slider ---------- */
+const pSlider = document.getElementById('p-slider');
+const pReadout = document.getElementById('p-readout');
+pSlider.addEventListener('input', () => { state.selP = +pSlider.value; renderAll(); });
+function setSelP(p) {
+  state.selP = p;
+  pSlider.value = p;
+  renderAll();
+}
+
+/* ---------- bars canvas ---------- */
+const bars = document.getElementById('bars');
+const bctx = bars.getContext('2d');
+const BW = bars.width, BH = bars.height;
+let groupRects = [];   // for click/hover detection
+let hoverGroup = -1;
+
+function drawBars() {
+  const padL = 110, padR = 40, padT = 120, padB = 130;
+  const plotW = BW - padL - padR, plotH = BH - padT - padB;
+  const bottom = BH - padB;
+  const y = v => bottom - (v / 100) * plotH;
+
+  bctx.clearRect(0, 0, BW, BH);
+  bctx.textBaseline = 'alphabetic';
+
+  // gridlines + y axis labels
+  bctx.font = '26px ' + FONT;
+  for (let v = 0; v <= 100; v += 25) {
+    bctx.strokeStyle = v === 0 ? '#d6d3d1' : GRID;
+    bctx.lineWidth = v === 0 ? 3 : 2;
+    bctx.beginPath();
+    bctx.moveTo(padL, y(v));
+    bctx.lineTo(BW - padR, y(v));
+    bctx.stroke();
+    bctx.fillStyle = MUTE;
+    bctx.textAlign = 'right';
+    bctx.fillText(v + '%', padL - 16, y(v) + 9);
+  }
+
+  // legend
+  bctx.textAlign = 'left';
+  bctx.font = '600 27px ' + FONT;
+  let lx = padL;
+  const legend = [[TEAL, 'starting probability'], [GOLD, 'new probability']];
+  legend.forEach(([col, label]) => {
+    bctx.fillStyle = col;
+    roundRect(bctx, lx, 40, 26, 26, 6); bctx.fill();
+    bctx.fillStyle = INK2;
+    bctx.fillText(label, lx + 36, 61);
+    lx += 36 + bctx.measureText(label).width + 50;
+  });
+
+  const groups = BASELINES.map(p => ({ p, label: p + '%', custom: false }));
+  groups.push({ p: state.selP, label: 'selected', custom: true });
+
+  const gw = plotW / groups.length;
+  const barW = Math.min(62, gw * 0.28), pairGap = 8;
+  groupRects = [];
+
+  groups.forEach((g, i) => {
+    const cx = padL + gw * i + gw / 2;
+    const p0 = g.p, p1 = applyOR(g.p, state.or);
+    const x0 = cx - pairGap / 2 - barW, x1 = cx + pairGap / 2;
+    const selected = g.custom;
+
+    groupRects.push({ x: padL + gw * i, w: gw, p: g.p, custom: g.custom });
+
+    // hover / selected background
+    if (selected || i === hoverGroup) {
+      bctx.fillStyle = selected ? '#f0fbfc' : '#f5f5f4';
+      roundRect(bctx, padL + gw * i + 6, padT - 66, gw - 12, plotH + 66 + 74, 12);
+      bctx.fill();
+    }
+    if (g.custom) {
+      bctx.strokeStyle = '#d6d3d1';
+      bctx.lineWidth = 2;
+      bctx.setLineDash([8, 8]);
+      bctx.beginPath();
+      bctx.moveTo(padL + gw * i, padT - 70);
+      bctx.lineTo(padL + gw * i, bottom + 60);
+      bctx.stroke();
+      bctx.setLineDash([]);
+    }
+
+    // bars (rounded at the data end, anchored at baseline)
+    drawBar(bctx, x0, y(p0), barW, bottom - y(p0), TEAL);
+    drawBar(bctx, x1, y(p1), barW, bottom - y(p1), GOLD);
+
+    // value labels above bars
+    bctx.font = '600 25px ' + NUMFONT;
+    bctx.fillStyle = INK3;
+    bctx.textAlign = 'center';
+    bctx.fillText(fmtPct(p0), x0 + barW / 2, Math.min(y(p0), y(p1)) - 16);
+    bctx.fillText(fmtPct(p1), x1 + barW / 2, Math.min(y(p0), y(p1)) - 16);
+
+    // change label
+    bctx.font = '700 30px ' + NUMFONT;
+    bctx.fillStyle = INK;
+    bctx.fillText(fmtPP(p1 - p0), cx, Math.min(y(p0), y(p1)) - 58);
+
+    // x label
+    bctx.font = (g.custom ? '700 ' : '') + '27px ' + FONT;
+    bctx.fillStyle = g.custom ? '#006D77' : INK2;
+    bctx.fillText(g.label, cx, bottom + 44);
+  });
+
+  // axis titles
+  bctx.font = '600 26px ' + FONT;
+  bctx.fillStyle = MUTE;
+  bctx.textAlign = 'center';
+  bctx.fillText('starting probability (click a column to select)', padL + plotW / 2, BH - 24);
+}
+
+function drawBar(ctx, x, yTop, w, h, color) {
+  const r = Math.min(8, h);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, yTop + h);
+  ctx.lineTo(x, yTop + r);
+  ctx.quadraticCurveTo(x, yTop, x + r, yTop);
+  ctx.lineTo(x + w - r, yTop);
+  ctx.quadraticCurveTo(x + w, yTop, x + w, yTop + r);
+  ctx.lineTo(x + w, yTop + h);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function canvasPos(canvas, e) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX - rect.left) * canvas.width / rect.width,
+    y: (e.clientY - rect.top) * canvas.height / rect.height
+  };
+}
+
+bars.addEventListener('mousemove', e => {
+  const { x } = canvasPos(bars, e);
+  const idx = groupRects.findIndex(r => x >= r.x && x < r.x + r.w && !r.custom);
+  bars.style.cursor = idx >= 0 ? 'pointer' : 'default';
+  if (idx !== hoverGroup) { hoverGroup = idx; drawBars(); }
+});
+bars.addEventListener('mouseleave', () => { hoverGroup = -1; drawBars(); });
+bars.addEventListener('click', e => {
+  const { x } = canvasPos(bars, e);
+  const r = groupRects.find(r => x >= r.x && x < r.x + r.w && !r.custom);
+  if (r) setSelP(r.p);
+});
+
+/* ---------- walkthrough ---------- */
+function renderWalkthrough() {
+  const p0 = state.selP;
+  const p1 = applyOR(p0, state.or);
+  const o0 = toOdds(p0), o1 = o0 * state.or;
+
+  document.getElementById('walk-title').textContent =
+    'Calculation, starting at ' + p0 + '%';
+
+  const steps = [
+    { cls: 'start', label: 'Starting probability', main: p0 + '%', sub: p0 + ' of 100 with the outcome, ' + (100 - p0) + ' without' },
+    { cls: '', label: 'Odds', main: p0 + ' : ' + (100 - p0) + ' = ' + fmtOdds(o0), sub: 'odds = p / (1 − p)' },
+    { cls: '', label: 'Odds × OR', main: fmtOdds(o0) + ' × ' + fmtOR(state.or) + ' = ' + fmtOdds(o1), sub: 'new odds = starting odds × OR' },
+    { cls: 'end', label: 'New probability', main: fmtPct(p1), sub: 'p = odds / (1 + odds)' }
+  ];
+
+  const holder = document.getElementById('steps');
+  holder.innerHTML = '';
+  steps.forEach((s, i) => {
+    if (i > 0) {
+      const a = document.createElement('div');
+      a.className = 'step-arrow';
+      a.textContent = '→';
+      holder.appendChild(a);
+    }
+    const d = document.createElement('div');
+    d.className = 'step ' + s.cls;
+    d.innerHTML = '<div class="step-label">' + s.label + '</div>' +
+                  '<div class="step-main">' + s.main + '</div>' +
+                  '<div class="step-sub">' + s.sub + '</div>';
+    holder.appendChild(d);
+  });
+
+  const diff = p1 - p0;
+  const ratio = p1 / p0;
+  const line = document.getElementById('result-line');
+  const note = document.getElementById('result-note');
+  if (Math.abs(state.or - 1) < 1e-9) {
+    line.innerHTML = 'The probability stays at <b>' + p0 + '%</b>.';
+    note.textContent = '';
+  } else {
+    line.innerHTML = 'Probability: <b>' + p0 + '%</b> to <b>' + fmtPct(p1) + '</b> (' + fmtPP(diff) +
+      '). The probability is multiplied by <b>×' + ratio.toFixed(2) + '</b>; the odds are multiplied by ×' + fmtOR(state.or) + '.';
+    if (p0 <= 10 && Math.max(p0, p1) <= 20) {
+      note.textContent = 'With a rare outcome, the probability ratio (×' + ratio.toFixed(2) +
+        ') is close to the odds ratio (×' + fmtOR(state.or) + ').';
+    } else {
+      note.textContent = 'The probability ratio (×' + ratio.toFixed(2) + ') is not the same as the odds ratio (×' + fmtOR(state.or) +
+        '). An odds ratio multiplies the odds, not the probability.';
+    }
+  }
+
+  renderArrays(p0, p1);
+}
+
+function renderArrays(p0, p1) {
+  const n0 = Math.round(p0);
+  const n1 = Math.round(p1);
+  const gb = document.getElementById('grid-before');
+  const ga = document.getElementById('grid-after');
+  gb.innerHTML = ''; ga.innerHTML = '';
+
+  document.getElementById('before-title').innerHTML = 'Before: <b>' + n0 + ' of 100</b>';
+  document.getElementById('after-title').innerHTML = 'After: <b>about ' + n1 + ' of 100</b>';
+
+  for (let i = 0; i < 100; i++) {
+    const s = document.createElement('span');
+    if (i < n0) s.className = 'before';
+    gb.appendChild(s);
+  }
+  const cap = document.getElementById('after-caption');
+  for (let i = 0; i < 100; i++) {
+    const s = document.createElement('span');
+    if (n1 >= n0) {
+      if (i < n0) s.className = 'before';
+      else if (i < n1) s.className = 'after';
+    } else {
+      if (i < n1) s.className = 'before';
+      else if (i < n0) s.className = 'lost';
+    }
+    ga.appendChild(s);
+  }
+  if (n1 > n0) {
+    cap.innerHTML = '<span class="sw gold"></span> ' + (n1 - n0) + ' more of 100 have the outcome.';
+  } else if (n1 < n0) {
+    cap.innerHTML = '<span class="sw hollow"></span> ' + (n0 - n1) + ' fewer of 100 have the outcome.';
+  } else {
+    cap.textContent = 'Rounded to whole counts, the number with the outcome is unchanged, even though the odds changed by ×' + fmtOR(state.or) + '.';
+  }
+}
+
+/* ---------- render all ---------- */
+function renderAll() {
+  pReadout.textContent = state.selP + '%';
+  drawBars();
+  renderWalkthrough();
+}
+
+/* optional deep-link: ?or=2.5&p=40 */
+const params = new URLSearchParams(location.search);
+const qP = parseInt(params.get('p'), 10);
+if (qP >= 1 && qP <= 99) { state.selP = qP; pSlider.value = qP; }
+const qOR = parseFloat(params.get('or'));
+setOR(isFinite(qOR) && qOR > 0 ? qOR : 2);
+</script>
+</body>
+</html>
