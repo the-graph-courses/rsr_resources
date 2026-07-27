@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Model fit 2: AIC (animated)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <style>
+    :root{
+      --gold:#e5b44f; --mist:#c4d8db; --teal:#035f6c; --alarm:#b5451f; --brown:#7a6212;
+      --pass:#2e7d4f;
+      --ink:#073b42; --ink-2:#3a555a; --stage:#0d2b30; --paper:#ffffff; --soft:#f2f7f7;
+      --warm:#fbeecb; --coral:#e58b73; --violet:#8c7ab8;
+      --sans:"Space Grotesk","Helvetica Neue",Arial,sans-serif;
+      --mono:"IBM Plex Mono","SF Mono",Menlo,monospace;
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;height:100%;overflow:hidden;background:var(--stage);color:var(--ink);font-family:var(--sans);}
+    #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:28px 10px 22px;overflow:hidden;}
+    #deck{position:relative;width:2560px;height:1440px;flex:none;container-type:size;transform-origin:center center;overflow:hidden;border-radius:2px;background:var(--paper);box-shadow:0 18px 60px rgba(0,0,0,.55);}
+    .chrome-top{position:absolute;top:0;left:0;right:0;height:10px;background:var(--gold);z-index:4;}
+    .chrome-bottom{position:absolute;bottom:0;left:0;right:0;height:10px;background:var(--teal);z-index:4;}
+    #board{position:absolute;inset:10px 0 10px 0;display:flex;flex-direction:column;padding:16px 40px 12px;}
+    header.head{flex:none;}
+    .head-row{display:flex;align-items:stretch;gap:16px;}
+    .head-text{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;}
+    .kicker{margin-bottom:3px;color:var(--brown);font-size:15px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;}
+    h1{margin:0;color:var(--teal);font-size:34px;line-height:1.05;font-weight:600;letter-spacing:-.01em;}
+    .title-line{width:460px;height:4px;margin-top:6px;border-radius:2px;background:var(--gold);}
+
+    /* two full-width panels, stacked */
+    .panels{flex:1;min-height:0;display:grid;grid-template-columns:1fr;grid-template-rows:1fr 1fr;gap:18px;margin-top:12px;}
+    #panel1{grid-column:1;grid-row:1;}
+    #panel2{grid-column:1;grid-row:2;}
+    .panel{position:relative;min-width:0;min-height:0;display:grid;grid-template-columns:minmax(0,.48fr) minmax(0,.52fr);grid-template-rows:minmax(0,1fr) auto;gap:12px;border:1px solid transparent;border-radius:4px;background:transparent;padding:16px 16px 12px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .4s ease,box-shadow .4s ease,border-color .4s ease,background .4s ease;}
+    .panel.lit{opacity:1;visibility:visible;pointer-events:auto;border-color:var(--mist);background:var(--paper);}
+    .panel.active{border-color:var(--gold);box-shadow:0 0 0 3px rgba(229,180,79,.35),0 8px 22px rgba(7,59,66,.10);}
+    .panel .p-num{position:absolute;top:-13px;left:14px;width:28px;height:28px;border-radius:50%;background:var(--teal);color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.2);z-index:2;}
+    .panel.active .p-num{background:var(--gold);color:#0d2b30;}
+    .panel-side{grid-column:1;grid-row:1;min-width:0;min-height:0;display:flex;flex-direction:column;gap:6px;overflow:auto;}
+    .panel-mainv{grid-column:2;grid-row:1;min-width:0;min-height:0;display:flex;flex-direction:column;gap:8px;}
+    .ppractice{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .ppractice[hidden]{display:none !important;}
+    .p-title{margin:0;color:var(--teal);font-size:22px;font-weight:600;line-height:1.15;}
+    .panel-explain{padding:7px 8px;background:var(--soft);border-left:3px solid var(--gold);border-radius:2px;}
+    .panel-explain strong{color:var(--teal);font-weight:600;}
+    .panel-explain .bad{color:var(--alarm);font-weight:600;}
+    .panel-explain.stack{flex:1;display:flex;flex-direction:column;gap:7px;overflow:auto;}
+    .panel-explain.stack .frag{flex:0 0 auto;margin:0;color:var(--ink);font-size:15.5px;line-height:1.35;}
+    .panel-explain.stack .frag.bullet{padding-left:16px;position:relative;}
+    .panel-explain.stack .frag.bullet::before{content:"•";position:absolute;left:0;color:var(--teal);}
+    .panel-explain.stack pre.frag{margin:0;padding:8px 10px;border:1px solid var(--mist);border-left:3px solid var(--gold);border-radius:2px;background:#fff;font-family:var(--mono);font-size:13px;line-height:1.4;white-space:pre;overflow:auto;}
+    .panel-explain.stack pre.frag.code{color:var(--ink);}
+    .panel-explain.stack pre.frag.out{color:var(--ink-2);border-left-color:var(--mist);}
+    .panel-explain.stack .hi{color:var(--teal);font-weight:600;}
+    .panel-explain.stack .hi-or{color:var(--alarm);font-weight:600;}
+    .panel-explain.stack .cm{color:#7f9296;}
+    .panel-explain.stack .inline-eq{padding:5px 8px;border-left:3px solid var(--gold);border-radius:2px;background:var(--warm);color:var(--teal);font-size:15.5px;text-align:center;}
+    .panel-explain.stack .inline-eq.big{font-size:17.5px;}
+    .panel-explain.stack .step-note{margin:0;padding-left:3px;font-style:italic;color:var(--ink-2);font-size:12.5px;line-height:1.3;}
+    .plotwrap{flex:1;min-width:0;min-height:0;position:relative;}
+    .plotwrap svg{width:100%;height:100%;display:block;overflow:hidden;}
+    .outcard{flex:none;margin:0;padding:8px 10px;border:1px solid var(--mist);border-radius:2px;background:#fff;font-family:var(--mono);font-size:13px;line-height:1.4;white-space:pre;color:var(--ink-2);overflow:auto;}
+    .outcard .hi{color:var(--teal);font-weight:600;}
+    /* practice questions */
+    .practice-q{position:relative;flex:none;padding:7px 130px 7px 12px;border:1px solid var(--mist);border-top:3px solid var(--gold);border-radius:3px;background:#fff;}
+    .practice-q .qlab{display:inline;margin-right:8px;color:var(--brown);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;}
+    .practice-q .q{display:inline;margin:0;color:var(--ink);font-size:14.5px;font-weight:600;line-height:1.25;}
+    .practice-options{display:inline;margin-left:10px;color:var(--ink-2);font-size:13.5px;line-height:1.3;white-space:nowrap;}
+    .practice-options .opt + .opt{margin-left:12px;}
+    .practice-options .opt::before{font-weight:700;color:var(--brown);margin-right:4px;}
+    .practice-options .opt:nth-child(1)::before{content:"(a) ";}
+    .practice-options .opt:nth-child(2)::before{content:"(b) ";}
+    .practice-ans{position:absolute;right:10px;top:50%;transform:translateY(-50%) rotate(180deg);font-size:12.5px;font-weight:700;color:var(--teal);opacity:0;transition:opacity .35s ease;max-width:116px;text-align:center;line-height:1.15;}
+    .practice-ans::before{content:"Answer: ";font-weight:600;}
+    .ppractice.revealed .practice-ans{opacity:1;}
+    @media print{
+      .practice-ans{opacity:1 !important;}
+    }
+    /* svg element styling */
+    .axis{stroke:#9fb7bb;stroke-width:1;}
+    .axis-lbl{fill:var(--ink-2);font-family:var(--sans);font-size:12.5px;}
+    .axis-title{fill:var(--brown);font-family:var(--sans);font-size:13px;font-weight:600;letter-spacing:.03em;}
+    .grp{opacity:0;transition:opacity .45s ease;}
+    .grp.vis{opacity:1;}
+    .icurve{stroke:var(--gold);stroke-width:3.4;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+    .shadepass{fill:var(--pass);fill-opacity:.18;stroke:none;}
+    .shadefail{fill:var(--alarm);fill-opacity:.10;stroke:none;}
+    .shadelab-pass{fill:var(--pass);font-family:var(--sans);font-size:14px;font-weight:700;}
+    .shadelab-fail{fill:var(--alarm);font-family:var(--sans);font-size:14px;font-weight:700;}
+    .propdot{fill:var(--teal);fill-opacity:.55;stroke:#fff;stroke-width:0.8;}
+    .nullln{stroke:var(--alarm);stroke-width:2.2;stroke-dasharray:7 5;fill:none;}
+    .nulllab{fill:var(--alarm);font-family:var(--sans);font-size:12.5px;font-weight:600;}
+    .devbar-lbl{fill:var(--ink-2);font-family:var(--sans);font-size:12.5px;font-weight:600;}
+    .bracelab{fill:var(--brown);font-family:var(--sans);font-size:11.5px;font-weight:600;text-anchor:middle;}
+    .mtitle{fill:var(--brown);font-family:var(--sans);font-size:14px;font-weight:700;text-anchor:middle;}
+    .ghostlab{fill:#7f9296;font-family:var(--sans);font-size:11.5px;font-style:italic;}
+    .aicdot{fill:var(--teal);stroke:#fff;stroke-width:1.5;}
+    .aicwin{fill:var(--gold);stroke:var(--brown);stroke-width:2;}
+    .aicval{fill:var(--ink);font-family:var(--mono);font-size:11.5px;font-weight:600;}
+    .zoomln{stroke:#9fb7bb;stroke-width:1;stroke-dasharray:2 3;}
+
+    #tools{position:fixed;top:14px;right:16px;z-index:22;display:flex;gap:8px;align-items:center;color:var(--mist);font-family:var(--sans);font-size:13px;}
+    #tools button{border:1px solid #4d747a;border-radius:2px;padding:6px 9px;background:#153d43;color:var(--mist);font:inherit;cursor:pointer;}
+    #tools button.on{border-color:var(--gold);background:var(--gold);color:#0d2b30;}
+    #hint{position:fixed;bottom:12px;left:0;right:0;z-index:20;text-align:center;color:var(--mist);font-size:13px;letter-spacing:.5px;opacity:.72;}
+    #counter{position:fixed;right:16px;bottom:12px;z-index:20;color:var(--mist);font-family:var(--mono);font-size:13px;opacity:.85;}
+    #ink{position:absolute;inset:0;z-index:15;width:100%;height:100%;pointer-events:none;touch-action:none;}
+    #deck.drawing #ink{pointer-events:auto;cursor:crosshair;}
+  </style>
+</head>
+<body>
+  <div id="tools">
+    <button id="pencil" type="button">Pencil: off</button>
+    <button id="undo" type="button">Undo</button>
+    <button id="clear" type="button">Clear</button>
+  </div>
+
+  <div id="stage">
+    <main id="deck" aria-live="polite">
+      <div class="chrome-top"></div>
+      <div id="board">
+        <header class="head">
+          <div class="head-row">
+            <div class="head-text">
+              <div class="kicker">Model fit &amp; model building &middot; part 2 of 2 &middot; logistic regression</div>
+              <h1>Comparing models with AIC</h1>
+              <div class="title-line"></div>
+            </div>
+          </div>
+        </header>
+
+        <div class="panels">
+
+          <!-- ============ PANEL 1: recap ============ -->
+          <section class="panel" id="panel1">
+            <div class="p-num">1</div>
+            <div class="panel-side">
+              <div class="p-title">Last time: null and residual deviance</div>
+              <!-- EDIT PANEL 1 HERE. -->
+              <div class="panel-explain stack">
+                <p class="frag bullet" data-step="1">Same ideas, now on KLoSA men aged 45+: <strong>weak grip</strong> predicted from <strong>age</strong>.</p>
+                <pre class="frag code" data-step="1">klosa &lt;- read_csv("klosa_men_grip_45plus.csv")   <span class="cm"># 4184 men</span>
+m0 &lt;- glm(weak_grip ~ 1,   family = binomial, data = klosa)
+m1 &lt;- glm(weak_grip ~ age, family = binomial, data = klosa)</pre>
+                <pre class="frag out" data-step="1">#&gt; summary(m1) shows:
+#&gt;     <span class="hi">Null deviance: 4259.0</span>  on 4183  degrees of freedom
+#&gt; <span class="hi">Residual deviance: 3455.1</span>  on 4182  degrees of freedom
+#&gt; <span class="hi">AIC: 3459.1</span></pre>
+                <p class="frag bullet" data-step="2">Flat dashed line: the null model. It predicts <strong>0.206</strong> for everyone (overall weak-grip rate).</p>
+                <p class="frag bullet" data-step="2">Gold curve: the model with age. Teal dots: observed proportion at each age.</p>
+                <div class="frag inline-eq big" data-step="3">$\text{Deviance drop} = 4259.0 - 3455.1 = 803.9$</div>
+                <p class="frag bullet" data-step="4">Adding <em>any</em> predictor reduces deviance a little, even a useless one.</p>
+                <p class="frag bullet" data-step="4">So residual deviance alone cannot choose between models. We need a score that also <strong>penalizes complexity</strong>.</p>
+              </div>
+            </div>
+            <div class="panel-mainv">
+              <div class="plotwrap"><svg id="svgRec" viewBox="0 0 620 440" preserveAspectRatio="xMidYMid meet"></svg></div>
+            </div>
+            <div class="ppractice frag" data-step="5" data-reveal="6">
+              <div class="practice-q">
+                <span class="qlab">Practice</span>
+                <p class="q">The null model glm(weak_grip ~ 1) predicts&hellip;</p>
+                <span class="practice-options"><span class="opt">0.206 for every man</span><span class="opt">0 for every man</span></span><span class="practice-ans">0.206 for every man</span>
+              </div>
+              <div class="practice-q">
+                <span class="qlab">Practice</span>
+                <p class="q">Which model has residual deviance 3455.1?</p>
+                <span class="practice-options"><span class="opt">weak_grip ~ age</span><span class="opt">weak_grip ~ 1</span></span><span class="practice-ans">weak_grip ~ age</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============ PANEL 2: AIC ============ -->
+          <section class="panel" id="panel2">
+            <div class="p-num">2</div>
+            <div class="panel-side">
+              <div class="p-title">AIC: deviance plus a penalty for parameters</div>
+              <!-- EDIT PANEL 2 HERE. -->
+              <div class="panel-explain stack">
+                <p class="frag bullet" data-step="7">Deviance always goes down when we add terms.</p>
+                <p class="frag bullet" data-step="7">So deviance alone cannot choose between models.</p>
+                <div class="frag inline-eq big" data-step="7">$\mathrm{AIC} = \text{residual deviance} + 2k$</div>
+                <p class="frag step-note" data-step="7">k = number of parameters. A term helps only if it removes more than 2 deviance per parameter.</p>
+                <pre class="frag code" data-step="8">m0 &lt;- glm(weak_grip ~ 1, family = binomial, data = klosa)
+m1 &lt;- glm(weak_grip ~ age, family = binomial, data = klosa)
+m2 &lt;- glm(weak_grip ~ age + diabetes, family = binomial, data = klosa)
+m3 &lt;- glm(weak_grip ~ age + diabetes + hypertension,
+          family = binomial, data = klosa)
+AIC(m0, m1, m2, m3)</pre>
+                <pre class="frag out" data-step="8">#&gt;    df      AIC
+#&gt; m0  1 4260.9918
+#&gt; m1  2 3459.1460
+#&gt; m2  3 <span class="hi">3441.1124</span>
+#&gt; m3  4 3443.1104</pre>
+                <p class="frag bullet" data-step="9">hypertension removes almost no deviance but adds 1 parameter: +2. AIC goes <span class="bad">up</span> by about 2.</p>
+                <p class="frag bullet" data-step="9">Lowest AIC: <strong>m2 (age + diabetes)</strong>.</p>
+                <p class="frag bullet" data-step="9">There is no &ldquo;good&rdquo; AIC number. Only <strong>differences</strong> on the same outcome and same rows matter.</p>
+                <p class="frag bullet" data-step="9">Differences under 2 are ties. Then choose the simpler model.</p>
+              </div>
+            </div>
+            <div class="panel-mainv">
+              <div class="plotwrap"><svg id="svgAic" viewBox="0 0 620 440" preserveAspectRatio="xMidYMid meet"></svg></div>
+            </div>
+            <div class="ppractice frag" data-step="10" data-reveal="11">
+              <div class="practice-q">
+                <span class="qlab">Practice</span>
+                <p class="q">m3: deviance 3435.11, 4 parameters. AIC = ?</p>
+                <span class="practice-options"><span class="opt">3443.11</span><span class="opt">3439.11</span></span><span class="practice-ans">3443.11</span>
+              </div>
+              <div class="practice-q">
+                <span class="qlab">Practice</span>
+                <p class="q">m2 AIC 3441.1, m3 AIC 3443.1. Choose&hellip;</p>
+                <span class="practice-options"><span class="opt">m2</span><span class="opt">m3</span></span><span class="practice-ans">m2</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="chrome-bottom"></div>
+      <canvas id="ink"></canvas>
+    </main>
+  </div>
+
+  <div id="hint">&larr;/&rarr; step &middot; &uarr;/&darr; jump panel &middot; P pencil &middot; U undo &middot; C clear &middot; R reset</div>
+  <div id="counter"></div>
+
+  <script src="deck-config.js"></script>
+  <script>
+  // ============================ DATA ============================
+  const KG = {b0:-8.824312, b1:0.116834, rate:0.2063};   // glm(weak_grip ~ age, binomial), KLoSA n = 4184
+  const sigAt=(b0,b1,x)=>1/(1+Math.exp(-(b0+b1*x)));
+  const ksig=a=>sigAt(KG.b0,KG.b1,a);
+  // [age, n with weak_grip=0, n with weak_grip=1]
+  const AP = [[45,134,3],[46,148,5],[47,150,5],[48,132,2],[49,162,11],[50,124,5],[51,126,7],[52,118,9],[53,103,7],[54,138,13],[55,95,9],[56,119,14],[57,115,10],[58,117,13],[59,106,13],[60,118,19],[61,105,16],[62,79,22],[63,81,18],[64,109,27],[65,108,28],[66,100,29],[67,84,29],[68,96,42],[69,90,41],[70,78,50],[71,71,44],[72,50,51],[73,41,29],[74,39,36],[75,29,32],[76,37,31],[77,22,31],[78,21,23],[79,16,22],[80,10,19],[81,17,18],[82,11,17],[83,7,22],[84,6,7],[85,2,13],[86,2,6],[87,2,6],[88,2,3],[89,0,2],[90,1,3],[91,0,1]];
+
+  // ============================ HELPERS ============================
+  const NS='http://www.w3.org/2000/svg';
+  const sc=(v,d0,d1,r0,r1)=>r0+(v-d0)/(d1-d0)*(r1-r0);
+  function el(tag,a){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);return e;}
+  function line(g,x1,y1,x2,y2,cls){g.appendChild(el('line',{x1,y1,x2,y2,class:cls}));}
+  function txt(g,x,y,s,cls,anchor){const t=el('text',{x,y,class:cls,'text-anchor':anchor||'middle'});t.textContent=s;g.appendChild(t);return t;}
+  function mkgrp(svg,id,always){const g=el('g',{class:'grp'+(always?' vis':''),...(id?{id}:{})});svg.appendChild(g);return g;}
+
+  // ============================ BUILDER: recap plot ============================
+  function buildRecapPlot(svg, prefix, always){
+    const X0=64,X1=596,YT=36,YB=380, A0=43, A1=93;
+    const ax=a=>sc(a,A0,A1,X0,X1), py=p=>sc(p,-0.06,1.06,YB,YT);
+    const base=el('g',{}); svg.appendChild(base);
+    line(base,X0,YT,X0,YB,'axis'); line(base,X0,YB,X1,YB,'axis');
+    [45,55,65,75,85,91].forEach(v=>{const x=ax(v);line(base,x,YB,x,YB+4,'axis');txt(base,x,YB+16,v,'axis-lbl');});
+    txt(base,(X0+X1)/2,YB+34,'age (years)','axis-title');
+    [{v:0,t:'0'},{v:.5,t:'.5'},{v:1,t:'1'}].forEach(o=>{const y=py(o.v);line(base,X0-4,y,X0,y,'axis');txt(base,X0-8,y+3.5,o.t,'axis-lbl','end');});
+    const yt=txt(base,0,0,'P(weak grip)','axis-title'); yt.setAttribute('transform',`translate(15,${(YT+YB)/2}) rotate(-90)`);
+    const gPlot=mkgrp(svg,prefix?prefix+'plot':null,always);
+    let d='';
+    for(let a=A0;a<=A1+0.001;a+=0.25){const x=ax(a).toFixed(1),y=py(ksig(a)).toFixed(1);d+=(d?' L ':'M ')+x+' '+y;}
+    gPlot.appendChild(el('path',{d:d+` L ${ax(A1).toFixed(1)} ${py(0).toFixed(1)} L ${ax(A0).toFixed(1)} ${py(0).toFixed(1)} Z`,class:'shadepass'}));
+    gPlot.appendChild(el('path',{d:d+` L ${ax(A1).toFixed(1)} ${py(1).toFixed(1)} L ${ax(A0).toFixed(1)} ${py(1).toFixed(1)} Z`,class:'shadefail'}));
+    txt(gPlot,ax(82),py(0.22),'P(weak)','shadelab-pass');
+    txt(gPlot,ax(52),py(0.78),'P(not weak)','shadelab-fail');
+    AP.forEach(([a,n0,n1])=>{
+      const n=n0+n1, p=n1/n;
+      const r=Math.max(2.2, Math.min(7.5, 1.6*Math.sqrt(n)/2.2));
+      gPlot.appendChild(el('circle',{cx:ax(a),cy:py(p),r,class:'propdot'}));
+    });
+    gPlot.appendChild(el('path',{d,class:'icurve'}));
+    gPlot.appendChild(el('path',{d:`M ${X0} ${py(KG.rate)} L ${X1} ${py(KG.rate)}`,class:'nullln'}));
+    txt(gPlot,X0+8,py(KG.rate)-10,'null model: 0.206 for everyone','nulllab','start');
+    txt(gPlot,(X0+X1)/2,YB+52,'teal dots = observed proportion at each age (larger = more men)','ghostlab');
+  }
+  buildRecapPlot(document.getElementById('svgRec'),'r_',false);
+
+  // ============================ BUILDER: AIC dot plot ============================
+  function buildAic(svg, prefix, always){
+    const g=mkgrp(svg,prefix?prefix+'aic':null,always);
+    const AX0=220,AX1=560, axv=v=>sc(v,3435,3465,AX0,AX1);
+    txt(g,(AX0+AX1)/2,36,'AIC = deviance + 2 × parameters (lower is better)','mtitle');
+    // m0 is far off this zoomed scale — call it out, then plot the close race
+    txt(g,AX0-10,72,'m0: null','devbar-lbl','end');
+    line(g,AX0,72,AX1,72,'zoomln');
+    txt(g,AX0+8,76,'AIC = 4261.0  (far off this zoomed scale →)','ghostlab','start');
+    const ROWS=[
+      {lab:'m1: age',                     v:3459.15, y:150},
+      {lab:'m2: age + diabetes',          v:3441.11, y:230, win:true},
+      {lab:'m3: + hypertension',          v:3443.11, y:310}
+    ];
+    ROWS.forEach(r=>{
+      line(g,AX0,r.y,AX1,r.y,'zoomln');
+      txt(g,AX0-10,r.y+4.5,r.lab,'devbar-lbl','end');
+      g.appendChild(el('circle',{cx:axv(r.v),cy:r.y,r:r.win?9:7,class:r.win?'aicwin':'aicdot'}));
+      txt(g,axv(r.v)+16,r.y+4.5,r.v.toFixed(1),'aicval','start');
+      if(r.win){txt(g,axv(r.v)+110,r.y+4.5,'← lowest AIC','bracelab','start');}
+    });
+    [3440,3450,3460].forEach(v=>{line(g,axv(v),340,axv(v),346,'axis');txt(g,axv(v),366,v,'axis-lbl');});
+    txt(g,60,400,'m2 and m3 differ by only ~2 — a small gap, and m2 is the simpler model.','ghostlab','start');
+    txt(g,60,422,'Compare AIC only for the same outcome fitted on the same rows.','ghostlab','start');
+  }
+  buildAic(document.getElementById('svgAic'),'a_',false);
+
+  // ============================ STEP SCRIPT ============================
+  const DEFAULT_STEP={ vis:[], panel:1 };
+  const R1=['r_plot'];
+  const A1=[...R1,'a_aic'];
+  const STEP_CHANGES=[
+    {},                                                        // 0  recap: two models
+    {vis:[...R1]},                                             // 1  the plot + null line
+    {},                                                        // 2  deviance drop
+    {},                                                        // 3  need a penalty
+    {},                                                        // 4  practice questions
+    {},                                                        // 5  practice answers
+    {panel:2},                                                 // 6  why AIC + formula
+    {vis:[...A1]},                                             // 7  AIC() output + dot plot
+    {},                                                        // 8  interpretation
+    {},                                                        // 9  practice questions
+    {}                                                         // 10 practice answers
+  ];
+  const STEPS=STEP_CHANGES.reduce((steps,change)=>{ steps.push({...DEFAULT_STEP,...steps.at(-1),...change}); return steps; },[]);
+  const N=STEPS.length;
+  const ALL_GROUPS=['r_plot','a_aic'];
+  const PANEL_FIRST={1:0,2:6};
+  const PANEL_IDS=[1,2];
+
+  let step=0;
+  const counter=document.getElementById('counter');
+  const panelEls={}; PANEL_IDS.forEach(n=>panelEls[n]=document.getElementById('panel'+n));
+
+  const REVEAL=!!window.DECK_REVEAL_ALL;
+  function apply(k){
+    step=(k+N)%N;
+    const s=STEPS[step];
+    const view=REVEAL?STEPS[N-1]:s;
+    const on=new Set(view.vis);
+    ALL_GROUPS.forEach(id=>document.getElementById(id).classList.toggle('vis',on.has(id)));
+    PANEL_IDS.forEach(n=>{
+      panelEls[n].classList.toggle('lit', REVEAL || step>=PANEL_FIRST[n]);
+      panelEls[n].classList.toggle('active', s.panel===n);
+    });
+    document.querySelectorAll('#deck [data-step]').forEach(el=>{
+      el.hidden=REVEAL?false:Number(el.dataset.step)>step+1;
+    });
+    document.querySelectorAll('.ppractice[data-reveal]').forEach(el=>{
+      el.classList.toggle('revealed', REVEAL || Number(el.dataset.reveal)<=step+1);
+    });
+    counter.textContent=`step ${step+1} / ${N}`;
+    if(window.renderMathInElement) renderMathInElement(document.getElementById('deck'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false});
+  }
+  function panelLast(p){
+    const i=PANEL_IDS.indexOf(p);
+    return i<PANEL_IDS.length-1 ? PANEL_FIRST[PANEL_IDS[i+1]]-1 : N-1;
+  }
+  function next(){
+    if(REVEAL){
+      const i=PANEL_IDS.indexOf(STEPS[step].panel);
+      if(i<PANEL_IDS.length-1) apply(panelLast(PANEL_IDS[i+1]));
+      return;
+    }
+    if(step<N-1) apply(step+1);
+  }
+  function prev(){
+    if(REVEAL){
+      const i=PANEL_IDS.indexOf(STEPS[step].panel);
+      if(i>0) apply(panelLast(PANEL_IDS[i-1]));
+      return;
+    }
+    if(step>0) apply(step-1);
+  }
+  function jumpPanel(dir){
+    if(REVEAL){
+      const i=PANEL_IDS.indexOf(STEPS[step].panel);
+      const j=Math.max(0,Math.min(PANEL_IDS.length-1,i+dir));
+      apply(panelLast(PANEL_IDS[j]));
+      return;
+    }
+    const order=PANEL_IDS.map(n=>PANEL_FIRST[n]);
+    if(dir>0){const nx=order.find(o=>o>step); apply(nx!==undefined?nx:N-1);}
+    else{const pr=[...order].reverse().find(o=>o<step); apply(pr!==undefined?pr:0);}
+  }
+
+  // ============================ FIT / CHROME ============================
+  const stage=document.getElementById('stage'), deck=document.getElementById('deck');
+  function fitDeck(){
+    const st=getComputedStyle(stage);
+    const aw=stage.clientWidth-parseFloat(st.paddingLeft)-parseFloat(st.paddingRight);
+    const ah=stage.clientHeight-parseFloat(st.paddingTop)-parseFloat(st.paddingBottom);
+    deck.style.transform=`scale(${Math.min(aw/2560,ah/1440)})`;
+  }
+  window.addEventListener('resize',fitDeck); fitDeck();
+
+  // ============================ PENCIL ============================
+  const canvas=document.getElementById('ink'), cx2=canvas.getContext('2d');
+  const CW=2560,CH=1440; canvas.width=CW; canvas.height=CH;
+  let pencil=false,penW=2.4,stroke=null; const strokes=[];
+  const pBtn=document.getElementById('pencil'),uBtn=document.getElementById('undo'),cBtn=document.getElementById('clear');
+  function setPencil(v){pencil=v;deck.classList.toggle('drawing',v);pBtn.classList.toggle('on',v);pBtn.textContent=`Pencil: ${v?'on':'off'}`;}
+  function pt(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*CW/r.width,y:(e.clientY-r.top)*CH/r.height};}
+  function redraw(){cx2.clearRect(0,0,CW,CH);strokes.forEach(s=>{if(s.points.length<2)return;cx2.save();cx2.lineCap='round';cx2.lineJoin='round';cx2.strokeStyle=s.color;cx2.lineWidth=s.width;cx2.beginPath();cx2.moveTo(s.points[0].x,s.points[0].y);s.points.slice(1).forEach(p=>cx2.lineTo(p.x,p.y));cx2.stroke();cx2.restore();});}
+  canvas.addEventListener('pointerdown',e=>{if(!pencil)return;e.preventDefault();canvas.setPointerCapture(e.pointerId);stroke={color:'#e07a2f',width:penW,points:[pt(e)]};strokes.push(stroke);});
+  canvas.addEventListener('pointermove',e=>{if(!stroke||!pencil)return;stroke.points.push(pt(e));redraw();});
+  function endStroke(){stroke=null;} canvas.addEventListener('pointerup',endStroke);canvas.addEventListener('pointercancel',endStroke);
+  function undo(){strokes.pop();redraw();} function clearAll(){strokes.length=0;redraw();}
+  pBtn.onclick=e=>{e.stopPropagation();setPencil(!pencil);}; uBtn.onclick=e=>{e.stopPropagation();undo();}; cBtn.onclick=e=>{e.stopPropagation();clearAll();};
+  window.addEventListener('resize',redraw);
+
+  document.addEventListener('keydown',e=>{
+    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return;}
+    if(e.metaKey||e.ctrlKey||e.altKey)return;
+    const k=e.key.toLowerCase();
+    if(['ArrowRight',' ','PageDown','Enter'].includes(e.key)){e.preventDefault();next();}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}
+    else if(e.key==='ArrowDown'){e.preventDefault();jumpPanel(1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();jumpPanel(-1);}
+    else if(k==='p'){e.preventDefault();setPencil(!pencil);}
+    else if(k==='u'){e.preventDefault();undo();}
+    else if(k==='c'||k==='e'){e.preventDefault();clearAll();}
+    else if(e.key==='['){e.preventDefault();penW=Math.max(1,penW-1);}
+    else if(e.key===']'){e.preventDefault();penW=Math.min(18,penW+1);}
+    else if(k==='r'){e.preventDefault();apply(0);}
+  });
+
+  // ============================ GO ============================
+  const _q=new URLSearchParams(location.search);
+  window.__STILL__ = _q.get('still')==='1' || REVEAL;
+  const _s=parseInt(_q.get('step'),10);
+  function boot(){ apply(Number.isFinite(_s)?_s:(REVEAL?panelLast(1):0)); }
+  if(window.renderMathInElement) boot();
+  else window.addEventListener('load',boot);
+  </script>
+</body>
+</html>

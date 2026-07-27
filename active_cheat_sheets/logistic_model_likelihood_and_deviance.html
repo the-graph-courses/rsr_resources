@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logistic Regression: Likelihood and Deviance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+  <style>
+    :root {
+      --bg: #dfe8ea;
+      --paper: #f7f4ed;
+      --white: #fffef9;
+      --ink: #101418;
+      --muted: #665f51;
+      --chapter: #4338a6;
+      --chapter-dark: #352d85;
+      --chapter-soft: #edebfa;
+      --teal: #0d7377;
+      --teal-dark: #0a5d61;
+      --teal-soft: #e3f3f3;
+      --gold: #f0c808;
+      --gold-soft: #fff3cc;
+      --rose: #b83b5e;
+      --rose-soft: #fdeef1;
+      --green: #2c8a4a;
+      --navy: #2f5f98;
+      --navy-soft: #e7eef7;
+      --border: #101418;
+      --shadow: rgba(16, 20, 24, 0.42);
+      --lik-teal: #0d7377;
+      --dev-rose: #b83b5e;
+      --null-navy: #2f5f98;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Space Grotesk', Arial, Helvetica, sans-serif;
+      font-size: 8.45pt;
+      line-height: 1.24;
+    }
+    .toolbar {
+      width: 210mm;
+      max-width: calc(100vw - 24px);
+      margin: 24px auto 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      line-height: 1.35;
+    }
+    .toolbar-intro { flex: 1; min-width: 0; font-size: 9pt; }
+    .toolbar-intro .title {
+      color: var(--chapter);
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 10pt;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .toolbar-intro .descr { color: #3a4a4f; max-width: 132mm; }
+    .toolbar-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+    button, .zoom-group {
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: 7px;
+      padding: 7px 11px;
+      font: inherit;
+      font-weight: 800;
+      line-height: 1.2;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 var(--shadow);
+    }
+    button.primary { background: var(--chapter); color: #fff; border-color: var(--ink); }
+    .print-button { display: inline-flex; align-items: center; gap: 5px; }
+    .print-button svg { width: 13px; height: 13px; display: block; }
+    .zoom-group { display: inline-flex; align-items: stretch; padding: 0; overflow: visible; }
+    .zoom-group button { border: 0; border-radius: 0; padding: 6px 10px; background: transparent; box-shadow: none; }
+    .zoom-group button + button, .zoom-group .zoom-label { border-left: 2px solid var(--ink); }
+    .zoom-label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      padding: 0 9px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-weight: 900;
+    }
+    .page-wrap { display: flex; flex-direction: column; align-items: center; }
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto 18px;
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: 10px;
+      padding: 3.2mm 6.8mm 2.2mm;
+      box-shadow: 8px 8px 0 rgba(16, 20, 24, 0.13), 0 14px 36px rgba(16, 20, 24, 0.14);
+      display: flex;
+      flex-direction: column;
+      gap: 2mm;
+      transform-origin: top center;
+    }
+    header {
+      border-bottom: 1mm solid var(--chapter);
+      padding-bottom: 0.85mm;
+      line-height: 1.1;
+    }
+    h1 {
+      margin: 0;
+      color: var(--chapter);
+      font-size: 17.8pt;
+      font-weight: 800;
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+    .subtitle {
+      margin-top: 0.45mm;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 7.1pt;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .group-label {
+      display: flex;
+      align-items: center;
+      gap: 2.5mm;
+      color: var(--ink);
+      font-size: 7.55pt;
+      font-weight: 900;
+      margin: 0;
+      break-after: avoid;
+    }
+    .group-label::before, .group-label::after { content: ""; flex: 1; border-top: 2px solid var(--ink); height: 0; }
+    .group-label span { background: var(--paper); border: 2px solid var(--ink); border-radius: 5px; padding: 0.32mm 1.55mm; white-space: nowrap; }
+    .row { display: grid; gap: 2.3mm; align-items: stretch; }
+    .row.cols-2 { grid-template-columns: 1fr 1fr; }
+    .row.split-46-54 { grid-template-columns: 46fr 54fr; }
+    .row.split-52-48 { grid-template-columns: 52fr 48fr; }
+    .row.split-40-60 { grid-template-columns: 40fr 60fr; }
+    .box, .box-body, .row > *, .verdict-row, .metric, .fig { min-width: 0; }
+    .box {
+      background: var(--white);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      box-shadow: 4px 4px 0 var(--shadow);
+      overflow: visible;
+      display: flex;
+      flex-direction: column;
+    }
+    .box-tag {
+      background: var(--teal);
+      color: white;
+      border-bottom: 2px solid var(--ink);
+      border-radius: 6px 6px 0 0;
+      font-size: 7.85pt;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      padding: 0.58mm 2mm 0.45mm;
+      line-height: 1.12;
+    }
+    .box-body {
+      border-radius: 0 0 6px 6px;
+      padding: 1.05mm 1.7mm 1.1mm;
+      gap: 0.6mm;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--teal-soft);
+      overflow: visible;
+    }
+    .pipeline {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 1.2mm;
+      align-items: stretch;
+    }
+    .pipe-step {
+      border: 1.8px solid var(--ink);
+      border-radius: 7px;
+      background: var(--white);
+      padding: 0.7mm 1.1mm;
+      text-align: center;
+      line-height: 1.18;
+    }
+    .pipe-step .ps-lab {
+      font-size: 6.2pt;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 0.35mm;
+    }
+    .pipe-step .ps-lab.lik { color: var(--lik-teal); }
+    .pipe-step .ps-lab.log { color: var(--navy); }
+    .pipe-step .ps-lab.dev { color: var(--dev-rose); }
+    .pipe-step .ps-eq { font-size: 8.2pt; font-weight: 850; }
+    .pipe-step .ps-note { font-size: 6.7pt; font-weight: 750; color: var(--muted); margin-top: 0.3mm; }
+    .pipe-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-weight: 900;
+      font-size: 11pt;
+      color: var(--chapter);
+    }
+    .box-body p { margin: 0; overflow-wrap: break-word; }
+    .tag-chapter .box-tag { background: var(--chapter); color: #fff; }
+    .tag-chapter .box-body { background: var(--chapter-soft); }
+    .tag-navy .box-tag { background: var(--navy); color: #fff; }
+    .tag-navy .box-body { background: var(--navy-soft); }
+    .tag-gold .box-tag { background: var(--gold); color: var(--ink); }
+    .tag-gold .box-body { background: var(--gold-soft); }
+    .tag-rose .box-tag { background: var(--rose); color: #fff; }
+    .tag-rose .box-body { background: var(--rose-soft); }
+    .navy { color: var(--navy); }
+    .lik { color: var(--lik-teal); font-weight: 850; }
+    .dev { color: var(--dev-rose); font-weight: 850; }
+    code, .r-code { font-family: 'JetBrains Mono', Consolas, Menlo, monospace; }
+    .big-eq, .formula {
+      text-align: center;
+      line-height: 1.32;
+      padding: 0.4mm 0;
+    }
+    .big-eq { font-size: 10.8pt; }
+    .formula { font-size: 9pt; }
+    .big-eq .katex, .formula .katex { color: var(--ink); }
+    .big-eq .katex { font-size: 1.1em; }
+    .formula .katex { font-size: 1.04em; }
+    .katex-display { margin: 0.12em 0; }
+    .mini-note {
+      border: 2px solid var(--ink);
+      border-radius: 7px;
+      background: var(--white);
+      padding: 0.5mm 1.15mm;
+      font-size: 7.15pt;
+      font-weight: 760;
+      line-height: 1.18;
+    }
+    .mini-note.gold { background: var(--gold-soft); color: #6f5200; }
+    .mini-note.chapter { background: var(--chapter-soft); color: var(--chapter-dark); }
+    .r-code {
+      border: 2px solid var(--ink);
+      border-radius: 7px;
+      background: #1d2229;
+      color: #f0ecdf;
+      padding: 0.65mm 1.35mm;
+      font-size: 6.35pt;
+      line-height: 1.3;
+      white-space: pre;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .r-code .cm { color: #a8b3b4; font-style: italic; }
+    .r-code .fn { color: #8fd5d2; }
+    .r-code .hi { color: #f0c808; font-weight: 700; }
+    .fig {
+      position: relative;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      padding: 0.5mm 0.85mm 0.55mm;
+      background: var(--white);
+      overflow: visible;
+    }
+    .fig svg { display: block; width: 100%; height: auto; }
+    .fig-caption {
+      font-size: 6.7pt;
+      color: var(--ink);
+      text-align: center;
+      line-height: 1.16;
+      padding-top: 0.2mm;
+    }
+    .metric-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 1.5mm;
+    }
+    .metric {
+      border: 1.8px solid var(--ink);
+      border-radius: 7px;
+      background: var(--white);
+      padding: 0.55mm 1.05mm;
+      line-height: 1.16;
+    }
+    .metric .m-lab {
+      font-size: 5.95pt;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 0.25mm;
+    }
+    .metric .m-lab.lik { color: var(--lik-teal); }
+    .metric .m-lab.log { color: var(--navy); }
+    .metric .m-lab.dev { color: var(--dev-rose); }
+    .metric .m-lab.null { color: var(--chapter); }
+    .metric .m-body { font-size: 6.95pt; font-weight: 750; }
+    .b {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      vertical-align: baseline;
+      line-height: 1;
+      margin: 0 0.18mm;
+      text-align: center;
+      max-width: 100%;
+      min-width: 0;
+    }
+    .fill {
+      border: 0;
+      border-bottom: 1.8px solid var(--chapter);
+      border-radius: 3px 3px 0 0;
+      padding: 0 0.3mm 0.5px;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.38);
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: 850;
+      line-height: 1;
+      text-align: center;
+      min-width: 2mm;
+      max-width: 100%;
+      transition: width 0.18s ease-out;
+    }
+    .fill.code { font-family: 'JetBrains Mono', Consolas, Menlo, monospace; }
+    .fill:focus { outline: none; border-bottom-color: var(--chapter-dark); box-shadow: 0 3px 0 rgba(67, 56, 166, 0.22); }
+    .hint {
+      font-size: 4.55pt;
+      color: #8b897d;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      line-height: 1.05;
+      margin-top: 0.28mm;
+      letter-spacing: 0.03em;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      max-width: 34mm;
+      text-align: center;
+    }
+    .b.solved .hint, .hints-hidden .hint { display: none; }
+    .b.solved .fill { background: rgba(255, 255, 255, 0.38); border-bottom-color: var(--chapter-dark); }
+    .fill.wrong-pick { border-bottom-color: var(--rose) !important; color: var(--rose); animation: shake 0.45s; }
+    .fill.correct-flash { animation: correctFlash 0.75s ease-out; }
+    @keyframes shake { 0%, 100% { transform: translateX(0) } 20%, 60% { transform: translateX(-2px) } 40%, 80% { transform: translateX(2px) } }
+    @keyframes correctFlash {
+      0% { background-color: rgba(44, 138, 74, 0); border-bottom-color: var(--chapter) }
+      20% { background-color: rgba(44, 138, 74, 0.30); border-bottom-color: var(--green) }
+      60% { background-color: rgba(44, 138, 74, 0.18); border-bottom-color: var(--green) }
+      100% { background-color: rgba(44, 138, 74, 0); border-bottom-color: var(--chapter) }
+    }
+    .verdict-row {
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      padding: 0.55mm 1.15mm;
+      background: var(--white);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.22mm 1.4mm;
+      align-items: center;
+    }
+    .verdict-row + .verdict-row { margin-top: 0.4mm; }
+    .v-text { font-size: 7pt; font-family: Georgia, serif; font-style: italic; color: var(--ink); line-height: 1.2; overflow-wrap: break-word; }
+    .verdict-btns { display: flex; gap: 0.65mm; }
+    .v-btn {
+      font-size: 5.85pt;
+      font-weight: 850;
+      padding: 0.35mm 1.3mm;
+      border-radius: 999px;
+      border: 1.5px solid var(--ink);
+      background: var(--white);
+      box-shadow: none;
+      cursor: pointer;
+      white-space: nowrap;
+      line-height: 1.1;
+    }
+    .v-btn.yes { color: var(--chapter-dark); border-color: var(--chapter-dark); }
+    .v-btn.no { color: var(--rose); border-color: var(--rose); }
+    .v-btn.picked.correct, .v-btn.was-correct { background: #d4ecd9; border-color: var(--green); color: #1e6a30; }
+    .v-btn.picked.incorrect { background: #f7d4dd; border-color: var(--rose); color: #8c2e48; animation: shake 0.45s; }
+    .v-btn:disabled { cursor: default; }
+    .v-explanation {
+      display: none;
+      grid-column: 1 / -1;
+      font-size: 6.5pt;
+      color: var(--muted);
+      border-top: 1.5px dashed var(--ink);
+      padding-top: 0.4mm;
+      margin-top: 0.18mm;
+      line-height: 1.22;
+    }
+    .verdict-row.revealed .v-explanation { display: block; }
+    footer {
+      background: var(--chapter);
+      border-radius: 7px;
+      color: #fff;
+      margin-top: auto;
+      padding: 0.75mm 2mm;
+      box-shadow: 4px 4px 0 var(--shadow);
+      text-align: center;
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 7pt;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+    footer a { color: #fff; text-decoration: none; font-weight: 900; }
+    footer a:hover { text-decoration: underline; }
+    @page { size: A4; margin: 0; }
+    @media print {
+      body { background: white; font-size: 7.35pt; line-height: 1.08; }
+      .toolbar { display: none; }
+      .page {
+        width: 210mm;
+        height: 297mm;
+        max-height: 297mm;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 1.5mm 5mm 0.75mm;
+        gap: 1.25mm;
+        background: white;
+        overflow: hidden;
+        transform: none !important;
+      }
+      header { border-bottom-width: 0.7mm; padding-bottom: 0.18mm; }
+      h1 { font-size: 14.4pt; }
+      .subtitle { font-size: 6.1pt; line-height: 1.02; margin-top: 0.14mm; }
+      .group-label { gap: 1.9mm; font-size: 6.3pt; margin: 0; }
+      .group-label::before, .group-label::after { border-top-width: 1.4px; }
+      .group-label span { background: white; border-width: 1.4px; border-radius: 4px; padding: 0.14mm 0.95mm; }
+      .row { gap: 1.85mm; }
+      .box, .fig, .mini-note, .verdict-row, .metric, .pipe-step { box-shadow: none; border-width: 1.3px; border-radius: 5px; }
+      .box-tag { border-bottom-width: 1.3px; border-radius: 4px 4px 0 0; font-size: 6.55pt; padding: 0.28mm 1.2mm 0.2mm; line-height: 1.02; }
+      .box-body { padding: 0.5mm 0.95mm 0.55mm; gap: 0.35mm; }
+      .pipeline { gap: 0.9mm; }
+      .pipe-step { padding: 0.4mm 0.7mm; }
+      .pipe-step .ps-lab { font-size: 5.4pt; }
+      .pipe-step .ps-eq { font-size: 7pt; }
+      .pipe-step .ps-note { font-size: 5.7pt; }
+      .pipe-arrow { font-size: 9pt; }
+      .big-eq { font-size: 9pt; padding: 0.18mm 0; }
+      .formula { font-size: 7.7pt; padding: 0.14mm 0; }
+      .mini-note { font-size: 6.05pt; padding: 0.24mm 0.7mm; }
+      .r-code { border-width: 1.3px; border-radius: 5px; font-size: 5.55pt; line-height: 1.16; padding: 0.35mm 0.9mm; }
+      .fig { padding: 0.15mm 0.4mm 0.2mm; }
+      .fig-caption { font-size: 5.55pt; padding-top: 0; line-height: 1.06; }
+      .metric-row { gap: 1.1mm; }
+      .metric { padding: 0.3mm 0.75mm; }
+      .metric .m-lab { font-size: 5.25pt; }
+      .metric .m-body { font-size: 6pt; }
+      .verdict-row { padding: 0.22mm 0.6mm; gap: 0.08mm 0.6mm; }
+      .verdict-row + .verdict-row { margin-top: 0.12mm; }
+      .v-text { font-size: 5.9pt; line-height: 1.06; }
+      .hint { display: none !important; }
+      .fill { transition: none; }
+      .fill.wrong-pick { color: var(--ink); border-bottom-color: var(--chapter) !important; }
+      button, .verdict-btns { display: none !important; }
+      .verdict-row .v-explanation { display: none !important; }
+      .verdict-row::after {
+        content: "True";
+        font-size: 4.9pt;
+        font-weight: 800;
+        padding: 0.15mm 0.65mm;
+        border-radius: 999px;
+        background: #d4ecd9;
+        border: 1px solid var(--green);
+        color: #1e6a30;
+      }
+      .verdict-row[data-correct="no"]::after { content: "False"; background: #f7d4dd; border-color: var(--rose); color: #8c2e48; }
+      footer { border-radius: 0; padding: 0.15mm 0; font-size: 5.7pt; box-shadow: none; }
+      .fill, .box, .box-tag, .box-body, .fig, .big-eq, .formula, .r-code, .mini-note, .metric, .pipe-step, .verdict-row, footer { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+    @media screen and (max-width: 820px) {
+      html, body { overflow-x: hidden; }
+      .page, .toolbar { width: calc(100vw - 16px); }
+      .page { padding: 16px; min-height: auto; transform: none !important; overflow: visible; }
+      .row, .metric-row, .pipeline { grid-template-columns: 1fr !important; }
+      .pipe-arrow { transform: rotate(90deg); padding: 0.4mm 0; }
+      .toolbar { flex-direction: column; align-items: stretch; margin-top: 12px; }
+      .toolbar-actions { justify-content: flex-start; }
+      .toolbar-intro .descr { max-width: none; }
+      button { padding: 6px 8px; }
+      .zoom-group button { padding: 5px 7px; }
+      .zoom-group .zoom-label { min-width: 38px; padding: 0 6px; }
+      .verdict-row { grid-template-columns: 1fr; }
+      .b { width: min(30vw, 140px); max-width: 100%; }
+      .fill { width: 100% !important; max-width: 100%; }
+      .hint { max-width: 100%; }
+      .big-eq, .formula { white-space: normal; overflow-wrap: anywhere; }
+      .verdict-btns { flex-wrap: wrap; }
+      .r-code { white-space: pre-wrap; overflow-wrap: anywhere; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="toolbar-intro">
+      <div class="title">GRAPH Courses cheat sheet</div>
+      <div class="descr">Type your answers in the blanks. Small grey text below each blank shows hint options. When you are finished, click Print / Save on the right.</div>
+    </div>
+    <div class="toolbar-actions">
+      <div class="zoom-group" role="group" aria-label="Zoom controls">
+        <button type="button" id="zoomOut" aria-label="Zoom out">Zoom -</button>
+        <button type="button" id="zoomIn" aria-label="Zoom in">Zoom +</button>
+        <span class="zoom-label" id="zoomLabel">100%</span>
+      </div>
+      <button type="button" id="toggleHints">Hide hints</button>
+      <button type="button" id="clearAnswers">Clear</button>
+      <button type="button" class="primary print-button" onclick="window.print()" aria-label="Print or save cheat sheet">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 3h10v5H7V3Zm10 14h2a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h2v4h10v-4Zm-8 2v-6h6v6H9Zm9-7.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" /></svg>
+        Print / Save
+      </button>
+    </div>
+  </div>
+
+  <div class="page-wrap" id="pageWrap">
+    <section class="page" id="sheet">
+      <header>
+        <h1>Logistic Regression: Likelihood and Deviance</h1>
+        <div class="subtitle">How logistic regression scores model fit</div>
+      </header>
+
+      <div class="group-label"><span>Likelihood: scoring each prediction</span></div>
+
+      <div class="row split-46-54">
+        <div class="box tag-chapter">
+          <div class="box-tag">Each observation contributes one score</div>
+          <div class="box-body">
+            <p>A logistic model predicts a probability \(p_i\) for each person. The <span class="lik">likelihood contribution</span> asks how much probability the model assigned to what actually happened.</p>
+            <div class="formula">\[L_i = \begin{cases} p_i &amp; \text{if } y_i = 1 \\[1pt] 1 - p_i &amp; \text{if } y_i = 0 \end{cases}\]</div>
+            <p>If the outcome was 1 (for example, passed an exam), the contribution is <span class="b"><input class="fill code" data-answer="p" data-alt="p_i|pi"><span class="hint">p / 1-p / 0.5</span></span>. If the outcome was 0 (failed), the contribution is <span class="b"><input class="fill code" data-answer="1-p" data-alt="1 - p|1-p_i|1 - p_i"><span class="hint">1-p / p / y</span></span>.</p>
+            <p>Someone who failed with \(P(\text{pass}) = 0.2\) has contribution <span class="b"><input class="fill code" data-answer="0.8" data-alt=".8"><span class="hint">0.8 / 0.2 / 1.2</span></span>. Someone who passed with \(P(\text{pass}) = 0.9\) has contribution <span class="b"><input class="fill code" data-answer="0.9" data-alt=".9"><span class="hint">0.9 / 0.1 / 1.9</span></span>.</p>
+          </div>
+        </div>
+        <div class="box">
+          <div class="box-tag">Overall likelihood multiplies the contributions</div>
+          <div class="box-body">
+            <div class="fig">
+              <svg viewBox="0 0 360 118" role="img" aria-label="Three people with predicted probabilities and likelihood contributions">
+                <rect x="1" y="1" width="358" height="116" rx="8" fill="#fffef9"/>
+                <text x="180" y="16" text-anchor="middle" font-size="8" font-weight="800" fill="#4338a6">Tiny example: three people, pass = 1 / fail = 0</text>
+                <!-- person 1 fail -->
+                <rect x="18" y="28" width="100" height="72" rx="7" fill="#fdeef1" stroke="#101418" stroke-width="1.4"/>
+                <text x="68" y="46" text-anchor="middle" font-size="8.5" font-weight="800" fill="#b83b5e">Fail (y=0)</text>
+                <text x="68" y="62" text-anchor="middle" font-size="7.5" font-weight="700" fill="#665f51">P(pass)=0.25</text>
+                <text x="68" y="84" text-anchor="middle" font-size="10" font-weight="900" fill="#0d7377">L = 0.75</text>
+                <!-- person 2 pass -->
+                <rect x="130" y="28" width="100" height="72" rx="7" fill="#e3f3f3" stroke="#101418" stroke-width="1.4"/>
+                <text x="180" y="46" text-anchor="middle" font-size="8.5" font-weight="800" fill="#0d7377">Pass (y=1)</text>
+                <text x="180" y="62" text-anchor="middle" font-size="7.5" font-weight="700" fill="#665f51">P(pass)=0.60</text>
+                <text x="180" y="84" text-anchor="middle" font-size="10" font-weight="900" fill="#0d7377">L = 0.60</text>
+                <!-- person 3 pass -->
+                <rect x="242" y="28" width="100" height="72" rx="7" fill="#e3f3f3" stroke="#101418" stroke-width="1.4"/>
+                <text x="292" y="46" text-anchor="middle" font-size="8.5" font-weight="800" fill="#0d7377">Pass (y=1)</text>
+                <text x="292" y="62" text-anchor="middle" font-size="7.5" font-weight="700" fill="#665f51">P(pass)=0.85</text>
+                <text x="292" y="84" text-anchor="middle" font-size="10" font-weight="900" fill="#0d7377">L = 0.85</text>
+              </svg>
+              <div class="fig-caption">Overall \(L = 0.75 \times 0.60 \times 0.85 =\) <span class="b"><input class="fill code" data-answer="0.3825" data-alt=".3825|0.383"><span class="hint">0.3825 / 2.2 / 0.75</span></span>. Larger \(L\) means a <span class="b"><input class="fill" data-answer="better" data-alt="higher|stronger"><span class="hint">better / worse / identical</span></span> fit.</div>
+            </div>
+            <p>R chooses the coefficients by <span class="b"><input class="fill" data-answer="maximum likelihood estimation" data-alt="MLE|maximum likelihood"><span class="hint">maximum likelihood estimation / least squares / ridge regression</span></span> (MLE).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-label"><span>From likelihood to deviance</span></div>
+
+      <div class="box tag-gold">
+        <div class="box-tag">One chain of fit summaries</div>
+        <div class="box-body">
+          <div class="pipeline">
+            <div class="pipe-step">
+              <div class="ps-lab lik">Likelihood</div>
+              <div class="ps-eq">\(L = \prod L_i\)</div>
+              <div class="ps-note">Higher = better fit</div>
+            </div>
+            <div class="pipe-arrow" aria-hidden="true">&rarr;</div>
+            <div class="pipe-step">
+              <div class="ps-lab log">Log-likelihood</div>
+              <div class="ps-eq">\(\ell = \ln L\)</div>
+            </div>
+            <div class="pipe-arrow" aria-hidden="true">&rarr;</div>
+            <div class="pipe-step">
+              <div class="ps-lab dev">Deviance</div>
+              <div class="ps-eq">\(-2 \times \ell\)</div>
+              <div class="ps-note">Lower = better fit</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row split-52-48">
+        <div class="box tag-navy">
+          <div class="box-tag">Why we take the natural log</div>
+          <div class="box-body">
+            <p>Likelihoods multiply many numbers between 0 and 1, so \(L\) gets tiny fast. The natural log turns that product into a <span class="b"><input class="fill" data-answer="sum" data-alt="addition|total"><span class="hint">sum / quotient / product</span></span>:</p>
+            <div class="big-eq">\[\ell = \ln L = \sum_{i=1}^{n} \ln L_i\]</div>
+            <p>Because \(\ln\) is increasing, maximizing \(\ell\) is the same as maximizing \(L\). Log-likelihood values are usually <span class="b"><input class="fill" data-answer="negative" data-alt="below zero"><span class="hint">negative / positive / zero</span></span>, and a less negative \(\ell\) means a better fit.</p>
+            <div class="r-code"><span class="fn">logLik</span>(mod)   <span class="cm"># maximized log-likelihood</span></div>
+          </div>
+        </div>
+        <div class="box tag-rose">
+          <div class="box-tag">Deviance = &minus;2 &times; log-likelihood</div>
+          <div class="box-body">
+            <div class="big-eq">\[\text{Deviance} = -2 \times \ell\]</div>
+            <p>Multiplying by <span class="b"><input class="fill code" data-answer="-2" data-alt="-2x"><span class="hint">-2 / 2 / -1</span></span> flips the sign, so <span class="dev">lower deviance</span> means a <span class="b"><input class="fill" data-answer="better" data-alt="higher|stronger"><span class="hint">better / worse / noisier</span></span> fit.</p>
+            <p>If \(\ell = -120\), deviance is <span class="b"><input class="fill code" data-answer="240"><span class="hint">240 / 120 / -240</span></span>. Model A has deviance 50 and Model B has 40 on the same data, so Model <span class="b"><input class="fill" data-answer="B" data-alt="b|Model B"><span class="hint">B / A / neither</span></span> fits better.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-label"><span>What summary() reports: null vs residual deviance</span></div>
+
+      <div class="row split-40-60">
+        <div class="box tag-gold">
+          <div class="box-tag">Read the two deviance lines</div>
+          <div class="box-body">
+<div class="r-code"><span class="fn">summary</span>(mod)
+<span class="hi">Null deviance:</span>     8.3178  on 5  degrees of freedom
+<span class="hi">Residual deviance:</span> 4.9560  on 4  degrees of freedom</div>
+            <p><span class="navy">Null deviance</span> comes from the <span class="b"><input class="fill" data-answer="intercept-only" data-alt="intercept only|null|no predictors"><span class="hint">intercept-only / saturated / full</span></span> model (<code>y ~ 1</code>, no predictors). <span class="dev">Residual deviance</span> is the deviance of your <span class="b"><input class="fill" data-answer="fitted" data-alt="current|estimated"><span class="hint">fitted / null / empty</span></span> model with predictors.</p>
+            <p>Degrees of freedom = number of observations minus number of <span class="b"><input class="fill" data-answer="parameters" data-alt="coefficients"><span class="hint">parameters / outcomes / predictors only</span></span>. With \(n = 6\) and two coefficients, residual df is <span class="b"><input class="fill code" data-answer="4"><span class="hint">4 / 5 / 6</span></span>.</p>
+          </div>
+        </div>
+        <div class="box tag-chapter">
+          <div class="box-tag">Direction of fit</div>
+          <div class="box-body">
+            <p>We care about deviance mainly because it lets us <span class="b"><input class="fill" data-answer="compare models" data-alt="compare|model comparison"><span class="hint">compare models / predict new y / compute odds</span></span>. Null deviance is almost always <span class="b"><input class="fill" data-answer="larger" data-alt="higher|bigger"><span class="hint">larger / smaller / equal</span></span> than residual deviance, because predictors usually improve fit.</p>
+            <div class="mini-note gold">Model X has residual deviance 12. Model Y has residual deviance 8 on the same data. Model <span class="b"><input class="fill" data-answer="Y" data-alt="y|Model Y"><span class="hint">Y / X / neither</span></span> fits better because its deviance is lower.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-label"><span>True or false?</span></div>
+
+      <div class="box tag-chapter">
+        <div class="box-tag">Mark each claim</div>
+        <div class="box-body">
+          <div class="verdict-row" data-correct="yes">
+            <div class="v-text">"Degrees of freedom for residual deviance equal the number of observations minus the number of parameters."</div>
+            <div class="verdict-btns"><button type="button" class="v-btn yes" data-pick="yes">True</button><button type="button" class="v-btn no" data-pick="no">False</button></div>
+            <div class="v-explanation">True. Residual df is n minus the number of estimated parameters in the fitted model.</div>
+          </div>
+          <div class="verdict-row" data-correct="no">
+            <div class="v-text">"We can use residual deviance to compare fit between any two models."</div>
+            <div class="verdict-btns"><button type="button" class="v-btn yes" data-pick="yes">True</button><button type="button" class="v-btn no" data-pick="no">False</button></div>
+            <div class="v-explanation">False. Residual deviance comparisons are for models fitted on the same data. Formal tests of the difference also require nested models.</div>
+          </div>
+          <div class="verdict-row" data-correct="no">
+            <div class="v-text">"Null deviance is the deviance of the model that includes all of your predictors."</div>
+            <div class="verdict-btns"><button type="button" class="v-btn yes" data-pick="yes">True</button><button type="button" class="v-btn no" data-pick="no">False</button></div>
+            <div class="v-explanation">False. Null deviance comes from the intercept-only model. Residual deviance is for the fitted model with predictors.</div>
+          </div>
+        </div>
+      </div>
+
+      <footer><a href="https://thegraphcourses.org" target="_blank" rel="noopener">thegraphcourses.org</a></footer>
+    </section>
+  </div>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      if (typeof renderMathInElement === "function") {
+        renderMathInElement(document.getElementById("sheet"), {
+          delimiters: [
+            { left: "\\[", right: "\\]", display: true },
+            { left: "\\(", right: "\\)", display: false }
+          ],
+          throwOnError: false
+        });
+      }
+    });
+
+    const sheet = document.getElementById("sheet"),
+          pageWrap = document.getElementById("pageWrap"),
+          blanks = Array.from(document.querySelectorAll(".b"));
+
+    function fingerprint(str) {
+      let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+      for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      return (h2 >>> 0).toString(36) + (h1 >>> 0).toString(36);
+    }
+    const fp = fingerprint(
+      blanks.map(b => {
+        const inp = b.querySelector(".fill");
+        return (inp.dataset.answer || "") + "|" + (inp.dataset.alt || "");
+      }).join("\n") + "\n" +
+      Array.from(document.querySelectorAll(".verdict-row")).map(r => "v:" + (r.dataset.correct || "")).join("\n")
+    );
+    const storageKey = "likelihood-deviance-cheatsheet-" + fp;
+
+    blanks.forEach(b => {
+      const hint = b.querySelector(".hint");
+      if (!hint) return;
+      const opts = hint.textContent.split(/\s*\/\s*/).filter(s => s.length > 0);
+      if (opts.length < 2) return;
+      for (let i = opts.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [opts[i], opts[j]] = [opts[j], opts[i]];
+      }
+      hint.textContent = opts.join(" / ");
+    });
+
+    const measureCanvas = document.createElement("canvas");
+    const measureCtx = measureCanvas.getContext("2d");
+    function getFontShorthand(el) {
+      const s = getComputedStyle(el);
+      return `${s.fontStyle || "normal"} ${s.fontWeight || "400"} ${s.fontSize} ${s.fontFamily}`;
+    }
+    function measureTextWidth(text, inp) {
+      measureCtx.font = getFontShorthand(inp);
+      return measureCtx.measureText(text).width;
+    }
+    function getDefaultWidth(inp) {
+      const answers = [inp.dataset.answer || "", ...(inp.dataset.alt ? inp.dataset.alt.split("|") : [])];
+      let maxW = 0;
+      answers.forEach(ans => { const w = measureTextWidth(ans, inp); if (w > maxW) maxW = w; });
+      return Math.max(maxW + 12, 22);
+    }
+    function getSolvedWidth(inp) { return Math.max(measureTextWidth(inp.value, inp) + 6, 12); }
+    function applyWidth(inp, solved) { inp.style.width = `${solved ? getSolvedWidth(inp) : getDefaultWidth(inp)}px`; }
+    blanks.forEach(b => applyWidth(b.querySelector(".fill"), false));
+
+    const norm = s => String(s)
+      .replace(/[−–]/g, "-")
+      .replace(/₀/g, "0").replace(/₁/g, "1").replace(/₂/g, "2").replace(/₃/g, "3").replace(/₄/g, "4")
+      .replace(/β/g, "beta")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+    const answersFor = input => [input.dataset.answer || "", ...(input.dataset.alt ? input.dataset.alt.split("|") : [])].map(norm);
+    const match = (value, input) => answersFor(input).includes(norm(value));
+
+    function flashCorrect(i) {
+      i.classList.remove("correct-flash");
+      void i.offsetWidth;
+      i.classList.add("correct-flash");
+      setTimeout(() => i.classList.remove("correct-flash"), 800);
+    }
+    function flashWrong(i) {
+      i.classList.remove("wrong-pick");
+      void i.offsetWidth;
+      i.classList.add("wrong-pick");
+    }
+    function save() { localStorage.setItem(storageKey, JSON.stringify(blanks.map(b => b.querySelector(".fill").value))); }
+    function restore() {
+      try {
+        const d = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        blanks.forEach((b, i) => {
+          const inp = b.querySelector(".fill");
+          if (d[i]) {
+            inp.value = d[i];
+            if (match(d[i], inp)) { b.classList.add("solved"); applyWidth(inp, true); }
+            else { inp.classList.add("wrong-pick"); }
+          }
+        });
+      } catch { localStorage.removeItem(storageKey); }
+    }
+
+    blanks.forEach(blank => {
+      const inp = blank.querySelector(".fill");
+      inp.addEventListener("input", () => {
+        const was = blank.classList.contains("solved");
+        inp.classList.remove("wrong-pick");
+        const ok = inp.value !== "" && match(inp.value, inp);
+        if (ok && !was) { blank.classList.add("solved"); applyWidth(inp, true); flashCorrect(inp); }
+        else if (ok && was) { applyWidth(inp, true); }
+        else if (!ok && was) { blank.classList.remove("solved"); applyWidth(inp, false); }
+        save();
+      });
+      inp.addEventListener("blur", () => {
+        const v = inp.value.trim();
+        if (v && !match(v, inp)) flashWrong(inp);
+      });
+    });
+    restore();
+
+    const verdictRows = Array.from(document.querySelectorAll(".verdict-row"));
+    const verdictKey = "likelihood-deviance-cheatsheet-verdict-" + fp;
+    function applyVerdictPick(row, pick) {
+      if (row.classList.contains("revealed")) return;
+      const correct = row.dataset.correct;
+      const btn = row.querySelector(`.v-btn[data-pick="${pick}"]`);
+      if (!btn) return;
+      const isRight = pick === correct;
+      btn.classList.add("picked", isRight ? "correct" : "incorrect");
+      if (!isRight) {
+        const correctBtn = row.querySelector(`.v-btn[data-pick="${correct}"]`);
+        if (correctBtn) correctBtn.classList.add("was-correct");
+      }
+      row.classList.add("revealed");
+      row.querySelectorAll(".v-btn").forEach(b => b.disabled = true);
+    }
+    function saveVerdicts() {
+      const state = verdictRows.map(row => {
+        const picked = row.querySelector(".v-btn.picked");
+        return picked ? picked.dataset.pick : null;
+      });
+      localStorage.setItem(verdictKey, JSON.stringify(state));
+    }
+    function restoreVerdicts() {
+      try {
+        const state = JSON.parse(localStorage.getItem(verdictKey) || "[]");
+        verdictRows.forEach((row, i) => { if (state[i]) applyVerdictPick(row, state[i]); });
+      } catch { localStorage.removeItem(verdictKey); }
+    }
+    verdictRows.forEach(row => {
+      row.querySelectorAll(".v-btn").forEach(btn => {
+        btn.addEventListener("click", () => { applyVerdictPick(row, btn.dataset.pick); saveVerdicts(); });
+      });
+    });
+    restoreVerdicts();
+
+    document.getElementById("toggleHints").addEventListener("click", e => {
+      sheet.classList.toggle("hints-hidden");
+      e.currentTarget.textContent = sheet.classList.contains("hints-hidden") ? "Show hints" : "Hide hints";
+    });
+    document.getElementById("clearAnswers").addEventListener("click", () => {
+      blanks.forEach(b => {
+        const i = b.querySelector(".fill");
+        i.value = "";
+        i.classList.remove("wrong-pick", "correct-flash");
+        b.classList.remove("solved");
+        applyWidth(i, false);
+      });
+      verdictRows.forEach(row => {
+        row.classList.remove("revealed");
+        row.querySelectorAll(".v-btn").forEach(b => { b.classList.remove("picked", "correct", "incorrect", "was-correct"); b.disabled = false; });
+      });
+      save();
+      saveVerdicts();
+    });
+
+    const zoomLevels = [0.1, 0.25, 0.5, 0.75, 0.85, 1.0, 1.15, 1.3, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
+    const zoomKey = "likelihood-deviance-cheatsheet-zoom";
+    const defaultZoomIdx = zoomLevels.indexOf(1.0);
+    let zoomIdx = parseInt(localStorage.getItem(zoomKey) || String(defaultZoomIdx), 10);
+    if (isNaN(zoomIdx) || zoomIdx < 0 || zoomIdx >= zoomLevels.length) zoomIdx = defaultZoomIdx;
+    const zoomLabel = document.getElementById("zoomLabel");
+    function applyZoom() {
+      const z = zoomLevels[zoomIdx];
+      sheet.style.transform = z === 1 ? "" : `scale(${z})`;
+      const baseH = 297;
+      pageWrap.style.minHeight = z === 1 ? "" : `${baseH * z + 20}mm`;
+      zoomLabel.textContent = Math.round(z * 100) + "%";
+      localStorage.setItem(zoomKey, String(zoomIdx));
+    }
+    document.getElementById("zoomOut").addEventListener("click", () => { if (zoomIdx > 0) { zoomIdx--; applyZoom(); } });
+    document.getElementById("zoomIn").addEventListener("click", () => { if (zoomIdx < zoomLevels.length - 1) { zoomIdx++; applyZoom(); } });
+    applyZoom();
+  </script>
+</body>
+</html>

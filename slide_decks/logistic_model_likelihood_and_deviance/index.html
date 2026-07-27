@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Likelihood, deviance and AIC (animated)</title>
+  <title>Likelihood and deviance (animated)</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -47,12 +47,10 @@
     .panel-side{grid-column:1;grid-row:1;min-width:0;min-height:0;display:flex;flex-direction:column;gap:6px;overflow:auto;}
     .panel-mainv{grid-column:2;grid-row:1;min-width:0;min-height:0;display:flex;flex-direction:column;gap:8px;}
     .ppractice{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .ppractice:has(.practice-q:only-child){grid-template-columns:1fr;}
     .ppractice[hidden]{display:none !important;}
     .p-title{margin:0;color:var(--teal);font-size:22px;font-weight:600;line-height:1.15;}
     .p-title .p-emoji{margin-left:8px;font-size:26px;line-height:1;vertical-align:-2px;}
-    .inset-photo{flex:none;align-self:flex-start;width:150px;margin:0;padding:4px;background:#fff;border:1px solid var(--mist);border-radius:3px;box-shadow:0 3px 10px rgba(7,59,66,.12);}
-    .inset-photo img{display:block;width:100%;height:92px;object-fit:cover;object-position:55% 30%;border-radius:2px;}
-    .inset-photo figcaption{margin-top:3px;color:var(--brown);font-size:10px;font-weight:600;line-height:1.1;letter-spacing:.04em;text-align:center;text-transform:uppercase;}
     .panel-explain{padding:7px 8px;background:var(--soft);border-left:3px solid var(--gold);border-radius:2px;}
     .panel-explain strong{color:var(--teal);font-weight:600;}
     .panel-explain .bad{color:var(--alarm);font-weight:600;}
@@ -60,6 +58,9 @@
     .panel-explain.stack .frag{flex:0 0 auto;margin:0;color:var(--ink);font-size:15.5px;line-height:1.35;}
     .panel-explain.stack .frag.bullet{padding-left:16px;position:relative;}
     .panel-explain.stack .frag.bullet::before{content:"•";position:absolute;left:0;color:var(--teal);}
+    .panel-explain.stack .frag.obj{padding-left:24px;position:relative;}
+    .panel-explain.stack .frag.obj::before{content:"✓";position:absolute;left:0;color:var(--pass);font-weight:700;}
+    .panel-explain.stack .frag.obj-lead{color:var(--brown);font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
     .panel-explain.stack pre.frag{margin:0;padding:8px 10px;border:1px solid var(--mist);border-left:3px solid var(--gold);border-radius:2px;background:#fff;font-family:var(--mono);font-size:13px;line-height:1.4;white-space:pre;overflow:auto;}
     .panel-explain.stack pre.frag.code{color:var(--ink);}
     .panel-explain.stack pre.frag.out{color:var(--ink-2);border-left-color:var(--mist);}
@@ -73,8 +74,17 @@
     .panel-explain.stack .step-note{margin:0;padding-left:3px;font-style:italic;color:var(--ink-2);font-size:12.5px;line-height:1.3;}
     .plotwrap{flex:1;min-width:0;min-height:0;position:relative;}
     .plotwrap svg{width:100%;height:100%;display:block;overflow:hidden;}
-    #panel2 .panel-mainv{justify-content:flex-start;align-self:stretch;}
-    #panel2 .plotwrap{flex:0 0 50%;height:50%;max-height:50%;min-height:0;align-self:stretch;}
+    #panel1 .panel-mainv{justify-content:flex-start;align-self:stretch;}
+    #panel1 .plotwrap{flex:0 0 50%;height:50%;max-height:50%;min-height:0;align-self:stretch;}
+    #panel2 .panel-mainv{justify-content:flex-start;gap:10px;}
+    #panel2 .panel-mainv .outcard{flex:none;}
+    #panel3 .panel-side{overflow:auto;}
+    #panel4.panel{grid-template-columns:1fr;grid-template-rows:1fr;}
+    .mid-practice{display:flex;flex-direction:column;gap:6px;}
+    .mid-practice[hidden]{display:none !important;}
+    .mid-practice .practice-q{padding-right:100px;}
+    .mid-practice .practice-options{white-space:normal;}
+    .mid-practice .practice-ans{max-width:88px;font-size:11px;}
     .underplot{flex:1;min-height:0;display:flex;flex-direction:column;gap:5px;overflow:auto;justify-content:flex-start;}
     .underplot .inline-eq{padding:5px 8px;border-left:3px solid var(--gold);border-radius:2px;background:var(--warm);color:var(--teal);font-size:13.5px;text-align:center;}
     .underplot .inline-eq[hidden],.underplot .bullet[hidden],.underplot pre.frag[hidden]{display:none !important;}
@@ -102,10 +112,25 @@
     .code-table-row .dtable.tight{justify-self:center;}
     .tbl-card{flex:none;padding:9px 11px;border:1px solid var(--mist);border-radius:3px;background:#fff;}
     .tbl-lab{display:block;margin-bottom:4px;color:var(--brown);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+    .dtable.recap td{text-align:left;font-family:var(--sans);font-size:14px;padding:6px 10px;vertical-align:top;}
+    .dtable.recap td:first-child{width:22%;color:var(--brown);font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+    .dtable.recap td:nth-child(2){width:28%;}
+    .dtable.recap td:nth-child(3){color:var(--ink-2);font-size:13.5px;line-height:1.3;}
+    .dtable.recap td code{font-family:var(--mono);font-size:13px;}
+    .nextcard{flex:none;padding:9px 11px;border:1px solid var(--mist);border-left:4px solid var(--teal);border-radius:3px;background:var(--soft);}
+    .nextcard[hidden]{display:none !important;}
+    .nextcard ul{margin:5px 0 0;padding-left:18px;}
+    .nextcard li{color:var(--ink);font-size:14.5px;line-height:1.35;}
+    .nextcard li + li{margin-top:4px;}
+    .nextcard strong{color:var(--teal);font-weight:600;}
+    .klosa-plot{flex:1;min-height:0;display:flex;flex-direction:column;padding:9px 11px;border:1px solid var(--mist);border-radius:3px;background:#fff;}
+    .klosa-plot[hidden]{display:none !important;}
     .nullstrip{flex:none;padding:8px 11px;border:1px solid var(--mist);border-left:4px solid var(--alarm);border-radius:2px;background:#fff;font-family:var(--mono);font-size:13px;line-height:1.5;color:var(--ink-2);}
     .nullstrip strong{color:var(--alarm);font-weight:600;}
     .outcard{flex:none;margin:0;padding:8px 10px;border:1px solid var(--mist);border-radius:2px;background:#fff;font-family:var(--mono);font-size:13px;line-height:1.4;white-space:pre;color:var(--ink-2);overflow:auto;}
+    .outcard.fullsum{font-size:11.5px;line-height:1.32;padding:7px 9px;}
     .outcard .hi{color:var(--teal);font-weight:600;}
+    .outcard .cm{color:#7f9296;}
     /* practice questions */
     .practice-q{position:relative;flex:none;padding:7px 130px 7px 12px;border:1px solid var(--mist);border-top:3px solid var(--gold);border-radius:3px;background:#fff;}
     .practice-q .qlab{display:inline;margin-right:8px;color:var(--brown);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;}
@@ -117,7 +142,7 @@
     .practice-options .opt:nth-child(2)::before{content:"(b) ";}
     .practice-ans{position:absolute;right:10px;top:50%;transform:translateY(-50%) rotate(180deg);font-size:12.5px;font-weight:700;color:var(--teal);opacity:0;transition:opacity .35s ease;max-width:116px;text-align:center;line-height:1.15;}
     .practice-ans::before{content:"Answer: ";font-weight:600;}
-    .ppractice.revealed .practice-ans{opacity:1;}
+    .revealed .practice-ans{opacity:1;}
     @media print{
       .practice-ans{opacity:1 !important;}
     }
@@ -148,6 +173,9 @@
     .scale-val{font-family:var(--mono);font-size:12.5px;font-weight:700;text-anchor:middle;}
     .brace{stroke:var(--brown);stroke-width:1.4;fill:none;}
     .bracelab{fill:var(--brown);font-family:var(--sans);font-size:11.5px;font-weight:600;text-anchor:middle;}
+    .flip-arrow{stroke:var(--brown);stroke-width:2;stroke-dasharray:6 4;}
+    .flip-head{fill:var(--brown);stroke:none;}
+    .flip-lbl{fill:var(--brown);font-family:var(--mono);font-size:14px;font-weight:700;text-anchor:middle;}
     .ghostlab{fill:#7f9296;font-family:var(--sans);font-size:11.5px;font-style:italic;}
 
     #tools{position:fixed;top:14px;right:16px;z-index:22;display:flex;gap:8px;align-items:center;color:var(--mist);font-family:var(--sans);font-size:13px;}
@@ -174,7 +202,7 @@
           <div class="head-row">
             <div class="head-text">
               <div class="kicker">Model fit &amp; model building &middot; part 1 of 2 &middot; logistic regression</div>
-              <h1>Likelihood, deviance and AIC</h1>
+              <h1>Likelihood and deviance</h1>
               <div class="title-line"></div>
             </div>
           </div>
@@ -182,62 +210,14 @@
 
         <div class="panels">
 
-          <!-- ============ PANEL 1: KLoSA re-intro ============ -->
+          <!-- ============ PANEL 1: toy example, scoring the predictions ============ -->
           <section class="panel" id="panel1">
             <div class="p-num">1</div>
             <div class="panel-side">
-              <div class="p-title">Reminder of our data: weak grip by age</div>
+              <div class="p-title">Toy Data: Study hours and probability of passing<span class="p-emoji" aria-hidden="true">📚</span></div>
               <!-- EDIT PANEL 1 HERE. -->
               <div class="panel-explain stack">
-                <pre class="frag code" data-step="2">klosa &lt;- read_csv("klosa_men_grip_45plus.csv")
-mod1 &lt;- glm(weak_grip ~ age, family = binomial, data = klosa)
-summary(mod1)</pre>
-                <pre class="frag out fullsum" data-step="3">#&gt; Call:
-#&gt; glm(formula = weak_grip ~ age, family = binomial, data = klosa)
-#&gt;
-#&gt; Coefficients:
-#&gt;              Estimate Std. Error z value Pr(&gt;|z|)
-#&gt; (Intercept) -8.824312   0.319252  -27.64   &lt;2e-16 ***
-#&gt; age          <span class="hi">0.116834</span>   0.004755   24.57   &lt;2e-16 ***
-#&gt;
-#&gt;     <span class="hi">Null deviance: 4259.0</span>  on 4183  degrees of freedom
-#&gt; <span class="hi">Residual deviance: 3455.1</span>  on 4182  degrees of freedom
-#&gt; <span class="hi">AIC: 3459.1</span>
-#&gt;
-#&gt; Number of Fisher Scoring iterations: 5</pre>
-                <div class="frag inline-eq" data-step="4">$\ln\dfrac{p}{1-p} = -8.824 + 0.1168\,\text{age}$</div>
-                <div class="frag inline-eq tight" data-step="5">$\widehat p = \dfrac{1}{1 + e^{-(-8.824 + 0.1168\,\text{age})}}$</div>
-              </div>
-            </div>
-            <div class="panel-mainv">
-              <figure class="inset-photo">
-                <img src="images/grip_dynamometer.jpg" alt="Older man squeezing a digital handgrip dynamometer">
-                <figcaption>hand dynamometer</figcaption>
-              </figure>
-              <div class="plotwrap"><svg id="svgKlosa" viewBox="0 0 620 480" preserveAspectRatio="xMidYMid meet"></svg></div>
-            </div>
-            <div class="ppractice frag" data-step="9" data-reveal="10">
-              <div class="practice-q">
-                <span class="qlab">Practice</span>
-                <p class="q">The age estimate 0.1168 is a change in&hellip;</p>
-                <span class="practice-options"><span class="opt">log-odds</span><span class="opt">probability</span></span><span class="practice-ans">log-odds</span>
-              </div>
-              <div class="practice-q">
-                <span class="qlab">Practice</span>
-                <p class="q">Residual deviance for mod1 is&hellip;</p>
-                <span class="practice-options"><span class="opt">3455.1</span><span class="opt">4259.0</span></span><span class="practice-ans">3455.1</span>
-              </div>
-            </div>
-          </section>
-
-          <!-- ============ PANEL 2: toy example, scoring the predictions ============ -->
-          <section class="panel" id="panel2">
-            <div class="p-num">2</div>
-            <div class="panel-side">
-              <div class="p-title">Toy Data: Study hours and probability of passing<span class="p-emoji" aria-hidden="true">📚</span></div>
-              <!-- EDIT PANEL 2 HERE. -->
-              <div class="panel-explain stack">
-                <div class="frag code-table-row" data-step="11">
+                <div class="frag code-table-row" data-step="1">
                   <pre class="code">students &lt;- tibble(
   hours = 1:6,
   pass  = c(0, 0, 1, 0, 1, 1)
@@ -255,36 +235,35 @@ head(students)</pre>
                     </tbody>
                   </table>
                 </div>
-                <pre class="frag code" data-step="12">mod &lt;- glm(pass ~ hours, family = binomial, data = students)
+                <pre class="frag code" data-step="2">mod &lt;- glm(pass ~ hours, family = binomial, data = students)
 summary(mod)</pre>
-                <pre class="frag out fullsum" data-step="13">#&gt; Coefficients:
+                <pre class="frag out fullsum" data-step="3">#&gt; Coefficients:
 #&gt;             Estimate Std. Error z value Pr(&gt;|z|)
 #&gt; (Intercept)  -4.2491     3.3878  -1.254    0.210
 #&gt; hours         <span class="hi">1.2140</span>     0.9126   1.330    0.183
 #&gt;
 #&gt;     <span class="hi">Null deviance: 8.3178</span>  on 5  degrees of freedom
 #&gt; <span class="hi">Residual deviance: 4.9560</span>  on 4  degrees of freedom
-#&gt; <span class="hi">AIC: 8.956</span>
 #&gt;
 #&gt; Number of Fisher Scoring iterations: 5</pre>
-                <div class="frag inline-eq" data-step="23">$L_i = \begin{cases} p_i &amp; y_i = 1 \\[2pt] 1-p_i &amp; y_i = 0 \end{cases}$</div>
-                <p class="frag bullet" data-step="23">Each $L_i$ is that student's <strong>likelihood contribution</strong>.</p>
-                <div class="frag inline-eq" data-step="24">$L = \displaystyle\prod_{i=1}^{n} L_i = \prod_{i=1}^{n} p_i^{y_i}(1-p_i)^{1-y_i}$</div>
+                <div class="frag inline-eq" data-step="13">$L_i = \begin{cases} p_i &amp; y_i = 1 \\[2pt] 1-p_i &amp; y_i = 0 \end{cases}$</div>
+                <p class="frag bullet" data-step="13">Each $L_i$ is that student's <strong>likelihood contribution</strong>.</p>
+                <div class="frag inline-eq" data-step="14">$L = \displaystyle\prod_{i=1}^{n} L_i = \prod_{i=1}^{n} p_i^{y_i}(1-p_i)^{1-y_i}$</div>
               </div>
             </div>
             <div class="panel-mainv">
               <div class="plotwrap"><svg id="svgToy" viewBox="0 0 620 480" preserveAspectRatio="xMinYMid meet"></svg></div>
               <div class="underplot">
-                <div class="frag inline-eq" data-step="25">$L = .954 \times .861 \times .353 \times .353 \times .861 \times .954 = 0.084$</div>
-                <p class="frag bullet" data-step="26">By the way: <code>glm()</code> chose the coefficients using <strong>maximum likelihood estimation (MLE)</strong>.</p>
-                <p class="frag bullet" data-step="26">R finds the best coefficients by trying better and better guesses. Each try is a <strong>Fisher scoring</strong> step. "Number of Fisher Scoring iterations: 5" means it took 5 tries.</p>
-                <p class="frag bullet" data-step="27">Multiplying many decimals is unwiedly. Logs turn that product into a sum.</p>
-                <div class="frag inline-eq" data-step="28">$\ell = \ln L = \ln(.954)+\ln(.861)+\ln(.353)+\ln(.353)+\ln(.861)+\ln(.954) = -2.478$</div>
-                <div class="frag inline-eq" data-step="29">$\ell = -0.047-0.150-1.041-1.041-0.150-0.047 = -2.478$</div>
-                <pre class="frag code" data-step="30">logLik(mod)   <span class="cm">#&gt; 'log Lik.' -2.477987 (df=2)</span></pre>
+                <div class="frag inline-eq" data-step="15">$L = .954 \times .861 \times .353 \times .353 \times .861 \times .954 = 0.084$</div>
+                <p class="frag bullet" data-step="16"><code>glm()</code> chose the coefficients using <strong>maximum likelihood estimation (MLE)</strong>.</p>
+                <p class="frag bullet" data-step="16">R uses <strong>Fisher scoring</strong> to update the coefficients. "Number of Fisher Scoring iterations: 5" indicates five iterations.</p>
+                <p class="frag bullet" data-step="17">Multiplying many small numbers is difficult to work with. Logs turn that product into a sum.</p>
+                <div class="frag inline-eq" data-step="18">$\ell = \ln L = \ln(.954)+\ln(.861)+\ln(.353)+\ln(.353)+\ln(.861)+\ln(.954) = -2.478$</div>
+                <div class="frag inline-eq" data-step="19">$\ell = -0.047-0.150-1.041-1.041-0.150-0.047 = -2.478$</div>
+                <pre class="frag code" data-step="20">logLik(mod)   <span class="cm">#&gt; 'log Lik.' -2.477987 (df=2)</span></pre>
               </div>
             </div>
-            <div class="ppractice frag" data-step="31" data-reveal="32">
+            <div class="ppractice frag" data-step="21" data-reveal="22">
               <div class="practice-q">
                 <span class="qlab">Practice</span>
                 <p class="q">Bob failed. The model's P(pass) = 0.139. Bob's likelihood contribution:</p>
@@ -298,122 +277,102 @@ summary(mod)</pre>
             </div>
           </section>
 
-          <!-- ============ PANEL 3: from scores to deviance ============ -->
-          <section class="panel" id="panel3">
-            <div class="p-num">3</div>
+          <!-- ============ PANEL 2: deviance ============ -->
+          <section class="panel" id="panel2">
+            <div class="p-num">2</div>
             <div class="panel-side">
-              <div class="p-title">From scores to deviance</div>
-              <!-- EDIT PANEL 3 HERE. -->
+              <div class="p-title">Deviance</div>
+              <!-- EDIT PANEL 2 HERE. -->
               <div class="panel-explain stack">
-                <p class="frag bullet" data-step="33">With thousands of people, the product becomes too small to store.</p>
-                <p class="frag bullet" data-step="33">So we add <strong>logarithms</strong> of the scores instead.</p>
-                <p class="frag bullet" data-step="34">The table adds ln(score) over all six students.</p>
-                <pre class="frag code" data-step="34">logLik(mod)   <span class="cm">#&gt; 'log Lik.' -2.477987 (df=2)</span></pre>
-                <div class="frag inline-eq big" data-step="35">$\text{Deviance} = -2 \times \text{log-likelihood}$</div>
-                <div class="frag inline-eq" data-step="35">$-2 \times (-2.478) = 4.956$</div>
-                <p class="frag bullet" data-step="35">Lower deviance = better fit. A perfect model has deviance 0.</p>
-                <p class="frag step-note" data-step="35">The &times;(&minus;2) makes deviance differences follow a chi-squared distribution.</p>
-                <p class="frag bullet" data-step="36">Now a model with <strong>no predictors</strong>:</p>
-                <pre class="frag code" data-step="36">mod0 &lt;- glm(pass ~ 1, family = binomial)
-fitted(mod0)   <span class="cm">#&gt; 0.5 0.5 0.5 0.5 0.5 0.5</span></pre>
-                <p class="frag bullet" data-step="36">It predicts 0.5 for everyone, because 3 of 6 passed.</p>
-                <p class="frag bullet" data-step="37"><strong>Null deviance</strong> = deviance of the no-predictor model.</p>
-                <p class="frag bullet" data-step="37"><strong>Residual deviance</strong> = deviance of your model.</p>
-                <p class="frag step-note" data-step="37">Degrees of freedom = number of people &minus; number of model parameters.</p>
+                <div class="frag inline-eq big" data-step="24">$\text{Deviance} = -2 \times \text{log-likelihood}$</div>
+                <div class="frag inline-eq" data-step="24">$\text{Residual deviance} = -2 \times (-2.478) = 4.956$</div>
+                <p class="frag bullet" data-step="24">The main reason for the &minus;2: <strong>differences</strong> in deviance between nested models follow a chi-squared distribution.</p>
+                <div class="frag mid-practice" data-step="25" data-reveal="26">
+                  <div class="practice-q">
+                    <span class="qlab">Practice</span>
+                    <p class="q">We care about deviance mainly because&hellip;</p>
+                    <span class="practice-options"><span class="opt">it lets us compare models</span><span class="opt">bigger = better fit</span></span><span class="practice-ans">it lets us compare models</span>
+                  </div>
+                </div>
+                <p class="frag bullet" data-step="27"><strong>Null deviance</strong> comes from a model with no predictors.</p>
+                <p class="frag bullet" data-step="27">That model predicts 0.5 for everyone, because 3 of 6 students passed.</p>
+                <div class="frag inline-eq" data-step="27">$\ell_0 = 6\times\ln(0.5) = 6\times(-0.693) = -4.159$</div>
+                <div class="frag inline-eq" data-step="27">$\text{Null deviance} = -2\times(-4.159) = 8.318$</div>
+                <p class="frag bullet" data-step="28"><strong>Null deviance</strong> = deviance of the intercept-only model.</p>
+                <p class="frag bullet" data-step="28"><strong>Residual deviance</strong> = deviance of the fitted model.</p>
+                <p class="frag bullet" data-step="28">Degrees of freedom = number of observations &minus; number of parameters.</p>
+                <div class="frag mid-practice" data-step="29" data-reveal="30">
+                  <div class="practice-q">
+                    <span class="qlab">Practice</span>
+                    <p class="q">Null deviance is the deviance of&hellip;</p>
+                    <span class="practice-options"><span class="opt">the intercept-only model</span><span class="opt">the fitted model with predictors</span></span><span class="practice-ans">the intercept-only model</span>
+                  </div>
+                  <div class="practice-q">
+                    <span class="qlab">Practice</span>
+                    <p class="q">Model A: deviance 50. Model B: deviance 40. Same data. Which model fits better?</p>
+                    <span class="practice-options"><span class="opt">Model B</span><span class="opt">Model A</span></span><span class="practice-ans">Model B</span>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="panel-mainv">
-              <div class="tbl-card frag" data-step="34">
-                <span class="tbl-lab">Scores for mod: pass ~ hours</span>
-                <table class="dtable">
-                  <thead><tr><th>Student</th><th>Hours</th><th>Result</th><th>P(pass)</th><th>Score</th><th>ln(Score)</th></tr></thead>
+              <pre class="outcard frag fullsum" data-step="23">#&gt; summary(mod)
+#&gt; Coefficients:
+#&gt;             Estimate Std. Error z value Pr(&gt;|z|)
+#&gt; (Intercept)  -4.2491     3.3878  -1.254    0.210
+#&gt; hours         <span class="hi">1.2140</span>     0.9126   1.330    0.183
+#&gt;
+#&gt;     <span class="hi">Null deviance: 8.3178</span>  on 5  degrees of freedom
+#&gt; <span class="hi">Residual deviance: 4.9560</span>  on 4  degrees of freedom</pre>
+            </div>
+          </section>
+
+          <!-- ============ PANEL 3: learning objectives ============ -->
+          <section class="panel" id="panel3">
+            <div class="p-num">3</div>
+            <div class="panel-side">
+              <div class="p-title">Learning objectives</div>
+              <!-- EDIT PANEL 3 HERE. -->
+              <div class="panel-explain stack">
+                <p class="frag obj-lead" data-step="31">You should now be able to:</p>
+                <p class="frag obj" data-step="31">Explain what a model's <strong>likelihood</strong> is.</p>
+                <p class="frag obj" data-step="31">Explain why we use the <strong>log</strong> of the likelihood.</p>
+                <p class="frag obj" data-step="31">Convert a log-likelihood into a <strong>deviance</strong> with &times;(&minus;2). State which direction means a better fit.</p>
+                <p class="frag obj" data-step="31">Identify <strong>null deviance</strong> and <strong>residual deviance</strong> in <code>summary()</code> output.</p>
+                <p class="frag obj" data-step="31">State how degrees of freedom are calculated for deviance.</p>
+              </div>
+            </div>
+            <div class="panel-mainv">
+              <div class="tbl-card frag" data-step="31">
+                <span class="tbl-lab">Formula recap</span>
+                <table class="dtable recap">
                   <tbody>
-                    <tr><td>A</td><td>1</td><td class="fail">failed</td><td>0.046</td><td>0.954</td><td>&minus;0.047</td></tr>
-                    <tr><td>B</td><td>2</td><td class="fail">failed</td><td>0.139</td><td>0.861</td><td>&minus;0.150</td></tr>
-                    <tr><td>C</td><td>3</td><td class="pass">passed</td><td>0.353</td><td>0.353</td><td>&minus;1.041</td></tr>
-                    <tr><td>D</td><td>4</td><td class="fail">failed</td><td>0.647</td><td>0.353</td><td>&minus;1.041</td></tr>
-                    <tr><td>E</td><td>5</td><td class="pass">passed</td><td>0.861</td><td>0.861</td><td>&minus;0.150</td></tr>
-                    <tr><td>F</td><td>6</td><td class="pass">passed</td><td>0.954</td><td>0.954</td><td>&minus;0.047</td></tr>
-                    <tr class="sumrow"><td colspan="4">Product / sum</td><td>L = 0.084</td><td>&minus;2.478</td></tr>
-                    <tr class="sumrow"><td colspan="4">Deviance = &minus;2 &times; (&minus;2.478)</td><td colspan="2">4.956</td></tr>
+                    <tr><td>Likelihood</td><td>$L = \prod_i L_i$</td><td>Multiply each person's likelihood contribution.</td></tr>
+                    <tr><td>Log-likelihood</td><td>$\ell = \ln L$</td><td>Add the logs of the likelihood contributions.</td></tr>
+                    <tr><td>Deviance</td><td>$-2\ell$</td><td>&minus;2 times the log-likelihood. Lower values indicate a better fit.</td></tr>
+                    <tr><td>Null deviance</td><td>deviance of <code>y ~ 1</code></td><td>Deviance of the intercept-only model.</td></tr>
+                    <tr><td>Residual deviance</td><td>deviance of your model</td><td>Deviance of the fitted model.</td></tr>
                   </tbody>
                 </table>
               </div>
-              <div class="nullstrip frag" data-step="36"><strong>Null model (pass ~ 1):</strong> every prediction = 0.5 &middot; every score = 0.5 &middot; ln(0.5) = &minus;0.693 &middot; sum = &minus;4.159 &middot; deviance = <strong>8.318</strong></div>
-              <pre class="outcard frag" data-step="37">#&gt; summary(mod) shows:
-#&gt;     <span class="hi">Null deviance: 8.3178</span>  on 5  degrees of freedom
-#&gt; <span class="hi">Residual deviance: 4.9560</span>  on 4  degrees of freedom</pre>
-              <div class="plotwrap" style="flex:none;height:130px;"><svg id="svgScale" viewBox="0 0 620 120" preserveAspectRatio="xMidYMid meet"></svg></div>
             </div>
-            <div class="ppractice frag" data-step="38" data-reveal="39">
+            <div class="ppractice frag" data-step="32" data-reveal="33">
               <div class="practice-q">
                 <span class="qlab">Practice</span>
-                <p class="q">A model has log-likelihood &minus;10. Its deviance is&hellip;</p>
-                <span class="practice-options"><span class="opt">20</span><span class="opt">&minus;20</span></span><span class="practice-ans">20</span>
+                <p class="q">A model has log-likelihood &minus;120. Its deviance is&hellip;</p>
+                <span class="practice-options"><span class="opt">240</span><span class="opt">120</span></span><span class="practice-ans">240</span>
               </div>
               <div class="practice-q">
                 <span class="qlab">Practice</span>
-                <p class="q">Model A: deviance 50. Model B: deviance 40. Same data. Better fit?</p>
-                <span class="practice-options"><span class="opt">Model B</span><span class="opt">Model A</span></span><span class="practice-ans">Model B</span>
+                <p class="q">Which quantity is not reported by <code>summary()</code> for a <code>glm</code>?</p>
+                <span class="practice-options"><span class="opt">log-likelihood</span><span class="opt">residual deviance</span></span><span class="practice-ans">log-likelihood</span>
               </div>
             </div>
           </section>
 
-          <!-- ============ PANEL 4: KLoSA, the numbers ============ -->
+          <!-- ============ PANEL 4: empty ============ -->
           <section class="panel" id="panel4">
             <div class="p-num">4</div>
-            <div class="panel-side">
-              <div class="p-title">The same table, with 4,184 men</div>
-              <!-- EDIT PANEL 4 HERE. -->
-              <div class="panel-explain stack">
-                <pre class="frag code" data-step="40">summary(mod1)</pre>
-                <pre class="frag out fullsum" data-step="40">#&gt; Coefficients:
-#&gt;              Estimate Std. Error z value Pr(&gt;|z|)
-#&gt; (Intercept) -8.824312   0.319252  -27.64   &lt;2e-16 ***
-#&gt; age          <span class="hi">0.116834</span>   0.004755   24.57   &lt;2e-16 ***
-#&gt;
-#&gt;     <span class="hi">Null deviance: 4259.0</span>  on 4183  degrees of freedom
-#&gt; <span class="hi">Residual deviance: 3455.1</span>  on 4182  degrees of freedom
-#&gt; <span class="hi">AIC: 3459.1</span>
-#&gt;
-#&gt; Number of Fisher Scoring iterations: 5</pre>
-                <p class="frag bullet" data-step="40"><strong>Null deviance 4259.0</strong>: the model without age.</p>
-                <p class="frag bullet" data-step="40"><strong>Residual deviance 3455.1</strong>: the model with age.</p>
-                <div class="frag inline-eq" data-step="41">$\mathrm{AIC} = \text{residual deviance} + 2 \times \text{number of parameters}$</div>
-                <div class="frag inline-eq" data-step="41">$\mathrm{AIC} = 3455.1 + 2 \times 2 = 3459.1$</div>
-                <p class="frag bullet" data-step="41">AIC is used to compare models. More on this next lesson.</p>
-                <p class="frag bullet" data-step="42">Adding age reduced the deviance by <strong>803.8</strong>.</p>
-                <p class="frag bullet" data-step="42">Is this reduction more than chance? Next lesson: the <strong>likelihood-ratio test</strong>.</p>
-              </div>
-            </div>
-            <div class="panel-mainv">
-              <div class="tbl-card frag" data-step="40">
-                <span class="tbl-lab">Scores for mod1: weak_grip ~ age</span>
-                <table class="dtable">
-                  <thead><tr><th>Man</th><th>Age</th><th>Weak grip</th><th>P(weak)</th><th>Score</th><th>ln(Score)</th></tr></thead>
-                  <tbody>
-                    <tr><td>1</td><td>52</td><td class="pass">no</td><td>0.060</td><td>0.940</td><td>&minus;0.062</td></tr>
-                    <tr><td>2</td><td>71</td><td class="fail">yes</td><td>0.371</td><td>0.371</td><td>&minus;0.992</td></tr>
-                    <tr><td>3</td><td>64</td><td class="pass">no</td><td>0.206</td><td>0.794</td><td>&minus;0.231</td></tr>
-                    <tr class="dots"><td colspan="6">&hellip; 4,181 more men &hellip;</td></tr>
-                    <tr class="sumrow"><td colspan="4">Sum of ln(Score) = &minus;1727.6</td><td colspan="2">Deviance = 3455.1</td></tr>
-                    <tr class="sumrow"><td colspan="4">Null model (0.206 for all): sum = &minus;2129.5</td><td colspan="2">Deviance = 4259.0</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div class="ppractice frag" data-step="43" data-reveal="44">
-              <div class="practice-q">
-                <span class="qlab">Practice</span>
-                <p class="q">Residual deviance 3455.1 measures the fit of&hellip;</p>
-                <span class="practice-options"><span class="opt">weak_grip ~ age</span><span class="opt">weak_grip ~ 1</span></span><span class="practice-ans">weak_grip ~ age</span>
-              </div>
-              <div class="practice-q">
-                <span class="qlab">Practice</span>
-                <p class="q">mod1 has 2 parameters and deviance 3455.1. AIC = ?</p>
-                <span class="practice-options"><span class="opt">3459.1</span><span class="opt">3457.1</span></span><span class="practice-ans">3459.1</span>
-              </div>
-            </div>
           </section>
         </div>
       </div>
@@ -436,10 +395,6 @@ fitted(mod0)   <span class="cm">#&gt; 0.5 0.5 0.5 0.5 0.5 0.5</span></pre>
   const sigAt=(b0,b1,x)=>1/(1+Math.exp(-(b0+b1*x)));
   const psig=h=>sigAt(TOY.b0,TOY.b1,h);
   STU.forEach(s=>{ s.p=psig(s.h); s.score=s.y? s.p : 1-s.p; });
-  const KG = {b0:-8.824312, b1:0.116834, rate:0.2063};   // glm(weak_grip ~ age, binomial), KLoSA
-  const ksig=a=>sigAt(KG.b0,KG.b1,a);
-  // raw KLoSA sample (same sample as the earlier decks): [age, grip, weak_grip]
-  const PTS = [[52,35,0],[60,34.5,0],[60,23.25,1],[59,34,0],[48,43.25,0],[54,38.25,0],[52,33,0],[46,40,0],[67,38.25,0],[79,24.5,1],[54,35.75,0],[60,35,0],[67,29.5,0],[56,29.5,0],[66,33.75,0],[80,26.5,1],[75,30,0],[72,28.5,0],[64,30,0],[67,28.5,0],[56,31.5,0],[68,27,1],[70,30,0],[63,30.25,0],[61,36.75,0],[59,40.25,0],[53,36.25,0],[67,34.5,0],[71,24.75,1],[58,27,1],[49,33.5,0],[63,34,0],[77,29.75,0],[54,30.5,0],[51,29.5,0],[47,34.25,0],[68,30,0],[50,39,0],[48,30.75,0],[82,7,1],[52,30.5,0],[67,40,0],[67,27.25,0],[83,29.25,0],[55,33,0],[52,40.25,0],[54,30,0],[60,31.5,0],[70,19.5,1],[55,35.25,0],[55,23.5,1],[72,39,0],[63,30.75,0],[72,32,0],[59,36,0],[57,39.75,0],[75,35.25,0],[46,37.5,0],[73,29.75,0],[70,38,0],[64,39,0],[56,40,0],[68,21.75,1],[90,23,1],[45,37.5,0],[63,30,0],[50,34.5,0],[57,43.25,0],[57,43.75,0],[81,14,1],[45,39,0],[45,35.5,0],[69,17.5,1],[69,30.25,0],[47,32,0],[83,27,1],[78,17.5,1],[62,37.25,0],[51,40,0],[48,42.5,0],[74,21.5,1],[63,35.25,0],[58,29.75,0],[67,35.75,0],[60,39.5,0],[56,35,0],[80,16,1],[67,20,1],[56,46.75,0],[66,22.5,1],[59,45.75,0],[55,37,0],[49,37,0],[54,39.5,0],[62,26.75,1],[49,36.5,0],[69,30,0],[46,30.25,0],[45,39.25,0],[57,30.5,0],[49,39.5,0],[73,17.5,1],[60,37.5,0],[72,16,1],[67,21.5,1],[55,37.25,0],[80,17.5,1],[72,30.5,0],[60,33.5,0],[55,26.5,1],[45,33.5,0],[70,28.25,0],[57,40,0],[67,34.5,0],[63,29.75,0],[54,32.75,0],[49,35,0],[74,30.75,0],[46,40.75,0],[47,38,0],[70,28.5,0],[50,38,0],[65,36.75,0],[49,39,0],[45,39.75,0],[83,22.75,1],[69,18,1],[80,24.5,1],[75,20.5,1],[64,29.5,0],[62,21.5,1],[80,21.75,1],[60,32.25,0],[69,34.5,0],[72,33.25,0],[49,34.25,0],[73,29.125,0],[56,36.375,0],[50,33.25,0],[58,38.5,0],[61,32.75,0],[72,8.5,1],[71,27.25,0],[47,29,0],[68,21.025,1],[60,37,0],[46,41.5,0],[46,39.75,0],[53,38.575,0],[64,29.5,0],[58,29.05,0],[49,34.75,0],[60,30.25,0],[76,32.25,0],[68,29.25,0],[47,33,0],[66,29.25,0],[52,46.25,0],[57,29.25,0],[76,35.25,0],[59,32.5,0],[53,44,0],[63,29.25,0],[72,32.5,0],[63,27.25,0],[61,36.5,0],[64,30.875,0],[65,33.25,0],[81,29.5,0],[48,31.5,0],[56,25,1],[68,36.625,0],[76,9.25,1],[65,38.75,0],[54,35.5,0],[62,39,0],[74,27.25,0],[74,18.25,1],[48,30.5,0],[73,26.75,1],[71,29.5,0],[67,33,0],[79,28.25,0],[51,47.5,0],[65,32.5,0],[68,32.5,0],[64,35.25,0],[49,33.75,0],[68,19.25,1],[51,39,0],[48,40.25,0],[55,33.25,0],[59,39.5,0],[70,39.25,0],[49,35,0],[62,36.375,0],[72,25.5,1],[45,34.75,0],[66,30,0],[62,29,0],[53,32.25,0],[72,25.25,1],[67,35,0],[62,31.25,0],[72,26.25,1],[74,30.5,0],[70,13.5,1],[54,39.5,0],[54,35.75,0],[71,25.25,1],[91,23.75,1],[59,26.5,1],[70,46.5,0],[49,37,0],[51,48.25,0],[48,32.5,0],[76,27.75,0],[70,20.25,1],[50,34,0],[46,45.75,0],[63,30,0],[55,33.75,0],[55,32.5,0],[69,30.5,0],[61,31,0],[49,31.5,0],[48,40.75,0],[46,40,0],[58,35.5,0],[57,30,0],[48,38.5,0],[59,27.5,0],[52,41.5,0],[64,32.25,0],[56,37.5,0],[63,24.25,1],[60,41.75,0],[57,29.5,0],[53,39.5,0],[65,33.5,0],[52,44,0],[79,29,0],[61,26.5,1],[48,41.5,0],[59,29.75,0],[62,34.5,0],[56,39.25,0],[53,30,0],[52,31,0],[62,32.5,0],[56,38.5,0],[49,39.5,0],[46,45.25,0],[64,36.5,0],[71,34.5,0],[76,35.5,0],[58,35.25,0],[73,32,0],[56,29.5,0],[58,46.5,0],[51,30,0],[56,37,0],[65,28.5,0],[58,33.25,0],[68,31.5,0],[69,31.5,0],[70,28.5,0],[70,26.375,1],[55,31.875,0],[53,31.25,0],[65,27.25,0],[51,26.125,1],[57,37.125,0],[67,36.375,0],[53,29.125,0],[61,9.75,1],[46,41,0],[45,16.25,1],[78,29.5,0],[63,34,0],[75,31,0],[52,37.25,0],[75,37.5,0],[49,28.25,0],[54,35.25,0],[48,33.5,0],[68,24,1],[59,38,0],[63,20,1],[55,32.5,0],[66,29.5,0],[77,20,1],[55,29.5,0],[46,29.25,0],[50,39.5,0],[68,33.75,0],[47,43.25,0],[67,32.25,0],[79,19.75,1],[69,35.75,0],[65,44.5,0],[57,21,1],[47,31.75,0],[61,36,0],[73,30.5,0],[69,27.5,0],[85,19,1],[62,38.75,0],[63,34.25,0],[65,30.5,0],[72,29,0],[61,33,0],[48,43,0],[63,31.75,0],[61,42.5,0],[45,38.25,0],[45,34,0],[76,26,1],[62,36.5,0],[57,38.75,0],[62,29,0],[58,44.75,0],[73,32.75,0],[64,20.5,1],[48,37,0],[68,36,0],[81,29.5,0],[70,30.5,0],[63,35.75,0],[74,31.25,0],[64,29.25,0],[54,37.25,0],[46,30.25,0],[59,38,0],[54,36.5,0],[68,29,0],[73,27.5,0],[71,32.5,0],[67,35,0],[87,19.5,1],[72,31.5,0],[48,41.75,0],[72,30,0],[61,25.625,1],[50,38.5,0],[47,39,0],[84,36.75,0],[72,22.625,1],[65,40.25,0],[46,38.5,0],[45,41.375,0],[89,20.5,1],[46,37.25,0],[49,42,0],[66,27,1],[78,26.75,1],[49,24.25,1],[52,40,0],[50,29,0],[45,28.75,0],[65,37,0],[73,19,1],[74,30,0],[80,29,0],[53,26.25,1],[62,26,1],[51,32.5,0],[60,31.25,0],[46,36.25,0],[45,34.75,0],[55,31.75,0],[69,28.5,0],[79,29,0],[46,28,0],[55,28.75,0],[67,32,0],[67,21.5,1],[66,27,1],[83,25.25,1],[70,32.5,0],[65,32.25,0],[81,29,0],[85,24,1],[69,17.25,1],[65,35.75,0],[90,13.5,1],[50,40,0],[64,32,0],[48,31,0],[46,37,0],[57,35,0],[76,28,0],[52,31.25,0],[55,33.5,0],[56,33,0],[49,29,0],[68,24,1],[56,35.5,0],[47,32.5,0],[69,38.5,0],[51,35.5,0],[52,30.5,0],[73,33,0],[74,17,1],[65,27.75,0],[58,35,0],[72,26.25,1],[86,29.5,0],[69,29.25,0],[71,31.5,0],[74,28.75,0],[73,34,0],[56,34.75,0],[60,33,0],[49,30.5,0],[48,42.75,0],[46,40.5,0],[74,32.25,0],[60,42.25,0],[63,31,0],[47,41.5,0],[63,28.75,0],[77,30,0],[72,32,0],[64,37.25,0],[78,22.25,1],[48,43.5,0],[77,26.5,1],[65,24,1],[48,34.5,0],[65,31,0],[77,19.75,1],[68,30.625,0],[69,33.125,0],[56,29.5,0],[75,24,1],[61,40,0],[59,26.25,1],[62,35,0],[47,30,0],[57,37,0],[60,42.5,0],[60,39.5,0],[50,35.75,0],[51,38.75,0],[57,30,0],[71,22,1],[66,43.5,0],[58,41,0],[83,13.5,1],[68,34.5,0],[56,29,0],[66,24.75,1],[52,35,0],[59,31.5,0],[83,18.875,1],[75,25.5,1],[47,43.5,0],[52,49.75,0],[74,28,0],[70,26.25,1],[57,41.5,0],[51,31.75,0],[52,36,0],[73,29.25,0],[60,35.375,0],[56,33.75,0],[58,37,0],[45,31,0],[56,37.25,0],[59,40.5,0],[70,20.25,1],[55,30.75,0],[62,27.5,0],[60,33.25,0],[84,19.875,1],[47,29.125,0],[64,22.75,1],[48,35,0],[51,37,0],[68,29.5,0],[51,45.625,0],[66,32.5,0],[57,39.25,0],[64,16.25,1],[73,34.5,0],[62,37,0],[83,18,1],[70,25,1],[50,32.25,0],[67,28.5,0],[52,40.25,0],[56,32,0],[55,33.5,0],[58,38.25,0],[79,36,0],[57,39.25,0],[61,32.75,0],[76,22,1],[48,32.75,0],[55,28.25,0],[58,39.25,0],[62,17.75,1],[45,43,0],[67,31.75,0],[63,32.25,0],[56,31.5,0],[51,37.5,0],[73,23.5,1],[66,35,0],[65,28,0],[45,37.5,0],[72,30.25,0],[64,25,1],[60,36,0],[46,43.25,0],[49,28.25,0],[51,33,0],[55,33.5,0],[55,27.75,0],[50,48.25,0],[46,48,0],[69,27,1]];
 
   // ============================ HELPERS ============================
   const NS='http://www.w3.org/2000/svg';
@@ -489,49 +444,6 @@ fitted(mod0)   <span class="cm">#&gt; 0.5 0.5 0.5 0.5 0.5 0.5</span></pre>
   }
   buildToyPlot(document.getElementById('svgToy'),'t_',false);
 
-  // ============================ BUILDER: deviance scale ============================
-  function buildScale(svg, yMid, always, prefix){
-    const SX0=70,SX1=560;
-    const sx=v=>sc(v,0,10,SX0,SX1);
-    const gA=mkgrp(svg,prefix?prefix+'scale':null,always), gB=mkgrp(svg,prefix?prefix+'null':null,always);
-    gA.appendChild(el('rect',{x:SX0,y:yMid-7,width:SX1-SX0,height:14,rx:7,class:'scale-track'}));
-    line(gA,sx(0),yMid-12,sx(0),yMid+12,'axis');
-    txt(gA,sx(0),yMid+28,'0 = perfect fit','scale-lbl');
-    txt(gA,(SX0+SX1)/2,yMid+46,'deviance — lower is better','axis-title');
-    gA.appendChild(el('circle',{cx:sx(4.956),cy:yMid,r:8,class:'probdot','stroke-width':2}));
-    txt(gA,sx(4.956),yMid-16,'pass ~ hours','scale-lbl');
-    const v1=txt(gA,sx(4.956),yMid+28,'4.956','scale-val'); v1.setAttribute('fill','#7a6212');
-    const nd=el('circle',{cx:sx(8.318),cy:yMid,r:8,class:'dotfail'}); nd.setAttribute('stroke','#fff'); nd.setAttribute('stroke-width',2); gB.appendChild(nd);
-    txt(gB,sx(8.318),yMid-16,'pass ~ 1','scale-lbl');
-    const v0=txt(gB,sx(8.318),yMid+28,'8.318','scale-val'); v0.setAttribute('fill','#b5451f');
-    const bx1=sx(4.956),bx2=sx(8.318),by=yMid-34;
-    gB.appendChild(el('path',{d:`M ${bx1} ${by+8} L ${bx1} ${by} L ${bx2} ${by} L ${bx2} ${by+8}`,class:'brace'}));
-    txt(gB,(bx1+bx2)/2,by-6,'difference = 3.362','bracelab');
-  }
-  buildScale(document.getElementById('svgScale'),58,false,'d_');
-
-  // ============================ BUILDER: KLoSA plot ============================
-  function buildKlosaPlot(svg){
-    const X0=64,X1=596,YT=40,YB=420;
-    const ax=a=>sc(a,44,92,X0,X1), py=p=>sc(p,-0.06,1.06,YB,YT);
-    const base=el('g',{}); svg.appendChild(base);
-    line(base,X0,YT,X0,YB,'axis'); line(base,X0,YB,X1,YB,'axis');
-    [50,60,70,80,90].forEach(v=>{const x=ax(v);line(base,x,YB,x,YB+4,'axis');txt(base,x,YB+16,v,'axis-lbl');});
-    txt(base,(X0+X1)/2,YB+34,'age (years)','axis-title');
-    [{v:0,t:'0'},{v:.5,t:'.5'},{v:1,t:'1'}].forEach(o=>{const y=py(o.v);line(base,X0-4,y,X0,y,'axis');txt(base,X0-8,y+3.5,o.t,'axis-lbl','end');});
-    const yt=txt(base,0,0,'P(weak grip)','axis-title'); yt.setAttribute('transform',`translate(15,${(YT+YB)/2}) rotate(-90)`);
-    const gDots=mkgrp(svg,'k_dots',false), gCurve=mkgrp(svg,'k_curve',false);
-    PTS.forEach((p,i)=>{
-      const jx=((i*37)%11-5)*0.35, jy=4+((i*61)%17);
-      const cx=ax(p[0])+jx, cy=py(p[2])+(p[2]?1:-1)*jy;
-      gDots.appendChild(el('circle',{cx,cy,r:1.8,class:p[2]?'dotfail':'dotpass','fill-opacity':.4}));
-    });
-    let d='';
-    for(let a=44;a<=92.001;a+=0.5){const x=ax(a).toFixed(1),y=py(ksig(a)).toFixed(1);d+=(d?' L ':'M ')+x+' '+y;}
-    gCurve.appendChild(el('path',{d,class:'icurve'}));
-  }
-  buildKlosaPlot(document.getElementById('svgKlosa'));
-
   // ============================ ANIMATION STATE ============================
   const A ={c1:0};       // toy curve draw
   const AT={c1:0};
@@ -550,9 +462,7 @@ fitted(mod0)   <span class="cm">#&gt; 0.5 0.5 0.5 0.5 0.5 0.5</span></pre>
 
   // ============================ STEP SCRIPT ============================
   const DEFAULT_STEP={ vis:[], panel:1, c1:0 };
-  const K1=['k_dots'];
-  const K2=[...K1,'k_curve'];
-  const T1=[...K2,'t_dots'];
+  const T1=['t_dots'];
   const T2=[...T1,'t_curve'];
   const T3=[...T2,'t_prob'];
   const SA=[...T3,'t_segA'];
@@ -561,58 +471,46 @@ fitted(mod0)   <span class="cm">#&gt; 0.5 0.5 0.5 0.5 0.5 0.5</span></pre>
   const SE=[...SF,'t_segE'];
   const SC=[...SE,'t_segC'];
   const SD=[...SC,'t_segD'];
-  const D1=[...SD,'d_scale'];
-  const D2=[...D1,'d_null'];
   const STEP_CHANGES=[
-    {},                                                        // 0  panel title
-    {},                                                        // 1  read_csv + glm
-    {},                                                        // 2  full summary()
-    {},                                                        // 3  log-odds equation
-    {},                                                        // 4  probability equation
-    {vis:[...K1]},                                             // 5  dots (after equations)
-    {vis:[...K2]},                                             // 6  gold curve
-    {},                                                        // 7  pause on the plot
-    {},                                                        // 8  practice questions
-    {},                                                        // 9  practice answers
-    {panel:2,vis:[...K2]},                                     // 10 students table (no toy plot yet)
-    {},                                                        // 11 glm + summary(mod)
-    {},                                                        // 12 summary output
-    {vis:[...T1]},                                             // 13 data points
-    {vis:[...T2],c1:1},                                        // 14 curve
-    {vis:[...T3]},                                             // 15 predicted probabilities
-    {vis:[...SA]},                                             // 16 measure A
-    {vis:[...SB]},                                             // 17 measure B
-    {vis:[...SF]},                                             // 18 measure F
-    {vis:[...SE]},                                             // 19 measure E
-    {vis:[...SC]},                                             // 20 measure C
-    {vis:[...SD]},                                             // 21 measure D
-    {},                                                        // 22 L_i formula + contribution
-    {},                                                        // 23 formal L = product
-    {},                                                        // 24 numeric L (under plot)
-    {},                                                        // 25 MLE note
-    {},                                                        // 26 why switch to logs
-    {},                                                        // 27 log-likelihood (under plot)
-    {},                                                        // 28 sum of calculated logs
-    {},                                                        // 29 logLik(mod)
-    {},                                                        // 30 practice questions
-    {},                                                        // 31 practice answers
-    {panel:3},                                                 // 32 logs
-    {},                                                        // 33 the table + logLik
-    {vis:[...D1]},                                             // 34 deviance + scale
-    {vis:[...D2]},                                             // 35 null model + null marker
-    {},                                                        // 36 summary lines + df note
-    {},                                                        // 37 practice questions
-    {},                                                        // 38 practice answers
-    {panel:4},                                                 // 39 null/residual meaning + table
-    {},                                                        // 40 AIC
-    {},                                                        // 41 the 803.8 question
-    {},                                                        // 42 practice questions
-    {}                                                         // 43 practice answers
+    {},                                                        // 0  students table
+    {},                                                        // 1  glm + summary(mod)
+    {},                                                        // 2  summary output
+    {vis:[...T1]},                                             // 3  data points
+    {vis:[...T2],c1:1},                                        // 4  curve
+    {vis:[...T3]},                                             // 5  predicted probabilities
+    {vis:[...SA]},                                             // 6  measure A
+    {vis:[...SB]},                                             // 7  measure B
+    {vis:[...SF]},                                             // 8  measure F
+    {vis:[...SE]},                                             // 9  measure E
+    {vis:[...SC]},                                             // 10 measure C
+    {vis:[...SD]},                                             // 11 measure D
+    {},                                                        // 12 L_i formula + contribution
+    {},                                                        // 13 formal L = product
+    {},                                                        // 14 numeric L (under plot)
+    {},                                                        // 15 MLE note
+    {},                                                        // 16 why switch to logs
+    {},                                                        // 17 log-likelihood (under plot)
+    {},                                                        // 18 sum of calculated logs
+    {},                                                        // 19 logLik(mod)
+    {},                                                        // 20 practice questions
+    {},                                                        // 21 practice answers
+    {panel:2},                                                 // 22 summary(mod)
+    {},                                                        // 23 deviance formula + chi-squared reason
+    {},                                                        // 24 mid practice: why deviance
+    {},                                                        // 25 mid practice answers
+    {},                                                        // 26 null deviance calculation
+    {},                                                        // 27 null/residual definitions
+    {},                                                        // 28 null deviance practice questions
+    {},                                                        // 29 null deviance practice answers
+    {panel:3},                                                 // 30 objectives + formula recap
+    {},                                                        // 31 practice questions
+    {},                                                        // 32 practice answers
+    {panel:4}                                                  // 33 empty panel
   ];
   const STEPS=STEP_CHANGES.reduce((steps,change)=>{ steps.push({...DEFAULT_STEP,...steps.at(-1),...change}); return steps; },[]);
   const N=STEPS.length;
-  const ALL_GROUPS=['k_dots','k_curve','t_dots','t_curve','t_prob','t_segA','t_segB','t_segC','t_segD','t_segE','t_segF','d_scale','d_null'];
-  const PANEL_FIRST={1:0,2:10,3:32,4:39};
+  const ALL_GROUPS=['t_dots','t_curve','t_prob','t_segA','t_segB','t_segC','t_segD','t_segE','t_segF'];
+  const PANEL_FIRST={1:0,2:22,3:30,4:33};
   const PANEL_IDS=[1,2,3,4];
 
   let step=0;
@@ -635,7 +533,7 @@ fitted(mod0)   <span class="cm">#&gt; 0.5 0.5 0.5 0.5 0.5 0.5</span></pre>
     document.querySelectorAll('#deck [data-step]').forEach(el=>{
       el.hidden=REVEAL?false:Number(el.dataset.step)>step+1;
     });
-    document.querySelectorAll('.ppractice[data-reveal]').forEach(el=>{
+    document.querySelectorAll('[data-reveal]').forEach(el=>{
       el.classList.toggle('revealed', REVEAL || Number(el.dataset.reveal)<=step+1);
     });
     counter.textContent=`step ${step+1} / ${N}`;

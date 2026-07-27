@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Model fit 2: likelihood-ratio test, anova(), AIC (animated)</title>
+  <title>Model fit 2: AIC (animated)</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
   <style>
@@ -65,7 +65,7 @@
     .panel-explain.stack .inline-eq{padding:5px 8px;border-left:3px solid var(--gold);border-radius:2px;background:var(--warm);color:var(--teal);font-size:15.5px;text-align:center;}
     .panel-explain.stack .inline-eq.big{font-size:17.5px;}
     .panel-explain.stack .step-note{margin:0;padding-left:3px;font-style:italic;color:var(--ink-2);font-size:12.5px;line-height:1.3;}
-    #panel3 .panel-explain.stack{gap:4px;}
+    #panel2 .panel-explain.stack,#panel3 .panel-explain.stack,#panel4 .panel-explain.stack{gap:4px;}
     .plotwrap{flex:1;min-width:0;min-height:0;position:relative;}
     .plotwrap svg{width:100%;height:100%;display:block;overflow:hidden;}
     /* tables */
@@ -138,6 +138,7 @@
     .zoombox{fill:#fff;stroke:var(--mist);}
     .aicdot{fill:var(--teal);stroke:#fff;stroke-width:1.5;}
     .aicwin{fill:var(--gold);stroke:var(--brown);stroke-width:2;}
+    .aicwinbox{fill:var(--warm);stroke:var(--gold);stroke-width:2;}
     .aicval{fill:var(--ink);font-family:var(--mono);font-size:11.5px;font-weight:600;}
     .zoomln{stroke:#9fb7bb;stroke-width:1;stroke-dasharray:2 3;}
 
@@ -165,7 +166,7 @@
           <div class="head-row">
             <div class="head-text">
               <div class="kicker">Model fit &amp; model building &middot; part 2 of 2 &middot; logistic regression</div>
-              <h1>Comparing models: anova(), the likelihood-ratio test, and AIC</h1>
+              <h1>AIC: balancing fit and complexity</h1>
               <div class="title-line"></div>
             </div>
           </div>
@@ -173,186 +174,163 @@
 
         <div class="panels">
 
-          <!-- ============ PANEL 1: recap ============ -->
+          <!-- ============ PANEL 1: deviance recap ============ -->
           <section class="panel" id="panel1">
             <div class="p-num">1</div>
             <div class="panel-side">
-              <div class="p-title">Last time: null and residual deviance</div>
+              <div class="p-title">Last time: likelihood and deviance</div>
               <!-- EDIT PANEL 1 HERE. -->
               <div class="panel-explain stack">
-                <p class="frag bullet" data-step="1">Part 1 scored six students by hand. Same exam, but now the <strong>whole class of 200</strong> — those six are the first six rows.</p>
-                <pre class="frag code" data-step="1">students &lt;- read_csv("students_exam.csv")   <span class="cm"># 200 students</span>
-m0 &lt;- glm(pass ~ 1,     family = binomial, data = students)
-m1 &lt;- glm(pass ~ hours, family = binomial, data = students)</pre>
-                <pre class="frag out" data-step="1">#&gt; summary(m1) shows:
-#&gt;     <span class="hi">Null deviance: 272.74</span>  on 199  degrees of freedom
-#&gt; <span class="hi">Residual deviance: 183.39</span>  on 198  degrees of freedom</pre>
-                <p class="frag bullet" data-step="2">Flat dashed line: the null model. It predicts <strong>0.425</strong> for everyone.</p>
-                <p class="frag bullet" data-step="2">Gold curve: the model with hours.</p>
-                <p class="frag bullet" data-step="3">The table computes both deviances, as in part 1.</p>
-                <div class="frag inline-eq big" data-step="3">$\text{Deviance drop} = 272.74 - 183.39 = 89.35$</div>
-                <p class="frag bullet" data-step="4">Adding <em>any</em> predictor reduces deviance a little, even a useless one.</p>
-                <p class="frag bullet" data-step="4">Is 89.35 more than chance alone could give? We need a <strong>test</strong>.</p>
+                <p class="frag bullet" data-step="1">Return to the KLoSA data: <strong>4,184 men aged 45 and older</strong>.</p>
+                <pre class="frag code" data-step="1">klosa &lt;- read_csv("klosa_men_grip_45plus.csv")
+m0 &lt;- glm(weak_grip ~ 1,
+  family = binomial, data = klosa)
+m_age &lt;- glm(weak_grip ~ age,
+  family = binomial, data = klosa)</pre>
+                <pre class="frag out" data-step="1">#&gt; summary(m_age)
+#&gt;     <span class="hi">Null deviance: 4259.0</span>  on 4183  degrees of freedom
+#&gt; <span class="hi">Residual deviance: 3455.1</span>  on 4182  degrees of freedom
+#&gt; AIC: 3459.1</pre>
+                <p class="frag bullet" data-step="2">The null model predicts the same probability, <strong>0.206</strong>, for every man.</p>
+                <p class="frag bullet" data-step="2">The age model lets the predicted probability rise with age.</p>
+                <div class="frag inline-eq big" data-step="3">$\text{Deviance drop} = 4259.0 - 3455.1 = 803.9$</div>
+                <p class="frag bullet" data-step="4">A more flexible model will nearly always fit the observed data better.</p>
+                <p class="frag bullet" data-step="4">We need to balance <strong>better fit</strong> against <strong>added complexity</strong>. That is the job of AIC.</p>
               </div>
             </div>
             <div class="panel-mainv">
-              <div class="plotwrap"><svg id="svgRec" viewBox="0 0 620 300" preserveAspectRatio="xMidYMid meet"></svg></div>
-              <div class="tbl-card frag" data-step="3">
-                <span class="tbl-lab">Scores and deviances (as in part 1)</span>
-                <table class="dtable">
-                  <thead><tr><th>Student</th><th>Hours</th><th>Result</th><th>P(pass)</th><th>Score</th><th>ln(Score)</th></tr></thead>
-                  <tbody>
-                    <tr><td>1</td><td>1</td><td class="fail">failed</td><td>0.074</td><td>0.926</td><td>&minus;0.077</td></tr>
-                    <tr><td>2</td><td>2</td><td class="fail">failed</td><td>0.110</td><td>0.890</td><td>&minus;0.117</td></tr>
-                    <tr><td>3</td><td>3</td><td class="pass">passed</td><td>0.161</td><td>0.161</td><td>&minus;1.828</td></tr>
-                    <tr class="dots"><td colspan="6">&hellip; 197 more students &hellip;</td></tr>
-                    <tr class="sumrow"><td colspan="4">m1 (with hours): sum = &minus;91.70</td><td colspan="2">Deviance = 183.39</td></tr>
-                    <tr class="sumrow"><td colspan="4">m0 (0.425 for all): sum = &minus;136.37</td><td colspan="2">Deviance = 272.74</td></tr>
-                  </tbody>
-                </table>
-              </div>
+              <div class="plotwrap"><svg id="svgRec" viewBox="0 0 620 440" preserveAspectRatio="xMidYMid meet"></svg></div>
             </div>
             <div class="ppractice frag" data-step="5" data-reveal="6">
               <div class="practice-q">
                 <span class="qlab">Practice</span>
-                <p class="q">The null model glm(pass ~ 1) predicts&hellip;</p>
-                <span class="practice-options"><span class="opt">0.425 for every student</span><span class="opt">0 for every student</span></span><span class="practice-ans">0.425 for every student</span>
+                <p class="q">Which model has residual deviance 3455.1?</p>
+                <span class="practice-options"><span class="opt">weak_grip ~ age</span><span class="opt">weak_grip ~ 1</span></span><span class="practice-ans">weak_grip ~ age</span>
               </div>
               <div class="practice-q">
                 <span class="qlab">Practice</span>
-                <p class="q">Which model has deviance 183.39?</p>
-                <span class="practice-options"><span class="opt">pass ~ hours</span><span class="opt">pass ~ 1</span></span><span class="practice-ans">pass ~ hours</span>
+                <p class="q">Why not choose a model using deviance alone?</p>
+                <span class="practice-options"><span class="opt">complexity usually lowers it</span><span class="opt">larger is always better</span></span><span class="practice-ans">complexity usually lowers it</span>
               </div>
             </div>
           </section>
 
-          <!-- ============ PANEL 2: the LRT ============ -->
+          <!-- ============ PANEL 2: AIC mechanics ============ -->
           <section class="panel" id="panel2">
             <div class="p-num">2</div>
             <div class="panel-side">
-              <div class="p-title">The likelihood-ratio test</div>
+              <div class="p-title">AIC rewards fit and penalizes complexity</div>
               <!-- EDIT PANEL 2 HERE. -->
               <div class="panel-explain stack">
-                <p class="frag bullet" data-step="7">Suppose hours had <strong>no real effect</strong>. The drop would still not be zero.</p>
-                <p class="frag bullet" data-step="7">Its distribution is known: <strong>chi-squared</strong>, df = number of added parameters.</p>
-                <p class="frag bullet" data-step="8">The 5% cutoff is <strong>3.84</strong>. Our drop is <strong>89.35</strong> — far beyond it.</p>
-                <pre class="frag code" data-step="9">anova(m0, m1, test = "LRT")</pre>
-                <pre class="frag out" data-step="9">#&gt; Model 1: pass ~ 1
-#&gt; Model 2: pass ~ hours
-#&gt;   Resid. Df Resid. Dev Df Deviance  Pr(&gt;Chi)
-#&gt; 1       199     272.74
-#&gt; 2       198     183.39  1    <span class="hi">89.35</span> <span class="hi">&lt; 2.2e-16</span> ***</pre>
-                <div class="read-card frag" data-step="10">
-                  <div class="read-title">what each column means</div>
-                  <div class="read-strip">
-                    <div class="read-cell"><span class="or">Resid. Dev</span><span class="w">each model's deviance</span></div>
-                    <div class="read-cell"><span class="or">Df</span><span class="w">parameters added (1)</span></div>
-                    <div class="read-cell hi2"><span class="or">Deviance</span><span class="w">the drop: 89.35</span></div>
-                    <div class="read-cell"><span class="or">Pr(&gt;Chi)</span><span class="w">probability of such a drop by chance</span></div>
-                  </div>
-                </div>
-                <div class="mini-report frag" data-step="10"><strong>Report:</strong> &ldquo;Study hours significantly improved model fit (likelihood-ratio &chi;&sup2;(1) = 89.4, p &lt; 0.001).&rdquo;</div>
+                <p class="frag bullet" data-step="7">AIC starts with likelihood-based fit, then adds a penalty for every estimated parameter.</p>
+                <div class="frag inline-eq big" data-step="7">$\mathrm{AIC} = \text{residual deviance} + 2k$</div>
+                <p class="frag step-note" data-step="7">For these logistic models, k is the number of coefficients, including the intercept.</p>
+                <pre class="frag code" data-step="8">m0      &lt;- glm(weak_grip ~ 1, ...)
+m_age   &lt;- glm(weak_grip ~ age, ...)
+m_curve &lt;- glm(weak_grip ~ age + I(age^2), ...)
+m_group &lt;- glm(weak_grip ~ age_group, ...)
+
+AIC(m0, m_age, m_curve, m_group)</pre>
+                <p class="frag step-note" data-step="8">age_group has three levels: 45&ndash;64, 65&ndash;74, and 75+.</p>
+                <pre class="frag out" data-step="9">#&gt;          df    AIC
+#&gt; m0        1 <span class="hi-or">4261.0</span>
+#&gt; m_age     2 <span class="hi">3459.1</span>
+#&gt; m_curve   3 3460.3
+#&gt; m_group   3 3599.0</pre>
+                <p class="frag bullet" data-step="10"><strong>Lower is better.</strong> Here, the model using age has the lowest AIC.</p>
+                <p class="frag bullet" data-step="10">Extra parameters must improve the fit enough to repay their penalty.</p>
               </div>
             </div>
             <div class="panel-mainv">
-              <div class="plotwrap"><svg id="svgChi" viewBox="0 0 620 440" preserveAspectRatio="xMidYMid meet"></svg></div>
+              <div class="plotwrap"><svg id="svgAic" viewBox="0 0 620 440" preserveAspectRatio="xMidYMid meet"></svg></div>
             </div>
             <div class="ppractice frag" data-step="11" data-reveal="12">
               <div class="practice-q">
                 <span class="qlab">Practice</span>
-                <p class="q">The LRT compares the drop with which distribution?</p>
-                <span class="practice-options"><span class="opt">chi-squared</span><span class="opt">normal</span></span><span class="practice-ans">chi-squared</span>
+                <p class="q">Which model does AIC prefer here?</p>
+                <span class="practice-options"><span class="opt">m_age: 3459.1</span><span class="opt">m0: 4261.0</span></span><span class="practice-ans">m_age: 3459.1</span>
               </div>
               <div class="practice-q">
                 <span class="qlab">Practice</span>
-                <p class="q">We added one parameter (hours). Df for the test = ?</p>
-                <span class="practice-options"><span class="opt">1</span><span class="opt">198</span></span><span class="practice-ans">1</span>
+                <p class="q">AIC balances better fit against&hellip;</p>
+                <span class="practice-options"><span class="opt">more parameters</span><span class="opt">a larger sample mean</span></span><span class="practice-ans">more parameters</span>
               </div>
             </div>
           </section>
 
-          <!-- ============ PANEL 3: anova comparisons ============ -->
+          <!-- ============ PANEL 3: relative interpretation ============ -->
           <section class="panel" id="panel3">
             <div class="p-num">3</div>
             <div class="panel-side">
-              <div class="p-title">Comparing models with anova()</div>
+              <div class="p-title">Only AIC differences are meaningful</div>
               <!-- EDIT PANEL 3 HERE. -->
               <div class="panel-explain stack">
-                <pre class="frag code" data-step="13">students2 &lt;- students |&gt; drop_na(attended, study_mode)
-m1 &lt;- glm(pass ~ hours, family = binomial, data = students2)
-m2 &lt;- glm(pass ~ hours + attended,
-          family = binomial, data = students2)
-m3 &lt;- glm(pass ~ hours + attended + study_mode,
-          family = binomial, data = students2)</pre>
-                <p class="frag step-note" data-step="13">Compare models only on the same rows — so drop missing attendance / study mode first. That leaves 185 of the 200 students.</p>
-                <pre class="frag code" data-step="14">anova(m1, m2, test = "LRT")   <span class="cm"># does attendance improve the fit?</span></pre>
-                <pre class="frag out" data-step="14">#&gt;   Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
-#&gt; 1       183     169.11
-#&gt; 2       182     159.28  1   <span class="hi">9.8238</span> <span class="hi">0.001723</span> **</pre>
-                <pre class="frag code" data-step="15">anova(m3, test = "LRT")   <span class="cm"># one row per term, in order</span></pre>
-                <pre class="frag out" data-step="15">#&gt;            Df Deviance Resid. Df Resid. Dev  Pr(&gt;Chi)
-#&gt; NULL                         184     253.60
-#&gt; hours       1   <span class="hi">84.489</span>       183     169.11 &lt; 2.2e-16 ***
-#&gt; attended    1    <span class="hi">9.824</span>       182     159.28  0.001723 **
-#&gt; study_mode  2    <span class="hi-or">1.648</span>       180     157.64  <span class="hi-or">0.438588</span></pre>
-                <p class="frag bullet" data-step="16">Attendance improves the fit. study_mode: drop 1.65, p = 0.44 — <span class="bad">no clear improvement</span>.</p>
-                <p class="frag step-note" data-step="16">study_mode has three levels, so it costs 2 df — its cutoff is 5.99, not 3.84.</p>
+                <p class="frag bullet" data-step="13">An AIC of <strong>3459.1</strong> is not good or bad on its own.</p>
+                <p class="frag bullet" data-step="13">AIC becomes meaningful only when we compare candidate models.</p>
+                <div class="frag inline-eq big" data-step="14">$\Delta\mathrm{AIC}_i = \mathrm{AIC}_i - \text{lowest AIC}$</div>
+                <pre class="frag out" data-step="14">#&gt; model     AIC  delta_AIC
+#&gt; m_age  3459.1      <span class="hi">0.0</span>
+#&gt; m_curve 3460.3      <span class="hi">1.2</span>
+#&gt; m_group 3599.0    139.9
+#&gt; m0      4261.0    801.8</pre>
+                <p class="frag bullet" data-step="15"><strong>m_age</strong> is the reference because it has the lowest AIC.</p>
+                <p class="frag bullet" data-step="15"><strong>m_curve</strong> is only 1.2 points higher. Do not describe that small difference as decisive.</p>
+                <p class="frag bullet" data-step="16">AIC ranks this candidate set. It does not prove that any candidate is a good model.</p>
+                <p class="frag bullet" data-step="16">AIC is not a p-value and has no universal good/bad cutoff.</p>
               </div>
             </div>
             <div class="panel-mainv">
-              <div class="plotwrap"><svg id="svgLad" viewBox="0 0 620 440" preserveAspectRatio="xMidYMid meet"></svg></div>
+              <div class="plotwrap"><svg id="svgDelta" viewBox="0 0 620 440" preserveAspectRatio="xMidYMid meet"></svg></div>
             </div>
             <div class="ppractice frag" data-step="17" data-reveal="18">
               <div class="practice-q">
                 <span class="qlab">Practice</span>
-                <p class="q">anova(m1, m2) requires the two models to be fitted on&hellip;</p>
-                <span class="practice-options"><span class="opt">the same rows</span><span class="opt">different rows</span></span><span class="practice-ans">the same rows</span>
+                <p class="q">Is an AIC of 3459.1 inherently good?</p>
+                <span class="practice-options"><span class="opt">no</span><span class="opt">yes</span></span><span class="practice-ans">no</span>
               </div>
               <div class="practice-q">
                 <span class="qlab">Practice</span>
-                <p class="q">The study_mode row tests study_mode after&hellip;</p>
-                <span class="practice-options"><span class="opt">hours and attended</span><span class="opt">no other terms</span></span><span class="practice-ans">hours and attended</span>
+                <p class="q">Which model has delta AIC = 0?</p>
+                <span class="practice-options"><span class="opt">the lowest-AIC model</span><span class="opt">the null model</span></span><span class="practice-ans">the lowest-AIC model</span>
               </div>
             </div>
           </section>
 
-          <!-- ============ PANEL 4: AIC ============ -->
+          <!-- ============ PANEL 4: linear-model crosswalk ============ -->
           <section class="panel" id="panel4">
             <div class="p-num">4</div>
             <div class="panel-side">
-              <div class="p-title">AIC: deviance plus a penalty for parameters</div>
+              <div class="p-title">The same idea works for linear models</div>
               <!-- EDIT PANEL 4 HERE. -->
               <div class="panel-explain stack">
-                <p class="frag bullet" data-step="19">Deviance always goes down when we add terms.</p>
-                <p class="frag bullet" data-step="19">So deviance alone cannot choose between models.</p>
-                <div class="frag inline-eq big" data-step="19">$\mathrm{AIC} = \text{residual deviance} + 2k$</div>
-                <p class="frag step-note" data-step="19">k = number of parameters. A term helps only if it removes more than 2 deviance per parameter.</p>
-                <pre class="frag code" data-step="20">m0 &lt;- glm(pass ~ 1, family = binomial, data = students2)
-AIC(m0, m1, m2, m3)</pre>
-                <pre class="frag out" data-step="20">#&gt;    df      AIC
-#&gt; m0  1 255.5976
-#&gt; m1  2 173.1085
-#&gt; m2  3 <span class="hi">165.2848</span>
-#&gt; m3  5 167.6364</pre>
-                <p class="frag bullet" data-step="21">study_mode removes 1.65 deviance but adds 2 parameters: +4. AIC goes up by 2.35.</p>
-                <p class="frag bullet" data-step="21">Lowest AIC: <strong>m2 (hours + attended)</strong>.</p>
-                <p class="frag bullet" data-step="21">Differences under 2 are ties. Then choose the simpler model.</p>
-                <p class="frag bullet" data-step="21">AIC can also compare <strong>non-nested</strong> models. The LRT cannot.</p>
+                <p class="frag bullet" data-step="19">Under the normal-error assumption, least squares also corresponds to maximum likelihood.</p>
+                <p class="frag bullet" data-step="19">For a linear model, AIC rewards a smaller residual sum of squares and penalizes extra parameters.</p>
+                <pre class="frag code" data-step="20">lm_age &lt;- lm(grip ~ age, data = klosa)
+lm_curve &lt;- lm(grip ~ age + I(age^2), data = klosa)
+
+AIC(lm_age, lm_curve)</pre>
+                <pre class="frag out" data-step="20">#&gt;          df     AIC
+#&gt; lm_age    3 <span class="hi-or">26561.7</span>
+#&gt; lm_curve  4 <span class="hi">26557.9</span></pre>
+                <p class="frag step-note" data-step="20">For <code>lm()</code>, df also counts the estimated error variance.</p>
+                <p class="frag bullet" data-step="21">Among these two linear models, <strong>lm_curve</strong> has the lower AIC.</p>
+                <p class="frag bullet" data-step="21">But do not compare 26557.9 with the logistic AIC of 3459.1.</p>
+                <p class="frag bullet" data-step="22">For this course, compare AIC only when models use the <strong>same outcome</strong>, <strong>same rows</strong>, and <strong>same likelihood family</strong>.</p>
               </div>
             </div>
             <div class="panel-mainv">
-              <div class="plotwrap"><svg id="svgAic" viewBox="0 0 620 300" preserveAspectRatio="xMidYMid meet"></svg></div>
+              <div class="plotwrap"><svg id="svgRules" viewBox="0 0 620 440" preserveAspectRatio="xMidYMid meet"></svg></div>
             </div>
-            <div class="ppractice frag" data-step="22" data-reveal="23">
+            <div class="ppractice frag" data-step="23" data-reveal="24">
               <div class="practice-q">
                 <span class="qlab">Practice</span>
-                <p class="q">m3: deviance 157.64, 5 parameters. AIC = ?</p>
-                <span class="practice-options"><span class="opt">167.64</span><span class="opt">162.64</span></span><span class="practice-ans">167.64</span>
+                <p class="q">Can we compare the two linear-model AIC values?</p>
+                <span class="practice-options"><span class="opt">yes</span><span class="opt">no</span></span><span class="practice-ans">yes</span>
               </div>
               <div class="practice-q">
                 <span class="qlab">Practice</span>
-                <p class="q">m2 AIC 165.3, m3 AIC 167.6. Choose&hellip;</p>
-                <span class="practice-options"><span class="opt">m2</span><span class="opt">m3</span></span><span class="practice-ans">m2</span>
+                <p class="q">Can 26557.9 be compared with logistic AIC 3459.1?</p>
+                <span class="practice-options"><span class="opt">no</span><span class="opt">yes</span></span><span class="practice-ans">no</span>
               </div>
             </div>
           </section>
@@ -370,11 +348,14 @@ AIC(m0, m1, m2, m3)</pre>
   <script src="deck-config.js"></script>
   <script>
   // ============================ DATA ============================
-  const SG = {b0:-2.960998, b1:0.436209, rate:0.425};   // glm(pass ~ hours, binomial), students n = 200
+  const KL = {b0:-8.824312, b1:0.116834, rate:0.206262};
   const sigAt=(b0,b1,x)=>1/(1+Math.exp(-(b0+b1*x)));
-  const ksig=h=>sigAt(SG.b0,SG.b1,h);
-  // the whole class, tabulated: [hours, n failed, n passed] — 200 students
-  const HP = [[0,9,1],[1,20,2],[2,21,1],[3,15,4],[4,15,4],[5,8,6],[6,5,2],[7,7,6],[8,4,7],[9,6,11],[10,3,11],[11,1,11],[12,1,19]];
+  const ksig=age=>sigAt(KL.b0,KL.b1,age);
+  const BANDS = [
+    {mid:47.07,p:0.0346}, {mid:52.03,p:0.0631}, {mid:57.04,p:0.0966},
+    {mid:61.96,p:0.1717}, {mid:67.00,p:0.2612}, {mid:71.69,p:0.4295},
+    {mid:76.73,p:0.5265}, {mid:81.72,p:0.6194}, {mid:86.70,p:0.7907}
+  ];
 
   // ============================ HELPERS ============================
   const NS='http://www.w3.org/2000/svg';
@@ -383,187 +364,161 @@ AIC(m0, m1, m2, m3)</pre>
   function line(g,x1,y1,x2,y2,cls){g.appendChild(el('line',{x1,y1,x2,y2,class:cls}));}
   function txt(g,x,y,s,cls,anchor){const t=el('text',{x,y,class:cls,'text-anchor':anchor||'middle'});t.textContent=s;g.appendChild(t);return t;}
   function mkgrp(svg,id,always){const g=el('g',{class:'grp'+(always?' vis':''),...(id?{id}:{})});svg.appendChild(g);return g;}
-  const chi1=x=>Math.exp(-x/2)/Math.sqrt(2*Math.PI*x);   // chi-squared pdf, df = 1
-  function arrow(svg,g,idBase,x1,y1,x2,y2){
-    const defs=el('defs',{}); const mk=el('marker',{id:idBase,markerWidth:8,markerHeight:8,refX:6,refY:3,orient:'auto'});
-    const mp=el('path',{d:'M0,0 L6,3 L0,6 Z'}); mp.setAttribute('fill','#035f6c'); mk.appendChild(mp); defs.appendChild(mk); svg.appendChild(defs);
-    const ar=el('path',{d:`M ${x1} ${y1} L ${x2} ${y2}`,class:'bigarrow'});
-    ar.setAttribute('marker-end',`url(#${idBase})`); g.appendChild(ar);
-  }
 
   // ============================ BUILDER: recap plot ============================
   function buildRecapPlot(svg, prefix, always){
-    const X0=64,X1=596,YT=30,YB=256, H0=-0.6, H1=12.6;
-    const ax=h=>sc(h,H0,H1,X0,X1), py=p=>sc(p,-0.06,1.06,YB,YT);
+    const X0=68,X1=592,YT=34,YB=268,A0=44,A1=92;
+    const ax=age=>sc(age,A0,A1,X0,X1), py=p=>sc(p,0,1,YB,YT);
     const base=el('g',{}); svg.appendChild(base);
     line(base,X0,YT,X0,YB,'axis'); line(base,X0,YB,X1,YB,'axis');
-    [0,2,4,6,8,10,12].forEach(v=>{const x=ax(v);line(base,x,YB,x,YB+4,'axis');txt(base,x,YB+16,v,'axis-lbl');});
-    txt(base,(X0+X1)/2,YB+32,'hours studied','axis-title');
+    [45,55,65,75,85].forEach(v=>{const x=ax(v);line(base,x,YB,x,YB+4,'axis');txt(base,x,YB+16,v,'axis-lbl');});
+    txt(base,(X0+X1)/2,YB+34,'age (years)','axis-title');
     [{v:0,t:'0'},{v:.5,t:'.5'},{v:1,t:'1'}].forEach(o=>{const y=py(o.v);line(base,X0-4,y,X0,y,'axis');txt(base,X0-8,y+3.5,o.t,'axis-lbl','end');});
-    const yt=txt(base,0,0,'P(pass)','axis-title'); yt.setAttribute('transform',`translate(15,${(YT+YB)/2}) rotate(-90)`);
+    const yt=txt(base,0,0,'P(weak grip)','axis-title'); yt.setAttribute('transform',`translate(15,${(YT+YB)/2}) rotate(-90)`);
     const gPlot=mkgrp(svg,prefix?prefix+'plot':null,always);
     let d='';
-    for(let h=H0;h<=H1+0.001;h+=0.1){const x=ax(h).toFixed(1),y=py(ksig(h)).toFixed(1);d+=(d?' L ':'M ')+x+' '+y;}
-    gPlot.appendChild(el('path',{d:d+` L ${ax(H1).toFixed(1)} ${py(0).toFixed(1)} L ${ax(H0).toFixed(1)} ${py(0).toFixed(1)} Z`,class:'shadepass'}));
-    gPlot.appendChild(el('path',{d:d+` L ${ax(H1).toFixed(1)} ${py(1).toFixed(1)} L ${ax(H0).toFixed(1)} ${py(1).toFixed(1)} Z`,class:'shadefail'}));
-    txt(gPlot,ax(10.6),py(0.30),'P(pass)','shadelab-pass');
-    txt(gPlot,ax(2.6),py(0.78),'P(fail)','shadelab-fail');
-    // one dot per student, stacked in small clusters on the 0 and 1 lines, over the shading
-    HP.forEach(([h,nFail,nPass])=>{
-      const stack=(count,atY,dir,cls)=>{
-        for(let i=0;i<count;i++){
-          const col=i%5, row=Math.floor(i/5);
-          gPlot.appendChild(el('circle',{cx:ax(h)+(col-2)*3.6,cy:py(atY)+dir*(5+row*5),r:2.2,class:cls,'fill-opacity':.8}));
-        }
-      };
-      stack(nFail,0,-1,'dotfail');   // failures sit on y = 0, stacking upward
-      stack(nPass,1, 1,'dotpass');   // passes sit on y = 1, stacking downward
-    });
+    for(let age=A0;age<=A1+0.001;age+=0.25){const x=ax(age).toFixed(1),y=py(ksig(age)).toFixed(1);d+=(d?' L ':'M ')+x+' '+y;}
     gPlot.appendChild(el('path',{d,class:'icurve'}));
-    gPlot.appendChild(el('path',{d:`M ${X0} ${py(SG.rate)} L ${X1} ${py(SG.rate)}`,class:'nullln'}));
-    txt(gPlot,X0+8,py(SG.rate)-8,'null model: 0.425 for everyone','nulllab','start');
+    BANDS.forEach(b=>gPlot.appendChild(el('circle',{cx:ax(b.mid),cy:py(b.p),r:5.6,class:'aicdot'})));
+    gPlot.appendChild(el('path',{d:`M ${X0} ${py(KL.rate)} L ${X1} ${py(KL.rate)}`,class:'nullln'}));
+    txt(gPlot,X0+8,py(KL.rate)-9,'null model: 0.206 for everyone','nulllab','start');
+    line(gPlot,426,48,454,48,'icurve'); txt(gPlot,462,52,'age model','axis-lbl','start');
+    gPlot.appendChild(el('circle',{cx:438,cy:70,r:5.6,class:'aicdot'})); txt(gPlot,462,74,'observed age bands','axis-lbl','start');
+
+    txt(gPlot,68,326,'deviance','axis-title','start');
+    const dv=v=>sc(v,0,4500,170,570);
+    const rows=[
+      {lab:'m0: null',v:4259.0,y:340,cls:'devbar-null'},
+      {lab:'m_age',v:3455.1,y:385,cls:'devbar-full'}
+    ];
+    rows.forEach(r=>{
+      txt(gPlot,160,r.y+18,r.lab,'devbar-lbl','end');
+      gPlot.appendChild(el('rect',{x:170,y:r.y,width:dv(r.v)-170,height:26,rx:3,class:r.cls}));
+      txt(gPlot,dv(r.v)+8,r.y+18,r.v.toFixed(1),'devbar-val','start');
+    });
+    txt(gPlot,370,430,'drop = 803.9','bracelab');
   }
   buildRecapPlot(document.getElementById('svgRec'),'r_',false);
 
-  // ============================ BUILDER: chi-squared plot ============================
-  function buildChiPlot(svg, prefix, always){
-    const CX0=60,CX1=580,CYB=360,CYT=120;
-    const cx=v=>sc(v,0,10,CX0,CX1), cy=f=>sc(f,0,0.8,CYB,CYT);
-    const base=el('g',{}); svg.appendChild(base);
-    txt(base,(CX0+CX1)/2,40,'deviance drops from a useless predictor (χ², df = 1)','mtitle');
-    line(base,CX0,CYB,CX1,CYB,'axis');
-    [0,2,4,6,8,10].forEach(v=>{line(base,cx(v),CYB,cx(v),CYB+4,'axis');txt(base,cx(v),CYB+18,v,'axis-lbl');});
-    txt(base,(CX0+CX1)/2,CYB+38,'size of the deviance drop','axis-title');
-    const gCurve=mkgrp(svg,prefix?prefix+'curve':null,always), gMark=mkgrp(svg,prefix?prefix+'mark':null,always);
-    let d='M';
-    for(let x=0.18;x<=10.001;x+=0.08) d+=` ${cx(x).toFixed(1)} ${cy(Math.min(chi1(x),0.78)).toFixed(1)}`;
-    const cpath=el('path',{d,class:'chicurve'}); gCurve.appendChild(cpath);
-    if(!always){
-      const L=cpath.getTotalLength(); cpath.style.strokeDasharray=L; cpath.style.strokeDashoffset=L;
-      window.__chidraw=()=>{ cpath.style.strokeDashoffset=L*(1-A.c1); };
-    }
-    line(gMark,cx(3.84),CYB,cx(3.84),cy(0.5),'cutln');
-    txt(gMark,cx(3.84),cy(0.5)-10,'5% cutoff = 3.84','cutlab');
-    arrow(svg,gMark,(prefix||'p')+'arr',cx(6.2),cy(0.26),cx(9.7),cy(0.26));
-    txt(gMark,cx(6.15),cy(0.26)-12,'our drop: 89.35','biglab','start');
-    txt(gMark,cx(6.15),cy(0.26)+20,'far beyond the cutoff, p < 2.2e-16','biglab','start');
-  }
-  buildChiPlot(document.getElementById('svgChi'),'c_',false);
-
-  // ============================ BUILDER: sequential ladder ============================
-  function buildLadder(svg, prefix, always){
-    const g=mkgrp(svg,prefix?prefix+'lad':null,always);
-    const BX0=170,BX1=560, bx=v=>sc(v,140,270,BX0,BX1);
-    const ROWS=[
-      {lab:'NULL',         v:253.60, y:70,  cls:'devbar-null'},
-      {lab:'+ hours',      v:169.11, y:160, cls:'devbar-full'},
-      {lab:'+ attended',   v:159.28, y:250, cls:'devbar-full'},
-      {lab:'+ study_mode', v:157.64, y:340, cls:'devbar-full'}
+  // ============================ BUILDER: AIC mechanics ============================
+  function buildAicMechanics(svg, prefix, always){
+    const g=mkgrp(svg,prefix?prefix+'mech':null,always);
+    txt(g,310,42,'AIC adds the parameter penalty to the deviance','mtitle');
+    const rows=[
+      {lab:'m0: null',dev:'4259.0',k:'2 × 1',aic:'4261.0',y:122,win:false},
+      {lab:'m_age',dev:'3455.1',k:'2 × 2',aic:'3459.1',y:255,win:true}
     ];
-    txt(g,(BX0+BX1)/2,32,'each row adds one term and reduces the deviance','mtitle');
-    ROWS.forEach(r=>{
-      txt(g,BX0-10,r.y+18,r.lab,'devbar-lbl','end');
-      g.appendChild(el('rect',{x:BX0,y:r.y,width:Math.max(6,bx(r.v)-BX0),height:26,rx:3,class:r.cls}));
+    rows.forEach(r=>{
+      txt(g,65,r.y+8,r.lab,'devbar-lbl','start');
+      g.appendChild(el('rect',{x:145,y:r.y-34,width:142,height:66,rx:4,class:'zoombox'}));
+      txt(g,216,r.y-7,'residual deviance','axis-lbl');
+      txt(g,216,r.y+18,r.dev,'devbar-val');
+      txt(g,310,r.y+8,'+','mtitle');
+      g.appendChild(el('rect',{x:338,y:r.y-34,width:96,height:66,rx:4,class:'zoombox'}));
+      txt(g,386,r.y-7,'penalty','axis-lbl');
+      txt(g,386,r.y+18,r.k,'devbar-val');
+      txt(g,458,r.y+8,'=','mtitle');
+      g.appendChild(el('rect',{x:486,y:r.y-34,width:104,height:66,rx:4,class:r.win?'aicwinbox':'zoombox'}));
+      txt(g,538,r.y-7,'AIC','axis-lbl');
+      txt(g,538,r.y+18,r.aic,'devbar-val');
+    });
+    txt(g,310,354,'lower AIC','axis-title');
+    line(g,238,374,382,374,'bigarrow');
+    txt(g,310,407,'m_age gives much better fit, even after its larger penalty','biglab');
+  }
+  buildAicMechanics(document.getElementById('svgAic'),'a_',false);
+
+  // ============================ BUILDER: delta AIC ============================
+  function buildDelta(svg, prefix, always){
+    const g=mkgrp(svg,prefix?prefix+'delta':null,always);
+    txt(g,310,35,'ΔAIC measures distance from the lowest AIC','mtitle');
+
+    txt(g,70,78,'close-up','axis-title','start');
+    const X0=170,X1=565, dx=v=>sc(v,0,3,X0,X1), Y1=122;
+    line(g,X0,Y1,X1,Y1,'axis');
+    [0,1,2,3].forEach(v=>{line(g,dx(v),Y1,dx(v),Y1+5,'axis');txt(g,dx(v),Y1+22,v,'axis-lbl');});
+    g.appendChild(el('circle',{cx:dx(0),cy:Y1,r:9,class:'aicwin'}));
+    txt(g,dx(0),Y1-19,'m_age  0.0','aicval','start');
+    g.appendChild(el('circle',{cx:dx(1.17),cy:Y1,r:7,class:'aicdot'}));
+    txt(g,dx(1.17),Y1-19,'m_curve  1.2','aicval');
+
+    txt(g,70,204,'full comparison','axis-title','start');
+    const bx=v=>sc(v,0,820,170,565);
+    const rows=[
+      {lab:'m_group',v:139.9,y:245,cls:'devbar-full'},
+      {lab:'m0: null',v:801.8,y:305,cls:'devbar-null'}
+    ];
+    rows.forEach(r=>{
+      txt(g,160,r.y+18,r.lab,'devbar-lbl','end');
+      g.appendChild(el('rect',{x:170,y:r.y,width:Math.max(4,bx(r.v)-170),height:26,rx:3,class:r.cls}));
       txt(g,bx(r.v)+8,r.y+18,r.v.toFixed(1),'devbar-val','start');
     });
-    const drops=[
-      {a:ROWS[0],b:ROWS[1],t:'−84.5   p < 2e-16 ***',bad:false},
-      {a:ROWS[1],b:ROWS[2],t:'−9.8    p = 0.0017 **',bad:false},
-      {a:ROWS[2],b:ROWS[3],t:'−1.6    p = 0.44',bad:true}
-    ];
-    drops.forEach(o=>{
-      const ymid=(o.a.y+26+o.b.y)/2+4;
-      const lt=txt(g,(BX0+BX1)/2+60,ymid,o.t,'bracelab');
-      if(o.bad){lt.setAttribute('fill','#b5451f');}
-    });
-    txt(g,60,408,'axis starts at 140 — the study_mode step is barely visible','ghostlab','start');
-    const om=txt(g,60,430,'order matters: each term is tested after the terms above it','ghostlab','start');
-    om.setAttribute('fill','#7a6212');
-    // zoom bubble for the last step
-    const zx=452,zy=384;
-    g.appendChild(el('rect',{x:zx-8,y:zy-18,width:130,height:60,rx:4,class:'zoombox'}));
-    txt(g,zx+56,zy-2,'zoom: last step','axis-lbl');
-    g.appendChild(el('rect',{x:zx+2,y:zy+8,width:66,height:6,rx:2,class:'devbar-full'}));
-    g.appendChild(el('rect',{x:zx+2,y:zy+26,width:64,height:6,rx:2,class:'devbar-full'}));
-    txt(g,zx+74,zy+15,'159.28','aicval','start');
-    txt(g,zx+74,zy+33,'157.64','aicval','start');
+    txt(g,310,382,'0 is best within this candidate set','biglab');
+    txt(g,310,412,'AIC has no absolute good or bad value','ghostlab');
   }
-  buildLadder(document.getElementById('svgLad'),'l_',false);
+  buildDelta(document.getElementById('svgDelta'),'d_',false);
 
-  // ============================ BUILDER: AIC dot plot ============================
-  function buildAic(svg, prefix, always){
-    const g=mkgrp(svg,prefix?prefix+'aic':null,always);
-    const AX0=190,AX1=560, axv=v=>sc(v,150,270,AX0,AX1);
-    txt(g,(AX0+AX1)/2,28,'AIC = deviance + 2 × parameters (lower is better)','mtitle');
-    const ROWS=[
-      {lab:'m0: null',           v:255.60, y:66},
-      {lab:'m1: hours',          v:173.11, y:114},
-      {lab:'m2: hours+attended', v:165.28, y:162, win:true},
-      {lab:'m3: + study_mode',   v:167.64, y:210}
-    ];
-    ROWS.forEach(r=>{
-      line(g,AX0,r.y,AX1,r.y,'zoomln');
-      txt(g,AX0-10,r.y+4.5,r.lab,'devbar-lbl','end');
-      g.appendChild(el('circle',{cx:axv(r.v),cy:r.y,r:r.win?9:7,class:r.win?'aicwin':'aicdot'}));
-      txt(g,axv(r.v)+16,r.y+4.5,r.v.toFixed(1),'aicval','start');
-      if(r.win){txt(g,axv(r.v)+96,r.y+4.5,'← lowest AIC','bracelab','start');}
-    });
-    [160,200,240].forEach(v=>{line(g,axv(v),222,axv(v),228,'axis');txt(g,axv(v),244,v,'axis-lbl');});
-    txt(g,60,278,'m2 and m3 differ by only 2.4 — a small gap, and m2 is the simpler model.','ghostlab','start');
-  }
-  buildAic(document.getElementById('svgAic'),'a_',false);
+  // ============================ BUILDER: comparison rules ============================
+  function buildRules(svg, prefix, always){
+    const g=mkgrp(svg,prefix?prefix+'rules':null,always);
+    txt(g,310,36,'Comparable models live on the same likelihood scale','mtitle');
 
-  // ============================ ANIMATION STATE ============================
-  const A ={c1:0};       // chi curve draw
-  const AT={c1:0};
-  let raf=null;
-  function drawCont(){ window.__chidraw(); }
-  function tick(){
-    let moving=false;
-    for(const k of ['c1']){
-      const d=AT[k]-A[k];
-      if(Math.abs(d)>0.0012){A[k]+=d*0.13;moving=true;} else A[k]=AT[k];
-    }
-    drawCont();
-    raf = moving ? requestAnimationFrame(tick) : null;
+    txt(g,72,88,'LINEAR MODELS OF GRIP (KG)','axis-title','start');
+    line(g,72,104,548,104,'zoomln');
+    txt(g,86,144,'grip ~ age','devbar-lbl','start');
+    txt(g,462,144,'26561.7','aicval','start');
+    txt(g,86,184,'grip ~ age + age²','devbar-lbl','start');
+    g.appendChild(el('circle',{cx:442,cy:180,r:8,class:'aicwin'}));
+    txt(g,462,184,'26557.9  lower','aicval','start');
+    txt(g,310,218,'These two AIC values can be compared','biglab');
+
+    line(g,72,249,548,249,'axis');
+    txt(g,72,286,'LOGISTIC MODEL OF WEAK GRIP (0/1)','axis-title','start');
+    txt(g,86,326,'weak_grip ~ age','devbar-lbl','start');
+    txt(g,462,326,'3459.1','aicval','start');
+    txt(g,310,360,'Do not compare this number with the linear-model AIC','cutlab');
+
+    txt(g,104,410,'✓ same outcome','biglab');
+    txt(g,310,410,'✓ same rows','biglab');
+    txt(g,516,410,'✓ same family','biglab');
   }
-  function animateTo(){ if(!raf) raf=requestAnimationFrame(tick); }
+  buildRules(document.getElementById('svgRules'),'q_',false);
 
   // ============================ STEP SCRIPT ============================
-  const DEFAULT_STEP={ vis:[], panel:1, c1:0 };
+  const DEFAULT_STEP={ vis:[], panel:1 };
   const R1=['r_plot'];
-  const C1=[...R1,'c_curve'];
-  const C2=[...C1,'c_mark'];
-  const L1=[...C2,'l_lad'];
-  const A1=[...L1,'a_aic'];
+  const A1=[...R1,'a_mech'];
+  const D1=[...A1,'d_delta'];
+  const Q1=[...D1,'q_rules'];
   const STEP_CHANGES=[
-    {},                                                        // 0  recap: two models
-    {vis:[...R1]},                                             // 1  the plot + null line
-    {},                                                        // 2  the table + drop 89.35
-    {},                                                        // 3  is it chance?
+    {},                                                        // 0  KLoSA models and output
+    {vis:[...R1]},                                             // 1  probability plot
+    {},                                                        // 2  deviance drop
+    {},                                                        // 3  why complexity matters
     {},                                                        // 4  practice questions
     {},                                                        // 5  practice answers
-    {panel:2,vis:[...C1],c1:1},                                // 6  chi-squared curve
-    {vis:[...C2]},                                             // 7  cutoff + our drop
-    {},                                                        // 8  anova(m0, m1) output
-    {},                                                        // 9  columns + report
+    {panel:2,vis:[...A1]},                                     // 6  AIC formula
+    {},                                                        // 7  candidate models
+    {},                                                        // 8  AIC output
+    {},                                                        // 9  lower is better
     {},                                                        // 10 practice questions
     {},                                                        // 11 practice answers
-    {panel:3},                                                 // 12 students2 + m1, m2, m3
-    {},                                                        // 13 anova(m1, m2) + report
-    {vis:[...L1]},                                             // 14 anova(m3) + ladder
-    {},                                                        // 15 reading the ladder
+    {panel:3,vis:[...D1]},                                     // 12 relative interpretation
+    {},                                                        // 13 delta AIC
+    {},                                                        // 14 closest models
+    {},                                                        // 15 no absolute cutoff
     {},                                                        // 16 practice questions
     {},                                                        // 17 practice answers
-    {panel:4},                                                 // 18 why AIC + formula
-    {vis:[...A1]},                                             // 19 AIC() output + dot plot
-    {},                                                        // 20 interpretation
-    {},                                                        // 21 practice questions
-    {}                                                         // 22 practice answers
+    {panel:4,vis:[...Q1]},                                     // 18 linear-model connection
+    {},                                                        // 19 linear AIC output
+    {},                                                        // 20 within-family comparison
+    {},                                                        // 21 comparison rule
+    {},                                                        // 22 practice questions
+    {}                                                         // 23 practice answers
   ];
   const STEPS=STEP_CHANGES.reduce((steps,change)=>{ steps.push({...DEFAULT_STEP,...steps.at(-1),...change}); return steps; },[]);
   const N=STEPS.length;
-  const ALL_GROUPS=['r_plot','c_curve','c_mark','l_lad','a_aic'];
+  const ALL_GROUPS=['r_plot','a_mech','d_delta','q_rules'];
   const PANEL_FIRST={1:0,2:6,3:12,4:18};
   const PANEL_IDS=[1,2,3,4];
 
@@ -578,8 +533,6 @@ AIC(m0, m1, m2, m3)</pre>
     const view=REVEAL?STEPS[N-1]:s;
     const on=new Set(view.vis);
     ALL_GROUPS.forEach(id=>document.getElementById(id).classList.toggle('vis',on.has(id)));
-    AT.c1=view.c1;
-    if(window.__STILL__){A.c1=AT.c1;drawCont();} else animateTo();
     PANEL_IDS.forEach(n=>{
       panelEls[n].classList.toggle('lit', REVEAL || step>=PANEL_FIRST[n]);
       panelEls[n].classList.toggle('active', s.panel===n);
