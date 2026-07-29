@@ -184,6 +184,7 @@
     .mark-yes{fill:var(--pass);font-family:var(--sans);font-size:28px;font-weight:700;}
     .mark-no{fill:var(--alarm);font-family:var(--sans);font-size:30px;font-weight:700;}
     .mark-na{fill:#7f9296;font-family:var(--sans);font-size:28px;font-weight:600;}
+    .mark-partial{fill:var(--brown);font-family:var(--sans);font-size:26px;font-weight:700;}
     .cell-note{fill:var(--ink);font-family:var(--sans);font-size:14px;}
     .cite-lab{fill:var(--ink);font-family:var(--sans);font-size:14px;}
     .cite-doi{fill:var(--teal);font-family:var(--sans);font-size:14px;text-decoration:underline;}
@@ -450,7 +451,7 @@ AIC(m0, m_age, m_noise, m_group)</pre>
     {
       title:'Report fit across adjustment sets',
       sub:['AIC compares relative fit'],
-      cells:[{m:'no',note:['usually fit one','predictor model']},
+      cells:[{m:'partial',note:['sometimes, via','block-entry models'],cite:{label:'Huang & Tan 2024',doi:'10.3390/cancers16203475',url:'https://pmc.ncbi.nlm.nih.gov/articles/PMC11506352/table/cancers-16-03475-t003/',link:'Table 3'}},
              {m:'yes',cite:{label:'Chowsomchat et al. 2023',doi:'10.1186/s12887-023-04450-y',url:'https://link.springer.com/article/10.1186/s12887-023-04450-y/tables/3',link:'Table 3'}},
              {m:'na',note:['not usually described as','adjustment sets']}]
     },
@@ -466,7 +467,7 @@ AIC(m0, m_age, m_noise, m_group)</pre>
     const g=mkgrp(svg,prefix?prefix+'purpose':null,always);
     const LW=260, CW=300, HY=24, HH=50, RH=126, TW=LW+CW*3;
     const cx=i=>LW+CW*i+CW/2;
-    const MARK={yes:{s:'✓',c:'mark-yes'},no:{s:'−',c:'mark-no'},na:{s:'−',c:'mark-no'}};
+    const MARK={yes:{s:'✓',c:'mark-yes'},no:{s:'−',c:'mark-no'},na:{s:'−',c:'mark-no'},partial:{s:'±',c:'mark-partial'}};
     txt(g,TW/2,14,'Uses of AIC by model purpose','mtitle');
     PURPOSES.forEach((p,i)=>{
       g.appendChild(el('rect',{x:LW+CW*i,y:HY+HH,width:CW,height:RH*USES.length,fill:p.fill}));
