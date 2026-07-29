@@ -49,6 +49,14 @@
     .ppractice{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
     .ppractice[hidden]{display:none !important;}
     .p-title{margin:0;color:var(--teal);font-size:22px;font-weight:600;line-height:1.15;}
+    #panel1 .panel-mainv{justify-content:flex-start;}
+    #panel1 .inset-photo{flex:none;align-self:flex-start;width:168px;margin:0 0 4px;padding:4px;background:#fff;border:1px solid var(--mist);border-radius:3px;box-shadow:0 3px 10px rgba(7,59,66,.12);}
+    #panel1 .inset-photo img{display:block;width:100%;height:102px;object-fit:cover;object-position:55% 30%;border-radius:2px;}
+    #panel1 .inset-photo figcaption{margin-top:3px;color:var(--brown);font-size:10px;font-weight:600;line-height:1.1;letter-spacing:.04em;text-align:center;text-transform:uppercase;}
+    #panel1 .panel-explain.stack{gap:4px;}
+    #panel1 .panel-explain.stack .frag{font-size:13.5px;line-height:1.25;}
+    #panel1 .panel-explain.stack pre.frag{padding:5px 7px;font-size:10.5px;line-height:1.22;}
+    #panel1 .panel-explain.stack pre.frag.lrt-out{font-size:10px;}
     .panel-explain{padding:7px 8px;background:var(--soft);border-left:3px solid var(--gold);border-radius:2px;}
     .panel-explain strong{color:var(--teal);font-weight:600;}
     .panel-explain .bad{color:var(--alarm);font-weight:600;}
@@ -65,7 +73,30 @@
     .panel-explain.stack .inline-eq{padding:5px 8px;border-left:3px solid var(--gold);border-radius:2px;background:var(--warm);color:var(--teal);font-size:15.5px;text-align:center;}
     .panel-explain.stack .inline-eq.big{font-size:17.5px;}
     .panel-explain.stack .step-note{margin:0;padding-left:3px;font-style:italic;color:var(--ink-2);font-size:12.5px;line-height:1.3;}
-    #panel2 .panel-explain.stack,#panel3 .panel-explain.stack,#panel4 .panel-explain.stack{gap:4px;}
+    #panel2{grid-template-columns:minmax(0,.62fr) minmax(0,.38fr);grid-template-rows:minmax(0,1fr);}
+    #panel3{grid-template-columns:minmax(0,1fr);}
+    #panel4{grid-template-columns:1fr;grid-template-rows:1fr;}
+    #panel4 .panel-side{grid-column:1/-1;grid-row:1;}
+    .panel-explain.stack .frag.obj{padding-left:24px;position:relative;font-size:14px;line-height:1.3;}
+    .panel-explain.stack .frag.obj::before{content:"✓";position:absolute;left:0;color:var(--pass);font-weight:700;}
+    .panel-explain.stack .frag.obj-lead{color:var(--brown);font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+    #panel2 .panel-explain.stack{gap:4px;}
+    #panel3 .panel-mainv{grid-column:1/-1;grid-row:1;justify-content:flex-start;}
+    #panel2 .panel-side .aic-compare{flex:0 0 155px;height:155px;min-height:155px;max-height:155px;display:flex;gap:8px;align-items:stretch;}
+    #panel2 .panel-side .aic-compare .outcard{flex:0 0 232px;margin:0;padding:6px 8px;font-size:11.5px;line-height:1.28;overflow:hidden;align-self:center;}
+    #panel2 .panel-side .aic-compare .plotwrap{flex:1;height:auto;min-height:0;max-height:none;}
+    #panel2 .panel-side .panel-explain.stack{flex:0 1 auto;}
+    #panel2 .panel-side .panel-explain.stack pre.frag{font-size:11.5px;line-height:1.25;padding:6px 8px;}
+    #panel2 .panel-mainv{justify-content:flex-start;}
+    #panel2 .panel-mainv .panel-explain.stack{flex:1;min-height:0;}
+    #panel2 .panel-mainv .ppractice{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+    #panel2 .panel-mainv .practice-q{padding:7px 12px 28px;}
+    #panel2 .panel-mainv .practice-options{display:block;margin:4px 0 0;margin-left:0;white-space:normal;font-size:12.5px;}
+    #panel2 .panel-mainv .practice-ans{right:12px;top:auto;bottom:8px;transform:none;max-width:none;text-align:left;}
+    #panel2 .aic-compare .devbar-val,#panel2 .aic-compare .aicval{font-size:12.5px;}
+    #panel2 .aic-compare .devbar-lbl{font-size:12.5px;}
+    #panel2 .aic-compare .track-title{font-size:11.5px;}
+    #panel2 .aic-compare .mtitle{font-size:14px;}
     .plotwrap{flex:1;min-width:0;min-height:0;position:relative;}
     .plotwrap svg{width:100%;height:100%;display:block;overflow:hidden;}
     /* tables */
@@ -81,6 +112,7 @@
     .tbl-lab{display:block;margin-bottom:4px;color:var(--brown);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
     .outcard{flex:none;margin:0;padding:8px 10px;border:1px solid var(--mist);border-radius:2px;background:#fff;font-family:var(--mono);font-size:13px;line-height:1.4;white-space:pre;color:var(--ink-2);overflow:auto;}
     .outcard .hi{color:var(--teal);font-weight:600;}
+    .outcard .hi-or{color:var(--alarm);font-weight:600;}
     /* column decoder */
     .read-card{flex:none;display:flex;flex-direction:column;gap:5px;padding:8px 10px;border:1px solid var(--mist);border-radius:3px;background:#fff;}
     .read-title{color:var(--brown);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
@@ -109,8 +141,8 @@
     }
     /* svg element styling */
     .axis{stroke:#9fb7bb;stroke-width:1;}
-    .axis-lbl{fill:var(--ink-2);font-family:var(--sans);font-size:12.5px;}
-    .axis-title{fill:var(--brown);font-family:var(--sans);font-size:13px;font-weight:600;letter-spacing:.03em;}
+    .axis-lbl{fill:var(--ink-2);font-family:var(--sans);font-size:14.5px;}
+    .axis-title{fill:var(--brown);font-family:var(--sans);font-size:15px;font-weight:600;letter-spacing:.03em;}
     .grp{opacity:0;transition:opacity .45s ease;}
     .grp.vis{opacity:1;}
     .icurve{stroke:var(--gold);stroke-width:3.4;fill:none;stroke-linecap:round;stroke-linejoin:round;}
@@ -121,25 +153,43 @@
     .dotfail{fill:var(--alarm);}
     .dotpass{fill:var(--pass);}
     .nullln{stroke:var(--alarm);stroke-width:2.2;stroke-dasharray:7 5;fill:none;}
-    .nulllab{fill:var(--alarm);font-family:var(--sans);font-size:12.5px;font-weight:600;}
+    .nulllab{fill:var(--alarm);font-family:var(--sans);font-size:14px;font-weight:600;}
     .devbar-null{fill:var(--alarm);fill-opacity:.78;}
     .devbar-full{fill:var(--teal);fill-opacity:.82;}
-    .devbar-lbl{fill:var(--ink-2);font-family:var(--sans);font-size:12.5px;font-weight:600;}
-    .devbar-val{fill:var(--ink);font-family:var(--mono);font-size:12.5px;font-weight:700;}
+    .devbar-lbl{fill:var(--ink-2);font-family:var(--sans);font-size:15px;font-weight:600;}
+    .devbar-val{fill:var(--ink);font-family:var(--mono);font-size:15px;font-weight:700;}
     .brace{stroke:var(--brown);stroke-width:1.4;fill:none;}
-    .bracelab{fill:var(--brown);font-family:var(--sans);font-size:11.5px;font-weight:600;text-anchor:middle;}
+    .bracelab{fill:var(--brown);font-family:var(--sans);font-size:14px;font-weight:600;text-anchor:middle;}
     .chicurve{stroke:var(--ink-2);stroke-width:2.4;fill:none;stroke-linecap:round;}
     .cutln{stroke:var(--alarm);stroke-width:1.8;stroke-dasharray:4 4;}
-    .cutlab{fill:var(--alarm);font-family:var(--mono);font-size:11.5px;font-weight:600;text-anchor:middle;}
+    .cutlab{fill:var(--alarm);font-family:var(--mono);font-size:14px;font-weight:600;text-anchor:middle;}
     .bigarrow{stroke:var(--teal);stroke-width:2.6;fill:none;}
-    .biglab{fill:var(--teal);font-family:var(--sans);font-size:12.5px;font-weight:600;}
-    .mtitle{fill:var(--brown);font-family:var(--sans);font-size:14px;font-weight:700;text-anchor:middle;}
-    .ghostlab{fill:#7f9296;font-family:var(--sans);font-size:11.5px;font-style:italic;}
+    .biglab{fill:var(--teal);font-family:var(--sans);font-size:15px;font-weight:600;}
+    .mtitle{fill:var(--brown);font-family:var(--sans);font-size:17px;font-weight:700;text-anchor:middle;}
+    .ghostlab{fill:#7f9296;font-family:var(--sans);font-size:13.5px;font-style:italic;}
     .zoombox{fill:#fff;stroke:var(--mist);}
     .aicdot{fill:var(--teal);stroke:#fff;stroke-width:1.5;}
     .aicwin{fill:var(--gold);stroke:var(--brown);stroke-width:2;}
     .aicwinbox{fill:var(--warm);stroke:var(--gold);stroke-width:2;}
-    .aicval{fill:var(--ink);font-family:var(--mono);font-size:11.5px;font-weight:600;}
+    .parambox{fill:var(--warm);stroke:var(--gold);stroke-width:2;}
+    .bestbox{fill:#e8f6ef;stroke:var(--pass);stroke-width:2.5;}
+    .paramval{fill:var(--brown);font-family:var(--mono);font-size:18px;font-weight:700;}
+    .track-title{fill:var(--ink-2);font-family:var(--sans);font-size:13px;font-weight:600;}
+    .purpose-head{fill:#fff;font-family:var(--sans);font-size:19px;font-weight:700;}
+    .purpose-label{fill:var(--brown);font-family:var(--sans);font-size:14px;font-weight:700;letter-spacing:.03em;}
+    .purpose-body{fill:var(--ink);font-family:var(--sans);font-size:15.5px;}
+    .purpose-desc{fill:#fff;font-family:var(--sans);font-size:13px;opacity:.92;}
+    .use-title{fill:var(--teal);font-family:var(--sans);font-size:15.5px;font-weight:600;}
+    .use-sub{fill:var(--ink-2);font-family:var(--sans);font-size:13px;}
+    .mark-yes{fill:var(--pass);font-family:var(--sans);font-size:28px;font-weight:700;}
+    .mark-no{fill:var(--alarm);font-family:var(--sans);font-size:30px;font-weight:700;}
+    .mark-na{fill:#7f9296;font-family:var(--sans);font-size:28px;font-weight:600;}
+    .cell-note{fill:var(--ink);font-family:var(--sans);font-size:14px;}
+    .cite-lab{fill:var(--ink);font-family:var(--sans);font-size:14px;}
+    .cite-doi{fill:var(--teal);font-family:var(--sans);font-size:14px;text-decoration:underline;}
+    .rowln{stroke:var(--mist);stroke-width:1;}
+    .collo{fill:#f7fafa;}
+    .aicval{fill:var(--ink);font-family:var(--mono);font-size:14px;font-weight:600;}
     .zoomln{stroke:#9fb7bb;stroke-width:1;stroke-dasharray:2 3;}
 
     #tools{position:fixed;top:14px;right:16px;z-index:22;display:flex;gap:8px;align-items:center;color:var(--mist);font-family:var(--sans);font-size:13px;}
@@ -182,26 +232,41 @@
               <!-- EDIT PANEL 1 HERE. -->
               <div class="panel-explain stack">
                 <p class="frag bullet" data-step="1">Return to the KLoSA data: <strong>4,184 men aged 45 and older</strong>.</p>
-                <pre class="frag code" data-step="1">klosa &lt;- read_csv("klosa_men_grip_45plus.csv")
-m0 &lt;- glm(weak_grip ~ 1,
-  family = binomial, data = klosa)
+                <pre class="frag code" data-step="3">klosa &lt;- read_csv("klosa_men_grip_45plus.csv")
 m_age &lt;- glm(weak_grip ~ age,
-  family = binomial, data = klosa)</pre>
-                <pre class="frag out" data-step="1">#&gt; summary(m_age)
+  family = binomial, data = klosa)
+summary(m_age)</pre>
+                <pre class="frag out" data-step="4">#&gt; Coefficients:
+#&gt;              Estimate Std. Error z value Pr(&gt;|z|)
+#&gt; (Intercept) -8.824312   0.319252  -27.64  &lt;2e-16 ***
+#&gt; age          0.116834   0.004755   24.57  &lt;2e-16 ***
+#&gt; ---
+#&gt; Signif. codes:  0 ‘***’ .001 ‘**’ .01 ‘*’ .05 ‘.’ .1 ‘ ’ 1
+#&gt;
+#&gt; (Dispersion parameter for binomial family taken to be 1)
+#&gt;
 #&gt;     <span class="hi">Null deviance: 4259.0</span>  on 4183  degrees of freedom
 #&gt; <span class="hi">Residual deviance: 3455.1</span>  on 4182  degrees of freedom
 #&gt; AIC: 3459.1</pre>
-                <p class="frag bullet" data-step="2">The null model predicts the same probability, <strong>0.206</strong>, for every man.</p>
-                <p class="frag bullet" data-step="2">The age model lets the predicted probability rise with age.</p>
-                <div class="frag inline-eq big" data-step="3">$\text{Deviance drop} = 4259.0 - 3455.1 = 803.9$</div>
-                <p class="frag bullet" data-step="4">A more flexible model will nearly always fit the observed data better.</p>
-                <p class="frag bullet" data-step="4">We need to balance <strong>better fit</strong> against <strong>added complexity</strong>. That is the job of AIC.</p>
+                <p class="frag bullet" data-step="6">The null model predicts the same probability, <strong>0.206</strong>, for every man.</p>
+                <p class="frag bullet" data-step="6">The residual deviance row is for the age model.</p>
+                <p class="frag bullet" data-step="7">The residual deviance is <strong>803.9 points lower</strong> than the null deviance.</p>
+                <pre class="frag code" data-step="8">anova(m_age, test = "LRT")</pre>
+                <pre class="frag out lrt-out" data-step="8">#&gt;      Df Deviance Resid. Df Resid. Dev Pr(&gt;Chi)
+#&gt; NULL                  4183     4259.0
+#&gt; age   1   803.85      4182     3455.1  &lt;2e-16 ***</pre>
+                <p class="frag bullet" data-step="8">Information from an LRT often overlaps with whether coefficients are significant in <code>summary()</code>, so we leave it aside here. Unlike AIC, the standard LRT compares nested models only.</p>
+                <p class="frag bullet" data-step="8">Adding predictors almost always lowers residual deviance, even when they are useless. So we need to balance <strong>better fit</strong> against <strong>added complexity</strong>. That is the job of AIC.</p>
               </div>
             </div>
             <div class="panel-mainv">
+              <figure class="inset-photo frag" data-step="2">
+                <img src="images/grip_dynamometer.jpg" alt="Older man squeezing a digital handgrip dynamometer">
+                <figcaption>hand dynamometer</figcaption>
+              </figure>
               <div class="plotwrap"><svg id="svgRec" viewBox="0 0 620 440" preserveAspectRatio="xMidYMid meet"></svg></div>
             </div>
-            <div class="ppractice frag" data-step="5" data-reveal="6">
+            <div class="ppractice frag" data-step="9" data-reveal="10">
               <div class="practice-q">
                 <span class="qlab">Practice</span>
                 <p class="q">Which model has residual deviance 3455.1?</p>
@@ -210,7 +275,7 @@ m_age &lt;- glm(weak_grip ~ age,
               <div class="practice-q">
                 <span class="qlab">Practice</span>
                 <p class="q">Why not choose a model using deviance alone?</p>
-                <span class="practice-options"><span class="opt">complexity usually lowers it</span><span class="opt">larger is always better</span></span><span class="practice-ans">complexity usually lowers it</span>
+                <span class="practice-options"><span class="opt">more predictors usually lower it</span><span class="opt">larger is always better</span></span><span class="practice-ans">more predictors usually lower it</span>
               </div>
             </div>
           </section>
@@ -222,115 +287,78 @@ m_age &lt;- glm(weak_grip ~ age,
               <div class="p-title">AIC rewards fit and penalizes complexity</div>
               <!-- EDIT PANEL 2 HERE. -->
               <div class="panel-explain stack">
-                <p class="frag bullet" data-step="7">AIC starts with likelihood-based fit, then adds a penalty for every estimated parameter.</p>
-                <div class="frag inline-eq big" data-step="7">$\mathrm{AIC} = \text{residual deviance} + 2k$</div>
-                <p class="frag step-note" data-step="7">For these logistic models, k is the number of coefficients, including the intercept.</p>
-                <pre class="frag code" data-step="8">m0      &lt;- glm(weak_grip ~ 1, ...)
-m_age   &lt;- glm(weak_grip ~ age, ...)
-m_curve &lt;- glm(weak_grip ~ age + I(age^2), ...)
-m_group &lt;- glm(weak_grip ~ age_group, ...)
-
-AIC(m0, m_age, m_curve, m_group)</pre>
-                <p class="frag step-note" data-step="8">age_group has three levels: 45&ndash;64, 65&ndash;74, and 75+.</p>
-                <pre class="frag out" data-step="9">#&gt;          df    AIC
-#&gt; m0        1 <span class="hi-or">4261.0</span>
-#&gt; m_age     2 <span class="hi">3459.1</span>
-#&gt; m_curve   3 3460.3
-#&gt; m_group   3 3599.0</pre>
-                <p class="frag bullet" data-step="10"><strong>Lower is better.</strong> Here, the model using age has the lowest AIC.</p>
-                <p class="frag bullet" data-step="10">Extra parameters must improve the fit enough to repay their penalty.</p>
+                <p class="frag bullet" data-step="11"><strong>Akaike Information Criterion (AIC)</strong> plays a role similar to <strong>adjusted R&sup2;</strong>: both reward fit while penalizing extra parameters.</p>
+                <div class="frag inline-eq big" data-step="11">$\mathrm{AIC} = \text{residual deviance} + 2k$</div>
+                <p class="frag step-note" data-step="11">Here, k counts coefficients including the intercept. Lower AIC is preferred.</p>
+                <p class="frag step-note" data-step="11">AIC also works for linear models; we will cover that formula in another lesson.</p>
+                <pre class="frag code" data-step="12">set.seed(2026)
+klosa &lt;- klosa |&gt; mutate(
+  age_group = cut(age, c(45, 65, 75, Inf), include.lowest = TRUE),
+  noise = rnorm(n()))
+m0      &lt;- glm(weak_grip ~ 1, family = binomial, data = klosa)
+m_age   &lt;- glm(weak_grip ~ age, family = binomial, data = klosa)
+m_noise &lt;- glm(weak_grip ~ age + noise, family = binomial, data = klosa)
+m_group &lt;- glm(weak_grip ~ age_group, family = binomial, data = klosa)</pre>
+                <pre class="frag code" data-step="12">deviance(m0); deviance(m_age); deviance(m_noise); deviance(m_group)
+AIC(m0, m_age, m_noise, m_group)</pre>
+              </div>
+              <div class="aic-compare">
+                <pre class="outcard frag" data-step="12">#&gt;           df deviance    AIC
+#&gt; m0         1   4259.0 4261.0
+#&gt; m_age      2   3455.1 3459.1
+#&gt; m_noise    3   3454.8 3460.8
+#&gt; m_group    3   3603.9 3609.9</pre>
+                <div class="plotwrap"><svg id="svgAic" viewBox="0 0 390 160" preserveAspectRatio="xMidYMid meet"></svg></div>
               </div>
             </div>
             <div class="panel-mainv">
-              <div class="plotwrap"><svg id="svgAic" viewBox="0 0 620 440" preserveAspectRatio="xMidYMid meet"></svg></div>
-            </div>
-            <div class="ppractice frag" data-step="11" data-reveal="12">
-              <div class="practice-q">
-                <span class="qlab">Practice</span>
-                <p class="q">Which model does AIC prefer here?</p>
-                <span class="practice-options"><span class="opt">m_age: 3459.1</span><span class="opt">m0: 4261.0</span></span><span class="practice-ans">m_age: 3459.1</span>
-              </div>
-              <div class="practice-q">
-                <span class="qlab">Practice</span>
-                <p class="q">AIC balances better fit against&hellip;</p>
-                <span class="practice-options"><span class="opt">more parameters</span><span class="opt">a larger sample mean</span></span><span class="practice-ans">more parameters</span>
+              <div class="panel-explain stack">
+                <p class="frag bullet" data-step="13">An AIC of 3459.1 is not good or bad on its own.</p>
+                <p class="frag bullet" data-step="13">AIC becomes meaningful only when we compare candidate models.</p>
+                <p class="frag bullet" data-step="13">AIC is not a p-value and has no universal good/bad cutoff.</p>
+                <div class="ppractice frag" data-step="14" data-reveal="15">
+                  <div class="practice-q">
+                    <span class="qlab">Practice</span>
+                    <p class="q">Which model does AIC prefer here?</p>
+                    <span class="practice-options"><span class="opt">m_age: 3459.1</span><span class="opt">m0: 4261.0</span></span><span class="practice-ans">m_age: 3459.1</span>
+                  </div>
+                  <div class="practice-q">
+                    <span class="qlab">Practice</span>
+                    <p class="q">AIC balances better fit against&hellip;</p>
+                    <span class="practice-options"><span class="opt">more parameters</span><span class="opt">a larger sample mean</span></span><span class="practice-ans">more parameters</span>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
 
-          <!-- ============ PANEL 3: relative interpretation ============ -->
+          <!-- ============ PANEL 3: purpose and comparison guardrails ============ -->
           <section class="panel" id="panel3">
             <div class="p-num">3</div>
-            <div class="panel-side">
-              <div class="p-title">Only AIC differences are meaningful</div>
-              <!-- EDIT PANEL 3 HERE. -->
-              <div class="panel-explain stack">
-                <p class="frag bullet" data-step="13">An AIC of <strong>3459.1</strong> is not good or bad on its own.</p>
-                <p class="frag bullet" data-step="13">AIC becomes meaningful only when we compare candidate models.</p>
-                <div class="frag inline-eq big" data-step="14">$\Delta\mathrm{AIC}_i = \mathrm{AIC}_i - \text{lowest AIC}$</div>
-                <pre class="frag out" data-step="14">#&gt; model     AIC  delta_AIC
-#&gt; m_age  3459.1      <span class="hi">0.0</span>
-#&gt; m_curve 3460.3      <span class="hi">1.2</span>
-#&gt; m_group 3599.0    139.9
-#&gt; m0      4261.0    801.8</pre>
-                <p class="frag bullet" data-step="15"><strong>m_age</strong> is the reference because it has the lowest AIC.</p>
-                <p class="frag bullet" data-step="15"><strong>m_curve</strong> is only 1.2 points higher. Do not describe that small difference as decisive.</p>
-                <p class="frag bullet" data-step="16">AIC ranks this candidate set. It does not prove that any candidate is a good model.</p>
-                <p class="frag bullet" data-step="16">AIC is not a p-value and has no universal good/bad cutoff.</p>
-              </div>
-            </div>
             <div class="panel-mainv">
-              <div class="plotwrap"><svg id="svgDelta" viewBox="0 0 620 440" preserveAspectRatio="xMidYMid meet"></svg></div>
+              <div class="plotwrap"><svg id="svgPurpose" viewBox="0 0 1160 486" preserveAspectRatio="xMidYMid meet"></svg></div>
             </div>
             <div class="ppractice frag" data-step="17" data-reveal="18">
               <div class="practice-q">
                 <span class="qlab">Practice</span>
-                <p class="q">Is an AIC of 3459.1 inherently good?</p>
+                <p class="q">Can AIC compare a logistic model of weak grip (binary outcome) to a linear model of grip strength (continuous outcome)?</p>
                 <span class="practice-options"><span class="opt">no</span><span class="opt">yes</span></span><span class="practice-ans">no</span>
-              </div>
-              <div class="practice-q">
-                <span class="qlab">Practice</span>
-                <p class="q">Which model has delta AIC = 0?</p>
-                <span class="practice-options"><span class="opt">the lowest-AIC model</span><span class="opt">the null model</span></span><span class="practice-ans">the lowest-AIC model</span>
               </div>
             </div>
           </section>
 
-          <!-- ============ PANEL 4: linear-model crosswalk ============ -->
+          <!-- ============ PANEL 4: learning objectives ============ -->
           <section class="panel" id="panel4">
             <div class="p-num">4</div>
             <div class="panel-side">
-              <div class="p-title">The same idea works for linear models</div>
+              <div class="p-title">Learning objectives</div>
               <!-- EDIT PANEL 4 HERE. -->
               <div class="panel-explain stack">
-                <p class="frag bullet" data-step="19">Under the normal-error assumption, least squares also corresponds to maximum likelihood.</p>
-                <p class="frag bullet" data-step="19">For a linear model, AIC rewards a smaller residual sum of squares and penalizes extra parameters.</p>
-                <pre class="frag code" data-step="20">lm_age &lt;- lm(grip ~ age, data = klosa)
-lm_curve &lt;- lm(grip ~ age + I(age^2), data = klosa)
-
-AIC(lm_age, lm_curve)</pre>
-                <pre class="frag out" data-step="20">#&gt;          df     AIC
-#&gt; lm_age    3 <span class="hi-or">26561.7</span>
-#&gt; lm_curve  4 <span class="hi">26557.9</span></pre>
-                <p class="frag step-note" data-step="20">For <code>lm()</code>, df also counts the estimated error variance.</p>
-                <p class="frag bullet" data-step="21">Among these two linear models, <strong>lm_curve</strong> has the lower AIC.</p>
-                <p class="frag bullet" data-step="21">But do not compare 26557.9 with the logistic AIC of 3459.1.</p>
-                <p class="frag bullet" data-step="22">For this course, compare AIC only when models use the <strong>same outcome</strong>, <strong>same rows</strong>, and <strong>same likelihood family</strong>.</p>
-              </div>
-            </div>
-            <div class="panel-mainv">
-              <div class="plotwrap"><svg id="svgRules" viewBox="0 0 620 440" preserveAspectRatio="xMidYMid meet"></svg></div>
-            </div>
-            <div class="ppractice frag" data-step="23" data-reveal="24">
-              <div class="practice-q">
-                <span class="qlab">Practice</span>
-                <p class="q">Can we compare the two linear-model AIC values?</p>
-                <span class="practice-options"><span class="opt">yes</span><span class="opt">no</span></span><span class="practice-ans">yes</span>
-              </div>
-              <div class="practice-q">
-                <span class="qlab">Practice</span>
-                <p class="q">Can 26557.9 be compared with logistic AIC 3459.1?</p>
-                <span class="practice-options"><span class="opt">no</span><span class="opt">yes</span></span><span class="practice-ans">no</span>
+                <p class="frag obj-lead" data-step="18">You should now be able to:</p>
+                <p class="frag obj" data-step="18">Explain why <strong>residual deviance alone</strong> is not enough to choose a model.</p>
+                <p class="frag obj" data-step="18">State the logistic regression <strong>AIC formula</strong>.</p>
+                <p class="frag obj" data-step="18">Compare candidate models using AIC</p>
+                <p class="frag obj" data-step="18">Name appropriate uses of AIC comparisons.</p>
               </div>
             </div>
           </section>
@@ -351,12 +379,6 @@ AIC(lm_age, lm_curve)</pre>
   const KL = {b0:-8.824312, b1:0.116834, rate:0.206262};
   const sigAt=(b0,b1,x)=>1/(1+Math.exp(-(b0+b1*x)));
   const ksig=age=>sigAt(KL.b0,KL.b1,age);
-  const BANDS = [
-    {mid:47.07,p:0.0346}, {mid:52.03,p:0.0631}, {mid:57.04,p:0.0966},
-    {mid:61.96,p:0.1717}, {mid:67.00,p:0.2612}, {mid:71.69,p:0.4295},
-    {mid:76.73,p:0.5265}, {mid:81.72,p:0.6194}, {mid:86.70,p:0.7907}
-  ];
-
   // ============================ HELPERS ============================
   const NS='http://www.w3.org/2000/svg';
   const sc=(v,d0,d1,r0,r1)=>r0+(v-d0)/(d1-d0)*(r1-r0);
@@ -367,164 +389,150 @@ AIC(lm_age, lm_curve)</pre>
 
   // ============================ BUILDER: recap plot ============================
   function buildRecapPlot(svg, prefix, always){
-    const X0=68,X1=592,YT=34,YB=268,A0=44,A1=92;
+    const X0=68,X1=592,YT=38,YB=370,A0=44,A1=92;
     const ax=age=>sc(age,A0,A1,X0,X1), py=p=>sc(p,0,1,YB,YT);
-    const base=el('g',{}); svg.appendChild(base);
+    const gPlot=mkgrp(svg,prefix?prefix+'plot':null,always);
+    const base=el('g',{}); gPlot.appendChild(base);
     line(base,X0,YT,X0,YB,'axis'); line(base,X0,YB,X1,YB,'axis');
     [45,55,65,75,85].forEach(v=>{const x=ax(v);line(base,x,YB,x,YB+4,'axis');txt(base,x,YB+16,v,'axis-lbl');});
     txt(base,(X0+X1)/2,YB+34,'age (years)','axis-title');
     [{v:0,t:'0'},{v:.5,t:'.5'},{v:1,t:'1'}].forEach(o=>{const y=py(o.v);line(base,X0-4,y,X0,y,'axis');txt(base,X0-8,y+3.5,o.t,'axis-lbl','end');});
     const yt=txt(base,0,0,'P(weak grip)','axis-title'); yt.setAttribute('transform',`translate(15,${(YT+YB)/2}) rotate(-90)`);
-    const gPlot=mkgrp(svg,prefix?prefix+'plot':null,always);
     let d='';
     for(let age=A0;age<=A1+0.001;age+=0.25){const x=ax(age).toFixed(1),y=py(ksig(age)).toFixed(1);d+=(d?' L ':'M ')+x+' '+y;}
     gPlot.appendChild(el('path',{d,class:'icurve'}));
-    BANDS.forEach(b=>gPlot.appendChild(el('circle',{cx:ax(b.mid),cy:py(b.p),r:5.6,class:'aicdot'})));
     gPlot.appendChild(el('path',{d:`M ${X0} ${py(KL.rate)} L ${X1} ${py(KL.rate)}`,class:'nullln'}));
     txt(gPlot,X0+8,py(KL.rate)-9,'null model: 0.206 for everyone','nulllab','start');
-    line(gPlot,426,48,454,48,'icurve'); txt(gPlot,462,52,'age model','axis-lbl','start');
-    gPlot.appendChild(el('circle',{cx:438,cy:70,r:5.6,class:'aicdot'})); txt(gPlot,462,74,'observed age bands','axis-lbl','start');
-
-    txt(gPlot,68,326,'deviance','axis-title','start');
-    const dv=v=>sc(v,0,4500,170,570);
-    const rows=[
-      {lab:'m0: null',v:4259.0,y:340,cls:'devbar-null'},
-      {lab:'m_age',v:3455.1,y:385,cls:'devbar-full'}
-    ];
-    rows.forEach(r=>{
-      txt(gPlot,160,r.y+18,r.lab,'devbar-lbl','end');
-      gPlot.appendChild(el('rect',{x:170,y:r.y,width:dv(r.v)-170,height:26,rx:3,class:r.cls}));
-      txt(gPlot,dv(r.v)+8,r.y+18,r.v.toFixed(1),'devbar-val','start');
-    });
-    txt(gPlot,370,430,'drop = 803.9','bracelab');
+    line(gPlot,414,56,450,56,'icurve'); txt(gPlot,462,61,'age model','axis-lbl','start');
   }
   buildRecapPlot(document.getElementById('svgRec'),'r_',false);
 
   // ============================ BUILDER: AIC mechanics ============================
   function buildAicMechanics(svg, prefix, always){
     const g=mkgrp(svg,prefix?prefix+'mech':null,always);
-    txt(g,310,42,'AIC adds the parameter penalty to the deviance','mtitle');
+    txt(g,96,14,'deviance','track-title');
+    txt(g,202,14,'k / penalty','track-title');
+    txt(g,308,14,'AIC','track-title');
     const rows=[
-      {lab:'m0: null',dev:'4259.0',k:'2 × 1',aic:'4261.0',y:122,win:false},
-      {lab:'m_age',dev:'3455.1',k:'2 × 2',aic:'3459.1',y:255,win:true}
+      {lab:'m0',dev:'4259.0',kpen:'k=1 (+2)',aic:'4261.0',y:38,win:false},
+      {lab:'m_age',dev:'3455.1',kpen:'k=2 (+4)',aic:'3459.1',y:70,win:true},
+      {lab:'m_noise',dev:'3454.8',kpen:'k=3 (+6)',aic:'3460.8',y:102,win:false},
+      {lab:'m_group',dev:'3603.9',kpen:'k=3 (+6)',aic:'3609.9',y:134,win:false}
     ];
     rows.forEach(r=>{
-      txt(g,65,r.y+8,r.lab,'devbar-lbl','start');
-      g.appendChild(el('rect',{x:145,y:r.y-34,width:142,height:66,rx:4,class:'zoombox'}));
-      txt(g,216,r.y-7,'residual deviance','axis-lbl');
-      txt(g,216,r.y+18,r.dev,'devbar-val');
-      txt(g,310,r.y+8,'+','mtitle');
-      g.appendChild(el('rect',{x:338,y:r.y-34,width:96,height:66,rx:4,class:'zoombox'}));
-      txt(g,386,r.y-7,'penalty','axis-lbl');
-      txt(g,386,r.y+18,r.k,'devbar-val');
-      txt(g,458,r.y+8,'=','mtitle');
-      g.appendChild(el('rect',{x:486,y:r.y-34,width:104,height:66,rx:4,class:r.win?'aicwinbox':'zoombox'}));
-      txt(g,538,r.y-7,'AIC','axis-lbl');
-      txt(g,538,r.y+18,r.aic,'devbar-val');
+      txt(g,0,r.y+3,r.lab,'devbar-lbl','start');
+      g.appendChild(el('rect',{x:60,y:r.y-10,width:72,height:24,rx:2,class:'zoombox'}));
+      txt(g,96,r.y+3,r.dev,'devbar-val');
+      txt(g,140,r.y+3,'+','mtitle');
+      g.appendChild(el('rect',{x:152,y:r.y-10,width:100,height:24,rx:2,class:'parambox'}));
+      txt(g,202,r.y+3,r.kpen,'aicval');
+      txt(g,262,r.y+3,'=','mtitle');
+      g.appendChild(el('rect',{x:274,y:r.y-10,width:76,height:24,rx:2,class:r.win?'bestbox':'zoombox'}));
+      txt(g,312,r.y+3,r.aic,'devbar-val');
     });
-    txt(g,310,354,'lower AIC','axis-title');
-    line(g,238,374,382,374,'bigarrow');
-    txt(g,310,407,'m_age gives much better fit, even after its larger penalty','biglab');
   }
   buildAicMechanics(document.getElementById('svgAic'),'a_',false);
 
-  // ============================ BUILDER: delta AIC ============================
-  function buildDelta(svg, prefix, always){
-    const g=mkgrp(svg,prefix?prefix+'delta':null,always);
-    txt(g,310,35,'ΔAIC measures distance from the lowest AIC','mtitle');
-
-    txt(g,70,78,'close-up','axis-title','start');
-    const X0=170,X1=565, dx=v=>sc(v,0,3,X0,X1), Y1=122;
-    line(g,X0,Y1,X1,Y1,'axis');
-    [0,1,2,3].forEach(v=>{line(g,dx(v),Y1,dx(v),Y1+5,'axis');txt(g,dx(v),Y1+22,v,'axis-lbl');});
-    g.appendChild(el('circle',{cx:dx(0),cy:Y1,r:9,class:'aicwin'}));
-    txt(g,dx(0),Y1-19,'m_age  0.0','aicval','start');
-    g.appendChild(el('circle',{cx:dx(1.17),cy:Y1,r:7,class:'aicdot'}));
-    txt(g,dx(1.17),Y1-19,'m_curve  1.2','aicval');
-
-    txt(g,70,204,'full comparison','axis-title','start');
-    const bx=v=>sc(v,0,820,170,565);
-    const rows=[
-      {lab:'m_group',v:139.9,y:245,cls:'devbar-full'},
-      {lab:'m0: null',v:801.8,y:305,cls:'devbar-null'}
-    ];
-    rows.forEach(r=>{
-      txt(g,160,r.y+18,r.lab,'devbar-lbl','end');
-      g.appendChild(el('rect',{x:170,y:r.y,width:Math.max(4,bx(r.v)-170),height:26,rx:3,class:r.cls}));
-      txt(g,bx(r.v)+8,r.y+18,r.v.toFixed(1),'devbar-val','start');
+  // ============================ BUILDER: purpose and comparison guardrails ============================
+  const PURPOSES=[
+    {title:'Compare predictors', desc:'Identify factors associated with outcome', head:'#035f6c', fill:'#f2f7f7'},
+    {title:'Causal',             desc:'Estimate an exposure effect',               head:'#b5451f', fill:'#fff7ed'},
+    {title:'Prediction',         desc:'Estimate future outcome risk',              head:'#2e7d4f', fill:'#ecfdf5'}
+  ];
+  const USES=[
+    {
+      title:'Compare functional forms',
+      sub:['Use the same variable, but as a linear','term, quadratic term, or categories'],
+      cells:[{m:'yes',cite:{label:'Home et al. 2018',doi:'10.1111/dom.13179',url:'https://pmc.ncbi.nlm.nih.gov/articles/PMC5887914/',link:'Methods'}},
+             {m:'yes',cite:{label:'Orioli et al. 2018',doi:'10.1371/journal.pone.0191112',url:'https://pmc.ncbi.nlm.nih.gov/articles/PMC5771616/table/pone.0191112.t005/',link:'Table 5'}},
+             {m:'yes',cite:{label:'Barrio et al. 2013',doi:'10.1186/1471-2288-13-83',url:'https://pmc.ncbi.nlm.nih.gov/articles/PMC3716996/table/T1/',link:'Table 1'}}]
+    },
+    {
+      title:'Report fit across adjustment sets',
+      sub:['AIC compares relative fit'],
+      cells:[{m:'no',note:['usually fit one','predictor model']},
+             {m:'yes',cite:{label:'Chowsomchat et al. 2023',doi:'10.1186/s12887-023-04450-y',url:'https://link.springer.com/article/10.1186/s12887-023-04450-y/tables/3',link:'Table 3'}},
+             {m:'na',note:['not usually described as','adjustment sets']}]
+    },
+    {
+      title:'Use automated variable selection',
+      sub:['For example, forward or backward','stepwise selection based on AIC'],
+      cells:[{m:'no',note:['use a specified','predictor model']},
+             {m:'no',note:['confounders come','from the DAG']},
+             {m:'yes',cite:{label:'Whiteman et al. 2025',doi:'10.1001/jamadermatol.2025.3028',link:'JAMA Dermatol.'}}]
+    }
+  ];
+  function buildPurpose(svg, prefix, always){
+    const g=mkgrp(svg,prefix?prefix+'purpose':null,always);
+    const LW=260, CW=300, HY=24, HH=50, RH=126, TW=LW+CW*3;
+    const cx=i=>LW+CW*i+CW/2;
+    const MARK={yes:{s:'✓',c:'mark-yes'},no:{s:'−',c:'mark-no'},na:{s:'−',c:'mark-no'}};
+    txt(g,TW/2,14,'Uses of AIC by model purpose','mtitle');
+    PURPOSES.forEach((p,i)=>{
+      g.appendChild(el('rect',{x:LW+CW*i,y:HY+HH,width:CW,height:RH*USES.length,fill:p.fill}));
+      g.appendChild(el('rect',{x:LW+CW*i,y:HY,width:CW,height:HH,fill:p.head}));
+      txt(g,cx(i),HY+21,p.title,'purpose-head');
+      txt(g,cx(i),HY+40,p.desc,'purpose-desc');
     });
-    txt(g,310,382,'0 is best within this candidate set','biglab');
-    txt(g,310,412,'AIC has no absolute good or bad value','ghostlab');
+    USES.forEach((u,r)=>{
+      const y=HY+HH+RH*r;
+      if(r) line(g,0,y,TW,y,'rowln');
+      txt(g,4,y+24,u.title,'use-title','start');
+      u.sub.forEach((s,i)=>txt(g,4,y+45+i*17,s,'use-sub','start'));
+      u.cells.forEach((c,i)=>{
+        const m=MARK[c.m], note=c.note||[];
+        txt(g,cx(i),note.length?y+40:(c.cite?y+54:y+73),m.s,m.c);
+        note.forEach((s,j)=>txt(g,cx(i),y+62+j*17,s,'cell-note'));
+        if(c.cite){
+          const cy=note.length?y+102:y+86;
+          const a=el('a',{href:c.cite.url||'https://doi.org/'+c.cite.doi,target:'_blank'});
+          g.appendChild(a);
+          txt(a,cx(i),cy,c.cite.label,'cite-lab');
+          txt(a,cx(i),cy+19,c.cite.link||c.cite.doi,'cite-doi');
+        }
+      });
+    });
+    const YB=HY+HH+RH*USES.length;
+    line(g,0,YB,TW,YB,'rowln');
+    txt(g,4,YB+24,'Note: compare AIC only for the same outcome, observations, and likelihood family.','use-sub','start');
   }
-  buildDelta(document.getElementById('svgDelta'),'d_',false);
-
-  // ============================ BUILDER: comparison rules ============================
-  function buildRules(svg, prefix, always){
-    const g=mkgrp(svg,prefix?prefix+'rules':null,always);
-    txt(g,310,36,'Comparable models live on the same likelihood scale','mtitle');
-
-    txt(g,72,88,'LINEAR MODELS OF GRIP (KG)','axis-title','start');
-    line(g,72,104,548,104,'zoomln');
-    txt(g,86,144,'grip ~ age','devbar-lbl','start');
-    txt(g,462,144,'26561.7','aicval','start');
-    txt(g,86,184,'grip ~ age + age²','devbar-lbl','start');
-    g.appendChild(el('circle',{cx:442,cy:180,r:8,class:'aicwin'}));
-    txt(g,462,184,'26557.9  lower','aicval','start');
-    txt(g,310,218,'These two AIC values can be compared','biglab');
-
-    line(g,72,249,548,249,'axis');
-    txt(g,72,286,'LOGISTIC MODEL OF WEAK GRIP (0/1)','axis-title','start');
-    txt(g,86,326,'weak_grip ~ age','devbar-lbl','start');
-    txt(g,462,326,'3459.1','aicval','start');
-    txt(g,310,360,'Do not compare this number with the linear-model AIC','cutlab');
-
-    txt(g,104,410,'✓ same outcome','biglab');
-    txt(g,310,410,'✓ same rows','biglab');
-    txt(g,516,410,'✓ same family','biglab');
-  }
-  buildRules(document.getElementById('svgRules'),'q_',false);
+  buildPurpose(document.getElementById('svgPurpose'),'p_',false);
 
   // ============================ STEP SCRIPT ============================
   const DEFAULT_STEP={ vis:[], panel:1 };
   const R1=['r_plot'];
   const A1=[...R1,'a_mech'];
-  const D1=[...A1,'d_delta'];
-  const Q1=[...D1,'q_rules'];
+  const P1=[...A1,'p_purpose'];
   const STEP_CHANGES=[
-    {},                                                        // 0  KLoSA models and output
-    {vis:[...R1]},                                             // 1  probability plot
-    {},                                                        // 2  deviance drop
-    {},                                                        // 3  why complexity matters
-    {},                                                        // 4  practice questions
-    {},                                                        // 5  practice answers
-    {panel:2,vis:[...A1]},                                     // 6  AIC formula
-    {},                                                        // 7  candidate models
-    {},                                                        // 8  AIC output
-    {},                                                        // 9  lower is better
-    {},                                                        // 10 practice questions
-    {},                                                        // 11 practice answers
-    {panel:3,vis:[...D1]},                                     // 12 relative interpretation
-    {},                                                        // 13 delta AIC
-    {},                                                        // 14 closest models
-    {},                                                        // 15 no absolute cutoff
+    {},                                                        // 0  KLoSA introduction
+    {},                                                        // 1  hand dynamometer
+    {},                                                        // 2  model code
+    {},                                                        // 3  summary output
+    {vis:[...R1]},                                             // 4  probability plot
+    {},                                                        // 5  null and residual-deviance rows
+    {},                                                        // 6  deviance drop
+    {},                                                        // 7  LRT and AIC motivation
+    {},                                                        // 8  practice questions
+    {},                                                        // 9  practice answers
+    {panel:2,vis:[...R1]},                                     // 10 AIC formula
+    {vis:[...A1]},                                             // 11 candidate models and AIC table
+    {},                                                        // 12 AIC comparison bullets
+    {},                                                        // 13 practice questions
+    {},                                                        // 14 practice answers
+    {panel:3,vis:[...P1]},                                     // 15 uses of AIC by model purpose
     {},                                                        // 16 practice questions
     {},                                                        // 17 practice answers
-    {panel:4,vis:[...Q1]},                                     // 18 linear-model connection
-    {},                                                        // 19 linear AIC output
-    {},                                                        // 20 within-family comparison
-    {},                                                        // 21 comparison rule
-    {},                                                        // 22 practice questions
-    {}                                                         // 23 practice answers
+    {panel:4,vis:[...P1]}                                     // 18 learning objectives
   ];
   const STEPS=STEP_CHANGES.reduce((steps,change)=>{ steps.push({...DEFAULT_STEP,...steps.at(-1),...change}); return steps; },[]);
   const N=STEPS.length;
-  const ALL_GROUPS=['r_plot','a_mech','d_delta','q_rules'];
-  const PANEL_FIRST={1:0,2:6,3:12,4:18};
+  const ALL_GROUPS=['r_plot','a_mech','p_purpose'];
+  const PANEL_FIRST={1:0,2:10,3:15,4:18};
   const PANEL_IDS=[1,2,3,4];
 
   let step=0;
   const counter=document.getElementById('counter');
-  const panelEls={}; PANEL_IDS.forEach(n=>panelEls[n]=document.getElementById('panel'+n));
+  const panelEls={}; [1,2,3,4].forEach(n=>panelEls[n]=document.getElementById('panel'+n));
 
   const REVEAL=!!window.DECK_REVEAL_ALL;
   function apply(k){
@@ -533,7 +541,7 @@ AIC(lm_age, lm_curve)</pre>
     const view=REVEAL?STEPS[N-1]:s;
     const on=new Set(view.vis);
     ALL_GROUPS.forEach(id=>document.getElementById(id).classList.toggle('vis',on.has(id)));
-    PANEL_IDS.forEach(n=>{
+    [1,2,3,4].forEach(n=>{
       panelEls[n].classList.toggle('lit', REVEAL || step>=PANEL_FIRST[n]);
       panelEls[n].classList.toggle('active', s.panel===n);
     });

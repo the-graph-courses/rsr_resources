@@ -1,0 +1,917 @@
+---
+title: "Model fit: likelihood, deviance and AIC"
+subtitle: "WebR practical: model fit for logistic regression in R"
+author: "GRAPH Courses"
+format:
+  html:
+    toc: false
+    number-sections: false
+    theme: cosmo
+    page-layout: full
+engine: knitr
+filters:
+  - webr
+webr:
+  show-startup-message: false
+  show-header-message: false
+  packages: ['dplyr', 'ggplot2', 'modelsummary', 'gt']
+---
+
+<style>
+:root {
+  --dark-teal: #00565e;
+  --light-teal: #5fbfbf;
+  --light-teal-soft: #e3f4f4;
+  --gold: #f5c542;
+  --rose: #b83b5e;
+  --ink: #173234;
+  --muted: #5d7475;
+  --page: #f4f7f7;
+  --card: #ffffff;
+  --border: #d0dede;
+  --good: #287a4d;
+  --good-bg: #e8f8ef;
+  --bad: #b83b3b;
+  --bad-bg: #fdecea;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.quarto-title-block { display: none; }
+
+.page-shell {
+  width: min(900px, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding: 1.25rem 0 3rem;
+}
+
+.masthead {
+  background: var(--dark-teal);
+  color: #fff;
+  border-radius: 8px;
+  border-left: 6px solid var(--gold);
+  padding: 1.4rem 1.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.eyebrow {
+  color: var(--gold);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+.masthead h1 {
+  color: #fff;
+  font-size: 1.6rem;
+  line-height: 1.15;
+  font-weight: 800;
+  margin: 0;
+}
+
+.masthead p {
+  max-width: 700px;
+  margin: 0.55rem 0 0;
+  color: #d3eded;
+  font-size: 0.98rem;
+}
+
+.panel, .practice, .callout, .webr-wrap, .svg-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.panel {
+  padding: 1.15rem 1.3rem;
+  margin-bottom: 1rem;
+}
+
+.panel h2 {
+  color: var(--dark-teal);
+  font-weight: 800;
+  margin-top: 0;
+  font-size: 1.3rem;
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 0.45rem;
+  margin-bottom: 0.8rem;
+}
+
+.panel p:last-child, .callout p:last-child { margin-bottom: 0; }
+
+.tight-list { padding-left: 1.15rem; margin-bottom: 0; }
+.tight-list li { margin-bottom: 0.35rem; }
+
+.formula-panel {
+  background: var(--light-teal-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.svg-panel {
+  padding: 0.6rem;
+  margin: 0.85rem 0 0.4rem;
+  overflow-x: auto;
+}
+
+.svg-panel svg { width: 100%; min-width: 560px; display: block; }
+.svg-caption { color: var(--muted); font-size: 0.9rem; margin: 0.2rem 0.3rem 0; }
+
+.practice {
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  border-top: 4px solid var(--gold);
+}
+
+.practice .practice-title {
+  color: var(--dark-teal);
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+}
+
+.practice p { margin-bottom: 0.7rem; }
+
+.choice-set { display: grid; gap: 0.5rem; margin: 0.8rem 0; }
+
+.choice-set label {
+  display: block;
+  position: relative;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 0.72rem 0.85rem 0.72rem 2.65rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.choice-set label:hover {
+  border-color: var(--light-teal);
+  background: #edf8f8;
+}
+
+.choice-set input {
+  position: absolute;
+  left: 0.85rem;
+  top: 0.72rem;
+  appearance: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid #aacaca;
+  border-radius: 50%;
+  margin-top: 0.15rem;
+}
+
+.choice-set input:checked {
+  border-color: var(--dark-teal);
+  background:
+    radial-gradient(circle at center, #fff 0 34%, transparent 36%),
+    var(--dark-teal);
+}
+
+.practice button {
+  background: var(--dark-teal);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.55rem 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.practice button:hover { background: #003f45; }
+
+.practice .practice-feedback {
+  display: none;
+  margin-top: 0.8rem;
+  border-radius: 8px;
+  padding: 0.75rem 0.85rem;
+}
+
+.practice.is-correct .practice-feedback {
+  display: block;
+  background: var(--good-bg);
+  color: #173a26;
+  border: 1px solid #a9dab9;
+}
+
+.practice.is-incorrect .practice-feedback {
+  display: block;
+  background: var(--bad-bg);
+  color: #4b1c1c;
+  border: 1px solid #e6b1b1;
+}
+
+.practice label.correct-choice { border-color: var(--good); background: var(--good-bg); }
+.practice label.incorrect-choice { border-color: var(--bad); background: var(--bad-bg); }
+
+.callout {
+  padding: 1rem 1.15rem;
+  border-left: 5px solid var(--light-teal);
+  margin: 1rem 0;
+}
+
+.callout.warning { border-left-color: var(--gold); background: #fffaf0; }
+
+.webr-wrap {
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  border-top: 4px solid var(--light-teal);
+}
+
+.webr-wrap h3 { color: var(--dark-teal); font-size: 1rem; margin-top: 0; }
+
+.answer { margin-top: 0.7rem; }
+.answer summary { cursor: pointer; font-weight: 700; color: var(--dark-teal); }
+.answer[open] summary { margin-bottom: 0.4rem; }
+
+code {
+  background: rgba(0, 86, 94, 0.08);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  color: #123638;
+}
+
+.qwebr-output-code-stdout pre, .qwebr-output-code-stderr pre { white-space: pre-wrap; }
+.qwebr-output-code-area .gt_table { white-space: normal; font-family: "Segoe UI", system-ui, sans-serif; }
+
+.panel.completion { border-top: 4px solid var(--gold); }
+
+.code-progress { font-weight: 800; color: var(--dark-teal); }
+
+.code-box {
+  display: none;
+  text-align: center;
+  background: var(--dark-teal);
+  color: #fff;
+  border-radius: 8px;
+  padding: 1.1rem;
+  margin-top: 0.6rem;
+}
+
+.code-box .code-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.code-box .code-value {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin-top: 0.3rem;
+}
+
+.footer-note { color: var(--muted); text-align: center; margin-top: 2rem; font-size: 0.9rem; }
+
+.slope-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.9rem 0 0.4rem;
+  font-size: 0.95rem;
+}
+
+.slope-table caption {
+  caption-side: top;
+  text-align: left;
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin-bottom: 0.4rem;
+}
+
+.slope-table th, .slope-table td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+}
+
+.slope-table thead th {
+  background: var(--dark-teal);
+  color: #fff;
+  font-weight: 700;
+}
+
+.slope-table tbody tr:nth-child(even) { background: #f2f9f9; }
+.slope-table .refrow td { background: var(--light-teal-soft); font-weight: 600; }
+.slope-table td code { background: transparent; padding: 0; }
+</style>
+
+<div class="page-shell">
+
+<header class="masthead">
+  <div class="eyebrow">WebR practical: categories version</div>
+  <h1>Model fit: likelihood, deviance and AIC</h1>
+</header>
+
+<section class="panel">
+
+<h2>Overview</h2>
+
+In this practical you will:
+
+<ul class="tight-list">
+  <li>Revise the meaning of likelihood, log-likelihood, and deviance.</li>
+  <li>Use AIC to compare different functional forms of the same predictor.</li>
+  <li>Present several models side by side with <code>modelsummary()</code>, which shows AIC and log-likelihood.</li>
+</ul>
+
+After answering the questions, your completion code will be revealed.
+
+</section>
+
+<section class="panel">
+
+<h2>Part 1. Revision: likelihood and deviance</h2>
+
+We start with the KLOSA data from the videos: 4,184 men aged 45 and above from the Korean Longitudinal Study of Aging. The outcome is `weak_grip` (grip strength of 27 kg or less), and the predictor is `age`.
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: read the data</h3>
+
+```{webr-r}
+library(dplyr)
+
+klosa <- read.csv("https://raw.githubusercontent.com/the-graph-courses/rsr_resources/refs/heads/main/data/28_klosa_men_grip.csv")
+
+nrow(klosa)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the output</summary>
+
+```
+[1] 4184
+```
+
+There are no missing values in `age` or `weak_grip`, so we can use all 4,184 rows for every model in this practical.
+
+</details>
+
+<div class="webr-wrap">
+
+<h3>R code: fit the model, fill in the blanks</h3>
+
+Fit a logistic regression predicting `weak_grip` from `age`. Fill in the function, the formula, the family and the data.
+
+```{webr-r}
+model_age_continuous <- ____(____ ~ ____, family = ____, data = ____)
+summary(model_age_continuous)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+model_age_continuous <- glm(weak_grip ~ age, family = binomial, data = klosa)
+summary(model_age_continuous)
+```
+
+The bottom of the output should read:
+
+```
+    Null deviance: 4259.0  on 4183  degrees of freedom
+Residual deviance: 3455.1  on 4182  degrees of freedom
+AIC: 3459.1
+```
+
+</details>
+
+The bottom of `summary()` reports the model's residual deviance. We can also extract it directly with `deviance()` and obtain the log-likelihood with `logLik()`. Run the next cell and compare the two values.
+
+<div class="webr-wrap">
+
+<h3>R code: log-likelihood and deviance</h3>
+
+```{webr-r}
+logLik(model_age_continuous)
+deviance(model_age_continuous)
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the output</summary>
+
+```
+'log Lik.' -1727.573 (df=2)
+[1] 3455.146
+```
+
+The `df=2` counts the model's two parameters: the intercept and the coefficient for `age`.
+
+</details>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 1</div>
+  <p>What does the log-likelihood summarize, and which direction indicates better fit?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p0" value="a">It is a score that indicates the deviation of the observed data from the model, so smaller and more negative values indicate better fit.</label>
+<label><input type="radio" name="p0" value="b">It indicates the likelihood of the observed data under the model, so a higher value indicates better fit.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The likelihood measures how compatible the observed outcomes are with the fitted model. Taking its log gives the log-likelihood, and higher values indicate better fit." data-incorrect="Not quite. The log-likelihood summarizes how compatible the observed outcomes are with the fitted model. Higher values, which are usually less negative, indicate better fit."></div>
+</div>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 2</div>
+  <p><code>logLik(model_age_continuous)</code> returned &minus;1727.573 and the residual deviance is 3455.146. What is the relationship between the two?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p1" value="a">Deviance = &minus;2 &times; log-likelihood, so lower deviance means higher likelihood.</label>
+<label><input type="radio" name="p1" value="b">Deviance is the log-likelihood with its sign flipped.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. -2 x (-1727.573) = 3455.146. The -2 flips the direction, so lower deviance indicates better fit." data-incorrect="Not quite. Deviance = -2 x log-likelihood, so -2 x (-1727.573) = 3455.146, not 1727.573."></div>
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 3</div>
+  <p>The <code>Null deviance: 4259.0</code> line is the deviance of which model?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p2" value="a">The fitted model <code>weak_grip ~ age</code>.</label>
+<label><input type="radio" name="p2" value="b">The intercept-only model <code>weak_grip ~ 1</code>.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The null model has no predictors and gives every man the same probability, 0.206. Its deviance (4259.0) is the baseline; adding age brought the deviance down to 3455.1." data-incorrect="Not quite. The null deviance belongs to the intercept-only model, weak_grip ~ 1. The fitted model's deviance is the residual deviance, 3455.1."></div>
+</div>
+
+<section class="panel">
+
+<h2>What those numbers mean: a short recap</h2>
+
+<ul class="tight-list">
+  <li>The <strong>likelihood</strong> measures how compatible the observed outcomes are with the fitted model.</li>
+  <li>The <strong>log-likelihood</strong> is the log of the likelihood. Higher values indicate better fit.</li>
+  <li>The <strong>deviance</strong> is &minus;2 times the log-likelihood. Lower values indicate better fit.</li>
+  <li>The <strong>null deviance</strong> belongs to the intercept-only model; the <strong>residual deviance</strong> belongs to the fitted model.</li>
+</ul>
+
+<div class="formula-panel">
+$$
+\text{Deviance} = -2 \times \text{log-likelihood}
+$$
+</div>
+
+</section>
+
+<section class="panel">
+
+<h2>Part 2. AIC: comparing functional forms in KLOSA</h2>
+
+As we saw in the videos, one problem with residual deviance is that adding predictors almost always lowers it, even when they are useless. So we cannot choose a model by residual deviance alone; we need to balance better fit against added complexity. That is the job of AIC.
+
+<div class="formula-panel">
+$$
+\mathrm{AIC} = \text{residual deviance} + 2k
+$$
+</div>
+
+<em>where $k$ is the number of estimated parameters.</em>
+
+One use case for AIC is to compare different functional forms for the same predictor.
+
+Below, we will compare age entered in three ways:
+
+<table class="slope-table">
+<thead><tr><th>model</th><th>form of age</th><th>parameters</th></tr></thead>
+<tbody>
+<tr><td><code>model_age_continuous</code></td><td>continuous age: <code>age</code></td><td>2</td></tr>
+<tr><td><code>model_age_equal_groups</code></td><td>four equal-width groups chosen automatically by <code>cut()</code></td><td>4</td></tr>
+<tr><td><code>model_age_decade_groups</code></td><td>decade groups: 40s, 50s, 60s, 70s, 80s, 90+</td><td>6</td></tr>
+</tbody>
+</table>
+
+The automatic cut divides the observed age range into four intervals of equal width. Its boundaries depend on the data and may not be round numbers. The decade cut uses familiar age bands that are easier to describe.
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: fit four automatic equal-width age groups</h3>
+
+`breaks = 4` asks `cut()` to divide the observed range of age into four equal-width intervals. `include.lowest = TRUE` makes the youngest observed age part of the first interval.
+
+```{webr-r}
+klosa$age_group_equal <- cut(klosa$age, breaks = 4,
+  include.lowest = TRUE)
+
+model_age_equal_groups <- glm(
+  weak_grip ~ age_group_equal, family = binomial, data = klosa
+)
+
+summary(model_age_equal_groups)
+```
+
+</div>
+
+<details class="answer">
+<summary>What to look for in the output</summary>
+
+The four groups are `[45,56.5]`, `(56.5,68]`, `(68,79.5]`, and `(79.5,91]`. The coefficient table has four rows:
+
+```
+                            Estimate Std. Error z value Pr(>|z|)
+(Intercept)                  -2.8456     0.1084 -26.244  <0.001
+age_group_equal(56.5,68]      1.3241     0.1278  10.359  <0.001
+age_group_equal(68,79.5]      2.6092     0.1278  20.409  <0.001
+age_group_equal(79.5,91]      3.5134     0.1923  18.273  <0.001
+```
+
+The bottom of the summary reports:
+
+```
+Residual deviance: 3532.9  on 4180  degrees of freedom
+AIC: 3540.9
+```
+
+</details>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 4</div>
+  <p>Why does this model have four coefficient rows?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p3" value="a">R estimates one coefficient for every group, then removes the intercept.</label>
+<label><input type="radio" name="p3" value="b">R estimates one intercept and three comparisons with the reference group.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The four rows are one intercept for the reference group and three coefficients comparing the other groups with it." data-incorrect="Not quite. One age group is the reference. Its log odds are represented by the intercept, and the other three coefficients are comparisons with that group."></div>
+</div>
+
+<div class="webr-wrap">
+
+<h3>R code: fit decade age groups</h3>
+
+Now we choose the boundaries ourselves. With whole-year ages, the intervals below represent the 40s (40&ndash;49), 50s, 60s, 70s, 80s, and 90+.
+
+```{webr-r}
+klosa$age_group_decade <- cut(klosa$age,
+  breaks = c(39, 49, 59, 69, 79, 89, Inf))
+
+model_age_decade_groups <- glm(
+  weak_grip ~ age_group_decade, family = binomial, data = klosa
+)
+
+summary(model_age_decade_groups)
+```
+
+</div>
+
+<details class="answer">
+<summary>What to look for in the output</summary>
+
+```
+                              Estimate Std. Error z value Pr(>|z|)
+(Intercept)                    -3.3295     0.1996 -16.681  <0.001
+age_group_decade(49,59]         0.8776     0.2252   3.897  <0.001
+age_group_decade(59,69]         2.0543     0.2111   9.732  <0.001
+age_group_decade(69,79]         3.1831     0.2126  14.975  <0.001
+age_group_decade(79,89]         3.9793     0.2562  15.532  <0.001
+age_group_decade(89,Inf]        4.7157     1.1357   4.152  <0.001
+```
+
+The bottom of the summary reports:
+
+```
+Residual deviance: 3493.5  on 4178  degrees of freedom
+AIC: 3505.5
+```
+
+</details>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 5</div>
+  <p>Which age group is represented by the intercept in this model?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p4" value="a">The 40s, the reference group.</label>
+<label><input type="radio" name="p4" value="b">Ages 90+, the final age group.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The first interval, the 40s, is the reference. The intercept gives its log odds of weak grip." data-incorrect="Not quite. R uses the first factor level as the reference, so the intercept represents the 40s."></div>
+</div>
+
+<div class="callout">
+<p>NOTE: AIC has <strong>no absolute scale</strong>: 3505.5 is not "good" or "bad" on its own. Only <strong>differences</strong> between models fitted to the same outcome and the same rows mean anything.</p>
+</div>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 6</div>
+  <p>The decade group model has residual deviance 3493.516 and six parameters. How is its AIC calculated?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p5" value="a">3493.516 + 2 &times; 6 = <strong>3505.516</strong>.</label>
+<label><input type="radio" name="p5" value="b">3493.516 + 6 = <strong>3499.516</strong>.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The penalty is 2 for each of six parameters, so AIC = 3493.516 + 12 = 3505.516." data-incorrect="Not quite. AIC adds 2k, not k. Six parameters produce a penalty of 12."></div>
+</div>
+
+<section class="panel">
+
+<h2>Seeing what the three models fit</h2>
+
+The points below are the observed proportions with weak grip at each age. The lines show the probabilities predicted by the continuous age model and the two grouped models.
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: plot the observed data and fitted probabilities</h3>
+
+```{webr-r}
+#| fig-width: 8
+#| fig-height: 5
+library(ggplot2)
+
+observed_by_age <- klosa %>%
+  group_by(age) %>%
+  summarize(proportion = mean(weak_grip), .groups = "drop")
+
+prediction_data <- data.frame(
+  age = seq(min(klosa$age), max(klosa$age))
+)
+prediction_data$age_group_equal <- cut(prediction_data$age, breaks = 4,
+  include.lowest = TRUE)
+prediction_data$age_group_decade <- cut(prediction_data$age,
+  breaks = c(39, 49, 59, 69, 79, 89, Inf))
+
+prediction_data$continuous <- predict(
+  model_age_continuous, newdata = prediction_data, type = "response"
+)
+prediction_data$equal_groups <- predict(
+  model_age_equal_groups, newdata = prediction_data, type = "response"
+)
+prediction_data$decade_groups <- predict(
+  model_age_decade_groups, newdata = prediction_data, type = "response"
+)
+
+ggplot(observed_by_age, aes(x = age, y = proportion)) +
+  geom_point(color = "grey45", alpha = 0.7) +
+  geom_line(
+    data = prediction_data,
+    aes(y = continuous, color = "Continuous age"), linewidth = 1.1
+  ) +
+  geom_step(
+    data = prediction_data,
+    aes(y = equal_groups, color = "Four equal-width groups"), linewidth = 1.1
+  ) +
+  geom_step(
+    data = prediction_data,
+    aes(y = decade_groups, color = "Decade groups"), linewidth = 1.1
+  ) +
+  scale_color_manual(values = c(
+    "Continuous age" = "#00565e",
+    "Four equal-width groups" = "#b83b5e",
+    "Decade groups" = "#d69f00"
+  )) +
+  labs(
+    x = "Age (years)",
+    y = "Probability of weak grip",
+    color = "Functional form"
+  ) +
+  theme_minimal()
+```
+
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 7</div>
+  <p>Why do both fitted lines from the grouped models look like staircases?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p6" value="a">Each model estimates a different probability for every year of age.</label>
+<label><input type="radio" name="p6" value="b">Each model assigns one probability to everyone within an age group.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. A grouped model changes its fitted probability only when age crosses one of its boundaries." data-incorrect="Not quite. Everyone in the same age group receives the same fitted probability, so changes occur only at group boundaries."></div>
+</div>
+
+<section class="panel">
+
+<h2>Choose functional forms carefully</h2>
+
+There are many forms you could try. Age squared, categories, splines etc. However, testing every form we can imagine makes it easier to select a pattern created by chance.
+
+Compare a small set of forms chosen for good reasons. Those reasons might come from subject knowledge, a pre-specified analysis plan, or categories that previous studies have found useful. 
+
+</section>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 8</div>
+  <p>Which is the better strategy when comparing possible functional forms?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p7" value="a">Try many functional forms and report only the form with the lowest AIC.</label>
+<label><input type="radio" name="p7" value="b">Compare a few functional forms supported by theory, prior evidence, or a pre-specified plan.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. Well-justified candidate groupings make the comparison easier to defend and reduce the risk of selecting a chance pattern." data-incorrect="Not quite. Searching many arbitrary cut points can make chance patterns look convincing. Restrict the comparison to well-justified candidates."></div>
+</div>
+
+<section class="panel">
+
+<h2>Presenting the models side by side</h2>
+
+When functional-form comparisons influence which model you report, it can be useful to show the candidate models in the main paper or supplementary material. This makes the model-building decision visible to readers.
+
+Here, `modelsummary()` collects the model results. We keep its fit-statistic rows and pass them to `gt()` so they appear as a polished HTML table.
+
+</section>
+
+<div class="webr-wrap">
+
+<h3>R code: an HTML fit table, fill in the blanks</h3>
+
+Fill in the three model names. We omit a few extra statistics to keep the table compact.
+
+```{webr-r}
+#| output: asis
+library(modelsummary)
+library(gt)
+
+comparison_data <- modelsummary(
+  list(
+    # enter the names of your three models here
+    "Continuous age" = ____,
+    "Equal-width groups" = ____,
+    "Decade groups" = ____
+  ),
+  gof_omit = "BIC|RMSE|F",
+  output = "data.frame"
+)
+
+fit_rows <- comparison_data[
+  comparison_data$part == "gof",
+  c("term", "Continuous age", "Equal-width groups", "Decade groups")
+]
+names(fit_rows)[1] <- "Fit statistic"
+
+fit_table <- gt(fit_rows) |>
+  tab_header(title = "Model fit comparison")
+
+fit_table
+```
+
+</div>
+
+<details class="answer">
+<summary>Show the answer</summary>
+
+```r
+comparison_data <- modelsummary(
+  list(
+    "Continuous age" = model_age_continuous,
+    "Equal-width groups" = model_age_equal_groups,
+    "Decade groups" = model_age_decade_groups
+  ),
+  gof_omit = "BIC|RMSE|F",
+  output = "data.frame"
+)
+
+fit_rows <- comparison_data[
+  comparison_data$part == "gof",
+  c("term", "Continuous age", "Equal-width groups", "Decade groups")
+]
+names(fit_rows)[1] <- "Fit statistic"
+
+fit_table <- gt(fit_rows) |>
+  tab_header(title = "Model fit comparison")
+
+cat(as_raw_html(fit_table))
+```
+
+<table class="slope-table">
+<thead><tr><th>Fit statistic</th><th>Continuous age</th><th>Equal-width groups</th><th>Decade groups</th></tr></thead>
+<tbody>
+<tr><td>Num.Obs.</td><td>4184</td><td>4184</td><td>4184</td></tr>
+<tr><td>AIC</td><td>3459.1</td><td>3540.9</td><td>3505.5</td></tr>
+<tr><td>Log.Lik.</td><td>&minus;1727.573</td><td>&minus;1766.466</td><td>&minus;1746.758</td></tr>
+</tbody>
+</table>
+
+Every model column confirms `Num.Obs. 4184`, so the comparison uses the same rows.
+
+</details>
+
+<div class="practice" data-answer="a">
+  <div class="practice-title">Question 9</div>
+  <p>Which model should we choose from this comparison?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p8" value="a">The continuous age model, because its AIC is substantially lower.</label>
+<label><input type="radio" name="p8" value="b">The decade groups, because their AIC is lower than the equal-width grouping.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. The continuous age model has the lowest AIC by about 46 points over the decade groups, so it is clearly preferred among these candidates." data-incorrect="Not quite. Decade groups beat equal-width groups, but both still have higher AIC than the continuous age model."></div>
+</div>
+
+<div class="practice" data-answer="b">
+  <div class="practice-title">Question 10</div>
+  <p>What does the AIC difference of about 35 between the two grouped models suggest?</p>
+  <div class="choice-set">
+<label><input type="radio" name="p9" value="a">The equal-width grouping is better than the decade grouping.</label>
+<label><input type="radio" name="p9" value="b">The decade grouping fits better than the equal-width grouping.</label>
+  </div>
+  <button type="button">Check</button>
+  <div class="practice-feedback" data-correct="Correct. An AIC difference of about 35 favours the decade groups over equal-width groups. The larger gap from the continuous age model is still the important comparison for choosing among all three." data-incorrect="Not quite. Lower AIC is better, so the decade grouping (3505.5) beats equal-width groups (3541). Both still trail the continuous age model."></div>
+</div>
+
+<section class="panel completion">
+
+<h2>Completion code</h2>
+
+<p>Answer at least 8 out of 10 questions correctly to reveal your completion code.</p>
+
+<p><span class="code-progress" id="code-progress">0 of 10 correct (need at least 8)</span></p>
+
+<div class="code-box" id="code-box">
+  <div class="code-label">Your completion code</div>
+  <div class="code-value" id="code-value"></div>
+</div>
+
+</section>
+
+<p class="footer-note">GRAPH Courses practical | Model fit: likelihood, deviance and AIC</p>
+
+</div>
+
+<script>
+const COMPLETION_CODE = "COMPARE";
+const COMPLETION_REQUIRED = 8;
+
+function updateCompletion() {
+  const cards = document.querySelectorAll(".practice");
+  const correct = document.querySelectorAll(".practice.is-correct").length;
+  const total = cards.length;
+  const progress = document.getElementById("code-progress");
+  const box = document.getElementById("code-box");
+  const value = document.getElementById("code-value");
+
+  if (progress) {
+    progress.textContent = correct + " of " + total + " correct (need at least " + COMPLETION_REQUIRED + ")";
+  }
+
+  if (box && value) {
+    if (correct >= COMPLETION_REQUIRED) {
+      value.textContent = COMPLETION_CODE;
+      box.style.display = "block";
+    } else {
+      box.style.display = "none";
+    }
+  }
+}
+
+document.querySelectorAll(".practice").forEach((card) => {
+  const button = card.querySelector("button");
+  const feedback = card.querySelector(".practice-feedback");
+  const answer = card.dataset.answer;
+
+  button.addEventListener("click", () => {
+    const selected = card.querySelector("input[type='radio']:checked");
+    card.classList.remove("is-correct", "is-incorrect");
+    card.querySelectorAll("label").forEach((label) => {
+      label.classList.remove("correct-choice", "incorrect-choice");
+    });
+
+    if (!selected) {
+      card.classList.add("is-incorrect");
+      feedback.textContent = "Choose an answer first, then check it.";
+      updateCompletion();
+      return;
+    }
+
+    const selectedLabel = selected.closest("label");
+    const correctInput = card.querySelector(`input[value="${answer}"]`);
+    const correctLabel = correctInput ? correctInput.closest("label") : null;
+
+    if (selected.value === answer) {
+      card.classList.add("is-correct");
+      selectedLabel.classList.add("correct-choice");
+      feedback.textContent = feedback.dataset.correct;
+    } else {
+      card.classList.add("is-incorrect");
+      selectedLabel.classList.add("incorrect-choice");
+      if (correctLabel) correctLabel.classList.add("correct-choice");
+      feedback.textContent = feedback.dataset.incorrect;
+    }
+
+    updateCompletion();
+  });
+});
+
+updateCompletion();
+</script>

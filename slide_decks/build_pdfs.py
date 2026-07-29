@@ -44,6 +44,12 @@ DECKS = [
         2560,
         1440,
     ),
+    (
+        "logistic_model_fit_2_aic",
+        "logistic_model_fit_2_aic.pdf",
+        2560,
+        1440,
+    ),
 ]
 
 
