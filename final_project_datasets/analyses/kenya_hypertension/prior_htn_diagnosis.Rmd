@@ -1,0 +1,740 @@
+---
+title: "Previous hypertension diagnosis in Kenyan outpatient attenders"
+subtitle: "Dataset 4: Kenya hypertension screening survey"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "kenya_hypertension.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names. The predictor set is
+# built around contact with care, not physiology, because that is what a
+# self-reported earlier diagnosis actually measures.
+outcome    <- "prior_htn_diagnosis"
+predictors <- c("age_group", "sex", "education", "employment", "bmi_category",
+                "diabetes", "cardiovascular_disease", "study_site")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+
+dat <- dat_raw |>
+  mutate(
+    # Event level is "Yes"; a two-level factor with "No" first makes glm() model
+    # the probability of a previous diagnosis, and lets Table 1 be grouped by
+    # outcome.
+    prior_htn_diagnosis = lab(factor(prior_htn_diagnosis, levels = c(0, 1),
+                                     labels = c("No", "Yes")),
+                              "Previously diagnosed with hypertension"),
+    hypertension = lab(factor(hypertension, levels = c(0, 1), labels = c("No", "Yes")),
+                       "Hypertension on measured BP"),
+    # Deliberate reference levels: the largest band, or the clinically
+    # "unexposed" group. 26-35 rather than 18-25 is the age reference because
+    # 18-25 holds only 101 people and would make every age contrast imprecise.
+    age_group = lab(fct_relevel(factor(age_group),
+                                "26-35", "18-25", "36-45", "46-55", "56-65", ">65"),
+                    "Age band (years)"),
+    sex = lab(factor(sex, levels = c("female", "male"), labels = c("Female", "Male")),
+              "Sex"),
+    # No schooling is the reference so higher categories read as "more education
+    # than the reference" - the natural framing for an access-to-care outcome.
+    education = lab(fct_relevel(factor(education),
+                                "No School", "Primary", "Secondary", "Tertiary"),
+                    "Education"),
+    employment = lab(fct_relevel(factor(employment), "Employed / Self Employed",
+                                 "Unemployed", "Retired"),
+                     "Employment status"),
+    bmi_category = lab(fct_relevel(factor(bmi_category),
+                                   "Healthy", "Underweight", "Overweight", "Obese"),
+                       "BMI category (WHO)"),
+    # "unknown" is kept as its own level rather than set to missing: for these
+    # two variables it means "never tested / never told", which is itself an
+    # access-to-care state and is exactly what this analysis is about.
+    diabetes = lab(fct_relevel(factor(diabetes), "no", "yes", "unknown"),
+                   "Self-reported diabetes"),
+    cardiovascular_disease = lab(fct_relevel(factor(cardiovascular_disease),
+                                             "no", "yes", "unknown"),
+                                 "Self-reported cardiovascular disease"),
+    # Public (government) facility is the reference: it is the default point of
+    # care in Kenya and the natural comparator for the private and mission
+    # sectors.
+    study_site = lab(fct_relevel(factor(study_site), "public", "private", "faith"),
+                     "Facility type"),
+    monthly_income = lab(fct_relevel(factor(monthly_income),
+                                     "0  - 15,000", "16,000 - 50,000",
+                                     "51,000 - 100,000", "100,000 - 200,000",
+                                     "Above 200,000"),
+                         "Monthly household income (KSh)"),
+    current_smoker = lab(factor(current_smoker, levels = c(0, 1), labels = c("No", "Yes")),
+                         "Current smoker")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+n_events  <- sum(dat_model[[outcome]] == "Yes")
+
+# The income-augmented sample is carried through the whole document so that the
+# cost of adding a 31%-missing variable can be quantified rather than asserted.
+dat_inc      <- dat |> select(all_of(c(outcome, predictors, "monthly_income"))) |> drop_na()
+n_events_inc <- sum(dat_inc[[outcome]] == "Yes")
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "< 0.001", paste0("= ", fmt(p, 3)))
+```
+
+# Introduction
+
+Roughly half of all hypertension in sub-Saharan Africa is undiagnosed, and the
+diagnosis step - not treatment or control - is where most of the care cascade is
+lost. This dataset is a cross-sectional screening survey of `r nrow(dat_raw)`
+adults recruited at three types of Kenyan outpatient facility - a government
+(public) facility, a private facility and a faith-based mission facility - in
+which every participant had blood pressure measured three times and was asked
+whether they had ever previously been told by a health worker that they had
+hypertension.
+
+That self-reported earlier diagnosis is a **different construct from the
+measured hypertension recorded on the same day**. Measured hypertension is
+physiology at one moment; a prior diagnosis is a record of having had contact
+with a health system that measured your blood pressure and told you the result.
+Modelling it asks who reaches diagnostic services, which is the more interesting
+question this file can answer and the one for which the predictor set below is
+assembled: age, sex, education, employment, body size, other diagnosed
+conditions and facility type.
+
+**Aim.** Among these Kenyan outpatient attenders, we examined which of age band,
+sex, education, employment status, BMI category, self-reported diabetes,
+self-reported cardiovascular disease and facility type are independently
+associated with reporting a previous hypertension diagnosis, mutually adjusting
+for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** A cross-sectional facility-based screening survey of
+`r nrow(dat_raw)` adults aged 18 and over attending outpatient services at three
+Kenyan facilities (`r sum(dat$study_site == "public")` public,
+`r sum(dat$study_site == "private")` private,
+`r sum(dat$study_site == "faith")` faith-based).
+
+**Variables.** The outcome is `prior_htn_diagnosis`, self-report of having
+previously been diagnosed with hypertension; the modelled event is **prior
+diagnosis = Yes** (`r sum(dat$prior_htn_diagnosis == "Yes")` of `r nrow(dat)`,
+`r fmt(100 * mean(dat$prior_htn_diagnosis == "Yes"), 1)`%). Predictors are age
+band (reference *26-35*); sex (reference *Female*); education (reference *No
+School*); employment status (reference *Employed / Self Employed*); WHO BMI
+category (reference *Healthy*); self-reported diabetes (reference *no*);
+self-reported cardiovascular disease (reference *no*); and facility type
+(reference *public*, the default point of care in Kenya). For diabetes and
+cardiovascular disease the *unknown* level is retained rather than treated as
+missing: "never tested / never told" is itself a state of contact with care and
+is precisely what this analysis is about.
+
+**Measured `hypertension`, `systolic_bp` and `diastolic_bp` are excluded from
+the main model** and examined in a sensitivity analysis. They are not clean
+predictors of a prior diagnosis, because the relationship runs in both
+directions at once: a person is diagnosed *because* their pressure was high in
+the past, but a diagnosis leads to antihypertensive treatment, which *lowers*
+the pressure measured today. Today's measurement is therefore partly a
+consequence of the outcome. **The file contains no medication variable of any
+kind**, so the two directions cannot be separated, and any coefficient for
+measured pressure in this model is uninterpretable as a causal quantity.
+
+**BMI is categorical, not continuous.** Only the WHO `bmi_category` label is
+supplied, so no per-unit BMI odds ratio can be reported; and in fact **no
+predictor in this file is continuous** - age is banded too - so every estimate
+is a contrast between broad groups with certain residual confounding within
+band.
+
+**Facility type and clustering.** `study_site` is a facility-*type* label
+(private, public, faith), not a facility identifier. It is a plausible
+confounder for a care-related outcome, since the three sectors serve different
+populations and have different case mixes, so it is included. But it is also the
+only handle on the fact that participants are clustered within three recruitment
+sites; with no facility ID, a random effect or cluster-robust standard errors
+are impossible, and the reported standard errors are almost certainly too small.
+
+**Statistical analysis.** Logistic regression via `glm(family = binomial)`,
+justified because the outcome is binary; estimates are reported as odds ratios.
+We fitted a univariable model for each predictor first, then a single
+multivariable model containing all eight. Predictors were chosen in advance on
+subject-matter grounds, not by significance. Significance threshold 0.05;
+estimates are reported with 95% confidence intervals. Assumptions were checked
+with `performance::check_model()`. Analysis used `r R.version.string` with
+tidyverse, gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped,
+`r fmt(100 * n_dropped / nrow(dat), 1)`%), containing `r n_events` events. The
+outcome and four predictors are 100% complete; losses come from `bmi_category`
+(`r sum(is.na(dat$bmi_category))` missing), `education`
+(`r sum(is.na(dat$education))`), `age_group` (`r sum(is.na(dat$age_group))`) and
+`employment` (`r sum(is.na(dat$employment))`). `monthly_income`, missing for
+`r sum(is.na(dat$monthly_income))` participants
+(`r fmt(100 * mean(is.na(dat$monthly_income)), 1)`%), is not in the main model
+despite being substantively relevant to an access-to-care question; the section
+*The cost of `monthly_income`* below reports exactly what including it would
+cost and gain.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(
+    by = prior_htn_diagnosis,
+    missing = "no"
+  ) |>
+  add_n() |>
+  add_overall() |>
+  modify_caption("**Table 1. Sample characteristics by self-reported previous hypertension diagnosis.**")
+```
+
+```{r table-one-numbers}
+prev <- 100 * mean(dat_model$prior_htn_diagnosis == "Yes")
+```
+
+`r fmt(prev, 1)`% of the analytic sample (`r n_events` of `r nrow(dat_model)`)
+reported a previous hypertension diagnosis. Those reporting one are much older
+(`r fmt(100 * mean(dat_model$age_group[dat_model$prior_htn_diagnosis == "Yes"] %in% c("56-65", ">65")), 0)`%
+over 55 versus
+`r fmt(100 * mean(dat_model$age_group[dat_model$prior_htn_diagnosis == "No"] %in% c("56-65", ">65")), 0)`%),
+much more likely to report cardiovascular disease
+(`r fmt(100 * mean(dat_model$cardiovascular_disease[dat_model$prior_htn_diagnosis == "Yes"] == "yes"), 0)`%
+versus
+`r fmt(100 * mean(dat_model$cardiovascular_disease[dat_model$prior_htn_diagnosis == "No"] == "yes"), 0)`%)
+or diabetes, more often retired, and heavier. Sex differences are slight.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Proportion reporting a previous hypertension diagnosis, by age band and facility type."}
+dat_model |>
+  mutate(age_group = fct_relevel(age_group, "18-25", "26-35", "36-45",
+                                 "46-55", "56-65", ">65")) |>
+  group_by(age_group, study_site) |>
+  summarise(prop = mean(prior_htn_diagnosis == "Yes"), n = n(), .groups = "drop") |>
+  ggplot(aes(age_group, prop, fill = study_site)) +
+  geom_col(position = position_dodge(preserve = "single")) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                     limits = c(0, 1)) +
+  scale_fill_viridis_d(option = "D", end = 0.9) +
+  labs(x = "Age band (years)", y = "Previously diagnosed (%)",
+       fill = "Facility type",
+       caption = "Bars are observed proportions; the 18-25 cells contain fewer than 40 people each")
+```
+
+The proportion reporting a previous diagnosis rises steeply with age in all
+three sectors, from almost nobody under 25 to well over half of the over-65s,
+and the faith-based facility sits above the other two in most age bands - but
+its attenders are also older and sicker, which is exactly the confounding the
+multivariable model has to resolve.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = glm,
+    method.args = list(family = binomial),
+    exponentiate = TRUE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(glm(reformulate(v, outcome), data = dat_model, family = binomial),
+       conf.int = TRUE, exponentiate = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 2) {
+  r <- utid[utid$term == term, ]
+  stopifnot(nrow(r) == 1L)
+  sprintf("OR %s (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+up <- function(term) { x <- utid$p.value[utid$term == term]; stopifnot(length(x) == 1L); pv(x) }
+```
+
+Crudely, the strongest associations are with other diagnosed conditions and with
+age. Self-reported cardiovascular disease carries `r ug("cardiovascular_diseaseyes")`
+(p `r up("cardiovascular_diseaseyes")`) and self-reported diabetes
+`r ug("diabetesyes")` (p `r up("diabetesyes")`). Relative to the 26-35 band, the
+odds of reporting a previous diagnosis are `r ug("age_group46-55")` at 46-55,
+`r ug("age_group56-65")` at 56-65 and `r ug("age_group>65")` above 65. Retired
+participants have `r ug("employmentRetired")` relative to the employed
+(p `r up("employmentRetired")`). Obesity carries `r ug("bmi_categoryObese")`
+(p `r up("bmi_categoryObese")`) and underweight `r ug("bmi_categoryUnderweight")`
+(p `r up("bmi_categoryUnderweight")`). Attenders at the faith-based facility have
+`r ug("study_sitefaith")` the odds of those at the public facility
+(p `r up("study_sitefaith")`), while private-facility attenders are
+indistinguishable from public (`r ug("study_siteprivate")`,
+p `r up("study_siteprivate")`). Neither sex (`r ug("sexMale")`,
+p `r up("sexMale")`) nor education (tertiary `r ug("educationTertiary")`,
+p `r up("educationTertiary")`) shows a crude association.
+
+## Why adjustment is needed
+
+The crude odds ratios are badly confounded because the predictors are strongly
+interlocked. **Age band** is the central problem. It is the strongest
+determinant of ever having been diagnosed - simply because older people have had
+more years and more clinical encounters in which a blood pressure could be
+taken - and it is associated with almost every other predictor here. Retirement
+is nearly a deterministic function of age
+(`r fmt(100 * mean(dat_model$age_group[dat_model$employment == "Retired"] %in% c("56-65", ">65")), 0)`%
+of retired participants are over 55), so the crude retirement OR of
+`r fmt(utid$estimate[utid$term == "employmentRetired"], 2)` is largely an age
+effect wearing a different label. Education is steeply age-patterned in the
+opposite direction:
+`r fmt(100 * mean(dat_model$education[dat_model$age_group == ">65"] == "Tertiary"), 0)`%
+of the over-65s have tertiary education against
+`r fmt(100 * mean(dat_model$education[dat_model$age_group == "26-35"] == "Tertiary"), 0)`%
+of the 26-35 band, so the crude education contrasts are the *youth* of the
+educated cancelling out any access advantage they may have, and only adjustment
+for age can separate the two. **Facility type** is the second key confounder,
+and the reason it must be in the model: the three sectors serve very different
+populations. The faith-based facility's attenders are older and far more likely
+to report cardiovascular disease
+(`r fmt(100 * mean(dat_model$cardiovascular_disease[dat_model$study_site == "faith"] == "yes"), 0)`%
+versus
+`r fmt(100 * mean(dat_model$cardiovascular_disease[dat_model$study_site == "public"] == "yes"), 0)`%
+at the public facility), so its crude excess of previously diagnosed attenders
+may be case mix rather than anything about the facility. **Comorbidity**
+(diabetes, cardiovascular disease) confounds the socio-economic contrasts in
+turn, because people already in chronic-disease care get their blood pressure
+taken repeatedly, and comorbidity is unevenly distributed across age, body size
+and facility. Mutual adjustment lets each odds ratio be read as a comparison
+between attenders alike on the other seven measured characteristics.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- glm(reformulate(predictors, outcome), data = dat_model, family = binomial)
+
+mv <- tbl_regression(fit, exponentiate = TRUE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+g <- function(term, d = 2) {
+  r <- tid[tid$term == term, ]
+  stopifnot(nrow(r) == 1L)
+  sprintf("OR %s (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gp <- function(term) { x <- tid$p.value[tid$term == term]; stopifnot(length(x) == 1L); pv(x) }
+```
+
+```{r fit-stats}
+n_par <- length(coef(fit))
+epp   <- n_events / (n_par - 1)
+tibble(
+  Statistic = c("Complete-case N", "Rows dropped by listwise deletion",
+                "Events (prior diagnosis = Yes)", "AIC", "Null deviance",
+                "Residual deviance", "Model parameters (incl. intercept)",
+                "Events per parameter"),
+  Value = c(as.character(nrow(dat_model)), as.character(n_dropped),
+            as.character(n_events), fmt(AIC(fit), 1),
+            fmt(fit$null.deviance, 1), fmt(fit$deviance, 1),
+            as.character(n_par), fmt(epp, 1))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable logistic model for previous hypertension diagnosis**"))
+```
+
+The model was fitted on `r nrow(dat_model)` complete cases with `r n_events`
+events and `r n_par` parameters, giving `r fmt(epp, 1)` **events per
+parameter** - above the conventional minimum of 10, so the model is identified
+and the predictor set does not need trimming. AIC is `r fmt(AIC(fit), 1)`
+against a null deviance of `r fmt(fit$null.deviance, 1)` and residual deviance
+`r fmt(fit$deviance, 1)`, a large improvement on the null.
+
+Conditional on the other seven predictors, age remains dominant:
+`r g("age_group46-55")` at 46-55, `r g("age_group56-65")` at 56-65 and
+`r g("age_group>65")` above 65, all relative to the 26-35 band. Self-reported
+cardiovascular disease carries an extreme `r g("cardiovascular_diseaseyes")`
+(p `r gp("cardiovascular_diseaseyes")`) - see the caution below - and diabetes
+`r g("diabetesyes")` (p `r gp("diabetesyes")`). Obesity retains
+`r g("bmi_categoryObese")` (p `r gp("bmi_categoryObese")`) and being overweight
+`r g("bmi_categoryOverweight")` (p `r gp("bmi_categoryOverweight")`). Education
+becomes strongly and positively associated once age is held constant: relative
+to no schooling, primary `r g("educationPrimary")`, secondary
+`r g("educationSecondary")` and tertiary `r g("educationTertiary")` (all
+p < 0.05). Attenders at the faith-based facility have `r g("study_sitefaith")`
+the adjusted odds of public-facility attenders (p `r gp("study_sitefaith")`) -
+the reverse of the crude direction. Employment and sex are null after
+adjustment. These are associations among the attenders observed, not effects of
+intervening on any of these variables.
+
+**Caution on the cardiovascular-disease coefficient.** An odds ratio of
+`r fmt(tid$estimate[tid$term == "cardiovascular_diseaseyes"], 0)` is not a
+plausible causal quantity and rests on a thin cell: only
+`r sum(dat_model$cardiovascular_disease == "yes" & dat_model$prior_htn_diagnosis == "No")`
+of the `r sum(dat_model$cardiovascular_disease == "yes")` participants reporting
+cardiovascular disease do *not* also report a hypertension diagnosis. This is
+close to - though not actually - quasi-complete separation, which is why the
+confidence interval is so wide. Substantively, cardiovascular disease is not a
+clean upstream exposure: it is largely diagnosed in the same clinical encounters
+that diagnose hypertension, and it is often a consequence of hypertension, so
+this coefficient reflects co-detection and shared care contact at least as much
+as any effect of one condition on the other. It is retained because leaving it
+out changes conclusions about facility type (see the sensitivity analysis), but
+it should be described as a marker of engagement with chronic-disease care and
+never as a risk factor.
+
+## The cost of `monthly_income`
+
+```{r income-cost}
+fit_inc      <- glm(reformulate(c(predictors, "monthly_income"), outcome),
+                    data = dat_inc, family = binomial)
+fit_noinc_cc <- glm(reformulate(predictors, outcome), data = dat_inc, family = binomial)
+
+inc_tid <- tidy(fit_inc, conf.int = TRUE, exponentiate = TRUE)
+epp_inc <- n_events_inc / (length(coef(fit_inc)) - 1)
+
+tibble(
+  Model = c("Main model (no income)",
+            "Same model, income complete-cases only",
+            "Model with monthly_income added"),
+  N = c(nrow(dat_model), nrow(dat_inc), nrow(dat_inc)),
+  `% of file` = fmt(100 * c(nrow(dat_model), nrow(dat_inc), nrow(dat_inc)) / nrow(dat), 1),
+  Events = c(n_events, n_events_inc, n_events_inc),
+  Parameters = c(n_par - 1, length(coef(fit_noinc_cc)) - 1,
+                 length(coef(fit_inc)) - 1),
+  `Events/parameter` = fmt(c(epp, n_events_inc / (length(coef(fit_noinc_cc)) - 1),
+                             epp_inc), 1),
+  AIC = fmt(c(AIC(fit), AIC(fit_noinc_cc), AIC(fit_inc)), 1)
+) |>
+  gt() |>
+  tab_header(title = md("**Table 2. What adding `monthly_income` costs.**"),
+             subtitle = md("`monthly_income` is missing for 31% of participants; listwise deletion removes them from the whole model, not just from that one coefficient. AICs from different samples are not comparable."))
+```
+
+```{r income-numbers}
+inc_lost <- nrow(dat_model) - nrow(dat_inc)
+inc_p    <- anova(fit_noinc_cc, fit_inc, test = "LRT")$`Pr(>Chi)`[2]
+faith_main <- tid$estimate[tid$term == "study_sitefaith"]
+faith_inc  <- inc_tid$estimate[inc_tid$term == "study_sitefaith"]
+tert_main  <- tid$estimate[tid$term == "educationTertiary"]
+tert_inc   <- inc_tid$estimate[inc_tid$term == "educationTertiary"]
+cvd_main   <- tid$estimate[tid$term == "cardiovascular_diseaseyes"]
+cvd_inc    <- inc_tid$estimate[inc_tid$term == "cardiovascular_diseaseyes"]
+miss_by_site <- dat |> group_by(study_site) |>
+  summarise(pct = 100 * mean(is.na(monthly_income)))
+```
+
+This is the most important methodological point in this dataset, and it bites
+hardest here because household income is genuinely relevant to an
+access-to-care outcome - this is the one model where a student has a real reason
+to want the variable. `monthly_income` is missing for
+`r fmt(100 * mean(is.na(dat$monthly_income)), 1)`% of participants, and because
+`glm()` deletes rows listwise, adding it removes those participants from *every*
+coefficient in the model, not just from the income coefficient. The
+complete-case N falls from **`r nrow(dat_model)`** to **`r nrow(dat_inc)`**
+(`r fmt(100 * nrow(dat_inc) / nrow(dat), 0)`% of the file) and events from
+**`r n_events`** to **`r n_events_inc`**: `r inc_lost` participants and
+`r n_events - n_events_inc` events discarded to buy
+`r length(coef(fit_inc)) - n_par` extra parameters, cutting events per parameter
+from `r fmt(epp, 1)` to `r fmt(epp_inc, 1)`. The likelihood-ratio test comparing
+the two models on the *same* `r nrow(dat_inc)` rows gives p `r pv(inc_p)`, so
+even on its own restricted sample income does not improve the model at the 0.05
+level, although it comes closer here than in any other outcome in this dataset.
+
+The missingness is emphatically not random, and in a way that is fatal for this
+particular research question. Non-response to the income question ranges from
+`r fmt(miss_by_site$pct[miss_by_site$study_site == "faith"], 0)`% at the
+faith-based facility to
+`r fmt(miss_by_site$pct[miss_by_site$study_site == "private"], 0)`% at the
+private facility, and rises with education (from
+`r fmt(100 * mean(is.na(dat$monthly_income[dat$education == "No School"])), 0)`%
+among those with no schooling to
+`r fmt(100 * mean(is.na(dat$monthly_income[dat$education == "Tertiary"])), 0)`%
+among the tertiary educated). In other words, the propensity to withhold income
+is itself patterned by two of the model's own predictors - facility type and
+education - so restricting to income responders systematically reshapes exactly
+the contrasts this analysis is about. The effect is visible: the faith-facility
+odds ratio moves from `r fmt(faith_main, 2)` to `r fmt(faith_inc, 2)`, tertiary
+education from `r fmt(tert_main, 2)` to `r fmt(tert_inc, 2)`, and the
+cardiovascular-disease coefficient from `r fmt(cvd_main, 1)` to
+`r fmt(cvd_inc, 1)`. **The main model therefore excludes `monthly_income`**, and
+a student who wants an income gradient for this outcome must use multiple
+imputation rather than complete cases; taking the reduced sample at face value
+would be a mistake.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 3. Unadjusted and adjusted odds ratios.**")
+```
+
+This is the most dramatic crude-versus-adjusted table in the dataset. **Facility
+type reverses direction.** The faith-based facility looks like the sector with
+*more* previously diagnosed attenders crudely (`r ug("study_sitefaith")`,
+p `r up("study_sitefaith")`), and becomes the sector with *fewer* after
+adjustment (`r g("study_sitefaith")`, p `r gp("study_sitefaith")`): its crude
+excess was entirely case mix - older attenders with far more cardiovascular
+disease - and once like is compared with like, its attenders are less likely to
+have been diagnosed before. **Education reverses too, and more strongly.**
+Tertiary education is crudely and non-significantly *protective*
+(`r ug("educationTertiary")`, p `r up("educationTertiary")`) and becomes a
+strong positive association after adjustment (`r g("educationTertiary")`,
+p `r gp("educationTertiary")`); the same happens to secondary
+(`r ug("educationSecondary")` to `r g("educationSecondary")`) and primary
+(`r ug("educationPrimary")` to `r g("educationPrimary")`). The crude estimates
+were suppressed by age: the educated are young, the young are undiagnosed, and
+holding age constant reveals a clear educational gradient in ever having been
+told you have hypertension - which is the substantive finding of this analysis.
+**Retirement collapses**, from `r ug("employmentRetired")` crude
+(p `r up("employmentRetired")`) to `r g("employmentRetired")` adjusted
+(p `r gp("employmentRetired")`), losing significance entirely: retirement in
+these data is essentially a restatement of old age. **Diabetes halves**, from
+`r ug("diabetesyes")` to `r g("diabetesyes")`, though it remains significant.
+Two predictors barely move: **obesity** (`r ug("bmi_categoryObese")` to
+`r g("bmi_categoryObese")`) and **cardiovascular disease**
+(`r ug("cardiovascular_diseaseyes")` to `r g("cardiovascular_diseaseyes")`),
+the latter simply because nothing measured here can explain away a variable so
+tightly bound to the outcome. The **age gradient** attenuates by roughly a third
+(over-65s `r ug("age_group>65")` to `r g("age_group>65")`) but stays the largest
+demographic signal. Collinearity is low throughout (see diagnostics), so these
+reversals are genuine confounding, not variance inflation.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r diag-numbers}
+vifs <- check_collinearity(fit)
+max_vif <- max(vifs$VIF)
+br <- binned_residuals(fit)
+br_pct <- 100 * attributes(br)$resid_ok
+min_cell <- sum(dat_model$cardiovascular_disease == "yes" &
+                  dat_model$prior_htn_diagnosis == "No")
+```
+
+For a logistic model only some `check_model()` panels apply. **Binned
+residuals**: `r fmt(br_pct, 1)`% of bins fall inside the error bounds against a
+rule-of-thumb target of about 95%, so there is genuine lack of fit. As with the
+other outcomes in this file the cause is structural - every predictor is a
+coarse category, so only a limited number of distinct fitted probabilities can be
+produced - and it cannot be repaired without continuous age and BMI.
+**Collinearity** is low (maximum VIF `r fmt(max_vif, 2)`, for
+`r vifs$Term[which.max(vifs$VIF)]`), which matters a great deal here: it means
+the education and facility-type reversals in Table 3 are real confounding and
+not artefacts of unstable estimation. **Separation** is the live risk in this
+model: the cardiovascular-disease contrast rests on a cell of just
+`r min_cell` participants (CVD reported, no prior hypertension diagnosis), which
+is why its odds ratio is enormous and its confidence interval spans a factor of
+`r fmt(tid$conf.high[tid$term == "cardiovascular_diseaseyes"] / tid$conf.low[tid$term == "cardiovascular_diseaseyes"], 0)`.
+The model converges and no coefficient runs away to infinity, so this is
+sparse-data bias rather than true separation, but the coefficient should be
+reported with the caveat above and never interpreted as a magnitude.
+**Influential observations**: no point exceeds the Cook's distance contours.
+**Events per parameter** is `r fmt(epp, 1)`, adequate. Homogeneity of variance
+and normality of residuals are printed for completeness but do not apply to a
+binomial GLM.
+
+## Sensitivity analyses
+
+```{r sens-nocvd}
+p_nocvd <- setdiff(predictors, "cardiovascular_disease")
+fit_nocvd <- glm(reformulate(p_nocvd, outcome), data = dat_model, family = binomial)
+nc <- tidy(fit_nocvd, conf.int = TRUE, exponentiate = TRUE)
+ncg <- function(term, d = 2) {
+  r <- nc[nc$term == term, ]
+  stopifnot(nrow(r) == 1L)
+  sprintf("OR %s (95%% CI %s to %s, p %s)", fmt(r$estimate, d), fmt(r$conf.low, d),
+          fmt(r$conf.high, d), pv(r$p.value))
+}
+```
+
+**Dropping cardiovascular disease.** Because that coefficient is so extreme, the
+model was refitted without it on the same `r nrow(dat_model)` rows. The facility
+result does not survive: the faith-facility odds ratio moves from
+`r g("study_sitefaith")` back to `r ncg("study_sitefaith")`, i.e. no difference
+from the public facility at all. The education gradient also weakens sharply
+(tertiary `r ncg("educationTertiary")`). In other words, **the two headline
+findings of this analysis exist only conditional on cardiovascular disease
+status**, a variable that is arguably a consequence of the same care contact
+that produces the outcome. Adjusting for it may be removing confounding by case
+mix, or may be conditioning on a collider and manufacturing associations that do
+not exist. This file cannot distinguish the two, and a student report should
+present both models rather than choosing.
+
+```{r sens-htn}
+dat_h <- dat |> select(all_of(c(outcome, predictors, "hypertension"))) |> drop_na()
+fit_h <- glm(reformulate(c(predictors, "hypertension"), outcome),
+             data = dat_h, family = binomial)
+ht <- tidy(fit_h, conf.int = TRUE, exponentiate = TRUE) |>
+  filter(term == "hypertensionYes")
+tab <- table(measured = dat$hypertension, prior = dat$prior_htn_diagnosis)
+aware <- 100 * tab["Yes", "Yes"] / sum(tab["Yes", ])
+```
+
+```{r prior-tab}
+as.data.frame.matrix(tab) |>
+  rownames_to_column("Measured hypertension") |>
+  rename(`Prior diagnosis: No` = No, `Prior diagnosis: Yes` = Yes) |>
+  gt() |>
+  tab_header(title = md("**Table 4. Measured hypertension against self-reported prior diagnosis.**"))
+```
+
+**Adding today's measured hypertension.** The two variables agree on only
+`r fmt(100 * (tab["No", "No"] + tab["Yes", "Yes"]) / sum(tab), 0)`% of
+participants: just `r fmt(aware, 0)`% of those hypertensive on measurement
+report a prior diagnosis, and `r tab["No", "Yes"]` of the
+`r sum(tab[, "Yes"])` who report a prior diagnosis are normotensive today. Adding
+`hypertension` to the model gives
+`r sprintf("OR %s (95%% CI %s to %s)", fmt(ht$estimate, 2), fmt(ht$conf.low, 2), fmt(ht$conf.high, 2))`,
+p `r pv(ht$p.value)`, and lowers AIC from `r fmt(AIC(fit), 1)` to
+`r fmt(AIC(fit_h), 1)`. **This must not be read as an effect of blood pressure
+on diagnosis.** Reverse causation is guaranteed here and runs in both
+directions: a diagnosis is given because pressure was high in the *past*, which
+inflates the association; and the diagnosis brings antihypertensive treatment
+which lowers the pressure measured *today*, which deflates it. The file records
+**no medication whatsoever**, so the two cannot be untangled, and the observed
+OR of `r fmt(ht$estimate, 1)` is a net of the two opposing mechanisms with no
+way to recover either. That the OR is only about
+`r fmt(ht$estimate, 0)` - rather than the very large value one would expect if
+diagnosis simply tracked pressure - is itself informative: it is consistent with
+substantial treatment effect among the diagnosed, but it is equally consistent
+with poor recall or with single-visit measurement error, and these data cannot
+choose between those explanations.
+
+# Discussion
+
+Among these Kenyan outpatient attenders, having ever been told you have
+hypertension is driven by age, by body size, by other diagnosed chronic
+conditions and - once age is held constant - by education. The educational
+gradient is the substantive finding and it is invisible in the crude analysis:
+tertiary-educated attenders have `r g("educationTertiary")` the odds of
+attenders who never went to school, of the same age, sex, employment status,
+body size, comorbidity and facility type, whereas crudely they appear
+marginally *less* likely to have been diagnosed. The reason is that education in
+Kenya is heavily age-patterned, so the crude comparison is mostly a comparison
+of young with old. Practically, this points to schooling - a proxy for health
+literacy and for the ability to seek and use services - as an axis of inequality
+in diagnosis, not merely in treatment. The awareness gap is the other headline:
+only `r fmt(aware, 0)`% of participants who were hypertensive at this visit had
+ever been told so.
+
+**Limitations.** The outcome is **self-reported** and depends on recall and on
+having understood what a clinician said; misclassification is certain and is
+probably differential by education, which is the very predictor of interest -
+better-educated participants may be better at recalling and reporting a
+diagnosis, so part of the education gradient reported here may be reporting
+behaviour rather than access. This is a **facility-based convenience sample**,
+so it describes attenders at three specific facilities and nothing wider; by
+construction everyone in it is already in contact with a health facility today,
+which truncates the access spectrum this analysis is meant to describe. The
+design is **cross-sectional**: comorbidity, body size and facility attendance
+are all recorded at the same visit as the outcome, so temporal ordering is
+assumed, not observed. The **cardiovascular-disease coefficient is
+uninterpretable as a magnitude** and, as the sensitivity analysis shows, both
+headline findings depend on adjusting for it; if it is a collider rather than a
+confounder, those findings are artefacts. **No medication variable exists**,
+which is a serious gap for any analysis linking diagnosis to measured pressure.
+**No facility identifier exists** either, only the three-level facility type, so
+clustering of attenders within facilities cannot be modelled and the standard
+errors are too small. **`monthly_income` was excluded** because including it
+would cost `r inc_lost` rows and `r n_events - n_events_inc` events, so household
+economic position - arguably the most important determinant of access to
+diagnosis - is simply unadjusted for, and its missingness is itself patterned by
+facility and education. **No predictor is continuous**, so age and adiposity
+effects are cell contrasts with residual confounding within band. Insurance
+status, distance to facility, and the reason for today's visit are all absent,
+and all three would plausibly dominate an access analysis.
+
+**Future work.** Repeat with insurance status, distance to facility and reason
+for attendance, a facility identifier for clustering, medication use, and
+multiple imputation for income - none of which this extract carries.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+- **The most interesting outcome in this dataset, and the most fragile.** It is
+  about access to and contact with care rather than physiology, it is fully
+  observed (`r sum(is.na(dat_raw$prior_htn_diagnosis))` missing), it has
+  `r n_events` events in `r nrow(dat_model)` complete cases and
+  `r fmt(epp, 1)` events per parameter, and it produces the most striking
+  crude-versus-adjusted table in the catalogue - two clean sign reversals
+  (facility type `r ug("study_sitefaith")` to `r g("study_sitefaith")`; tertiary
+  education `r ug("educationTertiary")` to `r g("educationTertiary")`) with
+  maximum VIF only `r fmt(max_vif, 2)`, so they are real confounding.
+- **MAJOR problem: both headline results depend on `cardiovascular_disease`.**
+  Drop it and the faith-facility effect becomes `r ncg("study_sitefaith")` and
+  tertiary education `r ncg("educationTertiary")` - both null. CVD is plausibly
+  a collider (diagnosed in the same care contact as hypertension) rather than a
+  confounder, so the analysis may be manufacturing its own findings. A student
+  must be told to fit both models. This is the biggest threat to the outcome.
+- **Near-sparse cell driving an OR of `r fmt(cvd_main, 0)`.** Only
+  `r min_cell` of `r sum(dat_model$cardiovascular_disease == "yes")` participants
+  reporting cardiovascular disease do not also report a hypertension diagnosis.
+  Not formal separation - the model converges - but the CI spans a factor of
+  `r fmt(tid$conf.high[tid$term == "cardiovascular_diseaseyes"] / tid$conf.low[tid$term == "cardiovascular_diseaseyes"], 0)`
+  and the magnitude is meaningless.
+- **Trap: measured `hypertension` / `systolic_bp` / `diastolic_bp` as
+  predictors.** Not forbidden the way they are for the `hypertension` outcome -
+  they are genuinely different constructs, agreeing on only
+  `r fmt(100 * (tab["No", "No"] + tab["Yes", "Yes"]) / sum(tab), 0)`% of rows -
+  but the relationship is bidirectional (diagnosis follows past high pressure;
+  treatment lowers present pressure) and there is **no medication variable** to
+  break the loop. Students will report the
+  `r sprintf("OR %s", fmt(ht$estimate, 2))` as "high blood pressure causes
+  diagnosis" unless explicitly warned.
+- **THE missing-data teaching case, and it is worst here.** `monthly_income` is
+  `r fmt(100 * mean(is.na(dat$monthly_income)), 1)`% missing; including it drops
+  N from `r nrow(dat_model)` to `r nrow(dat_inc)`
+  (`r fmt(100 * nrow(dat_inc) / nrow(dat), 0)`% of the file) and events from
+  `r n_events` to `r n_events_inc` (LRT p `r pv(inc_p)`). Unlike the other three
+  outcomes, income is *substantively central* to this research question, so the
+  student genuinely wants it - and its missingness is patterned by facility
+  (`r fmt(miss_by_site$pct[miss_by_site$study_site == "private"], 0)`% private vs
+  `r fmt(miss_by_site$pct[miss_by_site$study_site == "faith"], 0)`% faith) and by
+  education, i.e. by two of the model's own predictors. Best missing-data
+  discussion in the catalogue; multiple imputation is the only honest route.
+- **`study_site` is a facility *type*, not a facility ID.** Three sites, no
+  identifier, so clustering cannot be modelled at all and standard errors are
+  optimistic. It doubles as both a substantive predictor and the only (crude)
+  handle on clustering, which students should be told is unsatisfactory.
+- **Self-report outcome with differential misclassification by education** -
+  the same variable the analysis reports as its main finding. Must be discussed,
+  not hidden.
+- **Binned residuals fail (`r fmt(br_pct, 1)`% of bins inside bounds)**, for the
+  same structural reason as the other outcomes: no continuous predictors exist
+  in this file, so only a handful of fitted probabilities are possible. Not
+  repairable here.
+- **`employment` is nearly collinear with age in substance if not in VIF**
+  (`r fmt(100 * mean(dat_model$age_group[dat_model$employment == "Retired"] %in% c("56-65", ">65")), 0)`%
+  of retired participants are over 55); its crude OR of
+  `r fmt(utid$estimate[utid$term == "employmentRetired"], 2)` collapsing to
+  `r fmt(tid$estimate[tid$term == "employmentRetired"], 2)` is a good teaching
+  example but will confuse students who chose it as an exposure.
+- **`current_smoker` was left out** of this model deliberately: only
+  `r sum(dat_raw$current_smoker == 1)` smokers in the file, no substantive
+  reason to expect it to predict *diagnosis*, and the events-per-parameter
+  budget is better spent elsewhere.

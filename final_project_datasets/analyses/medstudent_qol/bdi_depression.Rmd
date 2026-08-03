@@ -1,0 +1,450 @@
+---
+title: "Depressive symptoms in Brazilian medical students"
+subtitle: "Dataset 7: Resilience, learning environment and quality of life in Brazilian medical students"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "medstudent_qol.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "bdi_depression"
+predictors <- c("sex", "age_yrs", "year_group", "school_legal_status",
+                "resilience_score", "dreem_global")
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    sex = factor(sex, levels = c("female", "male"),
+                 labels = c("Female", "Male")),
+    year_group = factor(year_group,
+                        levels = c("basic_sciences", "clinical_sciences", "clerkship"),
+                        labels = c("Basic sciences", "Clinical sciences", "Clerkship")),
+    school_legal_status = factor(school_legal_status, levels = c("public", "private"),
+                                 labels = c("Public", "Private")),
+    school_location = factor(school_location, levels = c("state_capital", "other_city"),
+                             labels = c("State capital", "Other city"))
+  ) |>
+  labelled::set_variable_labels(
+    bdi_depression      = "BDI total score (0-63)",
+    sex                 = "Sex",
+    age_yrs             = "Age (years)",
+    year_group          = "Stage of course",
+    school_legal_status = "School legal status",
+    resilience_score    = "Resilience score (16-98)",
+    dreem_global        = "DREEM global score (0-200)"
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+```
+
+# Introduction
+
+Tempski and colleagues surveyed a random sample of 1,350 students at 22 Brazilian
+medical schools in 2011-2012, measuring quality of life (WHOQOL-BREF), the
+perceived educational environment (DREEM), resilience, depressive symptoms and
+anxiety in a single cross-sectional questionnaire (Tempski et al., *PLOS ONE*
+2015; doi:10.1371/journal.pone.0131535). Depression in medical students is
+consistently more common than in age-matched peers and is the outcome with the
+clearest link to attrition and to later physician burnout, so identifying which
+student and school characteristics travel with it is directly useful to
+curriculum committees and student support services.
+
+**Aim.** Among Brazilian medical students, we examined which of sex, age, stage
+of the course, school legal status, resilience and the perceived educational
+environment are independently associated with the Beck Depression Inventory
+score, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** Multicentre cross-sectional survey of a random sample of 1,350
+students drawn from 22 medical schools across Brazil, stratified by stage of the
+course (basic sciences, clinical sciences, clerkship). All variables used here
+are complete.
+
+**Variables.** The outcome is `bdi_depression`, the Beck Depression Inventory
+total score, an integer from 0 to 63 (observed range 0 to 42) where higher means
+more depressive symptoms; a score of 14 or more conventionally indicates moderate
+or worse depression. Predictors are sex (reference: female, the larger group),
+age in years, stage of the course (reference: basic sciences, the earliest
+stage), school legal status (reference: public, the larger group and the
+traditional Brazilian medical school), the resilience scale score (16-98, higher
+= more resilient) and the DREEM global score (sum of the five DREEM subscales,
+higher = a more positive perceived educational environment). Continuous
+predictors are modelled per one-unit increase.
+
+Deliberate exclusions. `dreem_global` is used **instead of** its five subscales,
+which sum to it exactly. Neither `state_anxiety` nor `trait_anxiety` is used as
+a predictor, even though both are strongly associated with the BDI (*r* = 0.59
+and 0.73): all three are self-report scales of the same negative-affect
+construct, measured on the same day, and a model of depression on trait anxiety
+would be an instrument-validation exercise rather than a study of students. The
+four WHOQOL domains are excluded for the same reason - `whoqol_psychological`
+correlates -0.74 with the BDI. What is left is a model of depressive symptoms on
+demography, stage of training and the educational environment, which is the
+question a medical school would actually ask.
+
+**Statistical analysis.** Linear regression (`lm()`), justified because the
+outcome is a continuous summed score with 38 distinct observed values.
+We fitted a univariable model for each predictor first, then a single
+multivariable model containing all of them. Predictors were chosen in advance on
+subject-matter grounds, not by significance. Significance threshold 0.05;
+estimates are reported with 95% confidence intervals. Assumptions were checked
+with `performance::check_model()`. Analysis used `r R.version.string` with
+tidyverse, gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped).
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(
+    missing = "no"
+  ) |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics.**")
+```
+
+```{r prev}
+n_mod <- sum(dat_model$bdi_depression >= 14)
+```
+
+The median BDI score was 8 (IQR 4 to 13), and
+`r n_mod` students (`r sprintf("%.1f%%", 100 * n_mod / nrow(dat_model))`) scored
+14 or more, the conventional threshold for moderate or worse depression. The
+distribution is strongly right-skewed with a floor at 0, which matters for the
+diagnostics below.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. BDI score against resilience score, by sex. Points are individual students; lines are linear smoothers. The dashed line marks the moderate-depression threshold of 14."}
+ggplot(dat_model, aes(x = resilience_score, y = bdi_depression, colour = sex)) +
+  geom_point(alpha = 0.3, size = 1.2) +
+  geom_smooth(method = "lm", se = TRUE, linewidth = 0.9) +
+  geom_hline(yintercept = 14, linetype = "dashed", colour = "grey40") +
+  scale_colour_manual(values = c("#B3589A", "#3B7EA1")) +
+  labs(x = "Resilience score (16-98)", y = "BDI total score (0-63)",
+       colour = "Sex") +
+  theme(legend.position = "top")
+```
+
+Depressive symptoms fall steeply as resilience rises, the two sexes have nearly
+parallel lines with women sitting a couple of points higher throughout, and the
+funnel shape - wide scatter at low resilience, tight against the floor at high
+resilience - is the heteroscedasticity that the diagnostics will pick up.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    hide_n = TRUE
+  ) |>
+  modify_caption("**Univariable linear regression.**")
+uv
+```
+
+```{r uv-numbers}
+u <- function(v, tm = v) lm(reformulate(v, outcome), data = dat_model) |>
+  tidy(conf.int = TRUE) |> filter(term == tm)
+uv_res   <- u("resilience_score")
+uv_dreem <- u("dreem_global")
+uv_sex   <- u("sex", "sexMale")
+uv_priv  <- u("school_legal_status", "school_legal_statusPrivate")
+uv_clerk <- u("year_group", "year_groupClerkship")
+uv_clin  <- u("year_group", "year_groupClinical sciences")
+uv_age   <- u("age_yrs")
+```
+
+Resilience is the strongest crude predictor: each additional resilience point is
+associated with a `r sprintf("%.3f", abs(uv_res$estimate))`-point *lower* BDI
+score (95% CI
+`r sprintf("%.3f to %.3f", uv_res$conf.low, uv_res$conf.high)`, p < 0.001), so
+across the observed 16-to-98 resilience range that is about
+`r sprintf("%.0f", abs(uv_res$estimate) * 82)` BDI points - more than the whole
+observed spread of the outcome, which already signals that resilience and
+depression are close to being the same measurement. The DREEM global score is
+also inversely associated (`r sprintf("%.3f", uv_dreem$estimate)` per point,
+95% CI `r sprintf("%.3f to %.3f", uv_dreem$conf.low, uv_dreem$conf.high)`). Men
+score `r sprintf("%.2f", uv_sex$estimate)` points lower than women (95% CI
+`r sprintf("%.2f to %.2f", uv_sex$conf.low, uv_sex$conf.high)`, p < 0.001).
+Neither age (p = `r sprintf("%.2f", uv_age$p.value)`), stage of the course
+(clerkship p = `r sprintf("%.2f", uv_clerk$p.value)`) nor school legal status
+(p = `r sprintf("%.2f", uv_priv$p.value)`) shows any crude association.
+
+## Why adjustment is needed
+
+Two variables in this file plausibly confound the crude estimates. **The DREEM
+global score** confounds the school legal status contrast: private-school
+students rate their educational environment much more favourably (mean DREEM 128
+versus 115 at public schools) and a better-rated environment goes with fewer
+depressive symptoms, so the null crude private-school coefficient is a mixture of
+two opposing forces and cannot be read at face value. **Stage of the course**
+confounds the crude age association, because the stages are ordered in time and
+clerkship students are on average four years older than basic-sciences students;
+an unadjusted age coefficient is really asking "do later-stage students differ",
+not "do older students differ". **Sex** is a third, though a weak one: women in this
+sample report slightly lower resilience scores (mean 78.1 versus 79.2) as well as
+clearly higher BDI scores, so a small part of the crude resilience association is
+a sex difference. Finally, **stage of the course** also
+confounds the DREEM association in the opposite direction - clerkship students
+rate their environment worst of the three stages (mean DREEM 114 versus 124) -
+so holding stage fixed is necessary before the DREEM coefficient can be
+interpreted. A single model with all six predictors makes each estimate
+conditional on the rest.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit) |>
+  modify_caption("**Multivariable linear regression.**")
+mv
+```
+
+```{r fit-stats}
+gl <- glance(fit)
+tibble(
+  Statistic = c("R-squared", "Adjusted R-squared", "Residual SE", "n", "Model df"),
+  Value = c(sprintf("%.3f", gl$r.squared), sprintf("%.3f", gl$adj.r.squared),
+            sprintf("%.2f", gl$sigma), as.character(gl$nobs), as.character(gl$df))
+) |> gt() |> tab_header(title = md("**Model fit**"))
+```
+
+```{r mv-numbers}
+tid <- tidy(fit, conf.int = TRUE)
+g <- function(x) tid |> filter(term == x)
+b_res <- g("resilience_score"); b_dreem <- g("dreem_global"); b_sex <- g("sexMale")
+b_priv <- g("school_legal_statusPrivate"); b_clerk <- g("year_groupClerkship")
+b_clin <- g("year_groupClinical sciences"); b_age <- g("age_yrs")
+fmt <- function(r) sprintf("%.2f (95%% CI %.2f to %.2f)", r$estimate, r$conf.low, r$conf.high)
+fmt3 <- function(r) sprintf("%.3f (95%% CI %.3f to %.3f)", r$estimate, r$conf.low, r$conf.high)
+```
+
+The model explains `r sprintf("%.1f%%", gl$r.squared * 100)` of the variance in
+BDI score (adjusted R-squared `r sprintf("%.3f", gl$adj.r.squared)`). Holding the
+other five predictors fixed, each resilience point is associated with
+`r fmt3(b_res)` BDI points and each DREEM point with `r fmt3(b_dreem)` BDI
+points, so a 20-point better perceived environment corresponds to about
+`r sprintf("%.1f", abs(b_dreem$estimate) * 20)` fewer BDI points. Men score
+`r fmt(b_sex)` points lower than women. Two coefficients that were null crudely
+become significant: clerkship students score `r fmt(b_clerk)` points lower than
+basic-sciences students (clinical sciences `r fmt(b_clin)`), and private-school
+students score `r fmt(b_priv)` points *higher* than public-school students. Age
+has no independent association (`r fmt(b_age)`). All estimates are conditional
+associations from one cross-sectional survey and carry no causal claim.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+The two headline predictors move only modestly toward the null. **Resilience**
+goes from `r sprintf("%.3f", uv_res$estimate)` to
+`r sprintf("%.3f", b_res$estimate)`, retaining
+`r sprintf("%.0f%%", 100 * b_res$estimate / uv_res$estimate)` of its crude size -
+essentially nothing in this model explains it away. **Sex** retains
+`r sprintf("%.0f%%", 100 * b_sex$estimate / uv_sex$estimate)`
+(`r sprintf("%.2f", uv_sex$estimate)` to `r sprintf("%.2f", b_sex$estimate)`),
+so the female excess in depressive symptoms is largely not accounted for by
+anything else in the model. **The DREEM global score** is the one that
+halves, from `r sprintf("%.3f", uv_dreem$estimate)` to
+`r sprintf("%.3f", b_dreem$estimate)`
+(`r sprintf("%.0f%%", 100 * b_dreem$estimate / uv_dreem$estimate)` retained):
+much of the crude "bad environment goes with depression" association is really
+"low-resilience students both rate their school badly and score high on the BDI".
+
+Two coefficients change significance, both through suppression. **Private
+schooling** flips sign, from `r sprintf("%.2f", uv_priv$estimate)` crude and
+clearly non-significant (p = `r sprintf("%.2f", uv_priv$p.value)`) to
+`r sprintf("%.2f", b_priv$estimate)` adjusted and significant
+(p = `r sprintf("%.3f", b_priv$p.value)`). Private-school students rate their
+educational environment 13 DREEM points better on average, which pushes their
+crude BDI scores down; once DREEM is held fixed, a genuine private-school
+*excess* of depressive symptoms appears. **Clerkship** does the same:
+`r sprintf("%.2f", uv_clerk$estimate)` crude (p =
+`r sprintf("%.2f", uv_clerk$p.value)`) becomes
+`r sprintf("%.2f", b_clerk$estimate)` (p = `r sprintf("%.3f", b_clerk$p.value)`),
+because clerkship students rate their environment worst of the three stages and
+that was masking their lower depressive-symptom scores. **Age** barely moves in
+absolute terms (`r sprintf("%.3f", uv_age$estimate)` to
+`r sprintf("%.3f", b_age$estimate)`) and is non-significant throughout.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r vif-table}
+performance::check_collinearity(fit) |>
+  as_tibble() |>
+  transmute(Term, VIF = round(VIF, 2), Tolerance = round(Tolerance, 3)) |>
+  gt() |> tab_header(title = md("**Variance inflation factors**"))
+```
+
+```{r het-test}
+het <- performance::check_heteroscedasticity(fit)
+```
+
+**Linearity.** The fitted-versus-residual reference line bends upward at the low
+end: for students the model predicts to have very low BDI scores, the residuals
+are systematically positive, because the BDI cannot go below 0 and the model can.
+This is the main structural failure of a linear model for this outcome.
+
+**Homoscedasticity.** Breusch-Pagan strongly rejects constant variance
+(p `r ifelse(attr(het, "p") < 0.001, "< 0.001", sprintf("= %.3f", attr(het, "p")))`)
+and the scale-location panel rises steeply from left to right - residual spread
+is small among students predicted to score near 0 and large among those predicted
+to score high, exactly the fan seen in Figure 1. This is the expected pattern for
+a bounded, right-skewed count-like score and it is more pronounced here than for
+any of the WHOQOL outcomes. As a sensitivity check we refitted with
+heteroscedasticity-consistent (HC3) standard errors:
+
+```{r robust}
+rob <- lmtest::coeftest(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+broom::tidy(rob) |>
+  transmute(term,
+            estimate = round(estimate, 3),
+            `robust SE` = round(std.error, 3),
+            statistic = round(statistic, 2),
+            p.value = format.pval(p.value, digits = 3, eps = 0.001)) |>
+  gt() |> tab_header(title = md("**HC3 robust standard errors (sensitivity check)**"))
+```
+
+The robust standard errors are close to the model-based ones and every
+coefficient keeps its significance status, so the inference survives despite the
+clear heteroscedasticity.
+
+**Normality of residuals.** This is the weakest assumption here. The Q-Q plot
+shows a pronounced right tail: the BDI distribution is skewed
+(skewness `r sprintf("%.2f", (function(x) mean((x - mean(x))^3) / sd(x)^3)(dat_model$bdi_depression))`)
+and the residuals inherit it, with the formal test rejecting normality
+(p `r ifelse(attr(performance::check_normality(fit), "p") < 0.001, "< 0.001", sprintf("= %.3f", attr(performance::check_normality(fit), "p")))`).
+With n = `r nrow(dat_model)` the coefficient standard errors are still protected
+by the central limit theorem, but any prediction interval from this model is
+untrustworthy and would include impossible negative BDI scores.
+
+**Influential points.** No observation exceeds the Cook's distance threshold; the
+largest is `r sprintf("%.3f", max(cooks.distance(fit)))`, so despite the skew no
+single student drives the fit.
+
+**Collinearity.** The highest VIF is
+`r sprintf("%.2f", max(performance::check_collinearity(fit)$VIF))` (age and stage
+of the course, which are strongly related by design), and every value is below 2.
+This is the direct result of excluding `state_anxiety` and `trait_anxiety`: had
+trait anxiety been added, it would have correlated 0.73 with the outcome and 0.61
+with resilience, and the resilience coefficient would have been halved and its
+interpretation destroyed.
+
+# Discussion
+
+Depressive symptoms among Brazilian medical students are most strongly associated
+with low resilience, with women scoring about `r sprintf("%.1f", abs(b_sex$estimate))`
+BDI points higher than men, and with a poorly rated educational environment
+(about `r sprintf("%.1f", abs(b_dreem$estimate) * 20)` BDI points per 20 DREEM
+points). Two findings emerge only after adjustment and are worth attention:
+clerkship students score lower than basic-sciences students once the educational
+environment is held fixed, and private-school students score higher than
+public-school students on the same basis. Practically, the DREEM association is
+the one a school can act on, but its size is modest - moving a school from the
+25th to the 75th percentile of DREEM would be expected to shift the average BDI
+score by only a couple of points, well short of the 14-point clinical threshold.
+
+**Limitations.** *Distributional mismatch.* The BDI is a bounded, right-skewed,
+integer score with a hard floor at 0 and 23% of students above the clinical
+threshold; a linear model gives interpretable coefficients but fits the shape of
+the outcome badly, produces impossible negative predictions at the low end, and
+shows marked heteroscedasticity. Dichotomising at 14 and fitting logistic
+regression, or modelling on the log scale, would respect the outcome's shape
+better - at the cost of throwing away information or of interpretability.
+*Clustering is not modelled.* Students came from 22 medical schools, but the
+released file carries no school identifier, only `school_legal_status` and
+`school_location`; students in one school share teachers, curriculum and
+assessment load, so the reported standard errors - especially for the
+private-versus-public contrast, which is a school-level variable - are too
+narrow, and no random intercept can be fitted. *Cross-sectional design.*
+Resilience and depressive symptoms were measured at the same sitting, and a
+depressed student will answer a resilience questionnaire more negatively; the
+resilience association is therefore not evidence that resilience training would
+reduce depression. *No clinical assessment.* The BDI is a screening
+questionnaire, not a diagnosis, and self-report of mood on a survey administered
+by the medical school may be understated. *Unmeasured confounders* include
+family income, personal or family psychiatric history, and academic standing,
+none of which is in the file.
+
+**Future work.** A cohort design measuring BDI at entry and at the end of each
+stage, with school identifiers retained, would separate selection into schools
+from the effect of the training environment.
+
+# Feasibility notes
+
+*Not part of a student report.*
+
+- **Knits cleanly; no numerical trouble.** n = 1,350 complete cases, six
+  predictors, max VIF
+  `r sprintf("%.2f", max(performance::check_collinearity(fit)$VIF))`, max Cook's
+  distance `r sprintf("%.3f", max(cooks.distance(fit)))`.
+- **This outcome is a collinearity trap.** `trait_anxiety` correlates 0.73 with
+  the BDI, `state_anxiety` 0.59, and `whoqol_psychological` -0.74. A student who
+  drops all of those into the model gets R-squared above 0.6 and coefficients
+  that are meaningless - they will have regressed one mood questionnaire on
+  another. Excluding them is not optional; it is the whole design decision. If
+  supervisors let students include `trait_anxiety` here, this outcome should be
+  marked unusable.
+- **Worst diagnostics of the six outcomes.** Skewness
+  `r sprintf("%.2f", (function(x) mean((x - mean(x))^3) / sd(x)^3)(dat_model$bdi_depression))`,
+  a hard floor at 0, strongly rejected normality and the steepest scale-location
+  slope in the dataset. HC3 rescues the inference, but a student who takes
+  `check_model()` seriously will have a lot to write about, and honest
+  prediction from this model is not possible.
+- **Best suppression examples in the dataset.** Both `school_legal_status` and
+  `year_group` flip from null to significant once `dreem_global` is held fixed,
+  driven by the 13-point DREEM gap between private and public schools. This is a
+  genuinely instructive unadjusted-versus-adjusted table.
+- **The catalogue also offers this outcome as binary** (BDI >= 14, 23.3% of
+  students, `r n_mod`/`r nrow(dat_model)` here). For a student who is
+  uncomfortable defending a linear model on a skewed bounded score, the logistic
+  version is the safer route and loses little.
+- **Guardrails.** `dreem_global` must never appear with its five subscales; no
+  WHOQOL domain and no anxiety scale as a predictor.
+- **Verdict: workable but demanding.** Good effect sizes and a rich adjustment
+  story, undermined by an outcome distribution that a linear model does not fit
+  well and by an unusually tempting set of forbidden predictors.

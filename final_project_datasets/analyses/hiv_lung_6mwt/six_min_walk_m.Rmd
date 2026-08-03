@@ -1,0 +1,600 @@
+---
+title: "Six-minute walk distance in adults with and without HIV"
+subtitle: "Dataset 11: HIV infection and exercise capacity"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "hiv_lung_6mwt.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "six_min_walk_m"
+predictors <- c("hiv_positive", "age_yrs", "sex", "current_smoker", "pack_years",
+                "systolic_bp", "diastolic_bp", "haemoglobin_g_dl",
+                "fev1_pct_predicted", "fvc_pct_predicted", "dlco_pct_predicted")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    hiv_positive = lab(factor(hiv_positive, levels = c(0, 1), labels = c("No", "Yes")),
+                       "Living with HIV"),
+    sex = lab(factor(sex, levels = c("male", "female"), labels = c("Male", "Female")),
+              "Sex"),
+    # Smoking is parameterised as cumulative dose plus a current-smoking indicator;
+    # see Methods for why the three-level factor is not used as-is.
+    current_smoker = lab(factor(if_else(smoking_status == "current", "Yes", "No"),
+                                levels = c("No", "Yes")),
+                         "Current smoker"),
+    smoking_status = lab(factor(smoking_status, levels = c("never", "former", "current"),
+                                labels = c("Never", "Former", "Current")),
+                         "Smoking status"),
+    age_yrs = lab(age_yrs, "Age (years)"),
+    pack_years = lab(pack_years, "Smoking (pack-years)"),
+    systolic_bp = lab(systolic_bp, "Systolic BP (mmHg)"),
+    diastolic_bp = lab(diastolic_bp, "Diastolic BP (mmHg)"),
+    haemoglobin_g_dl = lab(haemoglobin_g_dl, "Haemoglobin (g/dL)"),
+    fev1_pct_predicted = lab(fev1_pct_predicted, "FEV1 (% predicted)"),
+    fvc_pct_predicted  = lab(fvc_pct_predicted, "FVC (% predicted)"),
+    dlco_pct_predicted = lab(dlco_pct_predicted, "DLCO (% predicted)"),
+    six_min_walk_m = lab(six_min_walk_m, "Six-minute walk distance (m)")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", fmt(p, 3)))
+```
+
+# Introduction
+
+The Pittsburgh/UCSF lung-function study enrolled adults living with HIV and
+HIV-uninfected comparators from two US clinical centres and put every
+participant through the same battery: a six-minute walk test, spirometry,
+diffusing capacity for carbon monoxide and the St George's Respiratory
+Questionnaire (Fitzpatrick and colleagues, *PLOS ONE* 2019). This teaching
+extract holds `r nrow(dat)` participants, `r sum(dat$hiv_positive == "Yes")` of
+them living with HIV. Six-minute walk distance is a cheap, well-standardised
+measure of integrated cardiopulmonary and musculoskeletal function that predicts
+hospitalisation and death in chronic lung disease, and reduced exercise capacity
+is one of the more consistent reports in ageing HIV cohorts.
+
+**Aim.** Among these adults, we examined which of HIV status, age, sex, current
+smoking, cumulative pack-years, blood pressure, haemoglobin and the three lung
+function measurements (FEV1, FVC and DLCO, each as a percentage of predicted)
+are independently associated with six-minute walk distance, mutually adjusting
+for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** A cross-sectional analysis of participants enrolled at two US
+clinical centres (Pittsburgh and San Francisco) into a cohort study of lung
+function in HIV. The extract contains `r nrow(dat)` adults aged
+`r min(dat$age_yrs)` to `r max(dat$age_yrs)` and 21 variables;
+`r sum(dat$hiv_positive == "Yes")` (`r fmt(100 * mean(dat$hiv_positive == "Yes"), 1)`%)
+are living with HIV and `r sum(dat$hiv_positive == "No")` are not. All
+measurements were made at a single study visit.
+
+**Variables.** The outcome is `six_min_walk_m`, the distance in metres covered
+in a standardised six-minute walk test (observed range
+`r fmt(min(dat$six_min_walk_m), 0)` to `r fmt(max(dat$six_min_walk_m), 0)` m),
+treated as continuous. Predictors are HIV status (reference HIV-negative, the
+clinically unexposed group), age (years), sex (reference male, the larger group),
+current smoking (reference not a current smoker), cumulative smoking exposure
+(pack-years), systolic and diastolic blood pressure (mmHg), haemoglobin (g/dL),
+and FEV1, FVC and DLCO each expressed as a percentage of the predicted value for
+a person of the same age, sex and height.
+
+**Smoking is entered once, as dose plus a current-smoking indicator.** The
+shipped `smoking_status` variable has three levels (never
+`r sum(dat$smoking_status == "Never")`, former
+`r sum(dat$smoking_status == "Former")`, current
+`r sum(dat$smoking_status == "Current")`), and `pack_years` is **exactly zero for
+all `r sum(dat$pack_years == 0)` never-smokers and strictly positive for every
+ever-smoker**. The two variables therefore encode the same never/ever
+distinction twice, and putting the untouched factor alongside pack-years forces
+the former- and current-smoker contrasts to be estimated at zero pack-years, a
+value no ever-smoker in this sample has. We instead keep `pack_years` as the
+cumulative-dose term and add a single binary indicator for *current* smoking,
+which is the one piece of information pack-years cannot carry (current smoking
+has acute effects on carboxyhaemoglobin and airway inflammation that are
+independent of lifetime dose). This costs two parameters instead of three and
+imposes the sensible continuity assumption that a former smoker with negligible
+lifetime exposure resembles a never-smoker.
+
+**Variables deliberately excluded.** `cd4_count`, `on_antiretroviral` and
+`viral_load_detectable` are **missing by design** for participants without HIV
+and are excluded from every model; the Feasibility notes below quantify what
+happens if they are not. `mmrc_dyspnoea` is excluded because it is missing for
+`r sum(is.na(dat$mmrc_dyspnoea))` participants, **all of them HIV-positive**, so
+it would delete a third of the exposed group. `fev1_fvc_ratio` is excluded
+because it is very largely a function of the two %-predicted values already in
+the model (regressing it on them gives R-squared
+`r fmt(summary(lm(fev1_fvc_ratio ~ fev1_pct_predicted + fvc_pct_predicted, data = dat))$r.squared, 2)`).
+The three SGRQ subscales and the SGRQ total are downstream symptom reports rather
+than characteristics of the participant, and are analysed as outcomes elsewhere
+in this folder rather than used as predictors here.
+
+**Statistical analysis.** `lm()`, justified because the outcome is a continuous
+distance in metres with a symmetric distribution (skewness
+`r fmt(mean((dat$six_min_walk_m - mean(dat$six_min_walk_m))^3) / sd(dat$six_min_walk_m)^3, 2)`).
+We fitted a univariable model for each predictor first, then a single
+multivariable model containing all of them. Predictors were chosen in advance on
+subject-matter grounds, not by significance: HIV status is the exposure of
+interest, and the remainder are the demographic, smoking, haemodynamic and
+lung-function characteristics that the source paper treats as determinants of
+walk distance. Significance threshold 0.05; estimates are reported with 95%
+confidence intervals. Assumptions were checked with
+`performance::check_model()`, with `check_collinearity()` inspected specifically
+because FEV1 and FVC are two readings from the same spirometry manoeuvre.
+Analysis used `r R.version.string` with tidyverse, gtsummary and performance.
+
+**Parameter budget.** The model estimates
+`r length(coef(lm(reformulate(predictors, outcome), data = dat_model))) - 1L`
+parameters on `r nrow(dat_model)` complete cases, i.e. about
+`r fmt(nrow(dat_model) / (length(coef(lm(reformulate(predictors, outcome), data = dat_model))) - 1L), 0)`
+observations per parameter, comfortably inside the 10-15 rule for a linear
+model. No cut to the suggested predictor list was needed.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped). The loss comes from haemoglobin
+(`r sum(is.na(dat$haemoglobin_g_dl))` missing), spirometry
+(`r sum(is.na(dat$fev1_pct_predicted))` missing), blood pressure
+(`r sum(is.na(dat$systolic_bp))` missing) and DLCO
+(`r sum(is.na(dat$dlco_pct_predicted))` missing); the outcome itself is complete.
+The analytic sample retains `r sum(dat_model$hiv_positive == "Yes")` participants
+with HIV and `r sum(dat_model$hiv_positive == "No")` without, so the comparison
+the dataset exists for is essentially intact.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(missing = "no") |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics (complete-case analytic sample).**")
+```
+
+The sample is middle-aged (median age `r median(dat_model$age_yrs)` years),
+predominantly male and heavily exposed to tobacco: about
+`r fmt(100 * mean(dat_model$current_smoker == "Yes"), 0)`% are current smokers.
+Median walk distance is `r fmt(median(dat_model$six_min_walk_m), 0)` m, with a
+wide spread from `r fmt(min(dat_model$six_min_walk_m), 0)` to
+`r fmt(max(dat_model$six_min_walk_m), 0)` m, and median lung function sits close
+to predicted for FEV1 and FVC but somewhat below predicted for DLCO
+(`r fmt(median(dat_model$dlco_pct_predicted), 0)`% of predicted).
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Six-minute walk distance against diffusing capacity, by HIV status."}
+ggplot(dat_model, aes(dlco_pct_predicted, six_min_walk_m, colour = hiv_positive)) +
+  geom_point(alpha = 0.5, size = 1.6) +
+  geom_smooth(method = "lm", se = TRUE, linewidth = 0.9) +
+  scale_colour_manual(values = c(No = "#3F6F9F", Yes = "#B5495B")) +
+  labs(x = "DLCO (% predicted)", y = "Six-minute walk distance (m)",
+       colour = "Living with HIV")
+```
+
+Walk distance rises steadily with diffusing capacity in both groups, and the two
+fitted lines are close to parallel with the HIV-positive line sitting below the
+HIV-negative one across the whole range of DLCO, which is what an additive model
+with an HIV main effect assumes.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(lm(reformulate(v, outcome), data = dat_model), conf.int = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 2) {
+  r <- utid[utid$term == term, ]
+  sprintf("%s m (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+```
+
+Crudely, participants living with HIV walk less far than HIV-negative
+participants: `r ug("hiv_positiveYes")` (p `r up("hiv_positiveYes")`), a deficit
+of about `r fmt(abs(utid$estimate[utid$term == "hiv_positiveYes"]), 0)` m. All three lung-function
+measures show strong crude gradients: each additional percentage point of
+predicted FEV1 is worth `r ug("fev1_pct_predicted")` (p
+`r up("fev1_pct_predicted")`), of predicted FVC `r ug("fvc_pct_predicted")`
+(p `r up("fvc_pct_predicted")`) and of predicted DLCO
+`r ug("dlco_pct_predicted")` (p `r up("dlco_pct_predicted")`). Smoking matters in
+both parameterisations: each pack-year is associated with
+`r ug("pack_years")` (p `r up("pack_years")`), and current smokers walk shorter
+distances than non-current smokers, `r ug("current_smokerYes")` (p
+`r up("current_smokerYes")`). Each additional year of age is associated with
+`r ug("age_yrs")` (p `r up("age_yrs")`). Sex (`r ug("sexFemale")`,
+p `r up("sexFemale")`), blood pressure and haemoglobin show no crude
+association.
+
+## Why adjustment is needed
+
+**Cumulative smoking** is the clearest confounder of the HIV association.
+Participants with HIV in this sample have smoked more
+(mean `r fmt(mean(dat$pack_years[dat$hiv_positive == "Yes"]), 1)` pack-years
+versus `r fmt(mean(dat$pack_years[dat$hiv_positive == "No"]), 1)` in the
+HIV-negative group), and pack-years is itself one of the strongest crude
+predictors of walk distance (`r ug("pack_years")` per pack-year). Some of the
+crude HIV deficit is therefore a tobacco deficit. **Diffusing capacity** is the
+second variable that must be handled explicitly: median DLCO is
+`r fmt(median(dat$dlco_pct_predicted[dat$hiv_positive == "Yes"], na.rm = TRUE), 0)`%
+of predicted in participants with HIV against
+`r fmt(median(dat$dlco_pct_predicted[dat$hiv_positive == "No"], na.rm = TRUE), 0)`%
+in those without, and DLCO is strongly related to walk distance, so it lies on
+the path between the two. Whether that makes it a confounder or a *mediator* is
+a genuine ambiguity: if HIV impairs gas transfer and impaired gas transfer
+shortens walk distance, then adjusting for DLCO removes part of the very effect
+we are trying to estimate, and the adjusted HIV coefficient should be read as the
+part of the HIV deficit *not* explained by measured lung function. **Sex** works
+on the smoking and haemoglobin coefficients rather than on HIV: men in this
+sample have higher haemoglobin (median
+`r fmt(median(dat$haemoglobin_g_dl[dat$sex == "Male"], na.rm = TRUE), 1)` versus
+`r fmt(median(dat$haemoglobin_g_dl[dat$sex == "Female"], na.rm = TRUE), 1)` g/dL)
+and different smoking histories, and sex also drives absolute walking capacity
+through stature and leg length. Mutual adjustment lets each coefficient be read
+as a comparison between participants alike on the other measured
+characteristics.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE)
+g <- function(term, d = 2) {
+  r <- tid[tid$term == term, ]
+  sprintf("%s m (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+```
+
+```{r fit-stats}
+s <- summary(fit)
+tibble(
+  Statistic = c("Complete-case N", "Parameters (excl. intercept)",
+                "Observations per parameter",
+                "R-squared", "Adjusted R-squared", "Residual SE (m)"),
+  Value = c(as.character(nrow(dat_model)),
+            as.character(length(coef(fit)) - 1L),
+            fmt(nrow(dat_model) / (length(coef(fit)) - 1L), 1),
+            fmt(s$r.squared, 3), fmt(s$adj.r.squared, 3), fmt(s$sigma, 1))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable linear model for six-minute walk distance**"))
+```
+
+The model explains `r fmt(100 * s$r.squared, 1)`% of the variance in walk
+distance (adjusted R-squared `r fmt(s$adj.r.squared, 3)`), leaving a residual
+standard deviation of `r fmt(s$sigma, 0)` m — larger than the whole HIV
+difference, so the model orders groups rather than individuals. Among
+participants of the same age, sex, smoking history, blood pressure, haemoglobin
+and lung function, those living with HIV still walk shorter distances,
+`r g("hiv_positiveYes")` (p `r gp("hiv_positiveYes")`), i.e. about
+`r fmt(abs(tid$estimate[tid$term == "hiv_positiveYes"]), 0)` m less. Among
+participants alike on everything else, each
+additional pack-year is associated with `r g("pack_years")`
+(p `r gp("pack_years")`), so a 40 pack-year history corresponds to about
+`r fmt(abs(40 * tid$estimate[tid$term == "pack_years"]), 0)` m. Diffusing
+capacity is the only lung-function measure that survives adjustment:
+`r g("dlco_pct_predicted")` per percentage point of predicted DLCO
+(p `r gp("dlco_pct_predicted")`), against `r g("fev1_pct_predicted")` for FEV1
+(p `r gp("fev1_pct_predicted")`) and `r g("fvc_pct_predicted")` for FVC
+(p `r gp("fvc_pct_predicted")`). Age (`r g("age_yrs")`), sex (`r g("sexFemale")`),
+current smoking (`r g("current_smokerYes")`), both blood pressures and
+haemoglobin are not independently associated. These are associations among the
+participants observed, not effects of intervening.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+Three predictors move a long way toward the null and lose significance. **Age**
+falls from `r ug("age_yrs")` crude (p `r up("age_yrs")`) to `r g("age_yrs")`
+adjusted (p `r gp("age_yrs")`) — almost the whole crude age effect on walking is
+carried by lung function and smoking, which both worsen with age. **Current
+smoking** falls from `r ug("current_smokerYes")` (p `r up("current_smokerYes")`)
+to `r g("current_smokerYes")` (p `r gp("current_smokerYes")`), because current
+smokers also have the most pack-years and the worst diffusing capacity; the
+cumulative-dose term absorbs it. **FEV1** falls from `r ug("fev1_pct_predicted")`
+to `r g("fev1_pct_predicted")` and **FVC** from `r ug("fvc_pct_predicted")` to
+`r g("fvc_pct_predicted")`, both losing significance. That is collinearity rather
+than confounding: FEV1 and FVC correlate at
+`r fmt(cor(dat_model$fev1_pct_predicted, dat_model$fvc_pct_predicted), 2)` in
+this sample, so once both are in the model neither can be estimated precisely
+and the shared spirometric signal is split between them.
+
+Two estimates move much less. **HIV status** attenuates from
+`r ug("hiv_positiveYes")` to `r g("hiv_positiveYes")`, i.e. roughly
+`r fmt(100 * (1 - tid$estimate[tid$term == "hiv_positiveYes"] / utid$estimate[utid$term == "hiv_positiveYes"]), 0)`%
+of the crude deficit is explained by smoking and lung function, but a deficit of
+about `r fmt(abs(tid$estimate[tid$term == "hiv_positiveYes"]), 0)` m remains and
+stays significant. **Pack-years** attenuates from `r ug("pack_years")` to
+`r g("pack_years")` and also stays significant. Nothing crosses *into*
+significance. The overall pattern is that the walk-distance signal in this
+dataset is carried by HIV status, cumulative tobacco dose and diffusing capacity,
+with the spirometric volumes contributing little once DLCO is present.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r collin}
+check_collinearity(fit)
+```
+
+```{r assumption-tests}
+print(check_heteroscedasticity(fit))
+print(check_normality(fit))
+```
+
+The diagnostics are largely reassuring. The residual-versus-fitted panel is flat
+with no fanning and `check_heteroscedasticity()` does not reject constant
+variance (p
+`r pv(as.numeric(check_heteroscedasticity(fit)))`), which is
+expected for a bounded distance measure. The posterior-predictive check tracks
+the observed distribution closely. The normal-QQ panel is the one blemish: a
+handful of participants who walked very short distances sit well below the line,
+and `check_normality()` rejects normality
+(p `r pv(as.numeric(check_normality(fit)))`). With
+`r nrow(dat_model)` observations this mild left tail has little practical
+consequence for the confidence intervals, and no transformation is indicated
+because the outcome itself is close to symmetric.
+
+Collinearity is the check that matters here, and it behaves exactly as
+anticipated: the two largest variance inflation factors are
+`r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fev1_pct_predicted"], 2)`
+for FEV1 and
+`r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fvc_pct_predicted"], 2)`
+for FVC, three times higher than anything else in the model, because the two are
+readings from the same forced expiratory manoeuvre. Both sit just below the
+conventional threshold of 5, so the model is estimable, but the practical
+consequence is visible in Table 2: the standard errors on the two spirometry
+terms are inflated and neither reaches significance despite both having strong
+crude associations. Every other VIF is below
+`r fmt(max(check_collinearity(fit)$VIF[!check_collinearity(fit)$Term %in% c("fev1_pct_predicted", "fvc_pct_predicted")]), 2)`.
+No observation exceeds the Cook's distance contours (maximum
+`r fmt(max(cooks.distance(fit)), 3)`), so no single participant drives the fit.
+
+# Discussion
+
+In this two-centre US sample, adults living with HIV walked about
+`r fmt(abs(tid$estimate[tid$term == "hiv_positiveYes"]), 0)` m less in six
+minutes than HIV-negative adults of the same age, sex, smoking history, blood
+pressure, haemoglobin and lung function. That is a clinically meaningful gap:
+the minimal important difference for the six-minute walk test in chronic lung
+disease is usually put at 25-35 m. Cumulative tobacco exposure and diffusing
+capacity are the other independent correlates, and diffusing capacity displaces
+both spirometric volumes once it is in the model — the same conclusion the source
+paper reaches. Practically, this points at gas transfer rather than airflow
+obstruction as the lung mechanism worth measuring when exercise capacity is the
+concern, and it says that the HIV deficit is not simply explained by the heavier
+smoking histories of people living with HIV.
+
+**Limitations.** Participants were recruited at **two clinical centres,
+Pittsburgh and UCSF, and the site variable is not in this deposit**, although the
+source paper shows that walk distance differs between them; site is therefore an
+unmeasured confounder and also a clustering variable that the model ignores, so
+the standard errors are very likely too small. The design is cross-sectional, so
+temporality is unknown and reverse causation is plausible for smoking, since
+people who cannot walk far may also be the people who continue to smoke.
+Adjusting for DLCO is probably adjusting for a *mediator* of the HIV effect
+rather than a confounder, which means the adjusted HIV coefficient is a
+"direct effect not through measured lung function" and understates the total
+association. Nothing about socioeconomic position, comorbidity, body composition,
+injecting drug use or musculoskeletal disease is measured, and all of these bear
+on how far someone walks. FEV1 and FVC compete for the same variance (VIFs
+`r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fev1_pct_predicted"], 1)`
+and
+`r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fvc_pct_predicted"], 1)`),
+so neither spirometric coefficient should be interpreted on its own. Complete-case
+analysis dropped `r n_dropped` of `r nrow(dat)` rows
+(`r fmt(100 * n_dropped / nrow(dat), 1)`%). Residuals are mildly non-normal in
+the left tail. All estimates are associations, not causal effects.
+
+**Future work.** Refit with study site as a fixed effect and with body
+composition and comorbidity data from the parent cohort, and separate the total
+HIV association from the part mediated by diffusing capacity using a formal
+mediation analysis rather than a single adjusted coefficient.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+```{r feas-hiv-vars}
+# Quantifies what happens when the HIV-specific columns are used as predictors.
+base_p <- predictors
+dm_base <- dat |> select(all_of(c(outcome, base_p))) |> drop_na()
+fit_base <- lm(reformulate(base_p, outcome), data = dm_base)
+tb <- tidy(fit_base, conf.int = TRUE)
+
+dmg <- function(v) {
+  dm <- dat |> select(all_of(c(outcome, base_p, v))) |> drop_na()
+  # lm() errors outright when hiv_positive has collapsed to a single level, which
+  # is itself the finding, so the failure is caught and reported rather than fixed.
+  f <- try(lm(reformulate(c(base_p, v), outcome), data = dm), silent = TRUE)
+  ok <- !inherits(f, "try-error")
+  r  <- if (ok) tidy(f, conf.int = TRUE) |> filter(term == "hiv_positiveYes") else NULL
+  est_ok <- ok && nrow(r) == 1 && !is.na(r$estimate[1])
+  tibble(
+    Added = v,
+    N = nrow(dm),
+    `HIV-negative retained` = sum(dm$hiv_positive == "No"),
+    `HIV-positive retained` = sum(dm$hiv_positive == "Yes"),
+    `HIV coefficient` = if (est_ok) sprintf("%s (SE %s)", fmt(r$estimate, 1), fmt(r$std.error, 1))
+                        else "not estimable",
+    `p` = if (est_ok) fmt(r$p.value, 3) else "model fails"
+  )
+}
+r0 <- tibble(Added = "(none - model as fitted)", N = nrow(dm_base),
+             `HIV-negative retained` = sum(dm_base$hiv_positive == "No"),
+             `HIV-positive retained` = sum(dm_base$hiv_positive == "Yes"),
+             `HIV coefficient` = sprintf("%s (SE %s)",
+                                         fmt(tb$estimate[tb$term == "hiv_positiveYes"], 1),
+                                         fmt(tb$std.error[tb$term == "hiv_positiveYes"], 1)),
+             p = fmt(tb$p.value[tb$term == "hiv_positiveYes"], 3))
+feas_tab <- bind_rows(r0, map_dfr(c("cd4_count", "on_antiretroviral",
+                                    "viral_load_detectable", "mmrc_dyspnoea"), dmg))
+feas_tab |>
+  gt() |>
+  tab_header(title = md("**Feasibility Table F1. Cost of adding an HIV-restricted variable to the model.**"))
+
+n_cd4 <- feas_tab$N[feas_tab$Added == "cd4_count"]
+neg_cd4 <- feas_tab$`HIV-negative retained`[feas_tab$Added == "cd4_count"]
+n_arv <- feas_tab$N[feas_tab$Added == "on_antiretroviral"]
+n_mmrc <- feas_tab$N[feas_tab$Added == "mmrc_dyspnoea"]
+```
+
+```{r feas-smoking}
+# The alternative smoking parameterisation: the untouched three-level factor
+# alongside pack_years, fitted on the same rows for a fair comparison.
+alt_pred <- c(setdiff(predictors, "current_smoker"), "smoking_status")
+alt_dat  <- dat |> select(all_of(c(outcome, alt_pred))) |> drop_na()
+alt_fit  <- lm(reformulate(alt_pred, outcome), data = alt_dat)
+```
+
+```{r feas-dichotomy}
+# What the <400 m dichotomisation would cost.
+dm_bin <- dat_model |> mutate(walk_lt400 = as.integer(six_min_walk_m < 400))
+n_ev <- sum(dm_bin$walk_lt400)
+gfit <- glm(reformulate(predictors, "walk_lt400"), data = dm_bin, family = binomial)
+gt_ <- tidy(gfit, conf.int = TRUE, exponentiate = TRUE)
+ghiv <- gt_[gt_$term == "hiv_positiveYes", ]
+br <- binned_residuals(gfit)
+br_pct <- 100 * mean(br$group == "yes")
+```
+
+- **USABLE, and the best of the four outcomes in this dataset.** The outcome is
+  complete (`r sum(!is.na(dat$six_min_walk_m))`/`r nrow(dat)`), symmetric,
+  clinically meaningful, and the exposure of interest survives adjustment. This
+  is the outcome the source paper analysed and it behaves.
+- **FATAL if any HIV-restricted variable is used as a predictor.** `cd4_count`,
+  `on_antiretroviral` and `viral_load_detectable` exist only for participants
+  with HIV. Feasibility Table F1 shows the damage precisely: adding
+  `on_antiretroviral` or `viral_load_detectable` leaves **zero HIV-negative
+  participants** (N falls from `r nrow(dm_base)` to `r n_arv` and
+  `r feas_tab$N[feas_tab$Added == "viral_load_detectable"]` respectively), so
+  `hiv_positive` becomes a constant and `lm()` refuses to run at all
+  ("contrasts can be applied only to factors with 2 or more levels") — the
+  comparison the dataset exists for has been deleted. A student who codes HIV
+  status as 0/1 numeric instead of a factor gets no error at all, just a silent
+  `NA` coefficient. Adding `cd4_count` is more insidious because it does not
+  produce an obvious error: N falls to `r n_cd4` and the HIV-negative group is
+  cut from `r sum(dm_base$hiv_positive == "No")` to `r neg_cd4`, the HIV
+  coefficient's standard error more than doubles, and the association goes from
+  p `r pv(tb$p.value[tb$term == "hiv_positiveYes"])` to
+  p = `r feas_tab$p[feas_tab$Added == "cd4_count"]`. A student would report "HIV
+  was not associated with walk distance" and be wrong. This is the single most
+  likely way this dataset is wrecked and it must be flagged in the brief.
+- **MAJOR: `mmrc_dyspnoea` is differentially missing.** All
+  `r sum(is.na(dat$mmrc_dyspnoea))` missing values are in HIV-positive
+  participants (`r fmt(100 * mean(is.na(dat$mmrc_dyspnoea[dat$hiv_positive == "Yes"])), 0)`%
+  of that group, 0% of the HIV-negative group). Adding it drops N to
+  `r n_mmrc` and the HIV coefficient loses significance
+  (p = `r feas_tab$p[feas_tab$Added == "mmrc_dyspnoea"]`). It is also arguably a
+  symptom consequence of low exercise capacity rather than a cause of it. Do not
+  suggest it as a predictor.
+- **MAJOR: FEV1 and FVC compete.** VIFs
+  `r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fev1_pct_predicted"], 2)`
+  and
+  `r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fvc_pct_predicted"], 2)`
+  (r = `r fmt(cor(dat_model$fev1_pct_predicted, dat_model$fvc_pct_predicted), 2)`),
+  against a maximum of
+  `r fmt(max(check_collinearity(fit)$VIF[!check_collinearity(fit)$Term %in% c("fev1_pct_predicted", "fvc_pct_predicted")]), 2)`
+  elsewhere. Below the threshold of 5 so no action is forced, but both crude
+  associations (p `r up("fev1_pct_predicted")` and p
+  `r up("fvc_pct_predicted")`) disappear on adjustment purely for this reason.
+  Students will misread that as "lung volumes don't matter".
+- **MINOR: `pack_years` and `smoking_status` are structurally entangled.**
+  `pack_years == 0` is exactly `smoking_status == "never"` on all
+  `r sum((dat$pack_years == 0) == (dat$smoking_status == "Never"))` of
+  `r nrow(dat)` rows. Entering both untouched is estimable — VIFs
+  `r fmt(check_collinearity(alt_fit)$VIF[check_collinearity(alt_fit)$Term == "smoking_status"], 2)`
+  for `smoking_status` and
+  `r fmt(check_collinearity(alt_fit)$VIF[check_collinearity(alt_fit)$Term == "pack_years"], 2)`
+  for `pack_years` — but the former/current contrasts are then evaluated at zero
+  pack-years, which no ever-smoker has. The parameterisation used here
+  (`pack_years` + current-smoker indicator) costs one parameter fewer and gives
+  AIC `r fmt(AIC(fit), 1)` against `r fmt(AIC(alt_fit), 1)` for the untouched
+  three-level factor, i.e. no practical difference in fit and a cleaner
+  interpretation. Either choice is defensible; silently using both without
+  comment is not.
+- **MINOR: non-normal residuals** (p
+  `r pv(as.numeric(check_normality(fit)))`), a left tail from a
+  small number of very poor walkers. Variance is constant (p
+  `r pv(as.numeric(check_heteroscedasticity(fit)))`) and no
+  transformation is warranted.
+- **Complete-case N `r nrow(dat_model)` of `r nrow(dat)`**
+  (`r fmt(100 * n_dropped / nrow(dat), 1)`% lost), matching the catalogue's
+  advertised 410/427 for the >= 95%-complete variable set. Confirmed for this
+  predictor set.
+- **On the `< 400 m` dichotomisation.** It works, but it is strictly worse. In
+  the complete-case sample there are `r n_ev` events
+  (`r fmt(100 * n_ev / nrow(dm_bin), 1)`%) for
+  `r length(coef(gfit)) - 1L` parameters, i.e.
+  `r fmt(n_ev / (length(coef(gfit)) - 1L), 1)` events per parameter — right at
+  the conventional minimum, with no room for a further covariate. The HIV odds
+  ratio is `r fmt(ghiv$estimate, 2)` (95% CI `r fmt(ghiv$conf.low, 2)` to
+  `r fmt(ghiv$conf.high, 2)`, p `r pv(ghiv$p.value)`), i.e. **the association
+  that is clearly significant on the linear scale is no longer significant after
+  dichotomisation**, which is the standard power loss from throwing away a
+  continuous outcome. Binned residuals also fail
+  (`r fmt(br_pct, 0)`% inside the bounds against a 95% target). The catalogue is
+  right to present this outcome as linear; the logistic version should be
+  offered only as an explicit lesson in what dichotomisation costs.
+- No separation issues arise (linear model), and no influential observations
+  (max Cook's distance `r fmt(max(cooks.distance(fit)), 3)`).
+- **Structural: two-site recruitment with no site variable.** The deposit does
+  not carry Pittsburgh/UCSF. The model treats `r nrow(dat_model)` participants as
+  independent when they come from two centres with different populations, so
+  standard errors are optimistic and site confounding cannot be excluded. This is
+  unfixable from the shipped file and belongs in every Limitations section.

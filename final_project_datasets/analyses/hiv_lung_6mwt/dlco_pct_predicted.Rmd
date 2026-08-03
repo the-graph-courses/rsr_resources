@@ -1,0 +1,542 @@
+---
+title: "Gas transfer (DLCO % predicted) in adults with and without HIV"
+subtitle: "Dataset 11: HIV infection and exercise capacity"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "hiv_lung_6mwt.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names. dlco_pct_predicted is
+# the outcome and is therefore removed from the predictor set.
+outcome    <- "dlco_pct_predicted"
+predictors <- c("hiv_positive", "age_yrs", "sex", "current_smoker", "pack_years",
+                "systolic_bp", "diastolic_bp", "haemoglobin_g_dl",
+                "fev1_pct_predicted", "fvc_pct_predicted")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    hiv_positive = lab(factor(hiv_positive, levels = c(0, 1), labels = c("No", "Yes")),
+                       "Living with HIV"),
+    sex = lab(factor(sex, levels = c("male", "female"), labels = c("Male", "Female")),
+              "Sex"),
+    # Smoking is parameterised as cumulative dose plus a current-smoking indicator;
+    # see Methods for why the three-level factor is not used as-is.
+    current_smoker = lab(factor(if_else(smoking_status == "current", "Yes", "No"),
+                                levels = c("No", "Yes")),
+                         "Current smoker"),
+    smoking_status = lab(factor(smoking_status, levels = c("never", "former", "current"),
+                                labels = c("Never", "Former", "Current")),
+                         "Smoking status"),
+    age_yrs = lab(age_yrs, "Age (years)"),
+    pack_years = lab(pack_years, "Smoking (pack-years)"),
+    systolic_bp = lab(systolic_bp, "Systolic BP (mmHg)"),
+    diastolic_bp = lab(diastolic_bp, "Diastolic BP (mmHg)"),
+    haemoglobin_g_dl = lab(haemoglobin_g_dl, "Haemoglobin (g/dL)"),
+    fev1_pct_predicted = lab(fev1_pct_predicted, "FEV1 (% predicted)"),
+    fvc_pct_predicted  = lab(fvc_pct_predicted, "FVC (% predicted)"),
+    dlco_pct_predicted = lab(dlco_pct_predicted, "DLCO (% predicted)")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", fmt(p, 3)))
+```
+
+# Introduction
+
+The Pittsburgh/UCSF lung-function study enrolled adults living with HIV and
+HIV-uninfected comparators from two US clinical centres and assessed all of them
+identically with a six-minute walk test, spirometry, diffusing capacity and the
+St George's Respiratory Questionnaire (Fitzpatrick and colleagues, *PLOS ONE*
+2019). This teaching extract holds `r nrow(dat)` participants,
+`r sum(dat$hiv_positive == "Yes")` of them living with HIV. The diffusing
+capacity of the lung for carbon monoxide, expressed as a percentage of the value
+predicted for a person of the same age, sex and height, measures how efficiently
+gas crosses from alveolus to blood; it is abnormal in emphysema, interstitial
+disease and pulmonary vascular disease, and in the source paper it is the
+lung-function measurement most strongly related to how far participants could
+walk.
+
+**Aim.** Among these adults, we examined which of HIV status, age, sex, current
+smoking, cumulative pack-years, blood pressure, haemoglobin and the two
+spirometric volumes (FEV1 and FVC, each as a percentage of predicted) are
+independently associated with DLCO % predicted, mutually adjusting for the
+others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** A cross-sectional analysis of participants enrolled at two US
+clinical centres (Pittsburgh and San Francisco) into a cohort study of lung
+function in HIV. The extract contains `r nrow(dat)` adults aged
+`r min(dat$age_yrs)` to `r max(dat$age_yrs)` and 21 variables;
+`r sum(dat$hiv_positive == "Yes")` (`r fmt(100 * mean(dat$hiv_positive == "Yes"), 1)`%)
+are living with HIV. All measurements were made at a single study visit.
+
+**Variables.** The outcome is `dlco_pct_predicted`, single-breath diffusing
+capacity for carbon monoxide as a percentage of the predicted value (observed
+range `r fmt(min(dat$dlco_pct_predicted, na.rm = TRUE), 1)` to
+`r fmt(max(dat$dlco_pct_predicted, na.rm = TRUE), 1)`), treated as continuous.
+Predictors are HIV status (reference HIV-negative, the clinically unexposed
+group), age (years), sex (reference male, the larger group), current smoking
+(reference not a current smoker), cumulative smoking exposure (pack-years),
+systolic and diastolic blood pressure (mmHg), haemoglobin (g/dL), and FEV1 and
+FVC each as a percentage of predicted. DLCO itself is of course removed from the
+predictor set.
+
+**Both spirometric volumes are retained, and the reason is worth stating.** FEV1
+and FVC as percentages of predicted correlate at
+`r fmt(cor(dat$fev1_pct_predicted, dat$fvc_pct_predicted, use = "complete.obs"), 2)`
+in this file, which is high enough to inflate their standard errors. They are
+nonetheless kept together here because, unlike in the model where FEV1 is the
+outcome, neither is a re-reading of the outcome: DLCO comes from a separate
+single-breath manoeuvre. Keeping both lets the model distinguish restriction
+(low FVC) from obstruction (low FEV1 relative to FVC), which is exactly the
+distinction that matters for gas transfer. The cost is reported explicitly in
+the Diagnostics section as a variance inflation factor.
+
+**Smoking is entered once, as dose plus a current-smoking indicator.** The
+shipped `smoking_status` variable has three levels (never
+`r sum(dat$smoking_status == "Never")`, former
+`r sum(dat$smoking_status == "Former")`, current
+`r sum(dat$smoking_status == "Current")`) and `pack_years` is **exactly zero for
+all `r sum(dat$pack_years == 0)` never-smokers and strictly positive for every
+ever-smoker**, so the two encode the same never/ever distinction twice. Entering
+the untouched factor alongside pack-years would force the former- and
+current-smoker contrasts to be estimated at zero pack-years, a value no
+ever-smoker in this sample has. We therefore keep `pack_years` as the
+cumulative-dose term and add one binary indicator for *current* smoking. That
+distinction is more than cosmetic for this outcome: current smoking raises
+carboxyhaemoglobin, which lowers measured DLCO on the day of the test
+independently of any lifetime damage.
+
+**Variables deliberately excluded.** `cd4_count`, `on_antiretroviral` and
+`viral_load_detectable` are **missing by design** for participants without HIV;
+including any of them deletes most or all of the HIV-negative comparison group.
+`mmrc_dyspnoea` is excluded because all `r sum(is.na(dat$mmrc_dyspnoea))` of its
+missing values fall in HIV-positive participants, and because breathlessness is
+downstream of impaired gas transfer. `fev1_fvc_ratio` is excluded because it is
+very largely a function of the two %-predicted values already in the model
+(regressing it on them gives R-squared
+`r fmt(summary(lm(fev1_fvc_ratio ~ fev1_pct_predicted + fvc_pct_predicted, data = dat))$r.squared, 2)`).
+The SGRQ scores and `six_min_walk_m` are consequences of lung function and are
+analysed as separate outcomes.
+
+**Statistical analysis.** `lm()`, justified because the outcome is a continuous,
+approximately symmetric percentage (skewness
+`r fmt(mean((dat_model$dlco_pct_predicted - mean(dat_model$dlco_pct_predicted))^3) / sd(dat_model$dlco_pct_predicted)^3, 2)`).
+We fitted a univariable model for each predictor first, then a single
+multivariable model containing all of them. Predictors were chosen in advance on
+subject-matter grounds, not by significance. Significance threshold 0.05;
+estimates are reported with 95% confidence intervals. Assumptions were checked
+with `performance::check_model()`, and `check_collinearity()` was inspected
+specifically because of the FEV1/FVC pair. Analysis used `r R.version.string`
+with tidyverse, gtsummary and performance.
+
+**Parameter budget.** The model estimates
+`r length(coef(lm(reformulate(predictors, outcome), data = dat_model))) - 1L`
+parameters on `r nrow(dat_model)` complete cases, about
+`r fmt(nrow(dat_model) / (length(coef(lm(reformulate(predictors, outcome), data = dat_model))) - 1L), 0)`
+observations per parameter, well inside the 10-15 rule.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped). The outcome itself is
+`r fmt(100 * mean(!is.na(dat$dlco_pct_predicted)), 1)`% complete
+(`r sum(is.na(dat$dlco_pct_predicted))` missing); the loss is mostly haemoglobin
+(`r sum(is.na(dat$haemoglobin_g_dl))` missing), spirometry
+(`r sum(is.na(dat$fev1_pct_predicted))`) and blood pressure
+(`r sum(is.na(dat$systolic_bp))`). The analytic sample keeps
+`r sum(dat_model$hiv_positive == "Yes")` participants with HIV and
+`r sum(dat_model$hiv_positive == "No")` without.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(missing = "no") |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics (complete-case analytic sample).**")
+```
+
+Median DLCO is `r fmt(median(dat_model$dlco_pct_predicted), 0)`% of predicted and
+`r sum(dat_model$dlco_pct_predicted < 80)`
+(`r fmt(100 * mean(dat_model$dlco_pct_predicted < 80), 0)`%) of participants fall
+below the conventional 80% lower limit, so impaired gas transfer is the modal
+abnormality in this sample even though median FEV1
+(`r fmt(median(dat_model$fev1_pct_predicted), 0)`% of predicted) and median FVC
+(`r fmt(median(dat_model$fvc_pct_predicted), 0)`%) are essentially normal.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. DLCO (% predicted) against cumulative smoking exposure, by HIV status."}
+ggplot(dat_model, aes(pack_years, dlco_pct_predicted, colour = hiv_positive)) +
+  geom_point(alpha = 0.5, size = 1.6) +
+  geom_smooth(method = "lm", se = TRUE, linewidth = 0.9) +
+  scale_colour_manual(values = c(No = "#3F6F9F", Yes = "#B5495B")) +
+  labs(x = "Cumulative smoking exposure (pack-years)", y = "DLCO (% predicted)",
+       colour = "Living with HIV")
+```
+
+Gas transfer falls as lifetime tobacco exposure rises in both groups, and the
+HIV-positive line sits below the HIV-negative one across the whole range, so the
+two exposures appear to act additively rather than one explaining the other.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(lm(reformulate(v, outcome), data = dat_model), conf.int = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 2) {
+  r <- utid[utid$term == term, ]
+  sprintf("%s percentage points (95%% CI %s to %s)", fmt(r$estimate, d),
+          fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+```
+
+Crudely, participants living with HIV have lower diffusing capacity,
+`r ug("hiv_positiveYes")` of predicted (p `r up("hiv_positiveYes")`). The
+spirometric volumes track the outcome closely — `r ug("fev1_pct_predicted")` per
+percentage point of predicted FEV1 (p `r up("fev1_pct_predicted")`) and
+`r ug("fvc_pct_predicted")` per percentage point of predicted FVC
+(p `r up("fvc_pct_predicted")`) — as does smoking, with each pack-year
+associated with `r ug("pack_years")` (p `r up("pack_years")`) and current
+smokers `r ug("current_smokerYes")` below non-current smokers
+(p `r up("current_smokerYes")`). Each additional year of age is associated with
+`r ug("age_yrs")` (p `r up("age_yrs")`) and women average `r ug("sexFemale")`
+above men (p `r up("sexFemale")`). **Haemoglobin shows no crude association
+whatever**, `r ug("haemoglobin_g_dl")` (p `r up("haemoglobin_g_dl")`); this turns
+out to be the most interesting number in the table. Neither blood pressure is
+crudely associated.
+
+## Why adjustment is needed
+
+**Cumulative smoking** is the primary confounder of the HIV association.
+Participants with HIV have smoked more (mean
+`r fmt(mean(dat$pack_years[dat$hiv_positive == "Yes"]), 1)` pack-years versus
+`r fmt(mean(dat$pack_years[dat$hiv_positive == "No"]), 1)` in the HIV-negative
+group), and pack-years is one of the strongest crude predictors of DLCO, so part
+of the crude HIV deficit is a tobacco deficit and the whole question is how much
+of it survives. **Sex** is the second, and it is the variable that makes this
+model worth fitting. Men are over-represented in the HIV-positive group
+(`r fmt(100 * mean(dat$sex[dat$hiv_positive == "Yes"] == "Male"), 0)`% versus
+`r fmt(100 * mean(dat$sex[dat$hiv_positive == "No"] == "Male"), 0)`%), men have
+markedly higher haemoglobin (mean
+`r fmt(mean(dat$haemoglobin_g_dl[dat$sex == "Male"], na.rm = TRUE), 1)` versus
+`r fmt(mean(dat$haemoglobin_g_dl[dat$sex == "Female"], na.rm = TRUE), 1)` g/dL)
+and men in this sample have distinctly lower DLCO % predicted (mean
+`r fmt(mean(dat$dlco_pct_predicted[dat$sex == "Male"], na.rm = TRUE), 0)`% versus
+`r fmt(mean(dat$dlco_pct_predicted[dat$sex == "Female"], na.rm = TRUE), 0)`%).
+Because higher haemoglobin should physiologically *raise* measured DLCO while
+being commoner in the sex with *lower* DLCO, sex masks the haemoglobin
+association almost perfectly in the crude analysis. Mutual adjustment lets each
+estimate be read as a comparison between participants alike on the other
+measured characteristics.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE)
+g <- function(term, d = 2) {
+  r <- tid[tid$term == term, ]
+  sprintf("%s percentage points (95%% CI %s to %s)", fmt(r$estimate, d),
+          fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+```
+
+```{r fit-stats}
+s <- summary(fit)
+tibble(
+  Statistic = c("Complete-case N", "Parameters (excl. intercept)",
+                "Observations per parameter",
+                "R-squared", "Adjusted R-squared", "Residual SE (% predicted)"),
+  Value = c(as.character(nrow(dat_model)),
+            as.character(length(coef(fit)) - 1L),
+            fmt(nrow(dat_model) / (length(coef(fit)) - 1L), 1),
+            fmt(s$r.squared, 3), fmt(s$adj.r.squared, 3), fmt(s$sigma, 1))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable linear model for DLCO (% predicted)**"))
+```
+
+This is the best-fitting of the four models in this dataset: it explains
+`r fmt(100 * s$r.squared, 1)`% of the variance in DLCO % predicted (adjusted
+R-squared `r fmt(s$adj.r.squared, 3)`), with a residual standard deviation of
+`r fmt(s$sigma, 1)` percentage points. Among participants of the same age, sex,
+smoking history, blood pressure, haemoglobin and spirometry, those living with
+HIV have lower diffusing capacity, `r g("hiv_positiveYes")` of predicted
+(p `r gp("hiv_positiveYes")`), i.e. about
+`r fmt(abs(tid$estimate[tid$term == "hiv_positiveYes"]), 1)` percentage points
+lower. Among participants alike on everything else, each
+additional year of age is associated with `r g("age_yrs")`
+(p `r gp("age_yrs")`), each pack-year with `r g("pack_years")`
+(p `r gp("pack_years")`), and current smoking with `r g("current_smokerYes")`
+(p `r gp("current_smokerYes")`) — so both the acute and the cumulative smoking
+terms are independently associated with gas transfer, which was not true for any
+other outcome in this dataset. Women average `r g("sexFemale")` above men
+(p `r gp("sexFemale")`), and each g/dL of haemoglobin is associated with
+`r g("haemoglobin_g_dl")` (p `r gp("haemoglobin_g_dl")`). FEV1 contributes
+`r g("fev1_pct_predicted")` (p `r gp("fev1_pct_predicted")`) and FVC
+`r g("fvc_pct_predicted", 3)` (p `r gp("fvc_pct_predicted")`), just short of
+conventional significance. Systolic pressure is
+weakly associated (`r g("systolic_bp")`, p `r gp("systolic_bp")`) and diastolic
+pressure is not. These are associations among the participants observed, not
+effects of intervening.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+**Haemoglobin is the striking one.** Crudely it has no association at all with
+diffusing capacity — `r ug("haemoglobin_g_dl")`, p `r up("haemoglobin_g_dl")`,
+an estimate indistinguishable from zero — yet adjusted it is one of the
+strongest terms in the model, `r g("haemoglobin_g_dl")`,
+p `r gp("haemoglobin_g_dl")`. This is textbook masking rather than confounding
+in the usual direction: haemoglobin genuinely raises measured DLCO (more
+haemoglobin in the capillary bed means more carbon monoxide taken up), but the
+people with high haemoglobin here are men, and men have lower DLCO % predicted
+for other reasons. The two influences cancelled almost exactly in the crude
+estimate. It also tells us something about the data: **the DLCO values in this
+file are evidently *not* haemoglobin-corrected**, since a properly corrected DLCO
+would show no residual haemoglobin association.
+
+Two predictors attenuate substantially but survive. **HIV status** moves from
+`r ug("hiv_positiveYes")` crude to `r g("hiv_positiveYes")` adjusted, so roughly
+`r fmt(100 * (1 - tid$estimate[tid$term == "hiv_positiveYes"] / utid$estimate[utid$term == "hiv_positiveYes"]), 0)`%
+of the crude deficit is explained by the other measured characteristics — mostly
+smoking — but a deficit of about
+`r fmt(abs(tid$estimate[tid$term == "hiv_positiveYes"]), 0)` percentage points
+remains and stays significant. **Pack-years** moves from `r ug("pack_years")` to
+`r g("pack_years")` for the same reason in reverse, sharing its crude effect with
+current smoking and the spirometric volumes. **FVC** moves the furthest of any
+term, from `r ug("fvc_pct_predicted")` crude (p `r up("fvc_pct_predicted")`) to
+`r g("fvc_pct_predicted", 3)` adjusted (p `r gp("fvc_pct_predicted")`), losing
+significance; this is collinearity with FEV1, which itself falls from
+`r ug("fev1_pct_predicted")` to `r g("fev1_pct_predicted")`.
+
+**Sex** is the one estimate that does not move at all, from `r ug("sexFemale")`
+crude to `r g("sexFemale")` adjusted — the female advantage in gas transfer is
+not explained by any other measured characteristic. **Age** attenuates modestly,
+from `r ug("age_yrs")` to `r g("age_yrs")`, and stays clearly significant. One
+estimate crosses
+into significance: **systolic blood pressure**, from `r ug("systolic_bp")`
+(p `r up("systolic_bp")`) to `r g("systolic_bp")` (p `r gp("systolic_bp")`),
+which appears only once diastolic pressure is held constant and should be read as
+an artefact of adjusting one blood-pressure component for the other rather than a
+finding about the pulmonary circulation.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r collin}
+check_collinearity(fit)
+```
+
+```{r assumption-tests}
+print(check_heteroscedasticity(fit))
+print(check_normality(fit))
+```
+
+The diagnostics are satisfactory. The residual-versus-fitted panel is flat and
+`check_heteroscedasticity()` does not reject constant variance
+(p `r pv(as.numeric(check_heteroscedasticity(fit)))`); the posterior-predictive
+check reproduces the observed distribution well, which it should, since this is
+the best-fitting model of the four. The normal-QQ panel shows a modest left tail
+from a handful of participants with severely impaired gas transfer, and
+`check_normality()` rejects at the 0.05 level
+(p `r pv(as.numeric(check_normality(fit)))`); with `r nrow(dat_model)`
+observations this has negligible practical consequence and the outcome is close
+to symmetric, so no transformation is indicated.
+
+Collinearity behaves exactly as anticipated in Methods. The two largest variance
+inflation factors are
+`r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fev1_pct_predicted"], 2)`
+for FEV1 and
+`r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fvc_pct_predicted"], 2)`
+for FVC, against a maximum of
+`r fmt(max(check_collinearity(fit)$VIF[!check_collinearity(fit)$Term %in% c("fev1_pct_predicted", "fvc_pct_predicted")]), 2)`
+for every other term. Both are below the conventional threshold of 5, so the
+model is estimable and we have kept both, but the practical cost is visible in
+Table 2: the FVC standard error is
+`r fmt(summary(fit)$coefficients["fvc_pct_predicted", 2], 3)` against
+`r fmt(summary(lm(reformulate(setdiff(predictors, "fev1_pct_predicted"), outcome), data = dat_model))$coefficients["fvc_pct_predicted", 2], 3)`
+in the same model with FEV1 removed, and the FVC coefficient loses significance
+as a result. Neither spirometric coefficient should be quoted on its own. No
+observation exceeds the Cook's distance contours (maximum
+`r fmt(max(cooks.distance(fit)), 3)`).
+
+# Discussion
+
+In this two-centre US sample, adults living with HIV had diffusing capacity about
+`r fmt(abs(tid$estimate[tid$term == "hiv_positiveYes"]), 1)` percentage points of
+predicted lower than HIV-negative adults of the same age, sex, smoking history,
+blood pressure, haemoglobin and spirometry — a little under half of the crude
+difference, the rest being smoking. This is the clearest HIV-associated lung
+abnormality in the dataset: HIV status is *not* associated with FEV1 in the same
+participants, but it is associated with gas transfer, and gas transfer is in turn
+the lung measurement most strongly related to how far they can walk. Practically,
+that argues for measuring DLCO rather than spirometry alone when assessing lung
+health in people living with HIV, since a normal FEV1 will not detect this.
+Cumulative and current smoking each contribute independently, so both a smoking
+history and current smoking status are worth recording.
+
+**Limitations.** Participants were recruited at **two clinical centres,
+Pittsburgh and UCSF, and the site variable is not in this deposit**, although the
+source paper shows site matters; DLCO measurement in particular is
+equipment-dependent and calibration differences between laboratories are a
+plausible source of between-site variation that this model cannot address, so
+site is both an unmeasured confounder and an ignored clustering variable. The
+design is cross-sectional. The haemoglobin finding implies that the DLCO values
+are uncorrected for haemoglobin; readers should not compare these percentages
+with haemoglobin-corrected values from other cohorts. Smoking is self-reported
+with no biochemical verification, so residual confounding of the HIV coefficient
+by under-reported smoking is likely, and it would act in the direction of
+exaggerating the HIV deficit. FEV1 and FVC compete for the same variance (VIFs
+`r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fev1_pct_predicted"], 1)`
+and
+`r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fvc_pct_predicted"], 1)`),
+so the FVC null should not be read as evidence that lung volume is irrelevant.
+Injecting drug use, prior *Pneumocystis* pneumonia and pulmonary hypertension —
+all commoner in HIV and all causes of reduced DLCO — are not measured, so the
+mechanism behind the HIV association cannot be identified here. Complete-case
+analysis dropped `r n_dropped` of `r nrow(dat)` rows
+(`r fmt(100 * n_dropped / nrow(dat), 1)`%). All estimates are associations, not
+causal effects.
+
+**Future work.** Refit with study site as a fixed effect and with
+haemoglobin-corrected DLCO, and test formally whether reduced diffusing capacity
+mediates the HIV association with six-minute walk distance seen in
+`six_min_walk_m.Rmd`.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+```{r feas}
+cc_cd4 <- dat |> select(all_of(c(outcome, predictors, "cd4_count"))) |> drop_na()
+cc_arv <- dat |> select(all_of(c(outcome, predictors, "on_antiretroviral"))) |> drop_na()
+cc_mmr <- dat |> select(all_of(c(outcome, predictors, "mmrc_dyspnoea"))) |> drop_na()
+fit_nofev <- lm(reformulate(setdiff(predictors, "fev1_pct_predicted"), outcome),
+                data = dat_model)
+```
+
+- **USABLE, and the strongest of the four outcomes for teaching.** Complete-case
+  N `r nrow(dat_model)` of `r nrow(dat)`, R-squared `r fmt(s$r.squared, 3)` (the
+  highest of the four models), diagnostics pass, the exposure of interest is
+  significant crudely and adjusted, and the dataset contains a beautiful worked
+  example of masking (haemoglobin). Recommend it.
+- **FATAL if any HIV-restricted variable is used.** `cd4_count`,
+  `on_antiretroviral` and `viral_load_detectable` exist only for the
+  `r sum(dat$hiv_positive == "Yes")` participants with HIV. Adding
+  `on_antiretroviral` takes the complete-case N from `r nrow(dat_model)` to
+  `r nrow(cc_arv)` with **`r sum(cc_arv$hiv_positive == "No")` HIV-negative
+  participants remaining**, so `hiv_positive` becomes a constant and `lm()`
+  refuses to fit; adding `cd4_count` takes N to `r nrow(cc_cd4)` with only
+  `r sum(cc_cd4$hiv_positive == "No")` HIV-negative participants left, which is
+  the dangerous case because nothing errors. `six_min_walk_m.Rmd` in this folder
+  tabulates the damage in full. Given that this outcome shows the clearest HIV
+  effect in the dataset, destroying the comparison here is the costliest mistake
+  a student can make.
+- **MAJOR: FEV1 and FVC compete.** VIFs
+  `r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fev1_pct_predicted"], 2)`
+  and
+  `r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fvc_pct_predicted"], 2)`
+  (r =
+  `r fmt(cor(dat_model$fev1_pct_predicted, dat_model$fvc_pct_predicted), 2)`),
+  against a maximum of
+  `r fmt(max(check_collinearity(fit)$VIF[!check_collinearity(fit)$Term %in% c("fev1_pct_predicted", "fvc_pct_predicted")]), 2)`
+  elsewhere. Below the threshold of 5, so nothing is unestimable, but FVC goes
+  from p `r up("fvc_pct_predicted")` crude to p `r gp("fvc_pct_predicted")`
+  adjusted purely because of it. Dropping FEV1 restores FVC to
+  `r fmt(coef(fit_nofev)["fvc_pct_predicted"], 3)` with a standard error of
+  `r fmt(summary(fit_nofev)$coefficients["fvc_pct_predicted", 2], 3)`. Students
+  need to be told that a non-significant collinear pair is not evidence of no
+  association.
+- **MAJOR (interpretive, not statistical): haemoglobin is completely masked in
+  the crude analysis.** Crude
+  `r ug("haemoglobin_g_dl")` (p `r up("haemoglobin_g_dl")`), adjusted
+  `r g("haemoglobin_g_dl")` (p `r gp("haemoglobin_g_dl")`). This is a real and
+  well-understood physiological effect (uncorrected DLCO depends on haemoglobin)
+  masked by sex, and it is the best teaching example in the whole dataset — but a
+  student who reports only the univariable table will conclude haemoglobin is
+  irrelevant, and one who reports only the multivariable table without noticing
+  the crude estimate will miss why it matters.
+- **MINOR: `mmrc_dyspnoea` is differentially missing** — all
+  `r sum(is.na(dat$mmrc_dyspnoea))` missing values are HIV-positive participants;
+  adding it would take N to `r nrow(cc_mmr)`. It is also downstream of the
+  outcome.
+- **MINOR: `fev1_fvc_ratio` is near-redundant** with the two %-predicted
+  spirometry variables (R-squared
+  `r fmt(summary(lm(fev1_fvc_ratio ~ fev1_pct_predicted + fvc_pct_predicted, data = dat))$r.squared, 2)`
+  regressing it on them). Adding all three to one model is a collinearity
+  disaster waiting to happen; the catalogue lists all three side by side without
+  comment.
+- **MINOR: `pack_years` and `smoking_status` are structurally entangled**
+  (`pack_years == 0` is exactly `smoking_status == "never"` on all
+  `r nrow(dat)` rows). Unusually for this dataset, *both* smoking terms are
+  independently significant for this outcome
+  (pack-years `r g("pack_years")`, current smoking
+  `r g("current_smokerYes")`), so the parameterisation choice has real
+  consequences here and must be justified.
+- **MINOR: mildly non-normal residuals** (p
+  `r pv(as.numeric(check_normality(fit)))`); variance is constant (p
+  `r pv(as.numeric(check_heteroscedasticity(fit)))`).
+- **Structural: two-site recruitment with no site variable.** More consequential
+  for DLCO than for the other outcomes, because diffusing-capacity measurement is
+  equipment- and calibration-dependent. Unfixable from the shipped file.

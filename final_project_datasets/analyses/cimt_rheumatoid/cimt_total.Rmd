@@ -1,0 +1,659 @@
+---
+title: "Carotid intima-media thickness in adults with and without rheumatoid arthritis"
+subtitle: "Dataset 10: Cardiovascular risk and carotid artery thickness in rheumatoid arthritis"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "cimt_rheumatoid.csv"),
+                    show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names. The predictor set is a
+# deliberately chosen subset: see Methods for the collinearity reasoning behind
+# dropping waist_cm, diastolic_bp, ldl_cholesterol, apo_a and apo_b.
+outcome    <- "cimt_total"
+predictors <- c("age_yrs", "sex", "has_ra", "bmi", "systolic_bp",
+                "current_smoker", "statins", "antihypertensives",
+                "total_cholesterol", "hdl_cholesterol", "triglycerides",
+                "glucose", "log_crp")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the clinically "unexposed" group throughout.
+    sex    = lab(factor(sex, levels = c("female", "male"),
+                        labels = c("Female", "Male")), "Sex"),
+    has_ra = lab(factor(has_ra, levels = c(0, 1),
+                        labels = c("Control", "RA")), "Rheumatoid arthritis"),
+    current_smoker    = lab(factor(current_smoker, levels = c(0, 1),
+                                   labels = c("No", "Yes")), "Current smoker"),
+    statins           = lab(factor(statins, levels = c(0, 1),
+                                   labels = c("No", "Yes")), "Taking a statin"),
+    antihypertensives = lab(factor(antihypertensives, levels = c(0, 1),
+                                   labels = c("No", "Yes")),
+                            "Taking antihypertensives"),
+    # CRP is strongly right-skewed (skewness ~5), so it enters as a predictor on
+    # the log scale; see Methods.
+    log_crp = lab(log(crp), "log CRP (log mg/L)"),
+    age_yrs = lab(age_yrs, "Age (years)"),
+    bmi = lab(bmi, "BMI (kg/m2)"),
+    systolic_bp = lab(systolic_bp, "Systolic BP (mmHg)"),
+    total_cholesterol = lab(total_cholesterol, "Total cholesterol (mmol/L)"),
+    hdl_cholesterol = lab(hdl_cholesterol, "HDL cholesterol (mmol/L)"),
+    triglycerides = lab(triglycerides, "Triglycerides (mmol/L)"),
+    glucose = lab(glucose, "Fasting glucose (mmol/L)"),
+    cimt_total = lab(cimt_total, "cIMT (mm)")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", fmt(p, 3)))
+
+# Data-integrity checks referred to in Methods and in the feasibility notes.
+sex_vals    <- sort(unique(na.omit(dat_raw$sex)))
+ht_min      <- min(dat_raw$height_cm, na.rm = TRUE)
+ht_max      <- max(dat_raw$height_cm, na.rm = TRUE)
+n_ht_metres <- sum(dat_raw$height_cm < 3, na.rm = TRUE)
+bmi_gap     <- max(abs(dat_raw$bmi - dat_raw$weight_kg / (dat_raw$height_cm / 100)^2),
+                   na.rm = TRUE)
+friedewald  <- dat_raw$total_cholesterol - dat_raw$hdl_cholesterol -
+               dat_raw$triglycerides / 2.2
+ldl_r       <- cor(dat_raw$ldl_cholesterol, friedewald, use = "complete.obs")
+ldl_gap     <- mean(abs(dat_raw$ldl_cholesterol - friedewald), na.rm = TRUE)
+n_empty_row <- sum(rowSums(is.na(dat_raw)) >= ncol(dat_raw) - 3)
+```
+
+# Introduction
+
+The source study recruited adults with rheumatoid arthritis (RA) and healthy
+controls without RA in the Netherlands, put every participant through the same
+physical examination and fasting laboratory panel, and measured carotid
+intima-media thickness (cIMT) semi-automatically by B-mode ultrasound
+(Hollan and colleagues, *PLOS ONE*, 2015). This teaching extract holds
+`r nrow(dat)` participants, `r sum(dat_raw$has_ra == 1)` with RA and
+`r sum(dat_raw$has_ra == 0)` controls. Carotid intima-media thickness is a
+non-invasive structural marker of early atherosclerosis that predicts subsequent
+myocardial infarction and stroke, and the long-standing clinical claim is that
+the chronic systemic inflammation of RA accelerates it beyond what conventional
+risk factors explain.
+
+**Aim.** Among these Dutch adults, we examined which of RA status, age, sex,
+adiposity, blood pressure, smoking, lipid-lowering and antihypertensive
+treatment, the fasting lipid panel, glucose and C-reactive protein are
+independently associated with carotid intima-media thickness, mutually adjusting
+for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** A cross-sectional case-control comparison conducted in the
+Netherlands and published in *PLOS ONE* in 2015. Cases were adults with
+established rheumatoid arthritis; controls were adults without RA recruited from
+the same setting. This extract contains `r nrow(dat)` participants and 25
+variables: anthropometry, blood pressure, current medication, a fasting
+lipid and glucose panel, C-reactive protein, and the two carotid ultrasound
+measures. Ages run from `r min(dat$age_yrs, na.rm = TRUE)` to
+`r max(dat$age_yrs, na.rm = TRUE)` years.
+
+**Variables.** The outcome is `cimt_total`, mean carotid intima-media thickness
+across both sides, in millimetres, treated as continuous (median
+`r fmt(median(dat$cimt_total, na.rm = TRUE), 2)` mm, range
+`r fmt(min(dat$cimt_total, na.rm = TRUE), 2)` to
+`r fmt(max(dat$cimt_total, na.rm = TRUE), 2)` mm). Predictors are rheumatoid
+arthritis status (reference Control), age in years, sex (reference Female),
+BMI in kg/m2, systolic blood pressure in mmHg, current smoking (reference No),
+statin use (reference No), antihypertensive use (reference No), total
+cholesterol, HDL cholesterol and triglycerides in mmol/L, fasting glucose in
+mmol/L, and log-transformed C-reactive protein. **RA status is the exposure of
+primary interest**; the remainder are conventional cardiovascular risk factors
+carried as covariates.
+
+Cases and controls were **not matched on age or sex** (RA cases have median age
+`r median(dat_model$age_yrs[dat_model$has_ra == "RA"])` versus
+`r median(dat_model$age_yrs[dat_model$has_ra == "Control"])` years for controls,
+and `r fmt(100 * mean(dat_model$sex[dat_model$has_ra == "RA"] == "Male"), 0)`%
+versus `r fmt(100 * mean(dat_model$sex[dat_model$has_ra == "Control"] == "Male"), 0)`%
+men), so age and sex are forced into every adjusted model regardless of their
+own significance.
+
+**Variables deliberately excluded, and why.** Six candidate predictors are left
+out on structural grounds, fixed before any model was fitted.
+
+- `weight_kg` and `height_cm`: `bmi` is exactly `weight_kg / (height_cm/100)^2`
+  in this file (largest discrepancy across all rows
+  `r formatC(bmi_gap, format = "e", digits = 1)` kg/m2, i.e. floating-point
+  noise), so including any two of the three is a deterministic relationship.
+- `waist_cm`: correlated `r fmt(cor(dat$bmi, dat$waist_cm, use = "complete.obs"), 2)`
+  with BMI. Both measure adiposity; BMI is kept because it is the more
+  completely recorded of the two.
+- `diastolic_bp`: correlated
+  `r fmt(cor(dat$systolic_bp, dat$diastolic_bp, use = "complete.obs"), 2)` with
+  systolic blood pressure. Systolic pressure is kept because it is the stronger
+  correlate of arterial structure at these ages.
+- `ldl_cholesterol`: **LDL in this file is not independently measured, it is
+  calculated.** Against the Friedewald formula
+  (`total - HDL - triglycerides/2.2`) it correlates `r fmt(ldl_r, 4)` with a mean
+  absolute discrepancy of `r fmt(ldl_gap, 3)` mmol/L, which is rounding. Putting
+  total cholesterol, HDL, triglycerides *and* LDL in one model is therefore a
+  near-exact linear dependency; doing so inflates the variance inflation factors
+  for the lipid terms into the hundreds (documented in the feasibility notes).
+- `apo_a` and `apo_b`: apolipoprotein B correlates
+  `r fmt(cor(dat$apo_b, dat$total_cholesterol, use = "complete.obs"), 2)` with
+  total cholesterol and apolipoprotein A correlates
+  `r fmt(cor(dat$apo_a, dat$hdl_cholesterol, use = "complete.obs"), 2)` with
+  HDL; they are alternative measurements of the same two lipid fractions rather
+  than additional information.
+- `hypertension_or_hyperchol`: every participant taking an antihypertensive or a
+  statin is coded 1 on this variable, so it is a structural superset of two
+  predictors already in the model.
+
+**Parameter budget.** With `r nrow(dat_model)` complete cases and
+`r length(predictors)` predictors, all of which cost one degree of freedom, the
+model estimates `r length(predictors)` parameters, i.e.
+`r fmt(nrow(dat_model) / length(predictors), 0)` observations per parameter. That
+is comfortably inside the 10-15 observations per parameter that a linear model
+needs, so the cap here is imposed by collinearity rather than by sample size.
+
+**Statistical analysis.** `lm()`, justified because the outcome is a continuous
+measurement in millimetres with a roughly symmetric distribution. We fitted a
+univariable model for each predictor first, then a single multivariable model
+containing all of them. Predictors were chosen in advance on subject-matter
+grounds, not by significance. Significance threshold 0.05; estimates are
+reported with 95% confidence intervals. Assumptions were checked with
+`performance::check_model()`, supplemented by `check_collinearity()`, and
+because non-constant variance was flagged we additionally report HC3
+heteroscedasticity-consistent standard errors. C-reactive protein is used as a
+predictor on the **log scale**: raw CRP has skewness
+`r fmt(with(dat, {x <- na.omit(crp); mean((x - mean(x))^3) / sd(x)^3}), 1)` and a
+range of `r min(dat$crp, na.rm = TRUE)` to `r max(dat$crp, na.rm = TRUE)`, so
+untransformed it would let a handful of participants with CRP above 40 dominate
+its coefficient. Analysis used `r R.version.string` with tidyverse, gtsummary
+and performance.
+
+**Data integrity.** The catalogue notes that in the original Zenodo deposit
+`sex` was coded 0 = woman / 1 = man and the height column mixed metres and
+centimetres. Both look corrected in the shipped CSV: `sex` takes the values
+`r paste(sex_vals, collapse = " and ")`, and `height_cm` runs from `r ht_min` to
+`r ht_max` cm with `r n_ht_metres` values below 3 (i.e. none left in metres).
+One residual defect remains: row `id = "control_row1"` is **entirely empty**
+apart from `id`, `has_ra` and `hypertension_or_hyperchol`, so the file's
+`r nrow(dat)` rows are really `r nrow(dat) - n_empty_row` participants plus one
+blank record. It is dropped by complete-case analysis and does not affect any
+estimate here.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped,
+`r fmt(100 * n_dropped / nrow(dat), 1)`%). The outcome itself is
+`r fmt(100 * mean(!is.na(dat$cimt_total)), 1)`% complete
+(`r sum(is.na(dat$cimt_total))` missing); the remaining attrition is spread
+thinly across the predictors, the largest single contributors being `crp`
+(`r sum(is.na(dat$crp))` missing), `statins` (`r sum(is.na(dat$statins))`) and
+`current_smoker` (`r sum(is.na(dat$current_smoker))`). Only
+`r sum(complete.cases(dat_raw))` of
+`r nrow(dat)` rows are complete on *every* column in the file, so adding
+predictors would cost further rows.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(
+    by = has_ra,
+    missing = "no"
+  ) |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics of the analytic sample, by rheumatoid arthritis status.**")
+```
+
+The two groups are broadly similar in crude cIMT (median
+`r fmt(median(dat_model$cimt_total[dat_model$has_ra == "RA"]), 2)` mm in RA
+versus `r fmt(median(dat_model$cimt_total[dat_model$has_ra == "Control"]), 2)` mm
+in controls) but not in the things that drive cIMT: RA cases are on average
+`r fmt(mean(dat_model$age_yrs[dat_model$has_ra == "RA"]) - mean(dat_model$age_yrs[dat_model$has_ra == "Control"]), 1)`
+years older, have systolic pressure about
+`r fmt(mean(dat_model$systolic_bp[dat_model$has_ra == "RA"]) - mean(dat_model$systolic_bp[dat_model$has_ra == "Control"]), 0)`
+mmHg higher, and are a more female group. Their C-reactive protein is markedly
+higher (median `r median(exp(dat_model$log_crp[dat_model$has_ra == "RA"]))`
+versus `r median(exp(dat_model$log_crp[dat_model$has_ra == "Control"]))` mg/L),
+which is the expected signature of active systemic inflammation.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Carotid intima-media thickness against age, separately for participants with rheumatoid arthritis and controls, with linear smoothers and 95% confidence bands."}
+ggplot(dat_model, aes(age_yrs, cimt_total, colour = has_ra, fill = has_ra)) +
+  geom_point(alpha = 0.45, size = 1.5) +
+  geom_smooth(method = "lm", alpha = 0.18, linewidth = 0.9) +
+  scale_colour_manual(values = c(Control = "#3F7CAC", RA = "#B5495B")) +
+  scale_fill_manual(values = c(Control = "#3F7CAC", RA = "#B5495B")) +
+  labs(x = "Age (years)", y = "Carotid intima-media thickness (mm)",
+       colour = "Group", fill = "Group")
+```
+
+Carotid intima-media thickness rises steadily and near-linearly with age in both
+groups, and the two smoothers lie almost on top of one another, with the RA line
+slightly *below* the control line across most of the age range - so whatever RA
+contributes, it is not a visible upward shift in cIMT at a given age.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(lm(reformulate(v, outcome), data = dat_model), conf.int = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 4) {
+  r <- utid[utid$term == term, ]
+  sprintf("%s mm (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d),
+          fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+```
+
+Age is by far the strongest crude predictor: each additional year is associated
+with `r ug("age_yrs")` greater cIMT (p `r up("age_yrs")`), i.e. about
+`r fmt(10 * utid$estimate[utid$term == "age_yrs"], 2)` mm per decade against a
+sample median of `r fmt(median(dat_model$cimt_total), 2)` mm. Systolic blood
+pressure follows (`r ug("systolic_bp")` per mmHg, p `r up("systolic_bp")`), then
+BMI (`r ug("bmi")` per kg/m2, p `r up("bmi")`), fasting glucose
+(`r ug("glucose")` per mmol/L, p `r up("glucose")`), total cholesterol
+(`r ug("total_cholesterol")` per mmol/L, p `r up("total_cholesterol")`) and
+triglycerides (`r ug("triglycerides")`, p `r up("triglycerides")`). Men average
+`r ug("sexMale")` more than women (p `r up("sexMale")`). The two treatment
+indicators look like strong *risk* markers: statin users average
+`r ug("statinsYes")` more cIMT (p `r up("statinsYes")`) and participants on
+antihypertensives `r ug("antihypertensivesYes")` more
+(p `r up("antihypertensivesYes")`). Crucially, **the exposure of interest shows
+nothing crudely**: RA status is associated with `r ug("has_raRA")`
+(p `r up("has_raRA")`), a difference that is both small and firmly
+non-significant. Current smoking (p `r up("current_smokerYes")`), HDL
+cholesterol (p `r up("hdl_cholesterol")`) and log CRP
+(p `r up("log_crp")`) show no crude association.
+
+## Why adjustment is needed
+
+**Age** is the confounder that matters most, and it works directly against the
+exposure of interest. Age is the dominant determinant of cIMT in this sample
+(crude `r ug("age_yrs")` per year), and because cases and controls were not
+age-matched the RA group is
+`r fmt(mean(dat_model$age_yrs[dat_model$has_ra == "RA"]) - mean(dat_model$age_yrs[dat_model$has_ra == "Control"]), 1)`
+years older on average. The RA group therefore carries an age-driven *upward*
+push on cIMT that masks whatever the disease itself contributes; adding age
+alone moves the RA coefficient from `r ug("has_raRA")` to
+`r fmt(coef(lm(cimt_total ~ has_ra + age_yrs, data = dat_model))["has_raRA"], 4)`
+mm. **Systolic blood pressure** does the same job for the same reason: RA cases
+average
+`r fmt(mean(dat_model$systolic_bp[dat_model$has_ra == "RA"]) - mean(dat_model$systolic_bp[dat_model$has_ra == "Control"]), 1)`
+mmHg higher, and higher pressure independently thickens the arterial wall, so
+part of the RA group's cIMT is a blood-pressure difference rather than a disease
+effect. **Sex** is a third: men have thicker intima-media at every age
+(`r ug("sexMale")` crude) and the RA group is more female
+(`r fmt(100 * mean(dat_model$sex[dat_model$has_ra == "RA"] == "Male"), 0)`% men
+versus `r fmt(100 * mean(dat_model$sex[dat_model$has_ra == "Control"] == "Male"), 0)`%),
+which pushes the crude RA estimate in the opposite direction to age. Finally,
+**age confounds the two treatment indicators**: statin users are on average
+`r fmt(mean(dat_model$age_yrs[dat_model$statins == "Yes"]) - mean(dat_model$age_yrs[dat_model$statins == "No"]), 1)`
+years older than non-users, which is enough on its own to generate the crude
+"statins are associated with thicker arteries" result. Mutual adjustment lets
+each estimate be read as a comparison between participants of the same age, sex,
+body mass, blood pressure, lipid profile and treatment status.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE)
+g <- function(term, d = 4) {
+  r <- tid[tid$term == term, ]
+  sprintf("%s mm (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d),
+          fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+```
+
+```{r fit-stats}
+s <- summary(fit)
+tibble(
+  Statistic = c("Complete-case N", "Parameters (excl. intercept)",
+                "Observations per parameter", "R-squared", "Adjusted R-squared",
+                "Residual SE (mm)"),
+  Value = c(as.character(nrow(dat_model)),
+            as.character(length(coef(fit)) - 1L),
+            fmt(nrow(dat_model) / (length(coef(fit)) - 1L), 1),
+            fmt(s$r.squared, 3), fmt(s$adj.r.squared, 3), fmt(s$sigma, 4))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable linear model for carotid intima-media thickness**"))
+```
+
+The model explains `r fmt(100 * s$r.squared, 1)`% of the variance in cIMT
+(adjusted R-squared `r fmt(s$adj.r.squared, 3)`), with a residual standard
+deviation of `r fmt(s$sigma, 3)` mm - about a sixth of the observed cIMT range.
+The gap between R-squared and adjusted R-squared is small because
+`r length(coef(fit)) - 1L` parameters are spread over `r nrow(dat_model)`
+observations.
+
+Three predictors survive adjustment. Among participants of the same sex, RA
+status, body mass, blood pressure, smoking status, treatment and laboratory
+profile, each additional year of age is associated with `r g("age_yrs")` greater
+cIMT (p `r gp("age_yrs")`), i.e. `r fmt(10 * tid$estimate[tid$term == "age_yrs"], 2)`
+mm per decade. Among participants alike on everything else, each additional mmHg
+of systolic pressure is associated with `r g("systolic_bp")`
+(p `r gp("systolic_bp")`), or `r fmt(10 * tid$estimate[tid$term == "systolic_bp"], 3)`
+mm per 10 mmHg. And the exposure of interest becomes significant only *after*
+adjustment: among participants of the same age, sex and cardiovascular risk
+profile, those with RA have `r g("has_raRA")` cIMT (p `r gp("has_raRA")`) - a
+**thinner**, not thicker, intima-media. Nothing else reaches significance:
+BMI (`r g("bmi")`, p `r gp("bmi")`), current smoking (`r g("current_smokerYes")`,
+p `r gp("current_smokerYes")`), statins (`r g("statinsYes")`,
+p `r gp("statinsYes")`), antihypertensives (`r g("antihypertensivesYes")`,
+p `r gp("antihypertensivesYes")`), total cholesterol
+(`r g("total_cholesterol")`, p `r gp("total_cholesterol")`), HDL
+(`r g("hdl_cholesterol")`, p `r gp("hdl_cholesterol")`), triglycerides
+(`r g("triglycerides")`, p `r gp("triglycerides")`), glucose (`r g("glucose")`,
+p `r gp("glucose")`) and log CRP (`r g("log_crp")`, p `r gp("log_crp")`) are all
+null. These are associations among the participants observed, not effects of
+intervening.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates for carotid intima-media thickness.**")
+```
+
+The two treatment indicators move furthest, and both move *toward* the null.
+Statin use falls from `r ug("statinsYes")` crude (p `r up("statinsYes")`) to
+`r g("statinsYes")` adjusted (p `r gp("statinsYes")`), losing about
+`r fmt(100 * (1 - tid$estimate[tid$term == "statinsYes"] / utid$estimate[utid$term == "statinsYes"]), 0)`%
+of its magnitude and its significance; antihypertensive use falls from
+`r ug("antihypertensivesYes")` (p `r up("antihypertensivesYes")`) to
+`r g("antihypertensivesYes")` (p `r gp("antihypertensivesYes")`). This is
+confounding by indication compounded by age: statin and antihypertensive users
+are older and have higher blood pressure, and once age and pressure are held
+constant the apparent "harm" of treatment disappears. Total cholesterol behaves
+the same way, from `r ug("total_cholesterol")` (p `r up("total_cholesterol")`) to
+`r g("total_cholesterol")` (p `r gp("total_cholesterol")`), as does glucose,
+which crosses from `r ug("glucose")` (p `r up("glucose")`) to
+`r g("glucose")` (p `r gp("glucose")`) - both crude estimates were essentially
+age in disguise.
+
+One estimate moves decisively *away* from the null, and it is the exposure of
+interest. RA status goes from `r ug("has_raRA")` (p `r up("has_raRA")`) to
+`r g("has_raRA")` (p `r gp("has_raRA")`), roughly
+`r fmt(tid$estimate[tid$term == "has_raRA"] / utid$estimate[utid$term == "has_raRA"], 1)`
+times larger in magnitude, and crosses *into* significance. This is negative
+confounding: the RA group's greater age and higher blood pressure were
+concealing a modest negative association, and removing them uncovers it. By
+contrast **age barely moves** - `r ug("age_yrs")` crude to `r g("age_yrs")`
+adjusted, a change of about
+`r fmt(100 * (1 - tid$estimate[tid$term == "age_yrs"] / utid$estimate[utid$term == "age_yrs"]), 0)`% -
+which is what one expects of a variable that nothing else in the model can stand
+in for. Systolic blood pressure is intermediate: it more than halves, from
+`r ug("systolic_bp")` to `r g("systolic_bp")`, but stays clearly significant,
+so part of the crude blood-pressure gradient was age and part of it is its own.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r collin}
+check_collinearity(fit)
+```
+
+```{r assumption-tests}
+het  <- check_heteroscedasticity(fit)
+print(het)
+norm <- check_normality(fit)
+print(norm)
+```
+
+```{r transform-check}
+res_skew <- function(m) { r <- resid(m); mean((r - mean(r))^3) / sd(r)^3 }
+fit_log  <- lm(reformulate(predictors, "log(cimt_total)"), data = dat_model)
+fit_sqrt <- lm(reformulate(predictors, "sqrt(cimt_total)"), data = dat_model)
+tibble(
+  Outcome = c("cIMT (mm, untransformed)", "log(cIMT)", "sqrt(cIMT)"),
+  `Residual skewness` = fmt(c(res_skew(fit), res_skew(fit_log), res_skew(fit_sqrt)), 2),
+  `Shapiro-Wilk p` = formatC(c(shapiro.test(resid(fit))$p.value,
+                               shapiro.test(resid(fit_log))$p.value,
+                               shapiro.test(resid(fit_sqrt))$p.value),
+                             format = "e", digits = 1),
+  `R-squared` = fmt(c(summary(fit)$r.squared, summary(fit_log)$r.squared,
+                      summary(fit_sqrt)$r.squared), 3)
+) |>
+  gt() |>
+  tab_header(title = md("**Table 3. Would a transformation of the outcome help?**"))
+```
+
+```{r robust-se}
+rob   <- lmtest::coeftest(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+robci <- lmtest::coefci(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+tibble(
+  Term = rownames(rob),
+  Estimate = fmt(rob[, 1], 4),
+  `SE (OLS)` = fmt(summary(fit)$coefficients[, 2], 4),
+  `SE (HC3)` = fmt(rob[, 2], 4),
+  `95% CI (HC3)` = paste0(fmt(robci[, 1], 4), " to ", fmt(robci[, 2], 4)),
+  `p (HC3)` = fmt(rob[, 4], 3)
+) |>
+  filter(Term != "(Intercept)") |>
+  gt() |>
+  tab_header(title = md("**Table 4. HC3 heteroscedasticity-consistent standard errors.**"))
+```
+
+**Linearity and predicted values.** The residual-versus-fitted panel is close to
+flat, and Figure 1 already showed that the age-cIMT relationship is essentially
+straight, so the linear specification is defensible. The posterior-predictive
+check reproduces the bulk of the cIMT distribution well but slightly
+under-predicts the right shoulder.
+
+**Collinearity is not a problem in this model.** The largest variance inflation
+factor is
+`r fmt(max(as.data.frame(check_collinearity(fit))$VIF), 2)` (for
+`r as.data.frame(check_collinearity(fit))$Term[which.max(as.data.frame(check_collinearity(fit))$VIF)]`)
+and every VIF is below
+`r fmt(ceiling(max(as.data.frame(check_collinearity(fit))$VIF) * 2) / 2, 1)`,
+well short of the conventional threshold of 5. That is a direct consequence of
+the exclusions set out in Methods: the same model with `waist_cm`,
+`diastolic_bp` and `ldl_cholesterol` added has VIFs of about
+`r fmt(max(as.data.frame(check_collinearity(lm(reformulate(c(predictors, "waist_cm", "diastolic_bp", "ldl_cholesterol"), outcome), data = dat |> select(all_of(c(outcome, predictors, "waist_cm", "diastolic_bp", "ldl_cholesterol"))) |> drop_na())))$VIF), 0)`
+for the lipid terms.
+
+**Variance is not constant.** `check_heteroscedasticity()` rejects constant
+error variance (p < 0.001): participants predicted to have thicker
+intima-media also vary more around their prediction, which is the usual pattern
+for a measurement with a floor near zero. Table 4 therefore reports HC3 robust
+standard errors. They change nothing substantive - the HC3 standard error for
+the RA coefficient is `r fmt(rob["has_raRA", 2], 4)` against an OLS
+`r fmt(summary(fit)$coefficients["has_raRA", 2], 4)`, and age, systolic pressure
+and RA status keep their significance status under robust inference.
+
+**Residuals are non-normal, but a transformation is the wrong fix.**
+`check_normality()` rejects (p < 0.001). The cause is not skew - residual
+skewness is only `r fmt(res_skew(fit), 2)` - but heavy tails: residual kurtosis
+is `r fmt(with(list(r = resid(fit)), mean((r - mean(r))^4) / sd(r)^4), 1)`
+against 3 for a normal distribution, driven by a small number of participants
+with unusually thin or unusually thick arteries. Table 3 shows that
+log-transforming the outcome makes matters clearly *worse* (residual skewness
+`r fmt(res_skew(fit_log), 2)`, i.e. a strong left tail, and a smaller Shapiro-Wilk
+p-value), and the square-root transform is no better; the outcome is therefore
+left on its natural millimetre scale, where the coefficients are directly
+interpretable. With `r nrow(dat_model)` observations the central limit theorem
+covers the coefficient standard errors, and the HC3 intervals are the ones we
+rely on.
+
+**No influential observations.** The largest Cook's distance is
+`r fmt(max(cooks.distance(fit)), 3)` and the largest leverage
+`r fmt(max(hatvalues(fit)), 3)`, so no single participant drives the fit.
+
+# Discussion
+
+In this Dutch case-control sample, carotid intima-media thickness is dominated by
+age and systolic blood pressure: about
+`r fmt(10 * tid$estimate[tid$term == "age_yrs"], 2)` mm per decade of age and
+`r fmt(10 * tid$estimate[tid$term == "systolic_bp"], 3)` mm per 10 mmHg of
+systolic pressure, each holding the other constant. Rheumatoid arthritis itself
+shows **no crude association** with cIMT, and after adjustment for age, sex and
+conventional risk factors the RA group has intima-media that is
+`r fmt(abs(tid$estimate[tid$term == "has_raRA"]), 3)` mm *thinner*
+(p `r gp("has_raRA")`). Against a median cIMT of
+`r fmt(median(dat_model$cimt_total), 2)` mm that is a difference of roughly
+`r fmt(100 * abs(tid$estimate[tid$term == "has_raRA"]) / median(dat_model$cimt_total), 0)`%,
+and it is around
+`r fmt(abs(tid$estimate[tid$term == "has_raRA"]) / tid$estimate[tid$term == "age_yrs"], 1)`
+years' worth of ageing - real but small. The practical reading is that in this
+sample the hypothesis that RA accelerates subclinical atherosclerosis is not
+supported; the cardiovascular risk carried by these RA patients is the risk
+carried by their age and their blood pressure.
+
+The result that most deserves caution is the pair of treatment indicators. Both
+statin use and antihypertensive use look strongly *harmful* in the crude
+analysis, and neither survives adjustment. That is confounding by indication in
+its purest form: people are prescribed statins **because** their lipids and
+overall cardiovascular risk are poor, and prescribed antihypertensives
+**because** their blood pressure is high. In this sample statin users are on
+average
+`r fmt(mean(dat_model$age_yrs[dat_model$statins == "Yes"]) - mean(dat_model$age_yrs[dat_model$statins == "No"]), 1)`
+years older and, despite treatment, have total cholesterol of
+`r fmt(mean(dat_model$total_cholesterol[dat_model$statins == "Yes"]), 1)` mmol/L
+against `r fmt(mean(dat_model$total_cholesterol[dat_model$statins == "No"]), 1)`
+in non-users. Neither the crude nor the adjusted coefficient can be read as an
+effect of treatment: the adjusted one conditions on the very lipid and pressure
+values that treatment was given to change, which is adjusting for a mediator.
+These indicators belong in the model as risk *markers* and should be described
+that way, never as evidence about whether statins work.
+
+**Limitations.** The design is cross-sectional, so no temporal ordering is
+established and the RA coefficient cannot be read as an effect of developing RA.
+Cases and controls were not matched on age or sex, so all comparisons rest on
+statistical adjustment; residual confounding by age is likely because age enters
+linearly while the age-cIMT relationship may curve at the extremes. The RA
+group's disease-specific characteristics - disease duration, DAS28 activity
+score, methotrexate, prednisone and anti-TNF exposure - are **not in this
+extract at all** (they are undefined for the `r sum(dat_raw$has_ra == 0)`
+controls), so we cannot distinguish RA patients with active from quiescent
+disease, and the null RA finding may conceal a real association confined to
+poorly controlled patients. Immunosuppressive treatment could itself reduce
+cIMT, in which case the negative RA coefficient is a treatment effect masquerading
+as a disease effect. Statin and antihypertensive use are confounded by indication
+as described above, and adjusting for the lipid and blood-pressure values they
+modify is over-adjustment. Error variance is non-constant and residuals are
+heavy-tailed; HC3 standard errors address inference but not the model's fit in
+the tails. Complete-case analysis dropped `r n_dropped` of `r nrow(dat)` rows.
+The sample is a single Dutch centre and is not representative of any wider
+population. All estimates are associations, not causal effects.
+
+**Future work.** Refit with the RA-specific disease-activity and treatment
+variables from the full deposit, restricted to the RA cases, to test whether
+cumulative inflammatory burden rather than the RA label predicts intima-media
+thickness.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+- **USABLE, and the best of the three outcomes in this dataset.** The outcome is
+  `r fmt(100 * mean(!is.na(dat$cimt_total)), 1)`% complete, the complete-case N is
+  `r nrow(dat_model)` of `r nrow(dat)`, R-squared is `r fmt(s$r.squared, 3)`, and
+  there is a clean, strong, genuinely interpretable signal in age and systolic
+  pressure. It is also a good teaching case because the exposure of interest is
+  null crudely and significant only after adjustment.
+- **MAJOR trap: `ldl_cholesterol` is the Friedewald calculation, not an
+  independent measurement.** Against `total_cholesterol - hdl_cholesterol -
+  triglycerides/2.2` it correlates `r fmt(ldl_r, 4)` (mean absolute discrepancy
+  `r fmt(ldl_gap, 3)` mmol/L). A student who puts all four lipid variables in one
+  model gets VIFs of roughly 500 (`total_cholesterol`), 410
+  (`ldl_cholesterol`), 93 (`hdl_cholesterol`) and 36 (`triglycerides`), with
+  standard errors an order of magnitude too large and coefficients that flip
+  sign. This is the single most likely way a student wrecks this outcome. The
+  `meta.json` predictor list currently suggests all four.
+- **MAJOR interpretive trap: `statins` and `antihypertensives` are confounded by
+  indication.** Both look harmful crudely (statins `r ug("statinsYes")`,
+  p `r up("statinsYes")`) and both vanish on adjustment. A student who reports
+  "statin use is associated with thicker arteries" without the indication caveat
+  has written something clinically backwards. Worse, adjusting for cholesterol
+  and blood pressure conditions on the mediators of treatment, so neither column
+  of Table 2 is interpretable as a treatment effect.
+- **MINOR-to-MAJOR: `bmi` and `waist_cm` (r
+  `r fmt(cor(dat$bmi, dat$waist_cm, use = "complete.obs"), 2)`) and
+  `systolic_bp` and `diastolic_bp` (r
+  `r fmt(cor(dat$systolic_bp, dat$diastolic_bp, use = "complete.obs"), 2)`) are
+  redundant pairs.** Including both members of each pair raises their VIFs to
+  about 3.5 and 2.2 respectively - not fatal, but it splits the adiposity and
+  pressure signal across two coefficients and neither reaches significance.
+- **MINOR: `apo_a`/`apo_b` duplicate HDL and total cholesterol** (r
+  `r fmt(cor(dat$apo_a, dat$hdl_cholesterol, use = "complete.obs"), 2)` and
+  `r fmt(cor(dat$apo_b, dat$total_cholesterol, use = "complete.obs"), 2)`).
+- **MINOR: `hypertension_or_hyperchol` is a structural superset of `statins` and
+  `antihypertensives`** - every treated participant is coded 1 - so the three
+  together are close to nested.
+- **MINOR: `weight_kg` and `height_cm` must be excluded**; `bmi` is exactly
+  `weight_kg/(height_cm/100)^2` (max discrepancy
+  `r formatC(bmi_gap, format = "e", digits = 1)`).
+- **MINOR failed diagnostics.** Non-constant variance (p < 0.001) and non-normal
+  residuals (p < 0.001), the latter from kurtosis
+  `r fmt(with(list(r = resid(fit)), mean((r - mean(r))^4) / sd(r)^4), 1)` rather
+  than skew (skewness only `r fmt(res_skew(fit), 2)`). **Transformation does not
+  help**: log(cIMT) gives residual skewness `r fmt(res_skew(fit_log), 2)` and a
+  worse Shapiro-Wilk p. HC3 standard errors are the right response and change no
+  conclusion. This is a useful counter-example to the reflex "skewed-looking
+  outcome, take logs".
+- **MINOR data defect: row `id = "control_row1"` is entirely blank** apart from
+  `id`, `has_ra` and `hypertension_or_hyperchol`, so the advertised 470 rows are
+  `r nrow(dat) - n_empty_row` participants plus one empty record. Harmless for
+  complete-case work but it makes every "% complete" figure in the codebook one
+  row pessimistic.
+- **Verified clean:** `sex` ships as the strings
+  `r paste(sex_vals, collapse = "/")` (the Zenodo 0/1 coding is fixed) and
+  `height_cm` ranges `r ht_min`-`r ht_max` cm with `r n_ht_metres` values in
+  metres (the mixed-unit problem is fixed). No RA-specific columns (DAS28,
+  methotrexate, anti-TNF) are present, as intended.
+- **No parameter-budget pressure**: `r nrow(dat_model)` observations for
+  `r length(coef(fit)) - 1L` parameters,
+  `r fmt(nrow(dat_model) / (length(coef(fit)) - 1L), 0)` per parameter. The
+  constraint on this model is collinearity, not N.

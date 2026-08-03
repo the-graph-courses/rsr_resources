@@ -1,0 +1,667 @@
+---
+title: "Trabecular bone strength at the distal tibia in healthy adults"
+subtitle: "Dataset 12: Muscle power and tibial bone strength in healthy adults"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "tibial_bone_strength.csv"),
+                    show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names. The predictor set is
+# capped at five parameters because there are only 142 participants, and
+# `relative_peak_power` is deliberately excluded because it is an exact function
+# of `peak_power_w` and `body_mass_kg` (verified below).
+outcome    <- "bone_strength_index"
+predictors <- c("sex", "age_band", "body_mass_kg", "peak_power_w")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", fmt(p, 3)))
+
+# --- Verifying the algebraic relationships between the shipped columns -------
+# 1. relative_peak_power is peak_power_w / body_mass_kg, rounded to 2 dp.
+rpp_err <- max(abs(dat_raw$relative_peak_power -
+                     round(dat_raw$peak_power_w / dat_raw$body_mass_kg, 2)))
+
+# 2. peak_power_w is the Sayers (1999) countermovement-jump equation,
+#    PP = 51.9 * jump height (cm) + 48.9 * body mass (kg) - 2007.
+#    Inverting it recovers the jump height each participant actually achieved.
+jump_cm  <- (dat_raw$peak_power_w - 48.9 * dat_raw$body_mass_kg + 2007) / 51.9
+pp_err   <- max(abs(dat_raw$peak_power_w -
+                      (51.9 * round(jump_cm, 2) + 48.9 * dat_raw$body_mass_kg - 2007)))
+# The recovered heights land on a half-inch grid, confirming the reconstruction.
+halfinch_err <- max(abs(jump_cm / 2.54 * 2 - round(jump_cm / 2.54 * 2)))
+n_jump_values <- n_distinct(round(jump_cm, 2))
+
+dat <- dat_raw |>
+  mutate(
+    jump_cm = lab(jump_cm, "Recovered jump height (cm)"),
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    sex = lab(factor(sex, levels = c("female", "male"), labels = c("Female", "Male")),
+              "Sex"),
+    # Decades 3 to 6 hold 9, 6, 5 and 2 participants respectively, far too few to
+    # estimate separately, so they are collapsed. Decade 2 is the reference
+    # because it is by far the largest band.
+    age_band = lab(factor(case_when(
+      age_decade == 1 ~ "Decade 1",
+      age_decade == 2 ~ "Decade 2",
+      age_decade >= 3 ~ "Decades 3-6"),
+      levels = c("Decade 2", "Decade 1", "Decades 3-6")),
+      "Age band (10-year bins)"),
+    body_mass_kg = lab(body_mass_kg, "Body mass (kg)"),
+    peak_power_w = lab(peak_power_w, "Estimated peak jump power (W)"),
+    relative_peak_power = lab(relative_peak_power, "Relative peak power (W/kg)"),
+    bone_strength_index = lab(bone_strength_index, "Bone strength index (mg/mm4)")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+```
+
+# Introduction
+
+This is a cross-sectional laboratory study of `r nrow(dat_raw)` healthy adults
+recruited as a convenience sample from the faculty, staff and students of
+California State University East Bay, reported by Nickols-Richardson and
+colleagues in the *Journal of Musculoskeletal and Neuronal Interactions* (2022).
+Each participant performed a countermovement vertical jump, from which peak leg
+power was estimated, and had the tibia scanned by peripheral quantitative
+computed tomography (pQCT). The outcome here is the **bone strength index at the
+4% distal tibial site**, a composite of trabecular density and cross-sectional
+area that indexes the ability of the bone end to resist compression; the distal
+tibia is a common fracture site and a standard target for exercise
+interventions, so knowing which everyday characteristics track with its strength
+is a useful descriptive question.
+
+**Aim.** Among these healthy adults, we examined which of sex, age band, body
+mass and estimated peak jump power are independently associated with the
+trabecular bone strength index at the distal tibia, mutually adjusting for the
+others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** A convenience sample of `r nrow(dat_raw)` faculty, staff and
+students at a mid-sized regional university in the United States, measured once
+in a laboratory session. The published report gives a mean age of about 25 years
+and describes the sample as healthy and free of conditions affecting bone. The
+file shipped with this catalogue holds `r ncol(dat_raw)` columns and
+`r nrow(dat_raw)` rows, and nothing is missing.
+
+**Variables.** The outcome is `bone_strength_index`, the compressive bone
+strength index at the 4% distal tibial site in mg/mm4, treated as continuous
+(range `r fmt(min(dat$bone_strength_index), 1)` to
+`r fmt(max(dat$bone_strength_index), 1)`). Predictors are sex (reference female,
+the larger group), age band (reference Decade 2, the modal band), body mass in
+kilograms, and estimated peak jump power in watts. Age is supplied only as a
+1-to-6 decade bin, not as exact years; the bins are consecutive ten-year bands,
+and given the reported mean age of about 25 years, Decade 2 corresponds to
+participants in their twenties. Because the file does not state the boundaries,
+the bands are labelled by bin number rather than by age in years.
+
+**Predictor budget.** With `r nrow(dat_raw)` participants and a conventional
+allowance of 10 to 15 observations per estimated parameter, this dataset supports
+roughly `r floor(nrow(dat_raw)/15)` to `r floor(nrow(dat_raw)/10)` parameters,
+and the smaller end of that range is the honest target for a sample recruited by
+convenience. The model below spends **`r length(predictors) + 1` parameters**
+(sex 1, age band 2, body mass 1, peak power 1), i.e.
+`r fmt(nrow(dat_raw) / (length(predictors) + 1), 0)` observations per parameter.
+Entering `age_decade` as an unmodified six-level factor would cost five
+parameters for age alone and take the model to eight; it is also not estimable in
+any useful sense, because decades 3, 4, 5 and 6 contain
+`r sum(dat$age_decade == 3)`, `r sum(dat$age_decade == 4)`,
+`r sum(dat$age_decade == 5)` and `r sum(dat$age_decade == 6)` participants. Those
+four bands are therefore collapsed into a single "Decades 3-6" level
+(n = `r sum(dat$age_decade >= 3)`). The budget was fixed before any model was
+fitted.
+
+**Choosing between the two power variables.** `peak_power_w` and
+`relative_peak_power` must never appear in the same model, because
+`relative_peak_power` is exactly `peak_power_w / body_mass_kg` rounded to two
+decimal places: across all `r nrow(dat_raw)` rows the largest discrepancy is
+`r rpp_err`. The redundancy runs deeper than that. `peak_power_w` was not
+measured; it was calculated from the Sayers (1999) equation, *peak power (W) =
+51.9 x jump height (cm) + 48.9 x body mass (kg) - 2007*, so body mass is already
+inside it with a fixed coefficient. Inverting the equation recovers each
+participant's jump height, and the recovered values sit on a half-inch grid
+(largest deviation `r fmt(halfinch_err, 5)` of a half-inch, with only
+`r n_jump_values` distinct heights in the file), which confirms the
+reconstruction; feeding those heights back through the equation reproduces
+`peak_power_w` to within `r pp_err` W. Three parameterisations are therefore
+available: body mass with absolute power, body mass with relative power, or
+power alone. We use **body mass and absolute peak power**, for three reasons.
+First, it is the parameterisation of the source paper, so the results here are
+directly comparable with the published analysis. Second, because power is a
+fixed linear combination of body mass and jump height, a model containing body
+mass and absolute power is *algebraically the same model* as one containing body
+mass and jump height, with the power coefficient equal to the jump-height
+coefficient divided by 51.9; this is demonstrated in the sensitivity section and
+it gives the adjusted power coefficient a clean physical reading. Third,
+`relative_peak_power` is a ratio whose denominator is another candidate
+predictor, and entering a ratio alongside its own denominator produces
+coefficients that answer no clear question. The cost of this choice is a
+correlation of `r fmt(cor(dat$body_mass_kg, dat$peak_power_w), 2)` between body
+mass and peak power, which inflates their standard errors; the resulting variance
+inflation factors are reported with the diagnostics.
+
+**Statistical analysis.** `lm()`, justified because the outcome is a continuous
+measurement with no floor or ceiling. We fitted a univariable model for each
+predictor first, then a single multivariable model containing all of them.
+Predictors were chosen in advance on subject-matter grounds, not by significance.
+Significance threshold 0.05; estimates are reported with 95% confidence
+intervals. Assumptions were checked with `performance::check_model()`,
+collinearity with `check_collinearity()`, and influence with Cook's distance;
+because non-constant variance was flagged we additionally report HC3
+heteroscedasticity-consistent standard errors. Analysis used
+`r R.version.string` with tidyverse, gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped). Every variable in the file is 100%
+complete, so listwise deletion costs nothing here and the complete-case N equals
+the recruited N.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(missing = "no") |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics.**")
+```
+
+The sample is young and female-weighted: `r sum(dat_model$sex == "Female")`
+women and `r sum(dat_model$sex == "Male")` men, with
+`r sum(dat_model$age_band == "Decade 2")` of `r nrow(dat_model)`
+(`r fmt(100 * mean(dat_model$age_band == "Decade 2"), 0)`%) in the modal age
+band and only `r sum(dat_model$age_band == "Decades 3-6")` participants in the
+whole of decades 3 to 6. The bone strength index has a median of
+`r fmt(median(dat_model$bone_strength_index), 1)` mg/mm4 with a long right tail
+reaching `r fmt(max(dat_model$bone_strength_index), 1)`, roughly five times the
+minimum of `r fmt(min(dat_model$bone_strength_index), 1)`.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Trabecular bone strength index against estimated peak jump power, by sex."}
+ggplot(dat_model, aes(peak_power_w, bone_strength_index, colour = sex)) +
+  geom_point(alpha = 0.7, size = 1.9) +
+  geom_smooth(method = "lm", se = TRUE, linewidth = 0.9) +
+  scale_colour_manual(values = c(Female = "#C46B4A", Male = "#3F8F7A")) +
+  labs(x = "Estimated peak jump power (W)",
+       y = "Bone strength index (mg/mm4)", colour = "Sex")
+```
+
+Bone strength index rises steadily with estimated peak power in both sexes, and
+the two fitted lines are close to parallel and close to each other, which
+suggests that much of the crude difference between men and women is a difference
+in power rather than a separate sex effect.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(lm(reformulate(v, outcome), data = dat_model), conf.int = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 2) {
+  r <- utid[utid$term == term, ]
+  sprintf("%s mg/mm4 (95%% CI %s to %s)", fmt(r$estimate, d),
+          fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+```
+
+Every predictor except the youngest age band shows a crude association. Each
+additional watt of estimated peak power is associated with
+`r ug("peak_power_w", 4)` higher bone strength index (p `r up("peak_power_w")`),
+which amounts to `r fmt(1000 * utid$estimate[utid$term == "peak_power_w"], 1)`
+mg/mm4 per 1000 W; each additional kilogram of body mass with
+`r ug("body_mass_kg")` (p `r up("body_mass_kg")`); and men average
+`r ug("sexMale")` higher than women (p `r up("sexMale")`). Participants in
+decades 3 to 6 average `r ug("age_bandDecades 3-6")` relative to decade 2
+(p `r up("age_bandDecades 3-6")`), while decade 1 is indistinguishable from
+decade 2 (`r ug("age_bandDecade 1")`, p `r up("age_bandDecade 1")`).
+
+## Why adjustment is needed
+
+**Body mass** confounds the crude peak-power association in a way that is
+unusually explicit in this dataset: heavier participants have higher estimated
+peak power partly because they jumped higher, but also partly by construction,
+since body mass enters the Sayers equation with a coefficient of 48.9 W per
+kilogram. Body mass is separately associated with bone strength because bone
+adapts to the load it habitually carries, so a crude power coefficient is
+carrying a mass effect on both counts. **Sex** confounds the same association
+from the other direction: men in this sample are heavier (median
+`r fmt(median(dat_model$body_mass_kg[dat_model$sex == "Male"]), 1)` versus
+`r fmt(median(dat_model$body_mass_kg[dat_model$sex == "Female"]), 1)` kg) and
+more powerful (median
+`r fmt(median(dat_model$peak_power_w[dat_model$sex == "Male"]), 0)` versus
+`r fmt(median(dat_model$peak_power_w[dat_model$sex == "Female"]), 0)` W), and
+men have larger, stronger tibiae for reasons of skeletal size and hormonal
+history that have nothing to do with jumping, so the crude power slope is partly
+a comparison of men with women. **Age band** works on both: the older
+participants here are both less powerful (mean peak power
+`r fmt(mean(dat_model$peak_power_w[dat_model$age_band == "Decades 3-6"]), 0)` W
+in decades 3-6 versus
+`r fmt(mean(dat_model$peak_power_w[dat_model$age_band == "Decade 2"]), 0)` W in
+decade 2) and losing trabecular bone with age. Mutual adjustment lets each
+coefficient be read as a comparison between participants of the same sex, age
+band and body mass.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE)
+g <- function(term, d = 2) {
+  r <- tid[tid$term == term, ]
+  sprintf("%s mg/mm4 (95%% CI %s to %s)", fmt(r$estimate, d),
+          fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+```
+
+```{r fit-stats}
+s <- summary(fit)
+tibble(
+  Statistic = c("Complete-case N", "Parameters (excl. intercept)",
+                "Observations per parameter",
+                "R-squared", "Adjusted R-squared", "Residual SE (mg/mm4)"),
+  Value = c(as.character(nrow(model.frame(fit))),
+            as.character(length(coef(fit)) - 1L),
+            fmt(nrow(model.frame(fit)) / (length(coef(fit)) - 1L), 1),
+            fmt(s$r.squared, 3), fmt(s$adj.r.squared, 3), fmt(s$sigma, 2))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable linear model for bone strength index**"))
+```
+
+The model explains `r fmt(100 * s$r.squared, 1)`% of the variance in the bone
+strength index (adjusted R-squared `r fmt(s$adj.r.squared, 3)`), and the gap
+between the two is small because only `r length(coef(fit)) - 1L` parameters are
+spent on `r nrow(model.frame(fit))` observations. **Estimated peak power is the
+one predictor that survives adjustment for body mass**: among participants of the
+same sex, age band and body mass, each additional watt is associated with
+`r g("peak_power_w", 4)` (p `r gp("peak_power_w")`), i.e.
+`r fmt(1000 * tid$estimate[tid$term == "peak_power_w"], 1)` mg/mm4 per 1000 W.
+Men average `r g("sexMale")` more than women of the same age, mass and power
+(p `r gp("sexMale")`). Body mass reverses sign and becomes null
+(`r g("body_mass_kg")`, p `r gp("body_mass_kg")`), and the deficit in decades 3
+to 6 falls to `r g("age_bandDecades 3-6")` (p `r gp("age_bandDecades 3-6")`),
+just short of the 0.05 threshold. The negative adjusted body-mass coefficient
+must be read with care and is explained in the sensitivity section: holding
+*estimated* peak power constant while increasing body mass by one kilogram
+implicitly requires the participant to have jumped lower, so this coefficient is
+not "heavier people have weaker bone". These are associations among the
+participants observed, not effects of intervening.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+Two estimates move a long way. **Body mass** collapses from
+`r ug("body_mass_kg")` crude to `r g("body_mass_kg")` adjusted, crossing the null
+and losing significance entirely (p `r up("body_mass_kg")` to
+p `r gp("body_mass_kg")`): almost the whole crude association between body mass
+and trabecular bone strength is shared with peak power, which is unsurprising
+given that the two are correlated at
+`r fmt(cor(dat_model$body_mass_kg, dat_model$peak_power_w), 2)` and that body
+mass is a component of the power calculation. **Sex** halves, from
+`r ug("sexMale")` to `r g("sexMale")`, moving toward the null but remaining
+clearly significant, so roughly half of the crude male advantage is explained by
+men being heavier and more powerful and half is not. The **decades 3-6** contrast
+also attenuates markedly, from `r ug("age_bandDecades 3-6")` to
+`r g("age_bandDecades 3-6")`, and crosses from significant
+(p `r up("age_bandDecades 3-6")`) to non-significant
+(p `r gp("age_bandDecades 3-6")`) - the older participants have lower bone
+strength largely because they are less powerful, not independently of it. By
+contrast **peak power barely moves**, from `r ug("peak_power_w", 4)` crude to
+`r g("peak_power_w", 4)` adjusted; it loses about
+`r fmt(100 * (1 - tid$estimate[tid$term == "peak_power_w"] / utid$estimate[utid$term == "peak_power_w"]), 0)`%
+of its magnitude and gains width in its interval because it is competing with
+body mass for the same variance, but it stays significant throughout. The
+**decade 1** contrast is negligible in both columns.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r collin}
+check_collinearity(fit)
+```
+
+```{r influence}
+cd <- cooks.distance(fit)
+i_max <- which.max(cd)
+fit_drop <- lm(reformulate(predictors, outcome), data = dat_model[-i_max, ])
+tibble(
+  Term = names(coef(fit)),
+  `Full sample` = fmt(coef(fit), 4),
+  `Most influential dropped` = fmt(coef(fit_drop), 4),
+  `Change (%)` = fmt(100 * (coef(fit_drop) - coef(fit)) / abs(coef(fit)), 1)
+) |>
+  filter(Term != "(Intercept)") |>
+  gt() |>
+  tab_header(title = md(paste0(
+    "**Table 3. Coefficients with and without the single most influential ",
+    "observation (Cook's D = ", fmt(max(cd), 3), ").**")))
+```
+
+```{r het-check}
+het <- check_heteroscedasticity(fit)
+print(het)
+nor <- check_normality(fit)
+print(nor)
+```
+
+```{r robust-se}
+rob   <- lmtest::coeftest(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+robci <- lmtest::coefci(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+tibble(
+  Term = rownames(rob),
+  Estimate = fmt(rob[, 1], 4),
+  `SE (OLS)` = fmt(summary(fit)$coefficients[, 2], 4),
+  `SE (HC3)` = fmt(rob[, 2], 4),
+  `95% CI (HC3)` = paste0(fmt(robci[, 1], 3), " to ", fmt(robci[, 2], 3)),
+  `p (HC3)` = fmt(rob[, 4], 3)
+) |>
+  filter(Term != "(Intercept)") |>
+  gt() |>
+  tab_header(title = md("**Table 4. HC3 heteroscedasticity-consistent standard errors.**"))
+```
+
+**Linearity and homogeneity of variance.** The residual-versus-fitted panel shows
+a mild fan: spread grows with the fitted value, and
+`check_heteroscedasticity()` flags non-constant error variance
+(p `r pv(as.numeric(het))`). This is the expected consequence of a
+right-skewed outcome whose variability scales with its level. Table 4 therefore
+reports HC3 robust standard errors, and the substantive conclusions are
+unchanged: peak power keeps p `r pv(rob["peak_power_w", 4])`, and the decades 3-6
+contrast in fact becomes significant under robust inference
+(p `r pv(rob["age_bandDecades 3-6", 4])`) because its OLS standard error was
+conservative.
+
+**Normality of residuals.** The normal-QQ panel is close to the reference line
+and `check_normality()` does **not** reject (p `r pv(as.numeric(nor))`), so
+despite the skewed raw outcome the residuals are acceptably normal. This is the
+one diagnostic that passes cleanly.
+
+**Collinearity.** The variance inflation factors are
+`r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "peak_power_w"], 2)`
+for peak power and
+`r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "body_mass_kg"], 2)`
+for body mass, with sex at
+`r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "sex"], 2)` and
+age band at
+`r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "age_band"], 2)`.
+These are below the conventional threshold of 5 but they are the direct price of
+the parameterisation chosen in Methods, and they are the reason the body-mass
+coefficient has a confidence interval wide enough to span zero comfortably.
+
+**Influential observations.** This matters more than usual at n =
+`r nrow(model.frame(fit))`, where one participant is 0.7% of the sample. The
+largest Cook's distance is `r fmt(max(cd), 3)`, far below the conventional
+concern threshold of 0.5, and the largest leverage is
+`r fmt(max(hatvalues(fit)), 3)`; `r sum(cd > 4 / nrow(dat_model))` observations
+exceed the stricter 4/n rule but none dominates. Table 3 confirms this directly:
+refitting without the single most influential participant changes the peak-power
+coefficient by only
+`r fmt(abs(100 * (coef(fit_drop)["peak_power_w"] - coef(fit)["peak_power_w"]) / abs(coef(fit)["peak_power_w"])), 1)`%
+and the sex coefficient by
+`r fmt(abs(100 * (coef(fit_drop)["sexMale"] - coef(fit)["sexMale"]) / abs(coef(fit)["sexMale"])), 1)`%.
+The only coefficient that swings proportionally is the decade 1 contrast, which
+moves from `r fmt(coef(fit)["age_bandDecade 1"], 2)` to
+`r fmt(coef(fit_drop)["age_bandDecade 1"], 2)` mg/mm4 - a large percentage change
+only because the estimate is close to zero to begin with, and immaterial next to
+its standard error of `r fmt(s$coefficients["age_bandDecade 1", 2], 2)`.
+
+## Sensitivity: alternative parameterisations
+
+```{r sensitivity}
+alt <- list(
+  `Chosen: body mass + absolute power`  = c("sex", "age_band", "body_mass_kg", "peak_power_w"),
+  `Equivalent: body mass + jump height` = c("sex", "age_band", "body_mass_kg", "jump_cm"),
+  `Alternative: body mass + relative power` = c("sex", "age_band", "body_mass_kg",
+                                                "relative_peak_power"),
+  `Absolute power only (no body mass)`  = c("sex", "age_band", "peak_power_w"),
+  `WRONG: all three power/mass terms`   = c("sex", "age_band", "body_mass_kg",
+                                            "peak_power_w", "relative_peak_power")
+)
+alt_fits <- map(alt, ~ lm(reformulate(.x, outcome), data = dat))
+
+map2_dfr(names(alt_fits), alt_fits, function(nm, f) {
+  tibble(
+    Model = nm,
+    `Parameters` = length(coef(f)) - 1L,
+    `R-squared` = fmt(summary(f)$r.squared, 3),
+    `Adjusted R-squared` = fmt(summary(f)$adj.r.squared, 3),
+    `Residual SE` = fmt(summary(f)$sigma, 2),
+    `Max VIF` = fmt(max(check_collinearity(f)$VIF), 1)
+  )
+}) |>
+  gt() |>
+  tab_header(title = md("**Table 5. The same data under five parameterisations of body mass and power.**"))
+```
+
+```{r reparam}
+f_pp <- alt_fits[["Chosen: body mass + absolute power"]]
+f_jh <- alt_fits[["Equivalent: body mass + jump height"]]
+f_bad <- alt_fits[["WRONG: all three power/mass terms"]]
+b_pp <- coef(f_pp)["peak_power_w"]
+b_jh <- coef(f_jh)["jump_cm"]
+```
+
+Table 5 makes the argument of the Methods section concrete. The chosen model and
+the jump-height model have **identical** R-squared
+(`r fmt(summary(f_pp)$r.squared, 6)` versus
+`r fmt(summary(f_jh)$r.squared, 6)`) and identical residual standard error,
+because they are the same model written twice: multiplying the peak-power
+coefficient by 51.9 gives `r fmt(51.9 * b_pp, 8)`, against a jump-height
+coefficient of `r fmt(b_jh, 8)` mg/mm4 per centimetre - the same number to eight
+decimal places, not merely a similar one. Read this way, the adjusted "power"
+effect is really a jump-height effect, and the negative body-mass coefficient in
+the main model is an artefact of holding a mass-containing composite fixed: in
+the jump-height parameterisation, body mass is associated with
+`r fmt(coef(f_jh)["body_mass_kg"], 2)` mg/mm4 per kilogram
+(p `r pv(summary(f_jh)$coefficients["body_mass_kg", 4])`), which is positive, as
+biology would expect.
+
+Substituting relative for absolute power changes little
+(R-squared `r fmt(summary(alt_fits[[3]])$r.squared, 3)` against
+`r fmt(summary(f_pp)$r.squared, 3)`) and lowers the maximum VIF, so a student who
+chose that parameterisation would reach the same substantive conclusion by a
+different route. The last row is the trap: entering body mass, absolute power
+*and* relative power together buys almost nothing in fit
+(R-squared `r fmt(summary(f_bad)$r.squared, 3)`) while pushing the maximum
+variance inflation factor to `r fmt(max(check_collinearity(f_bad)$VIF), 0)`,
+whereupon peak power loses significance
+(p `r pv(summary(f_bad)$coefficients["peak_power_w", 4])`) and relative power
+takes a meaningless negative coefficient of
+`r fmt(coef(f_bad)["relative_peak_power"], 2)`. Nothing in that column should be
+interpreted.
+
+```{r log-sens}
+fit_log <- lm(reformulate(predictors, paste0("log(", outcome, ")")), data = dat_model)
+het_log <- check_heteroscedasticity(fit_log)
+```
+
+Finally, because the outcome is right-skewed and the variance is non-constant, we
+refitted on the log scale. Heteroscedasticity is resolved
+(p `r pv(as.numeric(het_log))`), the fit is essentially unchanged
+(R-squared `r fmt(summary(fit_log)$r.squared, 3)`), and the conclusions hold:
+each 1000 W of peak power is associated with
+`r fmt(100 * (exp(1000 * coef(fit_log)["peak_power_w"]) - 1), 1)`% higher bone
+strength index (p `r pv(summary(fit_log)$coefficients["peak_power_w", 4])`) and
+men are `r fmt(100 * (exp(coef(fit_log)["sexMale"]) - 1), 1)`% higher than women
+(p `r pv(summary(fit_log)$coefficients["sexMale", 4])`). The natural-scale model
+is retained as primary because its coefficients are in the units clinicians and
+the source paper use, with HC3 standard errors doing the inferential work.
+
+# Discussion
+
+Among these `r nrow(dat_model)` healthy adults, **estimated peak leg power is the
+characteristic most strongly and independently associated with trabecular bone
+strength at the distal tibia**: about
+`r fmt(1000 * tid$estimate[tid$term == "peak_power_w"], 0)` mg/mm4 per 1000 W,
+holding sex, age band and body mass constant. Men average about
+`r fmt(tid$estimate[tid$term == "sexMale"], 0)` mg/mm4 more than women who are
+alike on the other three. The crude association with body mass does not survive
+adjustment; once the sensitivity analysis is read alongside it, the picture is
+that *how hard a person can push off the ground*, rather than *how much they
+weigh*, is what tracks with the strength of the bone end. Practically, this is
+consistent with the idea that high-rate loading rather than static weight-bearing
+is what the distal tibia responds to, which is the rationale behind jumping and
+plyometric exercise programmes for bone. It does not demonstrate that such
+programmes work.
+
+**Limitations.** The design is **cross-sectional**, so temporality is unknown and
+reverse causation is entirely plausible: people with stronger tibiae may simply
+be the people who have always jumped, played sport and stayed active, in which
+case the arrow runs from bone to power as much as from power to bone. The sample
+is a **convenience sample of one university's staff and students**, young
+(`r fmt(100 * mean(dat_model$age_band == "Decade 2"), 0)`% in a single decade
+band) and healthy, so nothing here generalises to older adults or to anyone at
+real fracture risk - the age coefficients in particular rest on
+`r sum(dat_model$age_band == "Decades 3-6")` participants above decade 2 and are
+wide. **Peak power was estimated, not measured**: it is the Sayers regression
+equation applied to jump height and body mass, and the jump heights themselves
+are recorded to the nearest half inch, giving only `r n_jump_values` distinct
+values. Measurement error in a predictor attenuates its coefficient toward the
+null, so the true association with genuinely measured peak power is if anything
+*stronger* than reported here; it also means the "power" variable is partly a
+restatement of body mass, which is why the two compete
+(VIF `r fmt(max(check_collinearity(fit)$VIF), 1)`). **Age is a decade bin, not a
+number**, so any age gradient is measured crudely and decades 3 to 6 had to be
+merged. Physical activity, calcium and vitamin D intake, smoking, menstrual and
+hormonal history, tibial length and limb dominance are **not measured at all**,
+and several of them plausibly cause both muscle power and bone strength, so
+residual confounding is certain. Residual variance is non-constant; HC3 standard
+errors address inference but not the model's fit to the upper tail. All estimates
+are associations, not causal effects.
+
+**Future work.** A prospective study with directly measured force-plate power,
+exact ages and an activity history would settle whether the power-bone
+association is a training effect or a shared constitutional one.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+- **USABLE.** This is a clean, well-behaved linear outcome with a genuine
+  finding, no missing data and a defensible model at
+  `r fmt(nrow(dat_model) / (length(coef(fit)) - 1L), 1)` observations per
+  parameter. It is one of the simpler datasets in the catalogue, and the
+  simplicity is the point: the whole difficulty is in choosing the predictor
+  parameterisation, not in cleaning.
+- **MAJOR trap: `peak_power_w` and `relative_peak_power` are the same variable.**
+  `relative_peak_power` is exactly `peak_power_w / body_mass_kg` rounded to 2 dp
+  (largest discrepancy across all `r nrow(dat_raw)` rows: `r rpp_err`). Putting
+  both in one model, with body mass, gives VIFs of
+  `r fmt(max(check_collinearity(f_bad)$VIF), 0)`,
+  `r fmt(sort(check_collinearity(f_bad)$VIF, decreasing = TRUE)[2], 0)` and
+  `r fmt(sort(check_collinearity(f_bad)$VIF, decreasing = TRUE)[3], 0)`, flips
+  the sign of relative power and kills the significance of peak power. The
+  catalogue's own suggested predictor list contains **both**, so a student
+  following it literally will hit this. This must be flagged in `meta.json`.
+- **MAJOR trap: `peak_power_w` already contains `body_mass_kg`.** It is the
+  Sayers (1999) equation, `PP = 51.9*jump_cm + 48.9*body_mass - 2007`, inverted;
+  the recovered jump heights land on a half-inch grid to within
+  `r fmt(halfinch_err, 5)` and reproduce `peak_power_w` to
+  `r pp_err` W. Consequences: (a) `cor(body_mass, peak_power) =
+  `r fmt(cor(dat$body_mass_kg, dat$peak_power_w), 2)``, VIF
+  `r fmt(max(check_collinearity(fit)$VIF), 1)`; (b) the adjusted body-mass
+  coefficient is **negative** (`r fmt(coef(fit)["body_mass_kg"], 2)`) purely
+  because it is conditioning on a mass-containing composite, which a student will
+  almost certainly misinterpret as "heavier people have weaker bone". The source
+  paper reports the same negative standardised coefficient (-0.102) without
+  explaining it. This is the single most likely way a student writes a
+  confidently wrong discussion.
+- **MAJOR: `age_decade` cannot be used as a six-level factor.** Cell sizes are
+  `r paste(as.integer(table(dat$age_decade)), collapse = ", ")` for decades 1
+  through 6, so decade 6 holds `r sum(dat$age_decade == 6)` participants and
+  there are no men at all in decades 4 or 6. As a six-level factor the largest
+  standard error is
+  `r fmt(max(summary(lm(bone_strength_index ~ sex + factor(age_decade) + body_mass_kg + peak_power_w, dat))$coefficients[, 2]), 1)`
+  mg/mm4 and the extra three degrees of freedom buy nothing (F test against the
+  collapsed model p =
+  `r fmt(anova(fit, lm(bone_strength_index ~ sex + factor(age_decade) + body_mass_kg + peak_power_w, dat))$"Pr(>F)"[2], 2)`).
+  Collapsing to three bands is required, not optional.
+- **MINOR: heteroscedasticity** (p `r pv(as.numeric(het))`). Normality of
+  residuals passes (p `r pv(as.numeric(nor))`), so this is the milder of the
+  two problems and a log transform fixes it (p `r pv(as.numeric(het_log))`)
+  without changing conclusions. A student who reports the untransformed model
+  without HC3 has one failed check on the record.
+- **MINOR: no influential-point problem.** Maximum Cook's distance
+  `r fmt(max(cd), 3)`, maximum leverage `r fmt(max(hatvalues(fit)), 3)`, and
+  dropping the most influential participant moves the peak-power coefficient by
+  `r fmt(abs(100 * (coef(fit_drop)["peak_power_w"] - coef(fit)["peak_power_w"]) / abs(coef(fit)["peak_power_w"])), 1)`%.
+  Worth checking because n = `r nrow(dat_model)`, but it comes out clean for this
+  outcome (contrast `polar_strength_strain_index`, where the same check moves a
+  coefficient by 22%).
+- **MINOR: no binary outcome exists in this file, and none should be
+  manufactured.** A student will be tempted to split the bone strength index at
+  its median or a percentile to run a logistic model. There is **no clinical
+  threshold** for BSI in healthy adults - unlike, say, a T-score, this index has
+  no reference population or diagnostic cut-point - so any dichotomy would be
+  arbitrary, would throw away the information that gives this analysis its
+  R-squared of `r fmt(s$r.squared, 2)`, and would produce an "outcome" that
+  answers no question anyone asks. The dataset supports a **linear project
+  only**, and `index.html` correctly says so.
+- **MINOR: the two outcomes are correlated at
+  `r fmt(cor(dat$bone_strength_index, dat$polar_strength_strain_index), 2)`**
+  (Pearson), i.e. they share
+  `r fmt(100 * cor(dat$bone_strength_index, dat$polar_strength_strain_index)^2, 0)`%
+  of their variance. They are *not* redundant: they measure different bone
+  compartments at different sites, the residual correlation after this model is
+  only `r fmt(cor(resid(fit), resid(lm(polar_strength_strain_index ~ sex + age_band + body_mass_kg + peak_power_w, dat))), 2)`,
+  and they give different answers - peak power dominates here while body mass
+  dominates for the shaft. Offering both is justified.
+- **Sample size is the binding constraint.** `r nrow(dat_raw)` participants and
+  five candidate predictors, two of which cannot coexist, leaves essentially one
+  sensible model. There is no room for interactions, splines or subgroup
+  analyses, and students should be told that plainly rather than discovering it.

@@ -1,0 +1,622 @@
+---
+title: "Carotid atherosclerotic plaque in adults with and without rheumatoid arthritis"
+subtitle: "Dataset 10: Cardiovascular risk and carotid artery thickness in rheumatoid arthritis"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "cimt_rheumatoid.csv"),
+                    show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names. The predictor set is
+# capped at six parameters because there are only 65 plaque events in the file:
+# see the parameter-budget paragraph in Methods.
+outcome    <- "carotid_plaque"
+predictors <- c("age_yrs", "sex", "has_ra", "systolic_bp", "current_smoker",
+                "total_cholesterol")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the clinically "unexposed" group throughout.
+    sex    = lab(factor(sex, levels = c("female", "male"),
+                        labels = c("Female", "Male")), "Sex"),
+    has_ra = lab(factor(has_ra, levels = c(0, 1),
+                        labels = c("Control", "RA")), "Rheumatoid arthritis"),
+    current_smoker    = lab(factor(current_smoker, levels = c(0, 1),
+                                   labels = c("No", "Yes")), "Current smoker"),
+    statins           = lab(factor(statins, levels = c(0, 1),
+                                   labels = c("No", "Yes")), "Taking a statin"),
+    antihypertensives = lab(factor(antihypertensives, levels = c(0, 1),
+                                   labels = c("No", "Yes")),
+                            "Taking antihypertensives"),
+    log_crp = lab(log(crp), "log CRP (log mg/L)"),
+    age_yrs = lab(age_yrs, "Age (years)"),
+    bmi = lab(bmi, "BMI (kg/m2)"),
+    systolic_bp = lab(systolic_bp, "Systolic BP (mmHg)"),
+    total_cholesterol = lab(total_cholesterol, "Total cholesterol (mmol/L)"),
+    hdl_cholesterol = lab(hdl_cholesterol, "HDL cholesterol (mmol/L)"),
+    triglycerides = lab(triglycerides, "Triglycerides (mmol/L)"),
+    glucose = lab(glucose, "Fasting glucose (mmol/L)"),
+    carotid_plaque = lab(carotid_plaque, "Carotid plaque")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+n_events  <- sum(dat_model[[outcome]])
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", fmt(p, 3)))
+
+# Differential missingness of the outcome, used in Methods and the feasibility notes.
+miss_ctrl <- sum(is.na(dat_raw$carotid_plaque) & dat_raw$has_ra == 0)
+miss_ra   <- sum(is.na(dat_raw$carotid_plaque) & dat_raw$has_ra == 1)
+n_ctrl    <- sum(dat_raw$has_ra == 0)
+n_ra      <- sum(dat_raw$has_ra == 1)
+
+sex_vals    <- sort(unique(na.omit(dat_raw$sex)))
+ht_min      <- min(dat_raw$height_cm, na.rm = TRUE)
+ht_max      <- max(dat_raw$height_cm, na.rm = TRUE)
+n_ht_metres <- sum(dat_raw$height_cm < 3, na.rm = TRUE)
+friedewald  <- dat_raw$total_cholesterol - dat_raw$hdl_cholesterol -
+               dat_raw$triglycerides / 2.2
+ldl_r       <- cor(dat_raw$ldl_cholesterol, friedewald, use = "complete.obs")
+```
+
+# Introduction
+
+The source study recruited adults with rheumatoid arthritis (RA) and healthy
+controls without RA in the Netherlands, put every participant through the same
+physical examination and fasting laboratory panel, and scanned both carotid
+arteries by B-mode ultrasound (Hollan and colleagues, *PLOS ONE*, 2015). As well
+as measuring wall thickness the ultrasound recorded whether a discrete
+atherosclerotic **plaque** was present. Plaque is a later and clinically harder
+endpoint than wall thickening - it is focal, it is what ruptures, and its
+presence reclassifies cardiovascular risk in a way that a continuous thickness
+measurement does not - so it is worth asking separately whether RA and the
+conventional risk factors predict it.
+
+**Aim.** Among these Dutch adults, we examined which of RA status, age, sex,
+systolic blood pressure, current smoking and total cholesterol are independently
+associated with the presence of carotid plaque, mutually adjusting for the
+others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** A cross-sectional case-control comparison conducted in the
+Netherlands and published in *PLOS ONE* in 2015. Cases were adults with
+established rheumatoid arthritis; controls were adults without RA recruited from
+the same setting. This extract contains `r nrow(dat)` participants (`r n_ra`
+with RA, `r n_ctrl` controls) and 25 variables. Ages run from
+`r min(dat$age_yrs, na.rm = TRUE)` to `r max(dat$age_yrs, na.rm = TRUE)` years.
+
+**Variables.** The outcome is `carotid_plaque`, a binary indicator where the
+**event is an atherosclerotic plaque visible on carotid ultrasound**. There are
+`r sum(dat_raw$carotid_plaque == 1, na.rm = TRUE)` events among the
+`r sum(!is.na(dat_raw$carotid_plaque))` participants scanned
+(`r fmt(100 * mean(dat_raw$carotid_plaque, na.rm = TRUE), 1)`%). Predictors are
+rheumatoid arthritis status (reference Control), age in years, sex (reference
+Female), systolic blood pressure in mmHg, current smoking (reference No) and
+total cholesterol in mmol/L. **RA status is the exposure of primary interest**;
+the other five are the conventional determinants of atherosclerosis.
+
+**The predictor set is deliberately small, and here is the arithmetic.** The
+file contains `r sum(dat_raw$carotid_plaque == 1, na.rm = TRUE)` plaque events
+and `r n_events` survive into the complete-case analytic sample. The
+conventional rule of **ten events per estimated parameter** therefore allows
+`r floor(n_events / 10)` parameters. All six predictors are continuous or
+binary, so each costs exactly one degree of freedom and the model estimates
+`r length(predictors)` parameters, giving
+**`r fmt(n_events / length(predictors), 1)` events per parameter**. That is the
+budget spent, with nothing to spare. The `meta.json` predictor list contains 16
+variables; fitting all of them would cost 16-17 parameters and drop events per
+parameter to about
+`r fmt(sum(dat_raw$carotid_plaque == 1, na.rm = TRUE) / 17, 1)`, which is
+over-fitting regardless of what the p-values then say. The six were chosen a
+priori: age and sex because cases and controls were **not matched** on either
+and both are the dominant determinants of plaque; RA status because it is the
+exposure of interest; and blood pressure, smoking and total cholesterol because
+they are the three modifiable risk factors that any cardiovascular model would
+be expected to contain.
+
+**Variables excluded from the candidate pool on structural grounds.**
+`ldl_cholesterol` is not independently measured in this file - it is the
+Friedewald calculation from total cholesterol, HDL and triglycerides
+(correlation `r fmt(ldl_r, 4)` with that formula), so it must never appear
+alongside all three. `waist_cm` duplicates `bmi`
+(r `r fmt(cor(dat$bmi, dat$waist_cm, use = "complete.obs"), 2)`) and
+`diastolic_bp` duplicates `systolic_bp`
+(r `r fmt(cor(dat$systolic_bp, dat$diastolic_bp, use = "complete.obs"), 2)`);
+`apo_a` and `apo_b` duplicate HDL and total cholesterol. `weight_kg` and
+`height_cm` are excluded because `bmi` is exactly
+`weight_kg/(height_cm/100)^2`. `statins` and `antihypertensives` are omitted
+from *this* model for a different reason - they are confounded by indication and
+each would cost a scarce parameter to estimate something that cannot be read as
+a treatment effect (see Discussion). `prednisone` is omitted because it is
+almost perfectly aligned with RA status
+(`r sum(dat_raw$prednisone == 1 & dat_raw$has_ra == 0, na.rm = TRUE)` of
+`r sum(dat_raw$prednisone == 1, na.rm = TRUE)` users are controls).
+
+**Statistical analysis.** `glm(family = binomial)`, justified because the
+outcome is binary. We fitted a univariable model for each predictor first, then
+a single multivariable model containing all six. Predictors were chosen in
+advance on subject-matter grounds, not by significance. Coefficients are
+exponentiated and reported as odds ratios with 95% confidence intervals;
+significance threshold 0.05. Model adequacy was assessed with
+`performance::check_model()`, `binned_residuals()` and `check_collinearity()`,
+focusing on calibration, collinearity, influential observations and events per
+parameter. Analysis used `r R.version.string` with tidyverse, gtsummary and
+performance.
+
+**Data integrity.** The catalogue notes that in the original Zenodo deposit
+`sex` was coded 0 = woman / 1 = man and the height column mixed metres and
+centimetres. Both are corrected here: `sex` ships as the strings
+`r paste(sex_vals, collapse = " and ")` and `height_cm` runs from `r ht_min` to
+`r ht_max` cm with `r n_ht_metres` values below 3. One defect remains: row
+`id = "control_row1"` is entirely blank apart from `id`, `has_ra` and
+`hypertension_or_hyperchol`.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped,
+`r fmt(100 * n_dropped / nrow(dat), 1)`%), leaving `r n_events` events. Almost
+all the loss is the outcome itself: `carotid_plaque` is only
+`r fmt(100 * mean(!is.na(dat_raw$carotid_plaque)), 1)`% complete
+(`r sum(is.na(dat_raw$carotid_plaque))` missing). **That missingness is severely
+differential with respect to the exposure of interest**: `r miss_ra` of `r n_ra`
+RA cases (`r fmt(100 * miss_ra / n_ra, 1)`%) lack a plaque reading, against
+`r miss_ctrl` of `r n_ctrl` controls (`r fmt(100 * miss_ctrl / n_ctrl, 1)`%).
+Nearly a quarter of the control group is therefore absent from this analysis for
+reasons we cannot observe, and if plaque status is related to whether a control
+was scanned, the RA-versus-control comparison is biased by an unknown amount in
+an unknown direction. This is stated again in the Limitations because it is the
+most serious weakness of this outcome.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  mutate(carotid_plaque = factor(carotid_plaque, levels = c(0, 1),
+                                 labels = c("No plaque", "Plaque"))) |>
+  tbl_summary(
+    by = carotid_plaque,
+    missing = "no"
+  ) |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics by carotid plaque status.**")
+```
+
+Participants with plaque are a decade older (median
+`r median(dat_model$age_yrs[dat_model$carotid_plaque == 1])` versus
+`r median(dat_model$age_yrs[dat_model$carotid_plaque == 0])` years), more often
+male (`r fmt(100 * mean(dat_model$sex[dat_model$carotid_plaque == 1] == "Male"), 0)`%
+versus `r fmt(100 * mean(dat_model$sex[dat_model$carotid_plaque == 0] == "Male"), 0)`%)
+and have higher systolic pressure. RA status looks almost irrelevant:
+`r fmt(100 * mean(dat_model$carotid_plaque[dat_model$has_ra == "RA"]), 1)`% of RA
+cases have plaque against
+`r fmt(100 * mean(dat_model$carotid_plaque[dat_model$has_ra == "Control"]), 1)`%
+of controls.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Proportion with carotid plaque by age group and rheumatoid arthritis status. Group sizes are printed above each bar."}
+dat_model |>
+  mutate(age_grp = cut(age_yrs, breaks = c(19, 40, 50, 60, 71),
+                       labels = c("20-39", "40-49", "50-59", "60-70"))) |>
+  group_by(age_grp, has_ra) |>
+  summarise(p = mean(carotid_plaque), n = n(), .groups = "drop") |>
+  ggplot(aes(age_grp, p, fill = has_ra)) +
+  geom_col(position = position_dodge(0.85), width = 0.78) +
+  geom_text(aes(label = paste0("n=", n)), position = position_dodge(0.85),
+            vjust = -0.4, size = 2.9, colour = "grey30") +
+  scale_y_continuous(labels = scales::percent, expand = expansion(c(0, 0.12))) +
+  scale_fill_manual(values = c(Control = "#3F7CAC", RA = "#B5495B")) +
+  labs(x = "Age group (years)", y = "Proportion with carotid plaque",
+       fill = "Group")
+```
+
+Plaque prevalence is driven overwhelmingly by age - it is
+`r fmt(100 * mean(dat_model$carotid_plaque[dat_model$age_yrs < 40]), 0)`% below
+age 40 and
+`r fmt(100 * mean(dat_model$carotid_plaque[dat_model$age_yrs >= 60]), 0)`% at 60
+and over - while the RA and control bars within each age band are close together
+and cross over, with no consistent direction. (Age is grouped here for display
+only; it enters the models as a continuous variable, which also avoids the
+zero-event cells visible in the youngest band.)
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = glm,
+    method.args = list(family = binomial),
+    exponentiate = TRUE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(glm(reformulate(v, outcome), data = dat_model, family = binomial),
+       conf.int = TRUE, exponentiate = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 2) {
+  r <- utid[utid$term == term, ]
+  sprintf("OR %s (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d),
+          fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+```
+
+Age dominates. Each additional year multiplies the odds of carotid plaque by
+`r ug("age_yrs")` (p `r up("age_yrs")`), which compounds to roughly
+`r fmt(utid$estimate[utid$term == "age_yrs"]^10, 1)`-fold per decade. Men have
+`r ug("sexMale")` the odds of women (p `r up("sexMale")`). Each additional mmHg
+of systolic pressure multiplies the odds by `r ug("systolic_bp")`
+(p `r up("systolic_bp")`), about
+`r fmt(utid$estimate[utid$term == "systolic_bp"]^10, 2)`-fold per 10 mmHg. The
+remaining three show no crude association: total cholesterol
+(`r ug("total_cholesterol")` per mmol/L, p `r up("total_cholesterol")`), current
+smoking (`r ug("current_smokerYes")`, p `r up("current_smokerYes")`) and - the
+exposure of interest - RA status (`r ug("has_raRA")`, p `r up("has_raRA")`),
+whose confidence interval spans both a halving and a fifty-per-cent increase in
+the odds.
+
+## Why adjustment is needed
+
+**Age** confounds almost everything here, and it confounds the smoking
+association in the awkward direction. Plaque odds rise `r ug("age_yrs")` per
+year, but current smokers in this sample are on average
+`r fmt(mean(dat_model$age_yrs[dat_model$current_smoker == "No"]) - mean(dat_model$age_yrs[dat_model$current_smoker == "Yes"]), 1)`
+years *younger* than non-smokers, and the imbalance is concentrated where it
+matters: only
+`r fmt(100 * mean(dat_model$current_smoker[dat_model$age_yrs >= 60] == "Yes"), 0)`%
+of participants aged 60 and over smoke, against
+`r fmt(100 * mean(dat_model$current_smoker[dat_model$age_yrs < 60] == "Yes"), 0)`%
+of those under 60 (many older participants are ex-smokers, who are coded as
+non-smokers here). Being younger protects strongly against plaque, so the crude
+smoking odds ratio is dragged toward the null by the smokers' youth and a real
+association is hidden - among participants under 50, for instance,
+`r fmt(100 * mean(dat_model$carotid_plaque[dat_model$age_yrs < 50 & dat_model$current_smoker == "Yes"]), 1)`%
+of smokers have plaque against
+`r fmt(100 * mean(dat_model$carotid_plaque[dat_model$age_yrs < 50 & dat_model$current_smoker == "No"]), 1)`%
+of non-smokers. **Sex** does the same: men are
+`r fmt(mean(dat_model$age_yrs[dat_model$sex == "Male"]) - mean(dat_model$age_yrs[dat_model$sex == "Female"]), 1)`
+years older on average as well as being at higher plaque risk for other reasons,
+so part of the crude male excess is age. **Age also confounds the systolic
+blood-pressure association**: arterial pressure rises with age
+(r `r fmt(cor(dat_model$age_yrs, dat_model$systolic_bp), 2)` in this sample) and
+so does plaque, so a crude blood-pressure gradient will partly be an age
+gradient. And **age and sex jointly confound the RA comparison**, because the
+groups were not matched on either: the RA group is
+`r fmt(mean(dat_model$age_yrs[dat_model$has_ra == "RA"]) - mean(dat_model$age_yrs[dat_model$has_ra == "Control"]), 1)`
+years older and more female. Mutual adjustment lets each odds ratio be read as a
+comparison between participants of the same age, sex, blood pressure, smoking
+status and cholesterol.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- glm(reformulate(predictors, outcome), data = dat_model, family = binomial)
+
+mv <- tbl_regression(fit, exponentiate = TRUE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+g <- function(term, d = 2) {
+  r <- tid[tid$term == term, ]
+  sprintf("OR %s (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d),
+          fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+```
+
+```{r fit-stats}
+n_par    <- length(coef(fit)) - 1L
+epp      <- n_events / n_par
+null_fit <- glm(reformulate("1", outcome), data = dat_model, family = binomial)
+tibble(
+  Statistic = c("Complete-case N", "Events (plaque = 1)",
+                "Parameters (excl. intercept)", "Events per parameter",
+                "AIC (null model)", "AIC (full model)", "Tjur's R-squared"),
+  Value = c(as.character(nrow(dat_model)), as.character(n_events),
+            as.character(n_par), fmt(epp, 1), fmt(AIC(null_fit), 1),
+            fmt(AIC(fit), 1), fmt(as.numeric(r2_tjur(fit)), 3))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable logistic model for carotid plaque**"))
+```
+
+The model has `r n_events` events for `r n_par` estimated parameters, i.e.
+**`r fmt(epp, 1)` events per parameter**, which clears the conventional minimum
+of ten but only because the predictor set was capped at six in advance. AIC
+falls from `r fmt(AIC(null_fit), 1)` for the intercept-only model to
+`r fmt(AIC(fit), 1)`, a drop of `r fmt(AIC(null_fit) - AIC(fit), 1)`, so the
+predictors collectively carry real information; Tjur's R-squared is
+`r fmt(as.numeric(r2_tjur(fit)), 3)`, which is modest - the model separates
+plaque from no-plaque only partially.
+
+Three predictors are independently associated with plaque. Among participants of
+the same sex, RA status, blood pressure, smoking status and cholesterol, each
+additional year of age multiplies the odds of plaque by `r g("age_yrs")`
+(p `r gp("age_yrs")`), about `r fmt(tid$estimate[tid$term == "age_yrs"]^10, 1)`-fold
+per decade. Among participants alike on everything else, men have
+`r g("sexMale")` the odds of women (p `r gp("sexMale")`), and current smokers
+`r g("current_smokerYes")` the odds of non-smokers (p `r gp("current_smokerYes")`).
+The exposure of interest remains null: among participants of the same age, sex
+and risk-factor profile, RA is associated with `r g("has_raRA")`
+(p `r gp("has_raRA")`) - a point estimate suggesting somewhat *lower* odds, but
+with a confidence interval that comfortably includes no association and a 35%
+increase. Systolic blood pressure (`r g("systolic_bp")`, p `r gp("systolic_bp")`)
+and total cholesterol (`r g("total_cholesterol")`, p `r gp("total_cholesterol")`)
+are both null after adjustment. These are associations among the participants
+observed, not effects of intervening.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted odds ratios for carotid plaque.**")
+```
+
+Two predictors move meaningfully in opposite directions. **Current smoking moves
+away from the null and crosses into significance**, from `r ug("current_smokerYes")`
+crude (p `r up("current_smokerYes")`) to `r g("current_smokerYes")` adjusted
+(p `r gp("current_smokerYes")`) - the odds ratio roughly
+`r fmt(tid$estimate[tid$term == "current_smokerYes"] / utid$estimate[utid$term == "current_smokerYes"], 1)`
+times larger. This is the negative confounding by age described above: adding
+age alone lifts the smoking odds ratio to
+`r fmt(exp(coef(glm(carotid_plaque ~ current_smoker + age_yrs, data = dat_model, family = binomial)))["current_smokerYes"], 2)`,
+and adding sex takes it the rest of the way. **Systolic blood pressure moves the
+other way, toward the null and out of significance**, from `r ug("systolic_bp")`
+(p `r up("systolic_bp")`) to `r g("systolic_bp")` (p `r gp("systolic_bp")`) - the
+entire crude blood-pressure gradient is explained by age, which is unsurprising
+given a correlation of `r fmt(cor(dat_model$age_yrs, dat_model$systolic_bp), 2)`
+between the two. Total cholesterol does the same, from `r ug("total_cholesterol")`
+to `r g("total_cholesterol")`.
+
+**Age barely moves at all**: `r ug("age_yrs")` crude to `r g("age_yrs")`
+adjusted, a change of
+`r fmt(abs(100 * (tid$estimate[tid$term == "age_yrs"] / utid$estimate[utid$term == "age_yrs"] - 1)), 1)`%,
+because nothing else in this model stands in for chronological age. Sex
+attenuates only slightly, from `r ug("sexMale")` to `r g("sexMale")`, and keeps
+its significance - part of the crude male excess was the men's greater age, but
+most of it is not. The exposure of interest, RA status, moves from
+`r ug("has_raRA")` to `r g("has_raRA")`: further below 1, consistent with the
+same negative confounding seen for cIMT (the RA group is older), but nowhere
+near significance in either column.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r binned-resid}
+br <- binned_residuals(fit)
+print(br)
+```
+
+```{r collin}
+check_collinearity(fit)
+```
+
+```{r separation-check}
+tibble(
+  Check = c("Largest |coefficient| (log-odds scale)",
+            "Largest standard error",
+            "Largest variance inflation factor",
+            "Largest Cook's distance",
+            "Largest leverage",
+            "Smallest cell: events in the smaller level of a binary predictor"),
+  Value = c(fmt(max(abs(coef(fit)[-1])), 2),
+            fmt(max(summary(fit)$coefficients[-1, 2]), 3),
+            fmt(max(as.data.frame(check_collinearity(fit))$VIF), 2),
+            fmt(max(cooks.distance(fit)), 3),
+            fmt(max(hatvalues(fit)), 3),
+            as.character(min(sum(dat_model$carotid_plaque[dat_model$sex == "Male"]),
+                             sum(dat_model$carotid_plaque[dat_model$current_smoker == "Yes"]),
+                             sum(dat_model$carotid_plaque[dat_model$has_ra == "Control"]))))
+) |>
+  gt() |>
+  tab_header(title = md("**Table 3. Checks for separation and undue influence.**"))
+```
+
+For a logistic model, **homogeneity of variance and normality of residuals do
+not apply and are not interpreted** - the panels `check_model()` draws for them
+are ignored here. The checks that do matter are these four.
+
+**Calibration (binned residuals).** This is the check that fails. Only about
+`r fmt(100 * mean(as.data.frame(br)$group == "yes"), 0)`% of binned residuals
+fall inside the error bounds against a target of 95% or more, so
+`binned_residuals()` reports a probably-bad fit. Part of this is unavoidable
+noise: with `r n_events` events spread over `r nrow(dat_model)` observations each
+bin holds only a handful of events. Part of it is real - the pattern is
+consistent with the linear-in-log-odds assumption for age being imperfect, since
+plaque prevalence is essentially zero below age 40 and then accelerates.
+
+**Collinearity is not a problem.** The largest variance inflation factor is
+`r fmt(max(as.data.frame(check_collinearity(fit))$VIF), 2)`, far below the
+conventional threshold of 5, so none of the six coefficients is competing with
+another for the same variance. That is a consequence of the exclusions in
+Methods rather than luck: adding `ldl_cholesterol` alongside total cholesterol,
+HDL and triglycerides drives the lipid VIFs into the hundreds.
+
+**No separation and no influential observations.** Every coefficient is finite,
+the largest on the log-odds scale being `r fmt(max(abs(coef(fit)[-1])), 2)`, and
+the largest standard error is `r fmt(max(summary(fit)$coefficients[-1, 2], na.rm = TRUE), 2)`
+- both entirely ordinary, and there is no "fitted probabilities numerically 0 or
+1" warning. Every level of every binary predictor contains events (the sparsest
+combination still has
+`r min(sum(dat_model$carotid_plaque[dat_model$sex == "Male"]), sum(dat_model$carotid_plaque[dat_model$current_smoker == "Yes"]), sum(dat_model$carotid_plaque[dat_model$has_ra == "Control"]))`).
+The largest Cook's distance is `r fmt(max(cooks.distance(fit)), 3)` and the
+largest leverage `r fmt(max(hatvalues(fit)), 3)`, so no single participant drives
+the fit.
+
+**Events per parameter.** `r fmt(epp, 1)`, just above the conventional ten. The
+model is at its capacity; a seventh predictor would take it below.
+
+# Discussion
+
+In this Dutch case-control sample, carotid plaque is predicted by age, sex and
+current smoking, and not by rheumatoid arthritis. Each decade of age multiplies
+the odds of plaque by about `r fmt(tid$estimate[tid$term == "age_yrs"]^10, 1)`,
+men have about `r fmt(tid$estimate[tid$term == "sexMale"], 1)` times the odds of
+women, and current smokers about
+`r fmt(tid$estimate[tid$term == "current_smokerYes"], 1)` times the odds of
+non-smokers, each holding the others constant. RA status is null both crudely
+(`r ug("has_raRA")`) and after adjustment (`r g("has_raRA")`). Practically, this
+says that in these patients the presence of plaque tracks the ordinary
+determinants of atherosclerosis, and that a clinician screening RA patients
+should be looking at their age, sex and smoking rather than treating the RA
+diagnosis itself as the risk marker.
+
+The smoking result is the one worth dwelling on, because it only appears after
+adjustment. Crudely, smokers look no different from non-smokers; that is an
+artefact of the age distribution: smokers are
+`r fmt(mean(dat_model$age_yrs[dat_model$current_smoker == "No"]) - mean(dat_model$age_yrs[dat_model$current_smoker == "Yes"]), 1)`
+years younger on average and make up only
+`r fmt(100 * mean(dat_model$current_smoker[dat_model$age_yrs >= 60] == "Yes"), 0)`%
+of the over-60s, the age band where most of the plaque is, while
+`current_smoker` counts ex-smokers as unexposed. Once age is held constant the
+expected doubling of odds emerges. This
+is a clean illustration of why an unadjusted analysis can be not merely
+imprecise but directionally misleading.
+
+A word is also owed to `statins` and `antihypertensives`, which are in the
+dataset and were **not** used here. Both are treatment indicators, and treatment
+is given because of risk: statin users in this sample are on average
+`r fmt(mean(dat$age_yrs[dat$statins == "Yes"], na.rm = TRUE) - mean(dat$age_yrs[dat$statins == "No"], na.rm = TRUE), 1)`
+years older than non-users and, despite being treated, still have total
+cholesterol of
+`r fmt(mean(dat$total_cholesterol[dat$statins == "Yes"], na.rm = TRUE), 1)`
+mmol/L against
+`r fmt(mean(dat$total_cholesterol[dat$statins == "No"], na.rm = TRUE), 1)` in
+non-users. Put into a plaque model, they act as proxies for prior cardiovascular
+risk and appear harmful; adjusted for the cholesterol and blood pressure they
+were prescribed to lower, they are being conditioned on their own mediators.
+Neither reading is a treatment effect, and with a six-parameter budget spending
+two parameters on uninterpretable coefficients would be poor economy.
+
+**Limitations.** The most serious problem is **differential missingness of the
+outcome**. `r miss_ctrl` of `r n_ctrl` controls (`r fmt(100 * miss_ctrl / n_ctrl, 0)`%)
+have no plaque reading against `r miss_ra` of `r n_ra` RA cases
+(`r fmt(100 * miss_ra / n_ra, 1)`%), so the exposure group of interest is nearly
+completely scanned while a quarter of the comparison group is not. Complete-case
+analysis is unbiased here only if being scanned is unrelated to plaque status
+among controls, which is untestable and unlikely if scanning was prompted by
+clinical suspicion. The design is cross-sectional, so no temporal ordering is
+established; the RA coefficient cannot be read as an effect of developing RA,
+and smoking status is current status, not lifetime exposure, with ex-smokers
+misclassified as unexposed - a misclassification that biases the smoking odds
+ratio toward the null and means the true association is probably stronger than
+reported. With only `r n_events` events the model can carry six parameters, so
+adiposity, glucose, the full lipid panel and RA disease activity are all
+omitted, and residual confounding is certain. RA disease duration, DAS28,
+methotrexate and anti-TNF exposure are **not in this extract at all**, being
+undefined for controls, so a null RA coefficient cannot rule out an association
+confined to patients with active or long-standing disease. The binned-residual
+check fails, indicating imperfect calibration. Complete-case analysis dropped
+`r n_dropped` of `r nrow(dat)` rows. The sample is a single Dutch centre. All
+estimates are associations, not causal effects.
+
+**Future work.** Establish why a quarter of controls have no plaque reading and,
+if the reason is administrative rather than clinical, refit with multiple
+imputation of the outcome-adjacent covariates; separately, model plaque with age
+as a spline to address the calibration failure.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+- **USABLE WITH WARNINGS.** `r nrow(dat_model)` complete cases, `r n_events`
+  events, `r fmt(epp, 1)` events per parameter at six predictors. The model fits
+  cleanly, has no separation, and finds a real and interpretable signal (age,
+  sex, smoking). But two things must be flagged to students, below.
+- **MAJOR: differential missingness of the outcome.** `carotid_plaque` is
+  `r fmt(100 * mean(!is.na(dat_raw$carotid_plaque)), 1)`% complete overall, but
+  that average hides everything: `r fmt(100 * miss_ctrl / n_ctrl, 1)`% missing
+  among controls (`r miss_ctrl`/`r n_ctrl`) versus
+  `r fmt(100 * miss_ra / n_ra, 1)`% among RA cases (`r miss_ra`/`r n_ra`). Since
+  `has_ra` is the exposure of primary interest, the complete-case comparison is
+  built on a control group that has lost a quarter of its members
+  non-randomly. `index.html` presents this as a flat "8.9% missing", which
+  understates the problem badly.
+- **MAJOR: the parameter budget is genuinely binding.** Six predictors is the
+  whole allowance (`r fmt(epp, 1)` EPP). The `meta.json` predictor list has 16
+  entries; a student who uses all of them gets
+  `r fmt(sum(dat_raw$carotid_plaque == 1, na.rm = TRUE) / 17, 1)` events per
+  parameter and, because that model also loses rows to missingness, ends with
+  about 408 observations and 64 events for 17 parameters.
+- **MAJOR trap: `ldl_cholesterol` is calculated, not measured.** It is the
+  Friedewald value (correlation `r fmt(ldl_r, 4)` with
+  `total - HDL - triglycerides/2.2`). A student who puts total cholesterol, HDL,
+  triglycerides and LDL in the same logistic model gets VIFs of roughly 478, 405,
+  94 and 30 and lipid coefficients that are pure noise.
+- **MAJOR trap: categorising age produces complete separation.** `age_yrs` is a
+  natural candidate for banding, and there are **zero plaque events among the
+  `r sum(dat_raw$age_yrs < 40 & !is.na(dat_raw$carotid_plaque), na.rm = TRUE)`
+  scanned participants under 40** (`r sum(dat_raw$age_yrs < 30 & !is.na(dat_raw$carotid_plaque), na.rm = TRUE)`
+  under 30 and the rest aged 30-39, none with plaque). Any model with an age
+  band below 40 as a level will produce a divergent coefficient, an enormous
+  standard error and a "fitted probabilities numerically 0 or 1" warning. Age
+  must stay continuous.
+- **MAJOR interpretive trap: `statins` and `antihypertensives` are confounded by
+  indication**, and adjusting for the cholesterol and blood pressure they modify
+  conditions on mediators. They are excluded here; a student who includes them
+  and reports "statins are associated with plaque" has it backwards.
+- **MAJOR: binned residuals fail** (~`r fmt(100 * mean(as.data.frame(br)$group == "yes"), 0)`%
+  inside bounds against a 95% target). Partly the small event count per bin,
+  partly genuine non-linearity in age. A student following the diagnostics
+  honestly must report a failed check.
+- **MINOR: `current_smoker` counts ex-smokers as unexposed** and smokers here are
+  `r fmt(mean(dat_model$age_yrs[dat_model$current_smoker == "No"]) - mean(dat_model$age_yrs[dat_model$current_smoker == "Yes"]), 1)`
+  years younger than non-smokers, so the crude smoking OR
+  (`r ug("current_smokerYes")`) is null and only adjustment reveals the
+  association (`r g("current_smokerYes")`). Good teaching material, but a student
+  doing univariable screening first and dropping non-significant predictors will
+  throw smoking away.
+- **MINOR: `prednisone` is near-perfectly aligned with `has_ra`** -
+  `r sum(dat_raw$prednisone == 1 & dat_raw$has_ra == 0, na.rm = TRUE)` of
+  `r sum(dat_raw$prednisone == 1, na.rm = TRUE)` users is a control. Including
+  both is close to including the same variable twice.
+- **MINOR: the exposure of interest is null and stays null.** `has_ra`
+  `r ug("has_raRA")` crude, `r g("has_raRA")` adjusted. This is a perfectly good
+  finding but students hoping for a significant headline may be tempted to
+  p-hack their way to one; the six-parameter budget makes that especially
+  damaging here.
+- **MINOR data defect: row `id = "control_row1"` is entirely blank.**
+- **Verified clean:** `sex` ships as `r paste(sex_vals, collapse = "/")` and
+  `height_cm` as `r ht_min`-`r ht_max` cm with `r n_ht_metres` values in metres,
+  so both documented Zenodo defects are fixed in this catalogue's CSV. No
+  RA-specific columns are present.

@@ -1,0 +1,693 @@
+---
+title: "Diagnosed hypertension among adults in Finland, Poland and Spain"
+subtitle: "Dataset 14: Quality of life among adults in Finland, Poland and Spain (COURAGE)"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "ageing_qol_europe.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names. The catalogue suggests
+# 21 predictors, which cost 39 parameters; the set below costs 15. The cut is
+# argued in Methods.
+outcome    <- "hypertension"
+predictors <- c("age_yrs", "sex", "country", "residence", "education",
+                "bmi_category", "smoking_status", "alcohol_use",
+                "physical_activity", "diabetes")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+yn  <- function(x, l) lab(factor(x, levels = c(0, 1), labels = c("No", "Yes")), l)
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest group, or the clinically
+    # "unexposed" one where that is the more natural comparison.
+    age_yrs = lab(age_yrs, "Age (years)"),
+    sex     = lab(factor(sex, levels = c("female", "male"),
+                         labels = c("Female", "Male")), "Sex"),
+    country = lab(factor(country, levels = c("poland", "spain", "finland"),
+                         labels = c("Poland", "Spain", "Finland")), "Country"),
+    residence = lab(factor(residence, levels = c("urban", "rural"),
+                           labels = c("Urban", "Rural")), "Residence"),
+    # education: `none_or_informal` (n = 125) is collapsed into the lower
+    # category because 124 of those 125 participants live in Spain and none live
+    # in Finland. See Methods.
+    education = lab(factor(if_else(education == "high_school_or_higher",
+                                   "High school or higher",
+                                   "None, primary or secondary"),
+                           levels = c("None, primary or secondary",
+                                      "High school or higher")),
+                    "Education"),
+    bmi_category = lab(factor(bmi_category,
+      levels = c("normal_or_underweight", "overweight", "obese"),
+      labels = c("Normal or underweight", "Overweight", "Obese")),
+      "BMI category"),
+    smoking_status = lab(factor(smoking_status,
+      levels = c("never", "former", "current"),
+      labels = c("Never", "Former", "Current")), "Smoking status"),
+    # alcohol_use: `frequent_heavy` holds 35 participants, so the two heavy
+    # categories are pooled. See Methods.
+    alcohol_use = lab(factor(case_when(
+      alcohol_use %in% c("frequent_heavy", "infrequent_heavy") ~ "Heavy",
+      alcohol_use == "abstainer_or_occasional" ~ "Abstainer or occasional",
+      alcohol_use == "non_heavy" ~ "Non-heavy"),
+      levels = c("Non-heavy", "Abstainer or occasional", "Heavy")),
+      "Alcohol use"),
+    physical_activity = lab(factor(physical_activity,
+      levels = c("high", "moderate", "low"),
+      labels = c("High", "Moderate", "Low")), "Physical activity"),
+    diabetes = yn(diabetes, "Diagnosed diabetes"),
+    hypertension = lab(hypertension, "Diagnosed hypertension")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+n_events  <- sum(dat_model[[outcome]])
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", fmt(p, 3)))
+
+# Parameter accounting for the full catalogue predictor list, used in Methods.
+all_suggested <- c("age_yrs", "sex", "country", "residence", "marital_status",
+                   "education", "bmi_category", "smoking_status", "alcohol_use",
+                   "physical_activity", "body_pain", "sleep_difficulty", "sadness",
+                   "distance_vision_difficulty", "social_network_index",
+                   "neighbourhood_usability", "home_usability", "arthritis",
+                   "angina", "diabetes", "depression_diagnosis")
+fit_full   <- glm(reformulate(all_suggested, outcome), family = binomial,
+                  data = mutate(dat_raw, across(where(is.character), factor)))
+n_par_full <- length(coef(fit_full)) - 1L
+
+# Demonstration only: angina is downstream of hypertension and is NOT in the model.
+dat_ang <- dat |> select(all_of(c(outcome, predictors, "angina"))) |>
+  mutate(angina = yn(angina, "Diagnosed angina")) |> drop_na()
+or_angina <- exp(coef(glm(reformulate(c(predictors, "angina"), outcome),
+                          data = dat_ang, family = binomial))[["anginaYes"]])
+```
+
+# Introduction
+
+COURAGE in Europe is a cross-sectional survey of the general community-dwelling
+adult population of Finland, Poland and Spain, designed to describe healthy
+ageing and its social and environmental determinants; the source paper is Miret
+and colleagues, *PLOS ONE* (2016). The file distributed with this catalogue holds
+`r nrow(dat_raw)` participants aged `r min(dat$age_yrs)` to `r max(dat$age_yrs)`
+(mean `r fmt(mean(dat$age_yrs), 1)` years), of whom `r sum(dat_raw$hypertension)`
+(`r fmt(100 * mean(dat_raw$hypertension), 1)`%) report a diagnosis of
+hypertension. Hypertension is the largest single contributor to cardiovascular
+mortality in Europe and is both preventable and treatable, so identifying which
+routinely collected characteristics mark higher diagnosed prevalence is directly
+useful for targeting screening.
+
+**Aim.** Among these adults in Finland, Poland and Spain, we examined which of
+age, sex, country, urban or rural residence, education, BMI category, smoking
+status, alcohol use, physical activity and diagnosed diabetes are independently
+associated with having a diagnosis of hypertension, mutually adjusting for the
+others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** COURAGE in Europe, a cross-sectional multistage stratified
+cluster sample of the community-dwelling adult populations of Finland, Poland and
+Spain, fielded between 2011 and 2012. The deposited S1 file used here contains
+`r nrow(dat_raw)` participants and `r ncol(dat_raw)` variables:
+`r sum(dat$country == "Poland")` from Poland, `r sum(dat$country == "Spain")` from
+Spain and `r sum(dat$country == "Finland")` from Finland.
+
+**Variables.** The outcome is `hypertension`, a binary indicator where the
+**event is a reported diagnosis of hypertension** (`r sum(dat_raw$hypertension)`
+events in the full file, `r fmt(100 * mean(dat_raw$hypertension), 1)`%). This is
+diagnosed, not measured, hypertension - a point returned to in Limitations.
+Predictors are age (years), sex (reference female), country (reference Poland,
+the largest group), residence (reference urban), education dichotomised as high
+school or higher versus none, primary or secondary (reference the latter), BMI
+category (reference normal or underweight, the clinically unexposed group),
+smoking status (reference never), alcohol use in three categories (reference
+non-heavy drinking, the conventional reference in alcohol epidemiology because
+abstainers include people who stopped because they were ill), physical activity
+(reference high) and diagnosed diabetes (reference no).
+
+**The predictor set is deliberately cut.** The catalogue suggests 21 predictors.
+Most are multi-level factors, so entering all of them costs **`r n_par_full`
+estimated parameters**, not 21: `body_pain` alone costs four, and
+`marital_status`, `alcohol_use`, `sleep_difficulty`, `sadness` and
+`distance_vision_difficulty` cost three each. With `r sum(dat_raw$hypertension)`
+events that would be `r fmt(sum(dat_raw$hypertension) / n_par_full, 1)` events per
+parameter, which clears the conventional minimum of ten comfortably, so it should
+be said plainly that on this outcome the events-per-parameter rule is **not** what
+forces the cut. Three other considerations do. First, a `r n_par_full`-row odds
+ratio table cannot be interpreted, and the Purpose 3 question - which predictors
+survive mutual adjustment - is only answerable for a set small enough to reason
+about. Second, testing `r n_par_full` coefficients at the 0.05 level means
+expecting about `r fmt(0.05 * n_par_full, 1)` significant results by chance alone.
+Third, and decisively, most of the suggested predictors have no place in a model
+for hypertension: they are either symptoms and disability measures that are
+plausibly *consequences* of cardiovascular disease, or they are downstream of the
+outcome itself. The set used here costs **15 parameters**, i.e.
+`r fmt(n_events / 15, 1)` events per parameter, and was fixed before any model was
+fitted.
+
+Eleven suggested predictors are dropped. `angina` is excluded because angina is a
+*consequence* of long-standing hypertension, not a cause of it: adding it to this
+model gives an odds ratio of about
+`r fmt(or_angina, 2)`,
+which is conditioning on a downstream variable and would bias every other
+coefficient. `body_pain`, `sleep_difficulty`, `sadness`,
+`distance_vision_difficulty`, `arthritis` and `depression_diagnosis` are excluded
+on the same logic - they are symptom and morbidity measures whose temporal
+position relative to a hypertension diagnosis is unknown, and between them they
+would cost 15 parameters for no gain in causal clarity. `marital_status` (3
+parameters), `social_network_index`, `neighbourhood_usability` and
+`home_usability` are excluded because they are not established determinants of
+blood pressure and are more naturally read as determinants of quality of life,
+which is a different outcome in this catalogue. `diabetes` is retained despite
+sharing this ambiguity, because it is the standard comorbidity adjustment in
+cardiovascular models and because its interpretation here is instructive: see
+Limitations.
+
+**Level collapsing.** Five categorical predictors were checked for sparse strata.
+`alcohol_use` has a `frequent_heavy` level with only
+`r sum(dat_raw$alcohol_use == "frequent_heavy")` participants and
+`r sum(dat_raw$alcohol_use == "frequent_heavy" & dat_raw$hypertension == 1)`
+events, so it was pooled with `infrequent_heavy` into a single "Heavy" category
+(n = `r sum(dat_model$alcohol_use == "Heavy")`). `education` had
+`r sum(dat_raw$education == "none_or_informal")` participants with no or informal
+education, of whom
+`r sum(dat_raw$education == "none_or_informal" & dat_raw$country == "spain")` live
+in Spain and **none** in Finland; it was collapsed to two levels, because a
+category that exists in only one of the three countries cannot be separated from
+country - and a `country`-by-`education` model on the uncollapsed variable
+produces outright separation (a coefficient of about -10.7 with a standard error
+of about 197). `marital_status` (smallest level `r min(table(dat$marital_status))`),
+`bmi_category` (`r min(table(dat$bmi_category))`) and `physical_activity`
+(`r min(table(dat$physical_activity))`) were all large enough to keep as supplied,
+and every level of every retained predictor contains at least
+`r min(table(dat_model$alcohol_use, dat_model$hypertension)[, 2], table(dat_model$education, dat_model$hypertension)[, 2], table(dat_model$bmi_category, dat_model$hypertension)[, 2], table(dat_model$country, dat_model$hypertension)[, 2], table(dat_model$smoking_status, dat_model$hypertension)[, 2], table(dat_model$physical_activity, dat_model$hypertension)[, 2], table(dat_model$residence, dat_model$hypertension)[, 2])`
+events, so there is no zero cell and no separation.
+
+**Statistical analysis.** `glm(family = binomial)`, justified because the outcome
+is binary. We fitted a univariable model for each predictor first, then a single
+multivariable model containing all of them. Predictors were chosen in advance on
+subject-matter grounds, not by significance. Coefficients are exponentiated and
+reported as odds ratios with 95% confidence intervals; significance threshold
+0.05. Model adequacy was assessed with `performance::check_model()`, focusing on
+binned residuals, collinearity, influential observations and events per parameter.
+Models are **unweighted**: the COURAGE sampling weights, strata and clusters are
+not carried in this file, so no result here is a nationally representative
+estimate. Analysis used `r R.version.string` with tidyverse, gtsummary and
+performance.
+
+**Missing data.** There is none. All `r ncol(dat_raw)` columns are 100% complete
+in this file and `r sum(complete.cases(dat_raw))` of `r nrow(dat_raw)` rows are
+complete on every variable, so the complete-case analysis uses
+`r nrow(dat_model)` of `r nrow(dat)` rows (`r n_dropped` dropped), leaving
+`r n_events` events. Listwise deletion costs nothing here, which means the
+predictor cut above rests entirely on interpretability and causal-structure
+grounds rather than on preserving sample size.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  mutate(hypertension = factor(hypertension, levels = c(0, 1),
+                               labels = c("No hypertension", "Hypertension"))) |>
+  tbl_summary(
+    by = hypertension,
+    missing = "no"
+  ) |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics by hypertension status.**")
+```
+
+Participants with a hypertension diagnosis are considerably older (median
+`r median(dat_model$age_yrs[dat_model$hypertension == 1])` versus
+`r median(dat_model$age_yrs[dat_model$hypertension == 0])` years), far more often
+obese (`r fmt(100 * mean(dat_model$bmi_category[dat_model$hypertension == 1] == "Obese"), 0)`%
+versus `r fmt(100 * mean(dat_model$bmi_category[dat_model$hypertension == 0] == "Obese"), 0)`%)
+and much more often diabetic
+(`r fmt(100 * mean(dat_model$diabetes[dat_model$hypertension == 1] == "Yes"), 0)`%
+versus `r fmt(100 * mean(dat_model$diabetes[dat_model$hypertension == 0] == "Yes"), 0)`%).
+They are also less educated
+(`r fmt(100 * mean(dat_model$education[dat_model$hypertension == 1] == "High school or higher"), 0)`%
+with high school or higher versus
+`r fmt(100 * mean(dat_model$education[dat_model$hypertension == 0] == "High school or higher"), 0)`%),
+which is one of the associations that adjustment substantially changes. Sex and
+urban/rural residence look similar in the two groups.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Proportion with diagnosed hypertension by age group and BMI category."}
+dat_model |>
+  mutate(age_grp = cut(age_yrs, breaks = c(18, 45, 60, 75, 105), right = FALSE,
+                       labels = c("18-44", "45-59", "60-74", "75+"))) |>
+  group_by(age_grp, bmi_category) |>
+  summarise(p = mean(hypertension), n = n(), .groups = "drop") |>
+  ggplot(aes(age_grp, p, fill = bmi_category)) +
+  geom_col(position = position_dodge(0.85), width = 0.78) +
+  geom_text(aes(label = paste0("n=", n)), position = position_dodge(0.85),
+            vjust = -0.4, size = 2.7, colour = "grey30") +
+  scale_y_continuous(labels = scales::percent, expand = expansion(c(0, 0.12))) +
+  scale_fill_manual(values = c("Normal or underweight" = "#7FA9C9",
+                               "Overweight" = "#E0A458", "Obese" = "#B5495B")) +
+  labs(x = "Age group (years)", y = "Proportion with diagnosed hypertension",
+       fill = "BMI category")
+```
+
+Diagnosed hypertension rises steeply with both age and BMI and the two compound:
+prevalence is around
+`r fmt(100 * mean(dat_model$hypertension[dat_model$age_yrs < 45 & dat_model$bmi_category == "Normal or underweight"]), 0)`%
+among normal-weight adults under 45 and around
+`r fmt(100 * mean(dat_model$hypertension[dat_model$age_yrs >= 75 & dat_model$bmi_category == "Obese"]), 0)`%
+among obese adults aged 75 and over. The BMI gradient is visible within every age
+band, so it is not simply an artefact of older participants being heavier.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = glm,
+    method.args = list(family = binomial),
+    exponentiate = TRUE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(glm(reformulate(v, outcome), data = dat_model, family = binomial),
+       conf.int = TRUE, exponentiate = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 2) {
+  r <- utid[utid$term == term, ]
+  sprintf("OR %s (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d),
+          fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+```
+
+Obesity shows the strongest crude association: compared with normal-weight or
+underweight participants, obese participants have `r ug("bmi_categoryObese")`
+(p `r up("bmi_categoryObese")`) and overweight participants
+`r ug("bmi_categoryOverweight")` (p `r up("bmi_categoryOverweight")`). Diagnosed
+diabetes carries `r ug("diabetesYes")` (p `r up("diabetesYes")`). Each additional
+year of age multiplies the odds by `r ug("age_yrs")` (p `r up("age_yrs")`), which
+compounds to about
+`r fmt(utid$estimate[utid$term == "age_yrs"]^10, 2)`-fold per decade. Education is
+strongly protective in crude terms: having high school education or above is
+associated with `r ug("educationHigh school or higher")`
+(p `r up("educationHigh school or higher")`), a halving of the odds. Abstinence or
+occasional drinking carries `r ug("alcohol_useAbstainer or occasional")`
+(p `r up("alcohol_useAbstainer or occasional")`) relative to non-heavy drinking,
+and low physical activity `r ug("physical_activityLow")`
+(p `r up("physical_activityLow")`). Two crude results are worth flagging as
+suspicious in advance: **current smoking appears protective**
+(`r ug("smoking_statusCurrent")`, p `r up("smoking_statusCurrent")`) while former
+smoking is associated with higher odds (`r ug("smoking_statusFormer")`,
+p `r up("smoking_statusFormer")`); and **Finland shows no crude excess**
+(`r ug("countryFinland")`, p `r up("countryFinland")`) although Spain does show a
+deficit (`r ug("countrySpain")`, p `r up("countrySpain")`). Sex
+(`r ug("sexMale")`, p `r up("sexMale")`) and rural residence
+(`r ug("residenceRural")`, p `r up("residenceRural")`) show no crude association.
+
+## Why adjustment is needed
+
+**Age** is the dominant confounder and it explains both of the suspicious crude
+results above. Current smokers in this sample have a median age of
+`r median(dat_model$age_yrs[dat_model$smoking_status == "Current"])` years against
+`r median(dat_model$age_yrs[dat_model$smoking_status == "Never"])` for never
+smokers, so the apparently protective crude smoking odds ratio is a statement
+about the youth of current smokers, not about tobacco. The same mechanism drives
+the physical-activity association: participants in the low-activity category have
+a median age of
+`r median(dat_model$age_yrs[dat_model$physical_activity == "Low"])` against
+`r median(dat_model$age_yrs[dat_model$physical_activity == "High"])` in the
+high-activity category, and inactivity is as plausibly a consequence of
+age-related morbidity as a cause of hypertension.
+
+**Education** is the second confounder, and it works on the country and BMI
+comparisons. Participants with high school education or above have a median age of
+`r median(dat_model$age_yrs[dat_model$education == "High school or higher"])`
+against `r median(dat_model$age_yrs[dat_model$education == "None, primary or secondary"])`
+for the rest - educational expansion means the less educated are simply older -
+and they are much less often obese
+(`r fmt(100 * mean(dat_model$bmi_category[dat_model$education == "High school or higher"] == "Obese"), 0)`%
+versus `r fmt(100 * mean(dat_model$bmi_category[dat_model$education == "None, primary or secondary"] == "Obese"), 0)`%).
+So the crude halving of the odds with education carries both an age difference and
+a body-mass difference. **Country** confounds in a third way: the Finnish sample is
+the oldest of the three (median age
+`r median(dat_model$age_yrs[dat_model$country == "Finland"])` against
+`r median(dat_model$age_yrs[dat_model$country == "Poland"])` in Poland), which is
+why Finland shows no crude excess despite the highest crude prevalence
+(`r fmt(100 * mean(dat_model$hypertension[dat_model$country == "Finland"]), 1)`%).
+Mutual adjustment lets each odds ratio be read as a comparison between
+participants of the same age, sex, country, residence, education, body mass,
+smoking, drinking, activity level and diabetes status.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- glm(reformulate(predictors, outcome), data = dat_model, family = binomial)
+
+mv <- tbl_regression(fit, exponentiate = TRUE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+g <- function(term, d = 2) {
+  r <- tid[tid$term == term, ]
+  sprintf("OR %s (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d),
+          fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+```
+
+```{r fit-stats}
+n_par  <- length(coef(fit)) - 1L
+epp    <- n_events / n_par
+null_fit <- glm(reformulate("1", outcome), data = dat_model, family = binomial)
+tibble(
+  Statistic = c("Complete-case N", "Events (hypertension = 1)",
+                "Parameters (excl. intercept)", "Events per parameter",
+                "AIC (null model)", "AIC (full model)", "Tjur's R-squared"),
+  Value = c(as.character(nrow(dat_model)), as.character(n_events),
+            as.character(n_par), fmt(epp, 1), fmt(AIC(null_fit), 1),
+            fmt(AIC(fit), 1), fmt(as.numeric(r2_tjur(fit)), 3))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable logistic model for diagnosed hypertension**"))
+```
+
+The model has `r n_events` events for `r n_par` estimated parameters, i.e.
+**`r fmt(epp, 1)` events per parameter**, an order of magnitude above the
+conventional minimum of ten, so over-fitting is not a concern here. AIC falls from
+`r fmt(AIC(null_fit), 1)` for the intercept-only model to `r fmt(AIC(fit), 1)`, a
+drop of `r fmt(AIC(null_fit) - AIC(fit), 1)`, and Tjur's R-squared is
+`r fmt(as.numeric(r2_tjur(fit)), 3)`.
+
+Among participants of the same age, sex, country, residence, education, smoking,
+drinking, activity level and diabetes status, obesity is associated with
+`r g("bmi_categoryObese")` (p `r gp("bmi_categoryObese")`) and being overweight
+with `r g("bmi_categoryOverweight")` (p `r gp("bmi_categoryOverweight")`).
+Diagnosed diabetes carries `r g("diabetesYes")` (p `r gp("diabetesYes")`). Each
+additional year of age multiplies the odds by `r g("age_yrs")`
+(p `r gp("age_yrs")`), about `r fmt(tid$estimate[tid$term == "age_yrs"]^10, 2)`-fold
+per decade. Holding everything else constant, both non-Polish countries now show
+lower odds than Poland: `r g("countrySpain")` for Spain
+(p `r gp("countrySpain")`) and `r g("countryFinland")` for Finland
+(p `r gp("countryFinland")`). Former smoking remains associated with
+`r g("smoking_statusFormer")` (p `r gp("smoking_statusFormer")`) while current
+smoking is now null (`r g("smoking_statusCurrent")`,
+p `r gp("smoking_statusCurrent")`). Education retains a small independent
+association (`r g("educationHigh school or higher")`,
+p `r gp("educationHigh school or higher")`), as does abstinence or occasional
+drinking (`r g("alcohol_useAbstainer or occasional")`,
+p `r gp("alcohol_useAbstainer or occasional")`). Sex
+(`r g("sexMale")`), rural residence (`r g("residenceRural")`), heavy drinking
+(`r g("alcohol_useHeavy")`) and both physical-activity contrasts
+(`r g("physical_activityLow")` for low activity) are not independently
+associated. These are associations among the participants observed, not effects
+of intervening.
+
+**Statistical against practical significance.** With `r nrow(dat_model)`
+observations and `r n_events` events, this model detects associations that are
+too small to act on. The education contrast is the clearest case: it is
+significant (`r g("educationHigh school or higher")`,
+p `r gp("educationHigh school or higher")`) but a
+`r fmt(100 * (1 - tid$estimate[tid$term == "educationHigh school or higher"]), 0)`%
+relative reduction in the odds of a diagnosis, with a confidence interval whose
+upper limit reaches
+`r fmt(tid$conf.high[tid$term == "educationHigh school or higher"], 2)`, is not a
+finding on which a screening programme would be built. The same applies to
+abstinence (`r g("alcohol_useAbstainer or occasional")`,
+p `r gp("alcohol_useAbstainer or occasional")`). Compare those with obesity
+(`r g("bmi_categoryObese")`), which quadruples the odds, or age, which multiplies
+them roughly `r fmt(tid$estimate[tid$term == "age_yrs"]^10, 1)`-fold per decade.
+A p-value below 0.05 at this sample size answers "is it distinguishable from zero",
+not "is it big enough to matter", and only the second question is useful.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted odds ratios.**")
+```
+
+**Current smoking** is the coefficient that moves furthest, and it crosses the
+null: `r ug("smoking_statusCurrent")` crude (p `r up("smoking_statusCurrent")`,
+apparently protective) becomes `r g("smoking_statusCurrent")` adjusted
+(p `r gp("smoking_statusCurrent")`, null). This is age confounding in almost pure
+form, as anticipated - current smokers are
+`r median(dat_model$age_yrs[dat_model$smoking_status == "Never"]) - median(dat_model$age_yrs[dat_model$smoking_status == "Current"])`
+years younger at the median than never smokers - and it is a good demonstration
+of why a crude protective association with a known harm should never be reported.
+**Physical activity** does the same thing from the other side: low activity moves
+from `r ug("physical_activityLow")` (p `r up("physical_activityLow")`) to
+`r g("physical_activityLow")` (p `r gp("physical_activityLow")`), i.e. all the way
+to the null and out of significance, so the crude inactivity association was
+entirely age and body mass. **Education** attenuates sharply, from
+`r ug("educationHigh school or higher")` to
+`r g("educationHigh school or higher")`, retaining significance but losing most of
+its magnitude; the crude estimate was carrying age, country and obesity.
+**Obesity** attenuates too, from `r ug("bmi_categoryObese")` to
+`r g("bmi_categoryObese")`, and **diabetes** from `r ug("diabetesYes")` to
+`r g("diabetesYes")`, both toward the null and both still large.
+
+Two estimates move *away* from the null. **Finland** goes from
+`r ug("countryFinland")` (p `r up("countryFinland")`, no association) to
+`r g("countryFinland")` (p `r gp("countryFinland")`, clearly protective) - a change
+of significance status caused by the Finnish sample being the oldest of the three,
+which masked a genuinely lower age-specific prevalence. **Spain** moves the same
+way, from `r ug("countrySpain")` to `r g("countrySpain")`. By contrast **age
+itself barely moves**, from `r ug("age_yrs")` to `r g("age_yrs")`, and so does
+**former smoking**, from `r ug("smoking_statusFormer")` to
+`r g("smoking_statusFormer")` - neither is explained by the other measured
+characteristics, which is what you would expect of age and of a cumulative
+exposure that people typically quit *because* of a diagnosis.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r binned-resid}
+br <- binned_residuals(fit)
+print(br)
+```
+
+```{r collin}
+check_collinearity(fit)
+```
+
+```{r sep-check}
+cf <- summary(fit)$coefficients
+tibble(
+  Check = c("Largest |coefficient| (log-odds)", "Largest standard error",
+            "Largest VIF", "Largest Cook's distance", "Largest leverage",
+            "Smallest event count in any predictor level"),
+  Value = c(fmt(max(abs(cf[-1, 1])), 2), fmt(max(cf[, 2]), 3),
+            fmt(max(as.data.frame(check_collinearity(fit))$VIF), 2),
+            fmt(max(cooks.distance(fit)), 4), fmt(max(hatvalues(fit)), 3),
+            as.character(min(sapply(dat_model[, predictors][sapply(dat_model[, predictors], is.factor)],
+                                    function(v) min(table(v, dat_model$hypertension)[, 2])))))
+) |>
+  gt() |>
+  tab_header(title = md("**Table 3. Separation, influence and collinearity checks.**"))
+```
+
+The binned-residual check is the one that matters for a logistic model and it is
+**not reassuring**: only about
+`r fmt(100 * attributes(br)$resid_ok, 0)`%
+of binned residuals fall inside the error bounds against a target of 95% or more,
+and `performance` prints a "probably bad model fit" warning. With
+`r nrow(dat_model)` observations the bins are large enough that this is unlikely
+to be noise, and the most plausible explanation is that the linear-in-log-odds
+assumption for age is imperfect - diagnosed hypertension prevalence plateaus in
+the oldest participants rather than continuing to rise on the log-odds scale.
+Collinearity is not a problem: the largest VIF is
+`r fmt(max(as.data.frame(check_collinearity(fit))$VIF), 2)` for
+`r as.data.frame(check_collinearity(fit))$Term[which.max(as.data.frame(check_collinearity(fit))$VIF)]`,
+far below the conventional threshold of 5, so country, education and residence are
+not competing badly despite their structural overlap. Influence is negligible: the
+largest Cook's distance is `r fmt(max(cooks.distance(fit)), 4)` and the largest
+leverage `r fmt(max(hatvalues(fit)), 3)`, so no participant drives the fit. There
+is **no separation**: every coefficient is finite, the largest standard error is
+`r fmt(max(summary(fit)$coefficients[, 2]), 3)`, and every level of every
+categorical predictor contains events (Table 3). Homogeneity of variance and
+normality of residuals do not apply to a logistic model and are not interpreted;
+the corresponding panels of `check_model()` should be ignored here.
+
+# Discussion
+
+Among these `r nrow(dat_model)` adults in Finland, Poland and Spain, obesity, age
+and diagnosed diabetes are the characteristics most strongly and independently
+associated with having a hypertension diagnosis: obesity roughly
+`r fmt(tid$estimate[tid$term == "bmi_categoryObese"], 1)`-fold, diabetes about
+`r fmt(tid$estimate[tid$term == "diabetesYes"], 1)`-fold, and age about
+`r fmt(tid$estimate[tid$term == "age_yrs"]^10, 1)`-fold per decade, each holding
+the others constant. The crude protective association with current smoking and the
+crude harmful association with inactivity both disappear once age is held
+constant, and the education gradient shrinks to something statistically detectable
+but practically small. Country remains a substantial independent contrast: at the
+same age and body mass, Spanish and Finnish participants have roughly
+`r fmt(100 * (1 - tid$estimate[tid$term == "countrySpain"]), 0)`% and
+`r fmt(100 * (1 - tid$estimate[tid$term == "countryFinland"]), 0)`% lower odds of
+a diagnosis than Polish participants. Practically, this supports age and BMI as
+the primary axes for opportunistic blood-pressure screening in these populations.
+
+**The outcome is a *diagnosis*, and that is the central interpretive problem.**
+Undiagnosed hypertension is misclassified as absent, and being diagnosed requires
+having had your blood pressure measured, which requires contact with a health
+system. That contact is not distributed at random: it differs by country, by
+education and by whether you already have another condition that brings you into
+a clinic. This is **differential misclassification**, and it works in a direction
+that can manufacture or destroy associations. The `diabetes` odds ratio of
+`r fmt(tid$estimate[tid$term == "diabetesYes"], 2)` is the clearest example - some
+of it is real shared aetiology through adiposity, but some of it is simply that
+people with diagnosed diabetes attend clinics where blood pressure is measured
+routinely, so their hypertension is more likely to have been *found*. The same
+argument applies to the education and country contrasts: the apparently lower odds
+in Spain and Finland could reflect genuinely lower prevalence, or different
+diagnostic thresholds and screening intensity, and this dataset cannot separate
+the two. A student reading these coefficients as prevalence differences is
+over-reading them.
+
+**Limitations.** The models are **unweighted**: the COURAGE sampling weights,
+strata and clusters are not carried in this file, so the sample must not be
+described as representative of any national population, and the standard errors
+ignore clustering within primary sampling units, which will make them too narrow.
+The outcome is self-reported *diagnosed* hypertension rather than measured blood
+pressure, with the differential misclassification by healthcare access described
+above; no measured systolic or diastolic pressure is available in this file to
+check it. The design is cross-sectional, so reverse causation is plausible for
+several predictors: people diagnosed with hypertension are advised to lose weight,
+stop smoking and exercise, which would attenuate the BMI and activity associations
+and could invert the smoking one. The deposited file differs from the published
+paper: it holds `r nrow(dat_raw)` rows with mean age `r fmt(mean(dat$age_yrs), 1)`
+years, whereas the source paper reports 5,639 participants with mean age 46.3
+years, so results here should not be compared with the published analysis. The
+binned-residual check fails, indicating that the model is miscalibrated in parts
+of the predicted-probability range and most likely that age is not linear in the
+log-odds. There is evidence of effect modification the additive model ignores: a
+country-by-education interaction improves the fit
+(likelihood-ratio p `r pv(anova(fit, update(fit, . ~ . + country:education), test = "LRT")[["Pr(>Chi)"]][2])`),
+so the education gradient is not the same in all three countries; country-by-age
+and country-by-BMI interactions do not
+(p `r pv(anova(fit, update(fit, . ~ . + country:age_yrs), test = "LRT")[["Pr(>Chi)"]][2])`
+and p `r pv(anova(fit, update(fit, . ~ . + country:bmi_category), test = "LRT")[["Pr(>Chi)"]][2])`).
+Eleven suggested predictors were excluded a priori, so residual confounding is
+certain - family history and salt intake, the two dominant determinants of blood
+pressure, are not measured at all. The `education` variable was collapsed to two
+levels, so any effect confined to the `r sum(dat_raw$education == "none_or_informal")`
+participants with no formal education is invisible; that group has a crude
+hypertension prevalence of
+`r fmt(100 * mean(dat_raw$hypertension[dat_raw$education == "none_or_informal"]), 0)`%
+and is almost entirely Spanish. With `r nrow(dat_model)` observations, small and
+practically uninteresting differences reach significance. All estimates are
+associations, not causal effects.
+
+**Future work.** Refit with the COURAGE survey design (weights, strata and
+clusters) and with the measured blood-pressure readings from the full COURAGE
+files, which would replace diagnosed hypertension with measured hypertension and
+remove the dominant misclassification problem.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+- **USABLE. The best-powered of the three outcomes in this dataset.**
+  `r n_events` events in `r nrow(dat_model)` complete rows, no missing data
+  anywhere in the file, `r fmt(epp, 1)` events per parameter at 15 parameters,
+  Tjur's R-squared `r fmt(as.numeric(r2_tjur(fit)), 3)`, no separation, no
+  influential points (max Cook's `r fmt(max(cooks.distance(fit)), 4)`), max VIF
+  `r fmt(max(as.data.frame(check_collinearity(fit))$VIF), 2)`.
+- **MAJOR: 21 suggested predictors cost `r n_par_full` parameters, not 21.** Most
+  are multi-level factors. Because there are `r sum(dat_raw$hypertension)` events,
+  even the full 21-predictor model runs at
+  `r fmt(sum(dat_raw$hypertension) / n_par_full, 1)` events per parameter and
+  produces **no warning of any kind** - which is precisely the trap. A student who
+  fits everything gets an unreadable `r n_par_full`-row table in which about
+  `r fmt(0.05 * n_par_full, 1)` coefficients are significant by chance, and no
+  diagnostic will tell them anything is wrong. The brief must instruct students to
+  count parameters (k levels cost k-1) and cut a priori.
+- **MAJOR: the outcome is *diagnosed* hypertension.** Detection depends on
+  healthcare contact, which differs by country and by education - exactly two of
+  the predictors. This is differential misclassification and it is not
+  recoverable from this file (no measured blood pressure is shipped). The
+  `diabetes` odds ratio of `r fmt(tid$estimate[tid$term == "diabetesYes"], 2)` is
+  partly a healthcare-contact artefact.
+- **MAJOR: binned residuals fail** (about
+  `r fmt(100 * attributes(br)$resid_ok, 0)`%
+  inside bounds against a 95% target, with a "probably bad model fit" warning).
+  Unlike small-sample cases this is not a bin-size artefact, because n is
+  `r nrow(dat_model)` and the bins are large. A student following the diagnostics
+  honestly must report a failed check; the likely cause is non-linear age.
+- **MAJOR: the file does not match the paper.** `r nrow(dat_raw)` rows, mean age
+  `r fmt(mean(dat$age_yrs), 1)`, median `r median(dat$age_yrs)`, range
+  `r min(dat$age_yrs)`-`r max(dat$age_yrs)`; the paper reports 5,639 participants
+  with mean age 46.3. Verified directly from the CSV. An 11.5-year gap in mean age
+  is far too large to be a subsetting or rounding artefact and suggests the
+  deposited S1 file is a different, older subsample. The dataset page should carry
+  an explicit caution and students must not be asked to reproduce published
+  numbers.
+- **MAJOR trap: `angina` must not be a predictor here.** Angina is a consequence
+  of long-standing hypertension. Added to this model it returns an odds ratio of
+  about
+  `r fmt(or_angina, 2)`
+  and biases every other coefficient by conditioning on a downstream variable. A
+  student building a "cardiovascular risk factor" model will reach for it.
+- **MINOR: `alcohol_use` has a `frequent_heavy` level of only
+  `r sum(dat_raw$alcohol_use == "frequent_heavy")` participants** with
+  `r sum(dat_raw$alcohol_use == "frequent_heavy" & dat_raw$hypertension == 1)`
+  hypertension events. Uncollapsed it is estimable but the contrast is very
+  imprecise, and a `country * alcohol_use` interaction spends six parameters on
+  cells of 9 to 15 people (standard errors up to about 1.0 on the log-odds
+  scale). For the depression outcome the same level *does* separate. Pooled with
+  `infrequent_heavy` here.
+- **MINOR but structural: `education == "none_or_informal"` is a Spain-only
+  category.**
+  `r sum(dat_raw$education == "none_or_informal" & dat_raw$country == "spain")` of
+  its `r sum(dat_raw$education == "none_or_informal")` members are Spanish and
+  **zero** are Finnish, so `country * education` produces textbook separation - a
+  coefficient of about -10.7 with a standard error of about 197, alongside a
+  "fitted probabilities numerically 0 or 1" warning. This is the most likely way a
+  student wrecks this outcome. Collapsed to two levels here.
+- **MINOR: crude current-smoking OR is protective**
+  (`r ug("smoking_statusCurrent")`, p `r up("smoking_statusCurrent")`) and becomes
+  null on adjustment. Good teaching material, but a weak student will report
+  "smoking protects against hypertension" from the univariable table.
+- **MINOR: unmodelled effect modification by country.** country-by-education
+  likelihood-ratio
+  p `r pv(anova(fit, update(fit, . ~ . + country:education), test = "LRT")[["Pr(>Chi)"]][2])`;
+  country-by-age and country-by-BMI are not significant. Worth a sentence, not a
+  model change.
+- **Unweighted survey analysis.** Must be stated in Methods and Limitations.

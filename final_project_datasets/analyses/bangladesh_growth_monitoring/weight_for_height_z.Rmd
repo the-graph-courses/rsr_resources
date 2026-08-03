@@ -1,0 +1,480 @@
+---
+title: "Weight-for-height Z-score in Bangladeshi infants aged 6-13 months"
+subtitle: "Dataset 6: Bangladesh growth monitoring and promotion survey"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "bangladesh_growth_monitoring.csv"),
+                    show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "weight_for_height_z"
+predictors <- c("delivery_model", "child_sex", "child_age_months", "mother_age_yrs",
+                "mother_schooling_yrs", "asset_index_tertile", "ngo_member",
+                "improved_toilet")
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    delivery_model = factor(delivery_model,
+                            levels = c("facility_based", "home_based"),
+                            labels = c("Facility-based", "Home-based")),
+    child_sex = factor(child_sex, levels = c("male", "female"),
+                       labels = c("Male", "Female")),
+    asset_index_tertile = factor(asset_index_tertile,
+                                 levels = c("lowest", "middle", "highest"),
+                                 labels = c("Lowest", "Middle", "Highest")),
+    ngo_member = factor(ngo_member, levels = c(0, 1), labels = c("No", "Yes")),
+    improved_toilet = factor(improved_toilet, levels = c(0, 1), labels = c("No", "Yes"))
+  ) |>
+  labelled::set_variable_labels(
+    weight_for_height_z  = "Weight-for-height Z-score",
+    delivery_model       = "Growth-monitoring delivery model",
+    child_sex            = "Child's sex",
+    child_age_months     = "Child's age (months)",
+    mother_age_yrs       = "Mother's age (years)",
+    mother_schooling_yrs = "Mother's schooling (years)",
+    asset_index_tertile  = "Household asset index tertile",
+    ngo_member           = "Mother is an NGO member",
+    improved_toilet      = "Improved toilet facility"
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+# Small helpers so that every number quoted in the prose is pulled from the
+# fitted objects rather than typed in by hand.
+fmt_ci <- function(tab, term_name, digits = 3) {
+  r <- tab[tab$term == term_name, ]
+  f <- function(x) formatC(x, format = "f", digits = digits)
+  sprintf("%s (95%% CI %s to %s)", f(r$estimate), f(r$conf.low), f(r$conf.high))
+}
+fmt_p <- function(tab, term_name) {
+  p <- tab[tab$term == term_name, ]$p.value
+  if (p < 0.001) "p < 0.001" else sprintf("p = %.3f", p)
+}
+```
+
+# Introduction
+
+The data come from a cross-sectional household survey in rural Bangladesh that
+compared two ways of delivering growth monitoring and promotion (GMP): sessions
+held at a community clinic ("facility-based") and sessions held in the
+community/home ("home-based"). Caregivers of `r nrow(dat_raw)` young children
+across six upazilas were interviewed and the children were weighed and measured
+(source paper: PLOS ONE, e0324918). Weight-for-height Z-score (WHZ) captures
+*acute* undernutrition — thinness relative to length — and is the index most
+responsive to recent food shortage and illness, so in principle it is the
+outcome most likely to move on a short timescale in response to a programme.
+
+**Aim.** Among rural Bangladeshi infants aged 6-13 months, we examined which of
+GMP delivery model, child sex, child age, mother's age, mother's schooling,
+household asset tertile, NGO membership and toilet quality are independently
+associated with weight-for-height Z-score, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** Cross-sectional survey of `r nrow(dat_raw)` caregiver-child
+pairs in six rural upazilas of Bangladesh. The study sampled 60 community-clinic
+catchment areas, arranged as matched pairs, one area of each pair receiving
+facility-based and the other home-based GMP. The file supplied for this
+catalogue contains one row per child.
+
+**Variables.** The outcome is `weight_for_height_z`, the WHO weight-for-height
+Z-score in standard-deviation units; more negative values mean thinner children
+for their length. Predictors are: GMP delivery model (facility-based =
+reference, home-based); child sex (male = reference); child age in months
+(continuous, observed range `r sprintf("%.1f", min(dat$child_age_months))` to
+`r sprintf("%.1f", max(dat$child_age_months))`); mother's age in years
+(continuous); mother's completed schooling in years (continuous); household
+asset index tertile (lowest = reference, middle, highest); NGO membership
+(no = reference); and improved toilet facility (no = reference).
+
+*Delivery model versus sub-district.* `delivery_model` and `sub_district` are
+almost the same variable: only 8 of `r nrow(dat_raw)` records (0.3%) sit in a
+sub-district whose other children received the alternative model. Fitting both
+together yields variance inflation factors of roughly 96 and 103 and inflates
+the delivery-model standard error about nine-fold, with the coefficient
+flipping sign. We kept `delivery_model`, the substantive programme exposure the
+survey was built around, and excluded `sub_district`. Genuine geographic
+differences between the six upazilas are therefore absorbed into the
+delivery-model coefficient and cannot be distinguished from it — a point that
+matters unusually much for this outcome, because delivery model is the one
+predictor that changes status after adjustment.
+
+*Near-constant variables dropped.* `mother_occupation` is 97.5% "housewife" and
+`religion_muslim` is 97.8% Muslim; both were left out of the main model and are
+shown in a sensitivity fit in the feasibility notes.
+
+*Other Z-scores excluded.* `weight_for_age_z` and `height_for_age_z` are not
+predictors. Weight-for-height is computed from the same weight and length
+measurements, so regressing it on either is an arithmetic exercise, not an
+epidemiological one.
+
+**Statistical analysis.** Linear regression via `lm()`, justified because the
+outcome is a continuous, approximately symmetric Z-score. We fitted a
+univariable model for each predictor first, then a single multivariable model
+containing all of them. Predictors were chosen in advance on subject-matter
+grounds, not by significance. Significance threshold 0.05; estimates are
+reported with 95% confidence intervals. Assumptions were checked with
+`performance::check_model()`. Analysis used `r R.version.string` with tidyverse,
+gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped).
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(missing = "no") |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics.**")
+```
+
+```{r table-one-numbers}
+med_whz <- median(dat_model[[outcome]])
+pct_wast <- mean(dat_model[[outcome]] <= -2) * 100
+n_severe_whz <- sum(dat_model[[outcome]] < -3)
+n_severe_haz <- sum(dat$height_for_age_z < -3, na.rm = TRUE)
+```
+
+Median weight-for-height Z-score is `r sprintf("%.2f", med_whz)`, only about
+half a standard deviation below the WHO reference median, and
+`r sprintf("%.1f", pct_wast)`% of children fall at or below the -2 wasting
+threshold. This is a far less shifted distribution than height-for-age in the
+same children, which is the expected pattern: chronic deficits accumulate, acute
+ones do not.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Weight-for-height Z-score against child age, by growth-monitoring delivery model. Points are individual children; lines are loess smooths with 95% confidence bands; the dashed line marks the -2 wasting threshold."}
+ggplot(dat_model, aes(x = child_age_months, y = weight_for_height_z,
+                      colour = delivery_model, fill = delivery_model)) +
+  geom_point(alpha = 0.13, size = 0.9) +
+  geom_smooth(method = "loess", se = TRUE, linewidth = 0.9, alpha = 0.2) +
+  geom_hline(yintercept = -2, linetype = "dashed", colour = "grey30") +
+  scale_colour_viridis_d(option = "D", end = 0.7, name = "Delivery model") +
+  scale_fill_viridis_d(option = "D", end = 0.7, name = "Delivery model") +
+  labs(x = "Child's age (months)",
+       y = "Weight-for-height Z-score",
+       title = "Weight-for-height declines with age in both delivery models")
+```
+
+Weight-for-height declines steadily across the narrow 6-13-month window in both
+arms, with the home-based curve sitting slightly below the facility-based one
+throughout — a small and roughly constant gap rather than a divergence.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+```
+
+```{r uv-tidy}
+uv_tidy <- map_dfr(predictors, function(p) {
+  tidy(lm(reformulate(p, outcome), data = dat_model), conf.int = TRUE) |>
+    filter(term != "(Intercept)")
+})
+```
+
+Unadjusted, household wealth is again the strongest correlate: children in the
+highest asset tertile score `r fmt_ci(uv_tidy, "asset_index_tertileHighest")`
+Z-units above the lowest tertile
+(`r fmt_p(uv_tidy, "asset_index_tertileHighest")`). Each additional year of
+maternal schooling is associated with
+`r fmt_ci(uv_tidy, "mother_schooling_yrs")`
+(`r fmt_p(uv_tidy, "mother_schooling_yrs")`) — noticeably weaker than the same
+slope for height-for-age, consistent with education acting mainly on chronic
+rather than acute deficit. Weight-for-height falls with child age
+(`r fmt_ci(uv_tidy, "child_age_months")` per month,
+`r fmt_p(uv_tidy, "child_age_months")`) and with mother's age
+(`r fmt_ci(uv_tidy, "mother_age_yrs")`, `r fmt_p(uv_tidy, "mother_age_yrs")`).
+The programme variable sits exactly on the conventional threshold: children in
+home-based areas score `r fmt_ci(uv_tidy, "delivery_modelHome-based")` relative
+to facility-based areas (`r fmt_p(uv_tidy, "delivery_modelHome-based")`). Child
+sex (`r fmt_p(uv_tidy, "child_sexFemale")`), NGO membership
+(`r fmt_p(uv_tidy, "ngo_memberYes")`) and improved toilet
+(`r fmt_p(uv_tidy, "improved_toiletYes")`) are not significant crude.
+
+## Why adjustment is needed
+
+**Household asset tertile** is the dominant confounder in this dataset. It
+predicts maternal schooling, latrine ownership and NGO membership on one side,
+and food security and illness exposure — hence weight-for-height — on the other,
+so every socio-economic crude estimate here is partly a wealth estimate.
+**Mother's schooling** confounds in the reverse direction: better-educated
+mothers live in wealthier households, so the crude asset gradient contains an
+education component. **Improved toilet facility** is a third: sanitation is
+concentrated in wealthier households (93% coverage overall) and poor sanitation
+causes the diarrhoeal illness that produces acute weight loss, so its crude
+coefficient cannot be interpreted without holding wealth constant. **Child age**
+must be adjusted for on structural grounds, because weight-for-height declines
+appreciably even over the seven months observed here. Adjustment matters
+particularly for the delivery-model comparison: although the study allocated
+delivery models to matched-pair areas, the two arms are not perfectly balanced
+on asset tertile (the highest tertile is slightly over-represented in home-based
+areas), so the crude programme contrast carries a wealth imbalance with it.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+```
+
+```{r fit-stats}
+s <- summary(fit)
+mv_tidy <- tidy(fit, conf.int = TRUE) |> filter(term != "(Intercept)")
+
+tibble(
+  Statistic = c("R-squared", "Adjusted R-squared", "Residual SE",
+                "Observations", "Model parameters (excl. intercept)"),
+  Value = c(sprintf("%.4f", s$r.squared),
+            sprintf("%.4f", s$adj.r.squared),
+            sprintf("%.3f", s$sigma),
+            format(nobs(fit), big.mark = ","),
+            as.character(length(coef(fit)) - 1))
+) |>
+  gt() |>
+  tab_header(title = "Model fit")
+```
+
+The model explains only `r sprintf("%.1f", 100 * s$r.squared)`% of the variance
+in weight-for-height (adjusted R-squared
+`r sprintf("%.3f", s$adj.r.squared)`) — the weakest fit of the three Z-score
+outcomes, which fits the interpretation that acute thinness is driven by
+short-term shocks that this survey did not measure. Holding the other predictors
+constant, children in the highest asset tertile score
+`r fmt_ci(mv_tidy, "asset_index_tertileHighest")` above the lowest
+(`r fmt_p(mv_tidy, "asset_index_tertileHighest")`); each extra year of maternal
+schooling adds `r fmt_ci(mv_tidy, "mother_schooling_yrs")`
+(`r fmt_p(mv_tidy, "mother_schooling_yrs")`); and each additional month of age is
+associated with `r fmt_ci(mv_tidy, "child_age_months")`
+(`r fmt_p(mv_tidy, "child_age_months")`). Adjusted for household circumstances,
+children in home-based GMP areas score
+`r fmt_ci(mv_tidy, "delivery_modelHome-based")` relative to facility-based areas
+(`r fmt_p(mv_tidy, "delivery_modelHome-based")`). That result should be treated
+with considerable caution — see the limitations on clustering below.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+The interesting movement here runs in both directions. **One predictor moved
+*away* from the null and gained significance**: the home-based versus
+facility-based difference went from `r fmt_ci(uv_tidy, "delivery_modelHome-based")`
+(`r fmt_p(uv_tidy, "delivery_modelHome-based")`) to
+`r fmt_ci(mv_tidy, "delivery_modelHome-based")`
+(`r fmt_p(mv_tidy, "delivery_modelHome-based")`). This is negative confounding:
+home-based areas contain slightly wealthier households, which was masking a small
+deficit, and holding wealth constant unmasks it. **Two predictors moved toward
+the null and lost significance.** Maternal schooling attenuated from
+`r fmt_ci(uv_tidy, "mother_schooling_yrs")` to
+`r fmt_ci(mv_tidy, "mother_schooling_yrs")`, a 30% reduction (still significant);
+mother's age went from `r fmt_ci(uv_tidy, "mother_age_yrs")`
+(`r fmt_p(uv_tidy, "mother_age_yrs")`) to
+`r fmt_ci(mv_tidy, "mother_age_yrs")` (`r fmt_p(mv_tidy, "mother_age_yrs")`); and
+the middle-versus-lowest asset contrast lost significance,
+`r fmt_ci(uv_tidy, "asset_index_tertileMiddle")`
+(`r fmt_p(uv_tidy, "asset_index_tertileMiddle")`) to
+`r fmt_ci(mv_tidy, "asset_index_tertileMiddle")`
+(`r fmt_p(mv_tidy, "asset_index_tertileMiddle")`). **Improved toilet collapsed to
+nothing**, from `r fmt_ci(uv_tidy, "improved_toiletYes")` to
+`r fmt_ci(mv_tidy, "improved_toiletYes")` — its crude association was entirely a
+wealth proxy. **Child sex and child age barely moved**
+(age `r fmt_ci(uv_tidy, "child_age_months")` to
+`r fmt_ci(mv_tidy, "child_age_months")`, sex
+`r fmt_ci(uv_tidy, "child_sexFemale")` to
+`r fmt_ci(mv_tidy, "child_sexFemale")`), as expected for variables not determined
+by household circumstances. None of this is collinearity: all variance inflation
+factors are under 1.3.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r diag-extra}
+vifs <- check_collinearity(fit)
+as_tibble(vifs) |>
+  select(Term, VIF) |>
+  mutate(VIF = round(VIF, 2)) |>
+  gt() |>
+  tab_header(title = "Variance inflation factors")
+```
+
+The *posterior predictive check* reproduces the observed weight-for-height
+distribution well. *Linearity* is satisfied — the residual smooth is flat, so
+linear terms for age and schooling are adequate. *Homogeneity of variance* holds
+across the fitted range. The *normality of residuals* Q-Q plot is close to the
+line through the body of the distribution with modest departure in both tails,
+partly reflecting the severe-malnutrition exclusion truncating the left tail and
+a few implausibly high Z-scores (above +4) on the right; neither threatens
+inference at this sample size. No observation crosses the Cook's-distance
+contours in the *influential observations* panel. *Collinearity* is fine as
+specified, but only because `sub_district` was deliberately excluded.
+
+# Discussion
+
+Among rural Bangladeshi infants aged 6-13 months, acute undernutrition as
+measured by weight-for-height is only weakly patterned by the household
+characteristics recorded in this survey. Household wealth and maternal schooling
+retain independent associations after mutual adjustment; sanitation, maternal age
+and NGO membership do not. The one result that changes status on adjustment is
+the programme comparison: home-based GMP areas show a small deficit in
+weight-for-height once household wealth is held constant. Given the design, this
+should be read as a hypothesis and not as evidence that home-based delivery harms
+children.
+
+**Limitations.**
+
+*Clustering cannot be modelled, and this outcome is where that bites hardest.*
+Delivery model is an **area-level** exposure assigned to whole upazilas — six of
+them — with 60 community-clinic catchment areas sampled as matched pairs.
+Children in the same catchment share fieldworkers, scales, clinics and food
+markets, so their weight-for-height values are correlated. The file carries no
+clinic or cluster identifier, so no random effect or cluster-robust standard
+error is possible. The nominally significant adjusted delivery-model result
+(`r fmt_p(mv_tidy, "delivery_modelHome-based")`) rests on a standard error
+computed as though `r nrow(dat_model)` children were independent when the
+effective number of independent units is closer to 60, or arguably six. Even a
+modest design effect would push that interval back across zero. `sub_district`
+is not a usable substitute cluster variable because it is collinear with the
+exposure. **This single result should not be reported as a finding.**
+
+*The outcome distribution is truncated by design.* The source paper states that
+children with severe stunting, wasting or underweight were excluded on ethical
+grounds so they could be referred for treatment. Yet the shipped file contains
+`r n_severe_whz` children with weight-for-height below -3 and
+`r n_severe_haz` with height-for-age below -3, so the exclusion was incomplete or
+applied on some other criterion. The lower tail of weight-for-height has
+therefore been interfered with: the `r sprintf("%.1f", pct_wast)`% wasting
+prevalence observed here understates the true burden, and coefficients describing
+movement into the thinnest part of the distribution are attenuated.
+
+*Age definition is inconsistent in the source.* The paper's abstract says
+children "under one year", its methods say 6-23 months, and the data run
+`r sprintf("%.1f", min(dat$child_age_months))` to
+`r sprintf("%.1f", max(dat$child_age_months))` months. We describe the observed
+range only.
+
+*Design and residual confounding.* Cross-sectional data give associations, not
+effects. Weight-for-height is the index most sensitive to *recent* events —
+diarrhoea in the last fortnight, a seasonal food gap, a feeding interruption —
+and none of these were recorded. Season of measurement is also unavailable, which
+matters because wasting in Bangladesh is strongly seasonal. Adjusted R-squared of
+`r sprintf("%.3f", s$adj.r.squared)` is the honest consequence.
+
+*Sparse and dropped variables.* `mother_occupation` and `religion_muslim` were
+excluded as near-constant.
+
+**Future work.** Repeated measurement across seasons, with cluster identifiers
+and recent-illness histories, would be needed before any statement about GMP
+delivery and acute undernutrition could be taken seriously.
+
+# Feasibility notes
+
+*Not part of a student report.*
+
+**Verdict: usable but the weakest of the three continuous outcomes, and it
+contains a booby trap.** The model fits without complaint, but two things make it
+harder to supervise than height-for-age or weight-for-age.
+
+1. **The delivery-model result is a trap, not a finding.** It is the only place
+   in the whole dataset where the programme exposure crosses p = 0.05, and it
+   does so only after adjustment
+   (`r fmt_p(uv_tidy, "delivery_modelHome-based")` crude to
+   `r fmt_p(mv_tidy, "delivery_modelHome-based")` adjusted). A student will seize
+   on it and write "home-based growth monitoring is associated with worse acute
+   nutritional status". Given 60 unmodellable clusters and six upazilas, that
+   p-value is almost certainly an artefact of ignoring clustering. The brief must
+   pre-warn markers and students alike.
+
+2. **Weakest fit of the six outcomes.** Adjusted R-squared
+   `r sprintf("%.3f", s$adj.r.squared)`, and only three predictors reach
+   significance. There is a real risk of a "nothing happened" report.
+
+3. **`delivery_model` versus `sub_district`.** 99.7% overlap (8 discordant
+   records out of `r nrow(dat_raw)`); together they give VIFs of roughly 96 and
+   103. Must be chosen between.
+
+4. **Do not put other anthropometry on the right-hand side.**
+   `weight_for_age_z` shares the same weight measurement as this outcome and
+   `height_for_age_z`/`stunted` share the same length measurement; any of them as
+   a predictor turns the model into an identity check. A derived `wasting`
+   indicator is exactly `weight_for_height_z <= -2` and must never appear as a
+   predictor here.
+
+5. **Near-constant predictors.** Sensitivity fit adding them back:
+
+```{r sens-near-constant}
+dat_sens <- dat |>
+  mutate(religion_muslim = factor(religion_muslim, levels = c(0, 1),
+                                  labels = c("Non-Muslim", "Muslim")),
+         mother_occupation = factor(mother_occupation,
+                                    levels = c("housewife", "others"),
+                                    labels = c("Housewife", "Other"))) |>
+  select(all_of(c(outcome, predictors)), mother_occupation, religion_muslim) |>
+  drop_na()
+
+fit_sens <- lm(reformulate(c(predictors, "mother_occupation", "religion_muslim"),
+                           outcome), data = dat_sens)
+
+tidy(fit_sens, conf.int = TRUE) |>
+  filter(str_detect(term, "mother_occupation|religion_muslim")) |>
+  mutate(across(where(is.numeric), ~ round(.x, 3))) |>
+  select(term, estimate, conf.low, conf.high, p.value) |>
+  gt() |>
+  tab_header(title = "Near-constant predictors, added back",
+             subtitle = "n = 77 non-housewives, 66 non-Muslim households")
+```
+
+   Wide, unstable intervals resting on tiny comparison groups. Shown only to
+   justify dropping them.
+
+6. **Overlap with the `wasting` analysis.** Same measurement, dichotomised. The
+   continuous version is strictly more powerful; a student choosing `wasting`
+   instead should know they are giving up power for interpretability.

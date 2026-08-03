@@ -1,0 +1,440 @@
+---
+title: "Environment-domain quality of life in Brazilian medical students"
+subtitle: "Dataset 7: Resilience, learning environment and quality of life in Brazilian medical students"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "medstudent_qol.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "whoqol_environment"
+predictors <- c("sex", "year_group", "school_legal_status", "school_location",
+                "dreem_global", "resilience_score", "trait_anxiety")
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    sex = factor(sex, levels = c("female", "male"),
+                 labels = c("Female", "Male")),
+    year_group = factor(year_group,
+                        levels = c("basic_sciences", "clinical_sciences", "clerkship"),
+                        labels = c("Basic sciences", "Clinical sciences", "Clerkship")),
+    school_legal_status = factor(school_legal_status, levels = c("public", "private"),
+                                 labels = c("Public", "Private")),
+    school_location = factor(school_location, levels = c("state_capital", "other_city"),
+                             labels = c("State capital", "Other city"))
+  ) |>
+  labelled::set_variable_labels(
+    whoqol_environment  = "WHOQOL environment domain (0-100)",
+    sex                 = "Sex",
+    year_group          = "Stage of course",
+    school_legal_status = "School legal status",
+    school_location     = "School location",
+    dreem_global        = "DREEM global score (0-200)",
+    resilience_score    = "Resilience score (16-98)",
+    trait_anxiety       = "Trait anxiety (20-80)"
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+```
+
+# Introduction
+
+Tempski and colleagues surveyed a random sample of 1,350 students at 22 Brazilian
+medical schools in 2011-2012, measuring quality of life (WHOQOL-BREF), the
+perceived educational environment (DREEM), resilience, depressive symptoms and
+anxiety in a single cross-sectional questionnaire (Tempski et al., *PLOS ONE*
+2015; doi:10.1371/journal.pone.0131535). The environment domain of the
+WHOQOL-BREF asks about financial resources, physical safety, home environment,
+transport, access to health care, opportunities for recreation and access to
+information - the material circumstances of a student's life rather than their
+mood. It is the domain most likely to differ between schools and cities, which
+makes the two school-level variables in this file directly relevant.
+
+**Aim.** Among Brazilian medical students, we examined which of sex, stage of the
+course, school legal status, school location, the perceived educational
+environment, resilience and trait anxiety are independently associated with
+environment-domain quality of life, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** Multicentre cross-sectional survey of a random sample of 1,350
+students drawn from 22 medical schools across Brazil, stratified by stage of the
+course (basic sciences, clinical sciences, clerkship). All variables used here
+are complete.
+
+**Variables.** The outcome is `whoqol_environment`, the WHOQOL-BREF environment
+domain transformed to a 0-100 scale where higher is better. Predictors are sex
+(reference: female, the larger group), stage of the course (reference: basic
+sciences, the earliest stage), school legal status (reference: public, the larger
+group and the traditional Brazilian medical school), school location (reference:
+state capital, the larger group and the better-resourced setting), the DREEM
+global score (sum of the five DREEM subscales, higher = a more positive perceived
+educational environment), the resilience scale score (16-98) and the trait
+anxiety scale (20-80, higher = more anxious). All continuous predictors are
+modelled per one-unit increase.
+
+Deliberate choices about construct overlap. `dreem_global` is used **instead of**
+its five subscales, which sum to it exactly. No other WHOQOL domain is used as a
+predictor, because they are subscales of the same instrument as the outcome. Of
+the three negative-affect scales, only `trait_anxiety` is included: it correlates
+0.73 with `bdi_depression` and 0.70 with `state_anxiety`, and entering all three
+would split one construct across three collinear terms. Trait anxiety was chosen
+over state anxiety because it is the dispositional measure and therefore less
+likely to be a same-day consequence of the material circumstances being measured.
+
+**Statistical analysis.** Linear regression (`lm()`), justified because the
+outcome is continuous and roughly symmetric. We fitted a univariable model for
+each predictor first, then a single multivariable model containing all of them.
+Predictors were chosen in advance on subject-matter grounds, not by significance.
+Significance threshold 0.05; estimates are reported with 95% confidence
+intervals. Assumptions were checked with `performance::check_model()`. Analysis
+used `r R.version.string` with tidyverse, gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped).
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(
+    missing = "no"
+  ) |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics.**")
+```
+
+The median environment-domain score was 65.6 out of 100. Just under two thirds of
+students attended public schools and just under three fifths attended a school in
+a state capital, so both school-level contrasts have adequate numbers on each
+side.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Environment-domain quality of life by school legal status and school location. Boxes show the median and interquartile range; the diamond marks the mean."}
+ggplot(dat_model, aes(x = school_location, y = whoqol_environment,
+                      fill = school_legal_status)) +
+  geom_boxplot(alpha = 0.75, outlier.alpha = 0.25, width = 0.6,
+               position = position_dodge(width = 0.7)) +
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 2.6,
+               fill = "white", position = position_dodge(width = 0.7)) +
+  scale_fill_manual(values = c("#3B7EA1", "#D1741F")) +
+  labs(x = "School location", y = "WHOQOL environment domain (0-100)",
+       fill = "School legal status") +
+  theme(legend.position = "top")
+```
+
+Students at schools outside the state capitals report slightly *better*
+environment-domain quality of life than those in the capitals, and the
+private-school advantage is small; the distributions overlap heavily, so any
+school-level differences are modest relative to between-student variation.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    hide_n = TRUE
+  ) |>
+  modify_caption("**Univariable linear regression.**")
+uv
+```
+
+```{r uv-numbers}
+u <- function(v, tm = v) lm(reformulate(v, outcome), data = dat_model) |>
+  tidy(conf.int = TRUE) |> filter(term == tm)
+uv_dreem <- u("dreem_global")
+uv_trait <- u("trait_anxiety")
+uv_res   <- u("resilience_score")
+uv_sex   <- u("sex", "sexMale")
+uv_priv  <- u("school_legal_status", "school_legal_statusPrivate")
+uv_loc   <- u("school_location", "school_locationOther city")
+uv_clerk <- u("year_group", "year_groupClerkship")
+uv_clin  <- u("year_group", "year_groupClinical sciences")
+```
+
+The DREEM global score is the strongest crude predictor: each point is associated
+with a `r sprintf("%.3f", uv_dreem$estimate)`-point higher environment score
+(95% CI `r sprintf("%.3f to %.3f", uv_dreem$conf.low, uv_dreem$conf.high)`,
+p < 0.001), so a 20-point better perceived educational environment corresponds to
+about `r sprintf("%.1f", uv_dreem$estimate * 20)` points on the 0-100 scale.
+Trait anxiety runs the other way (`r sprintf("%.2f", uv_trait$estimate)` per
+point, 95% CI
+`r sprintf("%.2f to %.2f", uv_trait$conf.low, uv_trait$conf.high)`) and
+resilience is positively associated (`r sprintf("%.2f", uv_res$estimate)` per
+point). Both school-level variables are significant crudely: students outside a
+state capital score `r sprintf("%.2f", uv_loc$estimate)` points higher
+(p < 0.001) and private-school students `r sprintf("%.2f", uv_priv$estimate)`
+points higher (p = `r sprintf("%.4f", uv_priv$p.value)`). Sex shows no crude
+association (p = `r sprintf("%.2f", uv_sex$p.value)`).
+
+## Why adjustment is needed
+
+The crude school-level contrasts are the ones most obviously in need of
+adjustment, and there are specific variables here that would confound them.
+**The DREEM global score** confounds the school legal status contrast: students
+at private schools rate their educational environment far more favourably (mean
+DREEM 128 versus 115 at public schools), and DREEM is itself strongly associated
+with the environment domain, so a crude "private schools are better" finding may
+be nothing more than the DREEM difference. **Trait anxiety** confounds both
+psychosocial predictors:
+dispositionally anxious students score lower on the resilience scale (*r* =
+-0.61), rate their educational environment more harshly (*r* = -0.43) and report
+worse material circumstances, so the crude resilience and DREEM coefficients each
+contain a share of trait anxiety. **Sex** is a third: women in this sample report
+substantially higher trait anxiety than men, which masks any direct sex
+difference in the environment domain until anxiety is held fixed. Finally,
+**stage of the course** is associated with both the perceived educational
+environment and with living circumstances (later-stage students are more likely
+to have moved out of the family home), so it must be held fixed before the DREEM
+coefficient can be read. Fitting all seven predictors together allows each
+estimate to be interpreted with the others held constant.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit) |>
+  modify_caption("**Multivariable linear regression.**")
+mv
+```
+
+```{r fit-stats}
+gl <- glance(fit)
+tibble(
+  Statistic = c("R-squared", "Adjusted R-squared", "Residual SE", "n", "Model df"),
+  Value = c(sprintf("%.3f", gl$r.squared), sprintf("%.3f", gl$adj.r.squared),
+            sprintf("%.2f", gl$sigma), as.character(gl$nobs), as.character(gl$df))
+) |> gt() |> tab_header(title = md("**Model fit**"))
+```
+
+```{r mv-numbers}
+tid <- tidy(fit, conf.int = TRUE)
+g <- function(x) tid |> filter(term == x)
+b_dreem <- g("dreem_global"); b_trait <- g("trait_anxiety")
+b_res <- g("resilience_score"); b_sex <- g("sexMale")
+b_priv <- g("school_legal_statusPrivate"); b_loc <- g("school_locationOther city")
+b_clerk <- g("year_groupClerkship"); b_clin <- g("year_groupClinical sciences")
+fmt <- function(r) sprintf("%.2f (95%% CI %.2f to %.2f)", r$estimate, r$conf.low, r$conf.high)
+fmt3 <- function(r) sprintf("%.3f (95%% CI %.3f to %.3f)", r$estimate, r$conf.low, r$conf.high)
+```
+
+The model explains `r sprintf("%.1f%%", gl$r.squared * 100)` of the variance
+(adjusted R-squared `r sprintf("%.3f", gl$adj.r.squared)`) - much less than for
+the psychological or physical domains, which is expected because material
+circumstances depend heavily on family resources that this survey did not
+measure. Holding the other predictors fixed, each DREEM point is associated with
+`r fmt3(b_dreem)` points of environment-domain score (about
+`r sprintf("%.1f", b_dreem$estimate * 20)` points per 20 DREEM points), and each
+trait-anxiety point with `r fmt(b_trait)` points. Attending a school outside a
+state capital remains independently associated with a `r fmt(b_loc)`-point
+higher score. Men score `r fmt(b_sex)` points *lower* than women once anxiety is
+held fixed. Clinical-sciences students score `r fmt(b_clin)` and clerkship
+students `r fmt(b_clerk)` points higher than basic-sciences students. Private
+schooling (`r fmt(b_priv)`) and resilience (`r fmt(b_res)`) show no independent
+association. These are conditional associations from a cross-sectional survey.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+The most dramatic movement is **resilience**, which goes from a strongly
+significant `r sprintf("%.2f", uv_res$estimate)` crude (p < 0.001) to
+`r sprintf("%.2f", b_res$estimate)` adjusted and non-significant
+(p = `r sprintf("%.2f", b_res$p.value)`) - it even changes sign. The entire crude
+resilience association with material circumstances was trait anxiety: resilient
+students are, on this instrument, mostly non-anxious students. **Private
+schooling** does the same thing, from `r sprintf("%.2f", uv_priv$estimate)`
+points (p = `r sprintf("%.4f", uv_priv$p.value)`) to
+`r sprintf("%.2f", b_priv$estimate)` (p = `r sprintf("%.2f", b_priv$p.value)`);
+once the DREEM score is held fixed the private-school advantage disappears,
+because private-school students rate their educational environment about 13 DREEM
+points higher on average and that, rather than the school's legal status, is what
+tracked the environment domain. (School location is *not* the explanation here -
+private and public schools are almost identically distributed between capitals
+and other cities, 43% versus 41% outside a capital.) **Sex** moves in the
+opposite direction, a textbook suppression: crude
+`r sprintf("%.2f", uv_sex$estimate)` points and clearly non-significant
+(p = `r sprintf("%.2f", uv_sex$p.value)`), adjusted
+`r sprintf("%.2f", b_sex$estimate)` points and significant
+(p = `r sprintf("%.3f", b_sex$p.value)`). Women's higher trait anxiety was
+concealing a modest male *disadvantage* on the environment domain.
+
+**School location** barely moves - `r sprintf("%.2f", uv_loc$estimate)` crude to
+`r sprintf("%.2f", b_loc$estimate)` adjusted, retaining
+`r sprintf("%.0f%%", 100 * b_loc$estimate / uv_loc$estimate)` and remaining
+significant - so it is not explained away by any of the individual-level
+predictors and is the closest thing in this analysis to a genuine school-level
+finding. **The DREEM global score** shrinks moderately
+(`r sprintf("%.3f", uv_dreem$estimate)` to
+`r sprintf("%.3f", b_dreem$estimate)`,
+`r sprintf("%.0f%%", 100 * b_dreem$estimate / uv_dreem$estimate)` retained), and
+**stage of the course** strengthens slightly (clerkship
+`r sprintf("%.2f", uv_clerk$estimate)` crude, non-significant, to
+`r sprintf("%.2f", b_clerk$estimate)` adjusted and significant).
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r vif-table}
+performance::check_collinearity(fit) |>
+  as_tibble() |>
+  transmute(Term, VIF = round(VIF, 2), Tolerance = round(Tolerance, 3)) |>
+  gt() |> tab_header(title = md("**Variance inflation factors**"))
+```
+
+```{r het-test}
+het <- performance::check_heteroscedasticity(fit)
+```
+
+**Linearity.** The fitted-versus-residual reference line is essentially flat
+across the fitted range, with only slight curvature at the extremes; the linear
+form is adequate.
+
+**Homoscedasticity.** Breusch-Pagan rejects constant variance
+(p = `r sprintf("%.3f", attr(het, "p"))`). As a sensitivity check we refitted
+with heteroscedasticity-consistent (HC3) standard errors:
+
+```{r robust}
+rob <- lmtest::coeftest(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+broom::tidy(rob) |>
+  transmute(term,
+            estimate = round(estimate, 3),
+            `robust SE` = round(std.error, 3),
+            statistic = round(statistic, 2),
+            p.value = format.pval(p.value, digits = 3, eps = 0.001)) |>
+  gt() |> tab_header(title = md("**HC3 robust standard errors (sensitivity check)**"))
+```
+
+No coefficient changes its significance status under HC3, so the
+heteroscedasticity - a floor/ceiling artefact of the bounded 0-100 scale - does
+not affect the conclusions.
+
+**Normality of residuals.** The Q-Q plot tracks the diagonal with a short left
+tail. The formal test flags non-normality
+(p = `r sprintf("%.3f", attr(performance::check_normality(fit), "p"))`), which at
+n = `r nrow(dat_model)` reflects the test's power rather than a real problem.
+
+**Influential points.** No observation exceeds the Cook's distance threshold; the
+largest is `r sprintf("%.3f", max(cooks.distance(fit)))`.
+
+**Collinearity.** The highest VIF is
+`r sprintf("%.2f", max(performance::check_collinearity(fit)$VIF))` (trait
+anxiety), with resilience at
+`r sprintf("%.2f", performance::check_collinearity(fit) |> as_tibble() |> filter(Term == "resilience_score") |> pull(VIF))`.
+All values are below 2 and comfortably under the threshold of 5. The two
+school-level variables are only weakly associated with each other in this sample
+(both VIFs near 1.1), so their separate contributions can be read with
+confidence.
+
+# Discussion
+
+Environment-domain quality of life - money, safety, housing, transport, access to
+care - is only weakly explained by anything measured in this survey
+(`r sprintf("%.0f%%", gl$r.squared * 100)` of variance). Within that, the two
+things that matter independently are how positively the student rates their
+educational environment and, unusually for this dataset, a school-level variable:
+students at schools outside the state capitals report about
+`r sprintf("%.1f", b_loc$estimate)` points better environment-domain quality of
+life than those in the capitals, and this is not explained away by school type,
+stage, sex, anxiety or resilience. A plausible reading is cost of living and
+commuting: capital cities in Brazil are more expensive and have longer, less safe
+commutes, and both feed directly into the items this domain asks about.
+Resilience, by contrast, has no independent association at all once trait anxiety
+is held fixed - resilience training would not be expected to change a student's
+material circumstances, and the data agree.
+
+**Limitations.** *Clustering is not modelled, and this matters more here than for
+any other outcome in the file.* The strongest finding is a school-level contrast,
+but students were sampled from 22 schools and the released file carries no school
+identifier - only `school_legal_status` and `school_location`. Two schools in the
+same city share cost of living, transport and campus facilities, so the effective
+number of independent units behind the location coefficient is closer to 22 than
+to `r nrow(dat_model)`. The reported standard error for `school_location` is
+therefore substantially too small and its p-value too optimistic; with a random
+intercept for school this finding might well not survive. *No socioeconomic
+measure.* Family income, which is the obvious driver of every item in the
+environment domain, is not in the file, so residual confounding of both
+school-level contrasts by family wealth is near-certain. *Cross-sectional
+design and common-method bias.* DREEM, resilience, anxiety and WHOQOL were all
+self-reported at one sitting, so a generally negative respondent depresses all of
+them together. *Low explained variance.* An R-squared of
+`r sprintf("%.2f", gl$r.squared)` means the model is describing a small slice of
+what determines this outcome, and predictions for individuals would be poor.
+
+**Future work.** Retain the school identifier and add a family-income measure,
+then fit a mixed model with a random intercept for school to test whether the
+capital-versus-other-city difference is a real contextual effect or an artefact
+of a handful of schools.
+
+# Feasibility notes
+
+*Not part of a student report.*
+
+- **Knits cleanly, statistically well behaved.** n = 1,350 complete cases, seven
+  predictors, max VIF
+  `r sprintf("%.2f", max(performance::check_collinearity(fit)$VIF))`, max Cook's
+  distance `r sprintf("%.3f", max(cooks.distance(fit)))`.
+- **The least tautological of the three WHOQOL outcomes.** Trait anxiety
+  correlates only -0.41 with the environment domain (versus -0.75 with the
+  psychological domain), and BDI -0.39. A student can use mood scales as
+  predictors here without the analysis collapsing into one questionnaire
+  predicting itself. That is a real pedagogical advantage.
+- **Lowest R-squared of the six outcomes**
+  (`r sprintf("%.2f", gl$r.squared)`). Some students will read this as failure;
+  it should be framed as the honest result of asking about material
+  circumstances with a questionnaire that measured none of them.
+- **Best worked example of confounding in the dataset.** Three distinct patterns
+  appear in one table: private schooling and resilience both lose significance,
+  sex gains it through suppression, and school location is essentially immovable.
+- **The clustering problem bites hardest here.** The headline finding
+  (`school_location`) is a school-level contrast estimated as if the 1,350
+  students were independent. With only 22 schools and no identifier this cannot
+  be fixed, and it must be stated plainly in Limitations, not buried.
+- **Guardrails.** `dreem_global` must never appear with its five subscales; no
+  other WHOQOL domain as a predictor; only one of BDI / state / trait anxiety.
+- **Heteroscedasticity is flagged** (BP p = `r sprintf("%.3f", attr(het, "p"))`),
+  as for every outcome in this dataset; HC3 changes nothing.
+- **Verdict: workable and pedagogically the most interesting**, provided the
+  student is willing to write an honest Limitations section about the 22 schools.

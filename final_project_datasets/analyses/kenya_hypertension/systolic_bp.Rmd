@@ -1,0 +1,633 @@
+---
+title: "Systolic blood pressure in Kenyan outpatient attenders"
+subtitle: "Dataset 4: Kenya hypertension screening survey"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "kenya_hypertension.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "systolic_bp"
+predictors <- c("age_group", "sex", "education", "bmi_category",
+                "current_smoker", "current_alcohol", "adequate_activity",
+                "diabetes")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest band, or the clinically
+    # "unexposed" group. 26-35 rather than 18-25 is the age reference because
+    # 18-25 holds only 101 people and would make every age contrast imprecise.
+    age_group = lab(fct_relevel(factor(age_group),
+                                "26-35", "18-25", "36-45", "46-55", "56-65", ">65"),
+                    "Age band (years)"),
+    sex = lab(factor(sex, levels = c("female", "male"), labels = c("Female", "Male")),
+              "Sex"),
+    # No schooling is the reference so higher categories read as "more education
+    # than the reference" and the gradient can be read straight down the column.
+    education = lab(fct_relevel(factor(education),
+                                "No School", "Primary", "Secondary", "Tertiary"),
+                    "Education"),
+    # Healthy weight is both the largest category and the clinical comparator.
+    bmi_category = lab(fct_relevel(factor(bmi_category),
+                                   "Healthy", "Underweight", "Overweight", "Obese"),
+                       "BMI category (WHO)"),
+    current_smoker = lab(factor(current_smoker, levels = c(0, 1), labels = c("No", "Yes")),
+                         "Current smoker"),
+    current_alcohol = lab(factor(current_alcohol, levels = c(0, 1), labels = c("No", "Yes")),
+                          "Current alcohol use"),
+    adequate_activity = lab(factor(adequate_activity, levels = c(0, 1), labels = c("No", "Yes")),
+                            "Meets activity recommendation"),
+    # "unknown" is kept as its own level rather than set to missing: it is a
+    # substantive answer (never tested) and dropping it would cost 261 rows.
+    diabetes = lab(fct_relevel(factor(diabetes), "no", "yes", "unknown"),
+                   "Self-reported diabetes"),
+    cardiovascular_disease = lab(fct_relevel(factor(cardiovascular_disease),
+                                             "no", "yes", "unknown"),
+                                 "Self-reported cardiovascular disease"),
+    study_site = lab(fct_relevel(factor(study_site), "public", "private", "faith"),
+                     "Facility type"),
+    monthly_income = lab(fct_relevel(factor(monthly_income),
+                                     "0  - 15,000", "16,000 - 50,000",
+                                     "51,000 - 100,000", "100,000 - 200,000",
+                                     "Above 200,000"),
+                         "Monthly household income (KSh)"),
+    prior_htn_diagnosis = lab(factor(prior_htn_diagnosis, levels = c(0, 1),
+                                     labels = c("No", "Yes")),
+                              "Previously diagnosed with hypertension"),
+    systolic_bp  = lab(systolic_bp, "Systolic BP (mmHg)"),
+    diastolic_bp = lab(diastolic_bp, "Diastolic BP (mmHg)")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+# The income-augmented sample is carried through the whole document so that the
+# cost of adding a 31%-missing variable can be quantified rather than asserted.
+dat_inc <- dat |> select(all_of(c(outcome, predictors, "monthly_income"))) |> drop_na()
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "< 0.001", paste0("= ", fmt(p, 3)))
+```
+
+# Introduction
+
+Hypertension is the leading modifiable cardiovascular risk factor in sub-Saharan
+Africa, and Kenya's national NCD strategy relies on opportunistic screening of
+people already attending health facilities rather than on population surveys.
+This dataset is a cross-sectional screening survey of `r nrow(dat_raw)` adults
+recruited at three types of outpatient facility in Kenya - a government (public)
+facility, a private facility and a faith-based mission facility - in which every
+participant had blood pressure measured three times and completed a WHO
+STEPS-style questionnaire on demography, behaviour and self-reported morbidity.
+Systolic pressure is modelled here as a continuous quantity because it is the
+measurement that drives stroke and ischaemic heart disease risk, and
+dichotomising it discards information.
+
+**Aim.** Among these Kenyan outpatient attenders, we examined which of age band,
+sex, education, BMI category, current smoking, current alcohol use, physical
+activity and self-reported diabetes are independently associated with average
+systolic blood pressure, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** A cross-sectional facility-based screening survey of
+`r nrow(dat_raw)` adults aged 18 and over attending outpatient services at three
+Kenyan facilities (`r sum(dat$study_site == "public")` public,
+`r sum(dat$study_site == "private")` private,
+`r sum(dat$study_site == "faith")` faith-based). Blood pressure was taken three
+times per participant and the file carries the average of the three readings.
+
+**Variables.** The outcome is `systolic_bp`, the mean of three systolic readings
+in mmHg, treated as continuous (observed range
+`r fmt(min(dat$systolic_bp), 0)` to `r fmt(max(dat$systolic_bp), 0)` mmHg).
+Predictors are age band (reference *26-35*, the largest band); sex (reference
+*Female*); education (reference *No School*); WHO BMI category (reference
+*Healthy*); current smoking (reference *No*); current alcohol use (reference
+*No*); meeting the physical-activity recommendation (reference *No*); and
+self-reported diabetes (reference *no*, with *unknown* retained as a substantive
+third level rather than treated as missing).
+
+**BMI is categorical, not continuous.** The file contains only the WHO
+`bmi_category` label, not the underlying height, weight or BMI value. It is
+therefore impossible to report a per-unit BMI effect (mmHg per kg/m2) from these
+data; every adiposity result below is a contrast between broad WHO bands, and
+the bands are wide enough that residual confounding by adiposity within band is
+certain. In fact **no predictor in this file is continuous** - even age is
+supplied only as a six-level band - so this linear model is a cell-means
+(ANOVA-style) model throughout and no slope-per-unit statement of any kind can
+be made.
+
+**Variables deliberately excluded.** `hypertension` is *not* an independent
+variable: it is defined as measured average blood pressure crossing the
+diagnostic threshold, so it is a deterministic function of the outcome and
+`diastolic_bp`. Regressing systolic pressure on it would be regressing the
+outcome on a coarsened copy of itself. `diastolic_bp` is excluded for the same
+reason - it is the other half of the same measurement, correlates with systolic
+pressure at r = `r fmt(cor(dat$systolic_bp, dat$diastolic_bp), 2)`, and is a
+co-outcome rather than an exposure. `prior_htn_diagnosis` is excluded from the
+main model and examined separately in a sensitivity analysis, because people who
+already carry a diagnosis are likely to be on treatment, which *lowers* measured
+pressure; that variable therefore sits downstream of the outcome as much as
+upstream of it. `monthly_income` is excluded from the main model on missing-data
+grounds and its cost is quantified below.
+
+**Statistical analysis.** `lm()`, justified because the outcome is a continuous,
+roughly unimodal measurement. We fitted a univariable model for each predictor
+first, then a single multivariable model containing all eight. Predictors were
+chosen in advance on subject-matter grounds, not by significance. Significance
+threshold 0.05; estimates are reported with 95% confidence intervals.
+Assumptions were checked with `performance::check_model()`, and because
+non-constant variance was flagged we additionally report HC3
+heteroscedasticity-consistent standard errors. Analysis used
+`r R.version.string` with tidyverse, gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped,
+`r fmt(100 * n_dropped / nrow(dat), 1)`%). Missingness in this file is
+extremely uneven. The outcome and four of the predictors are 100% complete; the
+losses come from `bmi_category`
+(`r sum(is.na(dat$bmi_category))` missing), `education`
+(`r sum(is.na(dat$education))`) and `age_group`
+(`r sum(is.na(dat$age_group))`). The one seriously incomplete variable is
+`monthly_income`, missing for `r sum(is.na(dat$monthly_income))` participants
+(`r fmt(100 * mean(is.na(dat$monthly_income)), 1)`%), which is why it is not in
+the main model; the section *The cost of `monthly_income`* below reports what
+including it would do.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(missing = "no") |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics, complete-case analytic sample.**")
+```
+
+```{r table-one-numbers}
+med_sbp <- median(dat_model$systolic_bp)
+iqr_sbp <- quantile(dat_model$systolic_bp, c(0.25, 0.75))
+pct_over <- 100 * mean(dat_model$bmi_category %in% c("Overweight", "Obese"))
+```
+
+Median systolic pressure is `r fmt(med_sbp, 1)` mmHg (IQR
+`r fmt(iqr_sbp[1], 1)` to `r fmt(iqr_sbp[2], 1)`), with a long right tail
+reaching `r fmt(max(dat_model$systolic_bp), 0)` mmHg. The sample is
+predominantly female (`r fmt(100 * mean(dat_model$sex == "Female"), 0)`%) and
+better educated than the Kenyan adult population
+(`r fmt(100 * mean(dat_model$education == "Tertiary"), 0)`% tertiary), which is
+a facility-attender rather than a community sample.
+`r fmt(pct_over, 0)`% are overweight or obese, while current smoking
+(`r fmt(100 * mean(dat_model$current_smoker == "Yes"), 1)`%) and current alcohol
+use (`r fmt(100 * mean(dat_model$current_alcohol == "Yes"), 1)`%) are rare.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Systolic blood pressure by age band and WHO BMI category. Boxes are medians and IQRs; points are individual participants."}
+ggplot(dat_model, aes(age_group, systolic_bp, fill = bmi_category)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.85, position = position_dodge(preserve = "single")) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.75),
+             alpha = 0.18, size = 0.7, show.legend = FALSE) +
+  scale_fill_viridis_d(option = "D", end = 0.9) +
+  labs(x = "Age band (years)", y = "Systolic blood pressure (mmHg)",
+       fill = "BMI category",
+       caption = "Underweight cells are small (n = 83 in the whole file) and their boxes should not be over-read")
+```
+
+Systolic pressure rises across successive age bands within every BMI category,
+and within each age band the obese sit above the healthy-weight group, so the
+two gradients are at least partly independent; the spread of pressures also
+widens noticeably in the older bands, which is the first hint of the
+non-constant variance confirmed in the diagnostics.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(lm(reformulate(v, outcome), data = dat_model), conf.int = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 2) {
+  r <- utid[utid$term == term, ]
+  stopifnot(nrow(r) == 1L)
+  sprintf("%s mmHg (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+up <- function(term) { x <- utid$p.value[utid$term == term]; stopifnot(length(x) == 1L); pv(x) }
+```
+
+Age dominates. Relative to the 26-35 band, participants over 65 average
+`r ug("age_group>65")` higher systolic pressure (p `r up("age_group>65")`), with
+a monotonic gradient through the intermediate bands
+(`r ug("age_group46-55")` at 46-55, `r ug("age_group56-65")` at 56-65). Obesity
+is the next largest crude signal: obese participants average
+`r ug("bmi_categoryObese")` higher pressure than healthy-weight participants
+(p `r up("bmi_categoryObese")`), and underweight participants
+`r ug("bmi_categoryUnderweight")` (p `r up("bmi_categoryUnderweight")`). Men
+average `r ug("sexMale")` higher than women (p `r up("sexMale")`).
+Self-reported diabetes carries `r ug("diabetesyes")` crudely
+(p `r up("diabetesyes")`). Education is non-monotonic in the crude analysis:
+primary schooling sits `r ug("educationPrimary")` above no schooling
+(p `r up("educationPrimary")`) while tertiary sits `r ug("educationTertiary")`
+(p `r up("educationTertiary")`). Smoking, alcohol and physical activity show no
+crude association.
+
+## Why adjustment is needed
+
+The crude estimates above are not comparable with one another because the
+predictors are strongly interlocked in this sample. **Age band** is the obvious
+confounder: it is the strongest determinant of systolic pressure through
+arterial stiffening, and it is also associated with almost every other predictor
+here - diabetes prevalence rises steeply with age
+(`r fmt(100 * mean(dat_model$diabetes[dat_model$age_group == ">65"] == "yes"), 0)`%
+of the over-65s report diabetes versus
+`r fmt(100 * mean(dat_model$diabetes[dat_model$age_group == "26-35"] == "yes"), 0)`%
+of the 26-35 band), obesity accumulates with age, and education is far lower in
+the older bands
+(`r fmt(100 * mean(dat_model$education[dat_model$age_group == ">65"] == "No School"), 0)`%
+of over-65s never attended school versus
+`r fmt(100 * mean(dat_model$education[dat_model$age_group == "26-35"] == "No School"), 0)`%
+of 26-35s). The crude diabetes coefficient of about
+`r fmt(utid$estimate[utid$term == "diabetesyes"], 1)` mmHg is therefore in large
+part an age difference between people with and without diabetes, and the crude
+"protective" tertiary-education coefficient is in large part the youth of the
+tertiary-educated. **Sex** confounds both behavioural exposures: smoking is
+almost entirely male in this sample
+(`r sum(dat_model$current_smoker == "Yes" & dat_model$sex == "Male")` of
+`r sum(dat_model$current_smoker == "Yes")` smokers are men) and so is alcohol
+use, while men also have higher pressure at a given age, so the crude smoking
+and alcohol coefficients are partly sex coefficients. **BMI category** confounds
+the diabetes and activity contrasts in turn, since adiposity causes both insulin
+resistance and raised pressure. Mutual adjustment lets each coefficient be read
+as a comparison between participants who are alike on the other seven measured
+characteristics.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE)
+g <- function(term, d = 2) {
+  r <- tid[tid$term == term, ]
+  stopifnot(nrow(r) == 1L)
+  sprintf("%s mmHg (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gp <- function(term) { x <- tid$p.value[tid$term == term]; stopifnot(length(x) == 1L); pv(x) }
+```
+
+```{r fit-stats}
+s <- summary(fit)
+tibble(
+  Statistic = c("Complete-case N", "Rows dropped by listwise deletion",
+                "Parameters (excl. intercept)", "R-squared",
+                "Adjusted R-squared", "Residual SE (mmHg)", "AIC"),
+  Value = c(as.character(nrow(dat_model)),
+            as.character(n_dropped),
+            as.character(length(coef(fit)) - 1L),
+            fmt(s$r.squared, 3), fmt(s$adj.r.squared, 3), fmt(s$sigma, 2),
+            fmt(AIC(fit), 1))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable linear model for systolic BP**"))
+```
+
+The model was fitted on `r nrow(dat_model)` complete cases and explains
+`r fmt(100 * s$r.squared, 1)`% of the variance in systolic pressure (adjusted
+R-squared `r fmt(s$adj.r.squared, 3)`, residual SE `r fmt(s$sigma, 1)` mmHg).
+The gap between R-squared and adjusted R-squared is small, so the
+`r length(coef(fit)) - 1L` parameters are not being bought at a meaningful cost
+in overfitting. Among participants of the same sex, education, BMI category,
+smoking, drinking, activity and diabetes status, the over-65s average
+`r g("age_group>65")` higher systolic pressure than the 26-35 band
+(p `r gp("age_group>65")`), and the 46-55 band `r g("age_group46-55")`
+(p `r gp("age_group46-55")`). Obesity retains `r g("bmi_categoryObese")`
+(p `r gp("bmi_categoryObese")`) and underweight `r g("bmi_categoryUnderweight")`
+(p `r gp("bmi_categoryUnderweight")`). Men average `r g("sexMale")` higher than
+women of the same age and body size (p `r gp("sexMale")`). Diabetes is
+essentially null after adjustment (`r g("diabetesyes")`,
+p `r gp("diabetesyes")`). These are associations among the participants
+observed, not effects of intervening on any of these variables.
+
+## The cost of `monthly_income`
+
+```{r income-cost}
+fit_inc      <- lm(reformulate(c(predictors, "monthly_income"), outcome), data = dat_inc)
+fit_noinc_cc <- lm(reformulate(predictors, outcome), data = dat_inc)
+
+inc_tid <- tidy(fit_inc, conf.int = TRUE)
+si  <- summary(fit_inc)
+
+tibble(
+  Model = c("Main model (no income)",
+            "Same model, income complete-cases only",
+            "Model with monthly_income added"),
+  N = c(nrow(dat_model), nrow(dat_inc), nrow(dat_inc)),
+  `% of file` = fmt(100 * c(nrow(dat_model), nrow(dat_inc), nrow(dat_inc)) / nrow(dat), 1),
+  `Parameters` = c(length(coef(fit)) - 1L, length(coef(fit_noinc_cc)) - 1L,
+                   length(coef(fit_inc)) - 1L),
+  `R-squared` = fmt(c(s$r.squared, summary(fit_noinc_cc)$r.squared, si$r.squared), 3),
+  `Adj. R-squared` = fmt(c(s$adj.r.squared, summary(fit_noinc_cc)$adj.r.squared,
+                           si$adj.r.squared), 3)
+) |>
+  gt() |>
+  tab_header(title = md("**Table 2. What adding `monthly_income` costs.**"),
+             subtitle = md("`monthly_income` is missing for 31% of participants; listwise deletion removes them from the whole model, not just from that one coefficient."))
+```
+
+```{r income-numbers}
+inc_lost   <- nrow(dat_model) - nrow(dat_inc)
+inc_p      <- anova(fit_noinc_cc, fit_inc)$`Pr(>F)`[2]
+age65_main <- tid$estimate[tid$term == "age_group>65"]
+age65_inc  <- inc_tid$estimate[inc_tid$term == "age_group>65"]
+ob_main    <- tid$estimate[tid$term == "bmi_categoryObese"]
+ob_inc     <- inc_tid$estimate[inc_tid$term == "bmi_categoryObese"]
+miss_by_site <- dat |> group_by(study_site) |>
+  summarise(pct = 100 * mean(is.na(monthly_income)))
+```
+
+This is the single most important methodological point in this dataset.
+`monthly_income` is missing for
+`r fmt(100 * mean(is.na(dat$monthly_income)), 1)`% of participants, and because
+`lm()` deletes rows listwise, adding it removes those participants from *every*
+coefficient in the model, not only from the income coefficient. The
+complete-case N falls from **`r nrow(dat_model)`** to **`r nrow(dat_inc)`**
+(`r fmt(100 * nrow(dat_inc) / nrow(dat), 0)`% of the file): `r inc_lost` further
+participants are discarded, at a cost of `r length(coef(fit_inc)) - length(coef(fit))`
+extra parameters. Income adds essentially nothing in exchange - the F-test
+comparing the two models on the *same* `r nrow(dat_inc)` rows gives
+p `r pv(inc_p)`, and adjusted R-squared moves from
+`r fmt(summary(fit_noinc_cc)$adj.r.squared, 3)` to `r fmt(si$adj.r.squared, 3)`.
+
+Worse, the missingness is clearly not random. Non-response to the income
+question ranges from
+`r fmt(miss_by_site$pct[miss_by_site$study_site == "faith"], 0)`% at the
+faith-based facility to
+`r fmt(miss_by_site$pct[miss_by_site$study_site == "private"], 0)`% at the
+private facility, and rises with education (from
+`r fmt(100 * mean(is.na(dat$monthly_income[dat$education == "No School"])), 0)`%
+among those with no schooling to
+`r fmt(100 * mean(is.na(dat$monthly_income[dat$education == "Tertiary"])), 0)`%
+among the tertiary educated). The people who decline to state their income are
+therefore systematically different from those who answer, so the reduced sample
+is not a random subsample and complete-case estimates from it are not guaranteed
+to be unbiased. The main coefficients happen to be fairly stable (the over-65
+contrast moves from `r fmt(age65_main, 1)` to `r fmt(age65_inc, 1)` mmHg and
+obesity from `r fmt(ob_main, 1)` to `r fmt(ob_inc, 1)` mmHg), which is
+reassuring but is a result, not something that could have been assumed. **The
+main model therefore excludes `monthly_income`**, and any student who wants the
+income gradient must either accept a one-third smaller sample or use multiple
+imputation.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 3. Unadjusted and adjusted estimates.**")
+```
+
+Two coefficients move a long way toward the null. **Self-reported diabetes**
+falls from `r ug("diabetesyes")` crude (p `r up("diabetesyes")`) to
+`r g("diabetesyes")` adjusted (p `r gp("diabetesyes")`), a drop of about
+`r fmt(100 * (1 - tid$estimate[tid$term == "diabetesyes"] / utid$estimate[utid$term == "diabetesyes"]), 0)`%,
+and loses significance entirely: essentially the whole crude diabetes-blood
+pressure association in these data is the age and adiposity difference between
+participants with and without diabetes, exactly as anticipated. **Tertiary
+education** behaves the same way, moving from `r ug("educationTertiary")`
+(p `r up("educationTertiary")`, nominally protective) to
+`r g("educationTertiary")` (p `r gp("educationTertiary")`, indistinguishable
+from no schooling) once age is held constant - the crude "benefit" of tertiary
+education was the youth of the tertiary-educated. **Current smoking** moves in
+the opposite direction and changes sign, from `r ug("current_smokerYes")` crude to
+`r g("current_smokerYes")` adjusted; smokers here are almost all men, so the crude
+estimate was carrying the male sex difference, and once sex is adjusted for
+nothing is left. Two predictors barely move at all: the **over-65 age contrast**
+goes from `r ug("age_group>65")` to `r g("age_group>65")` and **obesity** from
+`r ug("bmi_categoryObese")` to `r g("bmi_categoryObese")`, which is what one
+expects of variables that confound the others but are themselves confounded by
+little that is measured here. One coefficient crosses *into* significance:
+**secondary education** moves from `r ug("educationSecondary")`
+(p `r up("educationSecondary")`) to `r g("educationSecondary")`
+(p `r gp("educationSecondary")`), a precision gain rather than a change of
+substance, and given the non-monotonic education pattern it should not be
+over-interpreted.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r het-check}
+het <- check_heteroscedasticity(fit)
+print(het)
+vifs <- check_collinearity(fit)
+max_vif <- max(vifs$VIF)
+```
+
+```{r robust-se}
+rob   <- lmtest::coeftest(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+robci <- lmtest::coefci(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+tibble(
+  Term = rownames(rob),
+  Estimate = fmt(rob[, 1], 2),
+  `SE (OLS)` = fmt(summary(fit)$coefficients[, 2], 3),
+  `SE (HC3)` = fmt(rob[, 2], 3),
+  `95% CI (HC3)` = paste0(fmt(robci[, 1], 2), " to ", fmt(robci[, 2], 2)),
+  `p (HC3)` = fmt(rob[, 4], 3)
+) |>
+  filter(Term != "(Intercept)") |>
+  gt() |>
+  tab_header(title = md("**Table 4. HC3 heteroscedasticity-consistent standard errors.**"))
+```
+
+```{r het-numbers}
+worst <- which.max(abs(rob[, 2] - summary(fit)$coefficients[, 2]) /
+                     summary(fit)$coefficients[, 2])
+worst_term <- rownames(rob)[worst]
+sig_ols <- summary(fit)$coefficients[, 4] < 0.05
+sig_hc3 <- rob[, 4] < 0.05
+n_flip  <- sum(sig_ols != sig_hc3)
+```
+
+The posterior-predictive panel shows the model captures the centre of the
+distribution but cannot reproduce the long right tail: participants above about
+170 mmHg are systematically under-predicted, which is unavoidable when every
+predictor is a coarse category. The residual-versus-fitted panel fans out
+clearly toward higher fitted values - the spread of systolic pressure genuinely
+grows with its mean - and `check_heteroscedasticity()` confirms non-constant
+error variance (p < 0.001). The normal-QQ panel shows a heavy right tail
+consistent with the same high-pressure participants; with `r nobs(fit)`
+observations this is not a threat to the coefficient estimates themselves, only
+to small-sample normal-theory inference. The "linearity" panel is close to
+uninformative here because there is no continuous predictor: every fitted value
+is a cell mean, so the reference line simply traces the cell structure.
+Collinearity is a non-issue (maximum VIF `r fmt(max_vif, 2)`, for
+`r vifs$Term[which.max(vifs$VIF)]`), and no point exceeds the Cook's distance
+contours, so no single participant drives the fit.
+
+Because non-constant variance was detected, Table 4 reports HC3 robust standard
+errors. Point estimates are unchanged by construction; only the uncertainty is
+re-estimated. The HC3 standard errors differ from the OLS ones by at most
+`r fmt(100 * max(abs(rob[, 2] - summary(fit)$coefficients[, 2]) / summary(fit)$coefficients[, 2]), 0)`%
+(for `r worst_term`), and `r if (n_flip == 0) "no predictor changes its significance status" else paste(n_flip, "coefficients change significance status")`
+under robust inference. The substantive conclusions - age, obesity and sex in,
+diabetes and behaviour out - are unaffected by the variance assumption.
+
+## Sensitivity analysis: prior diagnosis and treatment
+
+```{r prior-sens}
+dat_prior <- dat |>
+  select(all_of(c(outcome, predictors, "prior_htn_diagnosis"))) |> drop_na()
+fit_prior <- lm(reformulate(c(predictors, "prior_htn_diagnosis"), outcome),
+                data = dat_prior)
+pt <- tidy(fit_prior, conf.int = TRUE) |> filter(term == "prior_htn_diagnosisYes")
+sbp_dx  <- mean(dat$systolic_bp[dat$prior_htn_diagnosis == "Yes"])
+sbp_ndx <- mean(dat$systolic_bp[dat$prior_htn_diagnosis == "No"])
+```
+
+Participants who report a previous hypertension diagnosis average
+`r fmt(sbp_dx, 1)` mmHg against `r fmt(sbp_ndx, 1)` mmHg in those who do not,
+and adding `prior_htn_diagnosis` to the model gives an adjusted difference of
+`r fmt(pt$estimate, 1)` mmHg (95% CI `r fmt(pt$conf.low, 1)` to
+`r fmt(pt$conf.high, 1)`, p `r pv(pt$p.value)`) with R-squared rising to
+`r fmt(summary(fit_prior)$r.squared, 3)`. **This coefficient must not be read as
+an effect of diagnosis on blood pressure.** It runs in both directions at once:
+being diagnosed is a consequence of having had high pressure in the past
+(pushing the coefficient up), while diagnosis leads to antihypertensive
+treatment which lowers measured pressure (pushing it down). The file contains
+**no medication variable at all**, so the two cannot be separated, and the
+observed positive coefficient is best read as evidence that treatment in this
+population is not bringing pressure back to the level of the undiagnosed. It is
+reported here as a sensitivity analysis and excluded from the main model.
+
+# Discussion
+
+In this Kenyan outpatient sample, age band, BMI category and sex are the
+characteristics independently associated with systolic blood pressure. Adjusted
+for the other seven predictors, the over-65s average
+`r g("age_group>65")` higher pressure than 26-35 year olds and obese
+participants `r g("bmi_categoryObese")` higher than healthy-weight
+participants. The crude association with self-reported diabetes, which looked
+substantial and highly significant, is almost entirely explained by the age and
+adiposity differences between participants with and without diabetes.
+Practically, this supports age and body size as the two variables that should
+drive who is offered opportunistic screening in these facilities, and it warns
+that a crude comparison of pressure across diabetes status or education will
+badly mislead.
+
+**Limitations.** This is a **facility-based convenience sample** of people
+attending outpatient clinics, not a community sample: attenders are sicker and,
+here, far better educated than the Kenyan adult population, so no prevalence or
+mean from this file can be generalised to Kenya. The design is
+**cross-sectional**, so nothing establishes temporality and no causal claim is
+warranted. **No predictor is continuous**: age is banded and BMI is supplied
+only as a WHO category, so residual confounding within band is guaranteed and no
+per-unit effect can be estimated. **Antihypertensive medication is not
+recorded**, which is the single most serious unmeasured confounder in an
+analysis of measured blood pressure - treated participants have lower measured
+pressure precisely because their underlying risk is higher, which biases the
+diabetes, obesity and age coefficients toward the null by an unknown amount.
+Participants were recruited from **three facilities but no facility identifier
+is present** beyond the three-level `study_site` label, so the correlation
+between participants attending the same facility cannot be modelled and the
+standard errors reported here, robust or not, are likely too small.
+Complete-case analysis dropped `r n_dropped` rows; `monthly_income` was excluded
+because including it would have cost a further `r nrow(dat_model) - nrow(dat_inc)`
+rows for no gain, but that means household economic position is simply
+unadjusted for. Sodium intake, family history, kidney function and stress are
+all absent. Finally, `r fmt(100 * s$r.squared, 0)`% explained variance means
+that most of the variation in systolic pressure in this sample is not captured
+by any measured characteristic.
+
+**Future work.** Refit with continuous age and measured BMI, a facility
+identifier for a mixed-effects model, and a medication variable, none of which
+this extract carries.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+- **Works well as a student project.** Continuous, fully observed outcome
+  (`r sum(is.na(dat$systolic_bp))` missing values), `r nrow(dat_model)`
+  complete cases, one unambiguous dominant signal (age) plus a second clean one
+  (BMI category), and at least two predictors that collapse on adjustment. That
+  is exactly the Purpose 3 teaching shape.
+- **FATAL trap: `hypertension` must never be a predictor here.** `hypertension`
+  is defined *from* the measured average blood pressure. Putting it on the
+  right-hand side is regressing the outcome on a threshold version of itself; it
+  will produce a large R-squared and a meaningless model. `diastolic_bp` is the
+  same measurement's other half (r = `r fmt(cor(dat$systolic_bp, dat$diastolic_bp), 2)`)
+  and must also stay out. Both need calling out in the brief.
+- **THE missing-data teaching case.** `monthly_income` is
+  `r fmt(100 * mean(is.na(dat$monthly_income)), 1)`% missing and listwise
+  deletion drops the sample from `r nrow(dat_model)` to `r nrow(dat_inc)`
+  (`r fmt(100 * nrow(dat_inc) / nrow(dat), 0)`% of the file) for a variable that
+  contributes nothing (p `r pv(inc_p)`). Missingness is strongly patterned by
+  facility (`r fmt(miss_by_site$pct[miss_by_site$study_site == "private"], 0)`%
+  private vs `r fmt(miss_by_site$pct[miss_by_site$study_site == "faith"], 0)`%
+  faith) and by education, so it is not MCAR. This is the best missing-data
+  example in the catalogue and should be a required part of the brief.
+- **No continuous predictors exist in this file.** Age is banded, BMI is
+  categorised. Students will try to report "mmHg per kg/m2" or "per year of age"
+  and cannot. The model is a cell-means model; say so up front.
+- **Heteroscedasticity is real and flagged (p < 0.001)** with a heavy right
+  tail. Good: it gives a genuine reason to run `check_heteroscedasticity()` and
+  HC3, and the conclusions survive
+  (`r if (n_flip == 0) "no significance flips" else paste(n_flip, "significance flips")`).
+- **`current_smoker` is sparse**: `r sum(dat$current_smoker == "Yes")` smokers in
+  the whole file, `r sum(dat_model$current_smoker == "Yes" & dat_model$sex == "Male")`
+  of `r sum(dat_model$current_smoker == "Yes")` of them men. The coefficient is
+  imprecise and largely a sex contrast. Keep it to one degree of freedom and do
+  not interact it with anything.
+- **`bmi_category` "Underweight" is thin** (`r sum(dat_model$bmi_category == "Underweight")`
+  in the analytic sample) and the strongly negative underweight coefficient is
+  probably reverse causation (illness-related weight loss), not protection.
+- **Clustering cannot be modelled.** Three facilities, no facility ID, so
+  `study_site` is the only handle and a random effect is impossible. Standard
+  errors are optimistic.
+- **Modest R-squared (`r fmt(s$r.squared, 3)`)** will disappoint students who
+  expect a "good" model; pre-empt it.
+- No separation, no collinearity (max VIF `r fmt(max_vif, 2)`), no influential-point
+  problems.

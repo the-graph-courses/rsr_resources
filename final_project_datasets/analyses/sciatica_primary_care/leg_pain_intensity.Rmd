@@ -1,0 +1,536 @@
+---
+title: "Leg-pain intensity in primary-care patients with sciatica"
+subtitle: "Dataset 2: Sciatica in primary care"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "sciatica_primary_care.csv"),
+                    show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "leg_pain_intensity"
+predictors <- c("age_yrs", "sex", "back_pain_intensity", "leg_pain_duration",
+                "below_knee_pain", "leg_pain_worse", "neural_tension_positive",
+                "mri_nerve_root_compression")
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    sex = factor(sex, levels = c("female", "male"), labels = c("Female", "Male")),
+    back_pain_duration = factor(back_pain_duration,
+                                levels = c("under_6_weeks", "6_to_12_weeks", "over_12_weeks"),
+                                labels = c("<6 weeks", "6-12 weeks", ">12 weeks")),
+    leg_pain_duration = factor(leg_pain_duration,
+                               levels = c("under_6_weeks", "6_to_12_weeks", "over_12_weeks"),
+                               labels = c("<6 weeks", "6-12 weeks", ">12 weeks")),
+    comorbidities = factor(comorbidities,
+                           levels = c("none", "one", "two_or_more"),
+                           labels = c("None", "One", "Two or more")),
+    general_health = factor(general_health,
+                            levels = c("good", "fair", "poor"),
+                            labels = c("Good", "Fair", "Poor")),
+    across(c(leg_pain_worse, cough_sneeze_positive, subjective_sensory_changes,
+             below_knee_pain, neural_tension_positive, neurological_deficit,
+             mri_nerve_root_compression, clinician_sciatica),
+           ~ factor(.x, levels = c(0, 1), labels = c("No", "Yes")))
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+# `id` is a row label with 395 distinct values and is never entered into a model.
+miss_tbl <- dat |>
+  summarise(across(everything(), ~ sum(is.na(.x)))) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "n_missing") |>
+  filter(n_missing > 0) |>
+  arrange(desc(n_missing))
+
+# `leg_pain_worse` is a self-reported comparison, not an arithmetic function of the
+# two numeric pain scores; this cross-tabulation documents that it is not
+# deterministic and is therefore safe to enter as a predictor.
+agree <- mean(
+  (dat$leg_pain_worse == "Yes") ==
+    (dat$leg_pain_intensity > dat$back_pain_intensity)
+)
+```
+
+# Introduction
+
+In sciatica it is leg pain, not back pain, that defines the syndrome and that
+patients most want relieved; leg-pain intensity is the primary outcome in most
+sciatica trials and one of the few things a GP can act on at the first visit.
+These data come from a cross-sectional diagnostic study of `r nrow(dat_raw)`
+adults presenting to Dutch general practices with a new episode of sciatica, each
+of whom had a standardised history, a physical examination and a lumbar MRI
+(Verwoerd et al.; sciatica in general practice, MRI substudy). Knowing which
+history items and examination findings mark out the patients in most leg pain
+tells us whether severity is something the consultation can identify or whether
+it is essentially unexplained by the routine assessment.
+
+**Aim.** Among primary-care patients presenting with sciatica, we examined which
+of age, sex, concurrent back-pain intensity, duration of the leg-pain episode,
+pain radiating below the knee, leg pain being worse than back pain, a positive
+neural-tension test and nerve-root compression on MRI are independently
+associated with leg-pain intensity, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** Cross-sectional baseline data from a primary-care sciatica
+cohort: `r nrow(dat_raw)` adults consulting Dutch general practitioners with a
+new episode of sciatica, all assessed at a single occasion. Age ranged from
+`r round(min(dat$age_yrs), 0)` to `r round(max(dat$age_yrs), 0)` years.
+
+**Variables.** The outcome is `leg_pain_intensity`, average leg-pain intensity
+on a 0-10 numerical rating scale, where higher means worse pain. Predictors are
+`age_yrs` (years), `sex` (reference: female, the larger group),
+`back_pain_intensity` (0-10 numerical rating scale), `leg_pain_duration`
+(reference: under 6 weeks, the largest group), `below_knee_pain` (pain extends
+below the knee; reference: no), `leg_pain_worse` (patient reports leg pain worse
+than back pain; reference: no), `neural_tension_positive` (at least one positive
+neural-tension test; reference: no) and `mri_nerve_root_compression` (nerve-root
+compression visible on MRI; reference: no).
+
+**Two predictor choices need justification.** First, `back_pain_intensity` is
+entered even though it is a pain measure like the outcome. They are related but
+distinct: back pain and leg pain are separately elicited on separate scales, they
+correlate r = `r round(cor(dat$back_pain_intensity, dat$leg_pain_intensity), 2)`
+rather than 1, and `r round(100 * mean(dat$back_pain_intensity > dat$leg_pain_intensity), 0)`%
+of patients report *more* back pain than leg pain. Including it answers a
+sharper question -- which findings mark out severe leg pain over and above a
+patient's general pain level -- and excluding it would leave every other
+coefficient confounded by overall pain reporting. Second, `leg_pain_worse` is a
+patient's own comparison of the two sites, not an arithmetic recoding of the two
+scores: it agrees with the sign of
+`leg_pain_intensity - back_pain_intensity` in only
+`r round(100 * agree, 0)`% of patients, so it carries independent information
+and is not a deterministic function of the outcome.
+
+`id` is a participant label and is excluded from every model.
+`clinician_sciatica` -- the GP's high-confidence diagnosis -- is deliberately
+**not** used. It is a summary judgement built from the same examination findings
+that appear as predictors here, correlating 0.61 with `neural_tension_positive`
+and 0.54 with `below_knee_pain`; putting it in the same model as those signs
+would make their coefficients uninterpretable.
+
+**Statistical analysis.** Linear regression (`lm()`), justified because the
+outcome is a numerical rating scale spread across its full 0-10 range and close
+to symmetric. We fitted a univariable model for each predictor first, then a
+single multivariable model containing all of them. Predictors were chosen in
+advance on subject-matter grounds, not by significance. Significance threshold
+0.05; estimates are reported with 95% confidence intervals. Assumptions were
+checked with `performance::check_model()` plus formal tests of
+heteroscedasticity, residual normality and collinearity; HC3 robust standard
+errors via `lmtest::coeftest()` with `sandwich::vcovHC()` are reported as a
+sensitivity check because the outcome is bounded. Analysis used
+`r R.version.string` with tidyverse, gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped,
+`r round(100 * n_dropped / nrow(dat), 1)`%). Missingness in the file is confined
+to
+`r paste(sprintf("%s (%d)", miss_tbl$variable, miss_tbl$n_missing), collapse = ", ")`.
+The outcome is complete; essentially all the loss here comes from
+`leg_pain_duration`, the single most incomplete column in the dataset. This is
+the largest complete-case loss of the three outcomes analysed for this dataset,
+and it is entirely a consequence of including that one predictor.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(missing = "no") |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics.**")
+```
+
+The analysed sample has a median leg-pain intensity of
+`r round(median(dat_model[[outcome]]), 1)`/10 with the interquartile range
+spanning `r round(quantile(dat_model[[outcome]], 0.25), 1)` to
+`r round(quantile(dat_model[[outcome]], 0.75), 1)`, so leg pain is moderate to
+severe in most patients but far from uniformly maximal. Clinical signs are
+common: `r round(100 * mean(dat_model$below_knee_pain == "Yes"), 0)`% report pain
+below the knee, `r round(100 * mean(dat_model$neural_tension_positive == "Yes"), 0)`%
+have a positive neural-tension test and
+`r round(100 * mean(dat_model$mri_nerve_root_compression == "Yes"), 0)`% have
+nerve-root compression on MRI. Only about half say their leg pain is worse than
+their back pain, which is a reminder that "sciatica" in primary care is often a
+mixed back-and-leg presentation.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Leg-pain intensity against back-pain intensity, split by whether the patient reports leg pain as worse than back pain. The dashed line is equality; the solid line is a linear smooth with a 95% confidence band. Points are jittered because both scales are recorded in thirds of a point."}
+ggplot(dat_model, aes(x = back_pain_intensity, y = .data[[outcome]])) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", colour = "grey55") +
+  geom_jitter(width = 0.12, height = 0.12, alpha = 0.3, size = 1.1) +
+  geom_smooth(method = "lm", formula = y ~ x, colour = "#2c7fb8") +
+  facet_wrap(~ leg_pain_worse,
+             labeller = labeller(leg_pain_worse = c(
+               "No" = "Leg pain NOT worse than back pain",
+               "Yes" = "Leg pain worse than back pain"))) +
+  labs(x = "Back-pain intensity (0-10 NRS)",
+       y = "Leg-pain intensity (0-10 NRS)")
+```
+
+Leg pain and back pain rise together with a slope well below the line of
+equality, and the whole cloud shifts upward by roughly a point when the patient
+says their leg pain is the worse of the two -- but the two panels overlap
+substantially, confirming that `leg_pain_worse` is a self-report rather than a
+recoding of which number is larger.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+```
+
+```{r uv-numbers}
+uv_est <- function(term, vars) {
+  tidy(lm(reformulate(vars, outcome), data = dat_model), conf.int = TRUE) |>
+    filter(.data$term == !!term)
+}
+fmtp <- function(p) ifelse(p < 0.001, "< 0.001", paste("=", round(p, 3)))
+u_bpi <- uv_est("back_pain_intensity", "back_pain_intensity")
+u_lpw <- uv_est("leg_pain_worseYes", "leg_pain_worse")
+u_bkp <- uv_est("below_knee_painYes", "below_knee_pain")
+u_nt  <- uv_est("neural_tension_positiveYes", "neural_tension_positive")
+u_mri <- uv_est("mri_nerve_root_compressionYes", "mri_nerve_root_compression")
+u_age <- uv_est("age_yrs", "age_yrs")
+```
+
+Back-pain intensity is by far the strongest crude predictor: each additional
+point of back pain is associated with a `r round(u_bpi$estimate, 2)`-point higher
+leg-pain score (95% CI `r round(u_bpi$conf.low, 2)` to
+`r round(u_bpi$conf.high, 2)`, p `r fmtp(u_bpi$p.value)`), and on its own it
+accounts for R² = `r round(summary(lm(leg_pain_intensity ~ back_pain_intensity, dat_model))$r.squared, 2)`
+of the variance in leg pain. Among the clinical variables, patients who report
+their leg pain as worse than their back pain score
+`r round(u_lpw$estimate, 2)` points higher (95% CI `r round(u_lpw$conf.low, 2)`
+to `r round(u_lpw$conf.high, 2)`, p `r fmtp(u_lpw$p.value)`), pain below the knee
+carries `r round(u_bkp$estimate, 2)` points (p `r fmtp(u_bkp$p.value)`), a
+positive neural-tension test `r round(u_nt$estimate, 2)` points
+(p `r fmtp(u_nt$p.value)`) and nerve-root compression on MRI
+`r round(u_mri$estimate, 2)` points (p `r fmtp(u_mri$p.value)`). Age, sex and
+leg-pain duration show no crude association: the age slope is
+`r round(u_age$estimate, 3)` points per year
+(p `r fmtp(u_age$p.value)`), and patients in their first six weeks report much
+the same leg pain as those beyond twelve.
+
+## Why adjustment is needed
+
+The crude estimates conflate a patient's specific sciatic pain with how much
+pain they report in general. `back_pain_intensity` is the clearest confounder of
+every clinical sign: patients with a positive neural-tension test have mean back
+pain
+`r round(mean(dat_model$back_pain_intensity[dat_model$neural_tension_positive == "Yes"]), 1)`
+versus
+`r round(mean(dat_model$back_pain_intensity[dat_model$neural_tension_positive == "No"]), 1)`
+in those without, and back pain is strongly associated with leg pain
+(r = `r round(cor(dat_model$back_pain_intensity, dat_model[[outcome]]), 2)`), so
+part of the crude neural-tension association is simply that patients with more
+pain everywhere are more likely to flinch on examination. `leg_pain_worse` is a
+second confounder, this time of the anatomical signs: it correlates with
+`below_knee_pain`
+(`r round(100 * mean(dat_model$leg_pain_worse[dat_model$below_knee_pain == "Yes"] == "Yes"), 0)`%
+of patients with below-knee pain say leg pain is worse, versus
+`r round(100 * mean(dat_model$leg_pain_worse[dat_model$below_knee_pain == "No"] == "Yes"), 0)`%
+of those without) and is itself strongly associated with leg-pain intensity, so
+the crude below-knee estimate partly reflects the patient's own ranking of their
+two pains. `age_yrs` is a third, milder one: older patients are more likely to
+have nerve-root compression on MRI
+(r = `r round(cor(dat_model$age_yrs, as.numeric(dat_model$mri_nerve_root_compression) - 1), 2)`)
+and report slightly more leg pain, so a little of the crude MRI association is
+age. Adjustment converts "patients with a positive neural-tension test have worse
+leg pain" into the more useful "at the same back-pain level, age and pain
+ranking, a positive neural-tension test still marks out worse leg pain".
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+```
+
+```{r fit-stats}
+gl <- glance(fit)
+n_params <- length(coef(fit))
+tibble(
+  Statistic = c("R-squared", "Adjusted R-squared", "Residual SE",
+                "N (complete cases)", "Estimated parameters",
+                "Observations per parameter", "AIC"),
+  Value = c(round(gl$r.squared, 3), round(gl$adj.r.squared, 3),
+            round(gl$sigma, 2), nrow(dat_model), n_params,
+            round(nrow(dat_model) / n_params, 1), round(AIC(fit), 1))
+) |>
+  gt() |>
+  tab_header(title = "Model fit")
+```
+
+```{r mv-numbers}
+tm <- tidy(fit, conf.int = TRUE)
+g <- function(t) tm |> filter(term == t)
+# What the model looks like without the back-pain predictor, for context.
+r2_noback <- summary(lm(reformulate(setdiff(predictors, "back_pain_intensity"), outcome),
+                        data = dat_model))$r.squared
+```
+
+Adjusting for all eight predictors, back-pain intensity remains overwhelmingly
+the strongest association: conditional on everything else, each extra point of
+back pain is associated with a `r round(g("back_pain_intensity")$estimate, 2)`-point
+higher leg-pain score (95% CI `r round(g("back_pain_intensity")$conf.low, 2)` to
+`r round(g("back_pain_intensity")$conf.high, 2)`,
+p `r fmtp(g("back_pain_intensity")$p.value)`). Three clinical variables remain
+independently associated. Reporting leg pain as worse than back pain adds
+`r round(g("leg_pain_worseYes")$estimate, 2)` points (95% CI
+`r round(g("leg_pain_worseYes")$conf.low, 2)` to
+`r round(g("leg_pain_worseYes")$conf.high, 2)`,
+p `r fmtp(g("leg_pain_worseYes")$p.value)`), pain below the knee adds
+`r round(g("below_knee_painYes")$estimate, 2)` points
+(p `r fmtp(g("below_knee_painYes")$p.value)`), and nerve-root compression on MRI
+adds `r round(g("mri_nerve_root_compressionYes")$estimate, 2)` points
+(p `r fmtp(g("mri_nerve_root_compressionYes")$p.value)`). The neural-tension test
+is now only marginally associated
+(`r round(g("neural_tension_positiveYes")$estimate, 2)` points,
+p `r fmtp(g("neural_tension_positiveYes")$p.value)`). Age retains a small
+association (`r round(g("age_yrs")$estimate, 3)` points per year,
+p `r fmtp(g("age_yrs")$p.value)`); sex and leg-pain duration contribute nothing.
+
+The model explains R² = `r round(gl$r.squared, 3)`
+(adjusted R² = `r round(gl$adj.r.squared, 3)`) with
+`r round(nrow(dat_model) / n_params, 1)` observations per estimated parameter.
+That R² looks impressive but is mostly borrowed: dropping `back_pain_intensity`
+alone takes it from `r round(gl$r.squared, 2)` to `r round(r2_noback, 2)`, so the
+seven clinical and demographic predictors together explain only about
+`r round(100 * r2_noback, 0)`% of the variance in leg-pain intensity. The honest
+reading is that the consultation explains leg-pain severity poorly unless you are
+allowed to ask how much back pain the patient also has.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+Three estimates move substantially, all toward the null. The **neural-tension
+test** collapses from `r round(u_nt$estimate, 2)` points crude to
+`r round(g("neural_tension_positiveYes")$estimate, 2)` adjusted -- a
+`r round(100 * (1 - g("neural_tension_positiveYes")$estimate / u_nt$estimate), 0)`%
+attenuation -- and drops from p `r fmtp(u_nt$p.value)` to
+p `r fmtp(g("neural_tension_positiveYes")$p.value)`; its crude association was
+largely the general-pain confounding described above, and it is the one predictor
+whose significance is genuinely fragile. **Pain below the knee** halves from
+`r round(u_bkp$estimate, 2)` to `r round(g("below_knee_painYes")$estimate, 2)`
+points but stays firmly significant, so radiation below the knee marks out worse
+leg pain even at the same overall pain level and the same self-ranked pain
+pattern. **MRI nerve-root compression** attenuates from
+`r round(u_mri$estimate, 2)` to
+`r round(g("mri_nerve_root_compressionYes")$estimate, 2)` points and stays just
+significant -- notable because it means the scan adds a little information about
+symptom severity beyond the history, though less than a single point of pain.
+**Leg pain worse than back pain** barely moves
+(`r round(u_lpw$estimate, 2)` to `r round(g("leg_pain_worseYes")$estimate, 2)`)
+and neither does **age** (`r round(u_age$estimate, 3)` to
+`r round(g("age_yrs")$estimate, 3)`), confirming that neither is standing in for
+the rest of the set. **Back-pain intensity** actually moves slightly *away* from
+the null (`r round(u_bpi$estimate, 2)` to
+`r round(g("back_pain_intensity")$estimate, 2)`): the clinical signs were
+suppressing it a little, because patients with strong sciatic signs report
+relatively more leg pain for a given amount of back pain. No predictor gains
+significance on adjustment; one (neural tension) nearly loses it.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r diag-tests}
+het <- check_heteroscedasticity(fit)
+nor <- check_normality(fit)
+col <- check_collinearity(fit)
+out <- check_outliers(fit)
+het; nor; col; out
+```
+
+```{r diag-numbers}
+vif_tab <- as.data.frame(col) |> arrange(desc(VIF))
+max_vif <- round(max(vif_tab$VIF), 2)
+max_vif_term <- vif_tab$Term[which.max(vif_tab$VIF)]
+p_het <- as.numeric(het); p_nor <- as.numeric(nor)
+n_out <- sum(out)
+n_pred_out <- sum(predict(fit) < 0 | predict(fit) > 10)
+```
+
+**Linearity.** The fitted-versus-residual smooth is essentially flat and the
+posterior-predictive check tracks the observed distribution reasonably, though
+simulated values spill below 0 and above 10 where the real scale cannot go.
+In practice `r n_pred_out` of the `r nrow(dat_model)` fitted values fall outside
+the 0-10 range, so the bound is not actually being violated at observed covariate
+patterns; the linear model is adequate here even though it is formally defined on
+the wrong support.
+
+**Homoscedasticity.** Constant variance is **not** rejected
+(`check_heteroscedasticity()` p = `r round(p_het, 3)`), so ordinary standard
+errors are valid and HC3 re-estimation is not required. Because the outcome is
+bounded and residual spread narrows near the ceiling, robust standard errors are
+nevertheless reported below as a sensitivity check.
+
+```{r hc3, results="asis"}
+rob <- lmtest::coeftest(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+tibble(
+  Term = rownames(rob),
+  `SE (OLS)` = round(summary(fit)$coefficients[, 2], 3),
+  `SE (HC3)` = round(rob[, 2], 3),
+  `p (OLS)` = round(summary(fit)$coefficients[, 4], 3),
+  `p (HC3)` = round(rob[, 4], 3)
+) |>
+  gt() |> tab_header(title = "HC3 robust standard errors (sensitivity)") |>
+  as_raw_html() |> cat()
+```
+
+```{r hc3-note}
+p_nt_ols <- summary(fit)$coefficients["neural_tension_positiveYes", 4]
+p_nt_hc3 <- rob["neural_tension_positiveYes", 4]
+```
+
+Under HC3 the neural-tension coefficient moves from p = `r round(p_nt_ols, 3)` to
+p = `r round(p_nt_hc3, 3)`, i.e. it sits on the 0.05 boundary either way; every
+other conclusion is unchanged. This is the one substantive result in the model
+that a reader should treat as provisional.
+
+**Normality of residuals.** Formally **rejected**
+(`check_normality()` p = `r round(p_nor, 3)`). The Q-Q plot shows mild departure
+in the tails, driven by the coarse recording of the 0-10 scale in thirds of a
+point and by the `r sum(dat_model[[outcome]] == 10)` patients piled at the
+ceiling of 10. With n = `r nrow(dat_model)` the
+central limit theorem covers the coefficient standard errors, so the practical
+consequence is small, but this is a genuine assumption failure and should be
+reported as one rather than waved away.
+
+**Influential points.** `check_outliers()` flags `r n_out` observation(s) at the
+Cook's-distance threshold.
+
+**Collinearity.** No problem: the largest variance inflation factor is
+`r max_vif_term` at `r max_vif`, well under 5. `leg_pain_worse` and
+`below_knee_pain` are correlated but not collinear
+(VIF `r round(vif_tab$VIF[vif_tab$Term == "leg_pain_worse"], 2)` and
+`r round(vif_tab$VIF[vif_tab$Term == "below_knee_pain"], 2)`), and
+`back_pain_intensity` has a VIF of only
+`r round(vif_tab$VIF[vif_tab$Term == "back_pain_intensity"], 2)` despite
+correlating 0.6 with the outcome -- a useful reminder that VIF concerns
+predictor-predictor, not predictor-outcome, correlation. Excluding
+`clinician_sciatica` avoided the one genuine collinearity threat in this file.
+
+# Discussion
+
+Among primary-care patients presenting with sciatica, leg-pain intensity is
+predicted overwhelmingly by how much back pain the patient also reports. Beyond
+that, three things independently mark out worse leg pain: the patient's own
+judgement that the leg is the worse of the two sites (about
+`r round(g("leg_pain_worseYes")$estimate, 1)` points), radiation below the knee
+(about `r round(g("below_knee_painYes")$estimate, 1)` points) and nerve-root
+compression on MRI (about
+`r round(g("mri_nerve_root_compressionYes")$estimate, 1)` points on the 0-10
+scale). A positive neural-tension test, which looks impressive crudely, is
+almost entirely explained away by overall pain level. Practically, the history
+carries more information about leg-pain severity than the examination does, and
+the scan adds little: the MRI coefficient is smaller than the minimal clinically
+important difference on a 0-10 pain scale, which is usually put at 1.5 to 2
+points. Duration of the leg-pain episode is irrelevant to severity, which argues
+against "how long has it been going on" as a triage question for pain intensity.
+
+**Limitations.** The design is cross-sectional and all variables come from the
+same consultation, so the back-pain-leg-pain association cannot be given a
+direction and is inflated by common-method bias: the same patient rated both
+scales minutes apart. The R² of `r round(gl$r.squared, 2)` is therefore not a
+measure of clinical predictability -- strip out back pain and it falls to
+`r round(r2_noback, 2)`. Residual normality is formally violated, and the
+outcome is bounded at 0 and 10 with `r sum(dat_model[[outcome]] == 10)` patients
+at the ceiling, so fitted values can and do stray outside the achievable range.
+Complete-case analysis dropped `r n_dropped` patients
+(`r round(100 * n_dropped / nrow(dat), 1)`%), almost all of them missing
+`leg_pain_duration`; if patients who could not date their episode differ
+systematically in pain, the estimates are mildly biased. The file has no
+analgesic use, no psychological measures and no work status, all of which
+plausibly affect reported pain, so residual confounding is likely. All estimates
+are associations, not causal effects.
+
+**Future work.** A repeat pain rating at three months would show whether the
+below-knee and MRI findings predict persistence of leg pain, which is the
+clinically actionable question.
+
+# Feasibility notes
+
+*Not part of a student report.*
+
+- **Workable but weaker than `disability_score`.** The headline R² of
+  `r round(gl$r.squared, 2)` is dominated by one predictor;
+  without `back_pain_intensity` the model explains only
+  `r round(r2_noback, 2)`. Students who include back pain will report a
+  gratifying model and learn the wrong lesson about how predictable pain is;
+  students who exclude it get an honest but flat result. Either way the
+  supervisor has to raise the point.
+- **Complete-case N = `r nrow(dat_model)`** of `r nrow(dat)`
+  (`r n_dropped` dropped, `r round(100 * n_dropped / nrow(dat), 1)`%) -- the
+  largest loss of the three outcomes, and entirely attributable to
+  `leg_pain_duration` (19 missing), which then turns out to be non-significant.
+  A good live demonstration that listwise deletion charges you for predictors
+  before you know whether they are worth it.
+- **Residual normality is rejected** (p = `r round(p_nor, 3)`) and the outcome is
+  bounded and discrete: values are recorded in thirds of a point,
+  `r sum(dat_model[[outcome]] == 10)` patients sit at the 10 ceiling and
+  `r sum(dat_model[[outcome]] == 0)` at the 0 floor, and `r n_pred_out` fitted
+  values fall outside 0-10. Homoscedasticity passes
+  (p = `r round(p_het, 3)`), so HC3 is not required; it is shown anyway and
+  moves the neural-tension p-value across the 0.05 line, which is worth knowing
+  before a student stakes a conclusion on it.
+- **No collinearity problem**: max VIF `r max_vif`. The `clinician_sciatica`
+  trap applies here exactly as elsewhere -- it correlates 0.61 with
+  `neural_tension_positive` and 0.54 with `below_knee_pain` and must stay out of
+  any model containing those signs.
+- **Watch `leg_pain_worse`.** It looks like it might be a deterministic
+  recoding of `leg_pain_intensity > back_pain_intensity`, but it agrees with that
+  comparison in only `r round(100 * agree, 0)`% of patients, so it is legitimate.
+  Verify this before assuming either way -- a genuinely deterministic version of
+  this variable would have made the outcome unusable.
+- **Fragile result to flag**: `neural_tension_positive` sits at
+  p `r fmtp(g("neural_tension_positiveYes")$p.value)` adjusted and crosses 0.05
+  under robust SEs. Do not let a student build a discussion around it.

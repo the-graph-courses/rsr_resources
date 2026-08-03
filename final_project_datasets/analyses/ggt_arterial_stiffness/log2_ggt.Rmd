@@ -1,0 +1,648 @@
+---
+title: "Serum gamma-glutamyltranspeptidase in a Japanese health-check cohort"
+subtitle: "Dataset 9: Liver enzymes and arterial stiffness in a Japanese health-check cohort"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "ggt_arterial_stiffness.csv"),
+                    show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names. `ggt` and `log2_ggt`
+# are the same variable on two scales and neither can appear on the right-hand
+# side; ALT and AST can, and do.
+outcome    <- "log2_ggt"
+predictors <- c("age_yrs", "sex", "bmi", "systolic_bp", "smoking_status",
+                "alcohol_g_per_week", "regular_exercise", "fasting_glucose",
+                "triglycerides", "hdl_cholesterol", "egfr", "alt", "ast")
+
+# The full catalogue list minus the outcome, used once to document the
+# collinearity that motivated the cut. No inference is drawn from that model.
+predictors_all <- c("age_yrs", "sex", "bmi", "systolic_bp", "diastolic_bp",
+                    "smoking_status", "alcohol_g_per_week", "regular_exercise",
+                    "fasting_glucose", "uric_acid", "total_cholesterol",
+                    "hdl_cholesterol", "ldl_cholesterol", "triglycerides",
+                    "egfr", "alt", "ast")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    sex = lab(factor(sex, levels = c("male", "female"), labels = c("Male", "Female")),
+              "Sex"),
+    smoking_status = lab(factor(smoking_status,
+                                levels = c("never", "former", "current"),
+                                labels = c("Never", "Former", "Current")),
+                         "Smoking status"),
+    regular_exercise = lab(factor(regular_exercise, levels = c(0, 1),
+                                  labels = c("No", "Yes")),
+                           "Takes regular exercise"),
+    age_yrs            = lab(age_yrs, "Age (years)"),
+    bmi                = lab(bmi, "BMI (kg/m2)"),
+    systolic_bp        = lab(systolic_bp, "Systolic BP (mmHg)"),
+    diastolic_bp       = lab(diastolic_bp, "Diastolic BP (mmHg)"),
+    alcohol_g_per_week = lab(alcohol_g_per_week, "Alcohol (g/week)"),
+    fasting_glucose    = lab(fasting_glucose, "Fasting glucose (mg/dL)"),
+    uric_acid          = lab(uric_acid, "Uric acid (mg/dL)"),
+    total_cholesterol  = lab(total_cholesterol, "Total cholesterol (mg/dL)"),
+    triglycerides      = lab(triglycerides, "Triglycerides (mg/dL)"),
+    hdl_cholesterol    = lab(hdl_cholesterol, "HDL cholesterol (mg/dL)"),
+    ldl_cholesterol    = lab(ldl_cholesterol, "LDL cholesterol (mg/dL)"),
+    egfr               = lab(egfr, "eGFR (mL/min/1.73m2)"),
+    alt                = lab(alt, "ALT (U/L)"),
+    ast                = lab(ast, "AST (U/L)"),
+    log2_ggt           = lab(log2_ggt, "Gamma-GT (log2 U/L)")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", fmt(p, 3)))
+# Convert a log2 coefficient into a multiplicative effect on raw GGT.
+mult <- function(b, per = 1) fmt(2^(b * per), 3)
+```
+
+```{r collinearity-evidence}
+# Documented redundancies in the suggested predictor list, quantified once.
+bp_r  <- cor(dat$systolic_bp, dat$diastolic_bp)
+enz_r <- cor(dat$alt, dat$ast)
+
+fw  <- lm(total_cholesterol ~ ldl_cholesterol + hdl_cholesterol + triglycerides,
+          data = dat)
+fw_r2   <- summary(fw)$r.squared
+fw_coef <- coef(fw)
+
+dat_all <- dat |> select(all_of(c(outcome, predictors_all))) |> drop_na()
+fit_all <- lm(reformulate(predictors_all, outcome), data = dat_all)
+cc_all  <- as.data.frame(check_collinearity(fit_all))
+vall <- function(term, d = 1) fmt(cc_all$VIF[cc_all$Term == term], d)
+
+# The deterministic relationship that must never enter the model.
+det_gap <- max(abs(log2(dat$ggt) - dat$log2_ggt))
+skew <- function(x) mean((x - mean(x))^3) / sd(x)^3
+```
+
+# Introduction
+
+A general health-check programme in Japan enrolled `r nrow(dat)` men and women
+aged `r min(dat$age_yrs)` to `r max(dat$age_yrs)` years and measured a full
+fasting biochemistry panel alongside abdominal ultrasound and automated vascular
+measurements; the cohort is reported in *BMJ Open* 2014;4:e005413.
+Gamma-glutamyltranspeptidase (GGT) is the liver enzyme most often used as a
+marker of alcohol intake, but it also rises with hepatic steatosis, oxidative
+stress and metabolic syndrome, and raised GGT predicts cardiovascular disease and
+diabetes independently of drinking. Understanding what a raised GGT at a routine
+health check actually reflects is therefore a question about the interpretation
+of a very widely ordered test.
+
+**Aim.** Among these health-check attendees, we examined which of age, sex, body
+mass index, systolic blood pressure, smoking status, alcohol intake, regular
+exercise, fasting glucose, triglycerides, HDL cholesterol, kidney function and
+the two other liver enzymes (ALT and AST) are independently associated with serum
+GGT, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** A cross-sectional Japanese health-check cohort of `r nrow(dat)`
+adults attending a voluntary medical check-up programme that included a fasting
+blood panel, abdominal ultrasound and automated measurement of pulse-wave
+velocity and the ankle-brachial index.
+
+**Variables.** The outcome is `log2_ggt`, serum gamma-GT on a base-2 logarithmic
+scale. The raw enzyme is severely right-skewed (skewness
+`r fmt(skew(dat$ggt), 2)`, median `r median(dat$ggt)` U/L, maximum
+`r max(dat$ggt)` U/L); on the log2 scale the skewness falls to
+`r fmt(skew(dat$log2_ggt), 2)`, which is why the catalogue ships the transformed
+version and why we model it. A coefficient of *b* on this scale means that a
+one-unit increase in the predictor multiplies GGT by 2^*b*. Predictors are age
+(years), sex (reference Male, the larger group at `r sum(dat$sex == "Male")` of
+`r nrow(dat)`), BMI (kg/m2), systolic blood pressure (mmHg), smoking status
+(three levels, reference Never, the largest group at
+`r sum(dat$smoking_status == "Never")`), alcohol intake (g/week), regular
+exercise (reference No, the unexposed and larger group), fasting glucose
+(mg/dL), triglycerides (mg/dL), HDL cholesterol (mg/dL), estimated glomerular
+filtration rate (mL/min/1.73m2), ALT (U/L) and AST (U/L).
+
+**`ggt` is excluded from the predictor set as a matter of arithmetic, not
+judgement.** `log2_ggt` is exactly `log2(ggt)` in this file - the largest
+absolute discrepancy across all `r nrow(dat)` rows is
+`r format(det_gap, scientific = TRUE, digits = 2)`, i.e. floating-point noise -
+so regressing the outcome on `ggt` is regressing a variable on a monotone
+transformation of itself. Any model containing it is circular and its R-squared
+is meaningless.
+
+**The predictor set was cut from the 17 remaining suggested predictors to
+`r length(predictors)`.** With `r nrow(dat_model)` complete cases and
+`r length(coef(lm(reformulate(predictors, outcome), data = dat_model))) - 1L`
+parameters this model already has about
+`r fmt(nrow(dat_model) / (length(coef(lm(reformulate(predictors, outcome), data = dat_model))) - 1L), 0)`
+observations per parameter, so the 10-15 observations-per-parameter budget would
+have tolerated all 17; the cut is about **redundancy** and **interpretability**
+instead. Systolic and diastolic pressure correlate at r = `r fmt(bp_r, 2)` and
+carry VIFs of `r vall("systolic_bp")` and `r vall("diastolic_bp")` when both are
+included, so only systolic pressure is kept. The four lipid measures satisfy the
+Friedewald identity total = LDL + HDL + triglycerides/5 to within rounding
+(regressing total cholesterol on the other three gives R-squared
+`r fmt(fw_r2, 3)` with coefficients `r fmt(fw_coef["ldl_cholesterol"], 2)`,
+`r fmt(fw_coef["hdl_cholesterol"], 2)` and `r fmt(fw_coef["triglycerides"], 2)`),
+and with all four in the model the VIFs reach `r vall("total_cholesterol")` and
+`r vall("ldl_cholesterol")`; only HDL cholesterol and triglycerides, the two
+metabolic-syndrome components, are kept. Uric acid is dropped because it
+duplicates information already carried by adiposity and kidney function
+(r = `r fmt(cor(dat$uric_acid, dat$egfr), 2)` with eGFR,
+r = `r fmt(cor(dat$uric_acid, dat$bmi), 2)` with BMI).
+
+**ALT and AST are deliberately retained, despite correlating at
+r = `r fmt(enz_r, 2)`.** With GGT as the outcome the other two enzymes stop being
+nuisance duplicates and become the substantive question: does GGT carry
+information about the liver beyond what ALT and AST already say? Their VIFs are
+reported explicitly in the diagnostics, and the interpretation of each is
+conditional on the other.
+
+**Statistical analysis.** `lm()`, justified because the outcome is a continuous
+(log-transformed) measurement. We fitted a univariable model for each predictor
+first, then a single multivariable model containing all of them. Predictors were
+chosen in advance on subject-matter grounds, not by significance. Significance
+threshold 0.05; estimates are reported with 95% confidence intervals. Assumptions
+were checked with `performance::check_model()`, `check_heteroscedasticity()` and
+`check_collinearity()`, and because non-constant variance was flagged we
+additionally report HC3 heteroscedasticity-consistent standard errors. Analysis
+used `r R.version.string` with tidyverse, gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped). The outcome is complete; the entire
+loss comes from `regular_exercise` (`r sum(is.na(dat$regular_exercise))` missing)
+and `alcohol_g_per_week` (`r sum(is.na(dat$alcohol_g_per_week))` missing), which
+do not overlap. Only `r sum(complete.cases(dat_raw))` of `r nrow(dat)` rows are
+complete on *every* column in the file.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(missing = "no") |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics.**")
+```
+
+Median log2 GGT is `r fmt(median(dat_model$log2_ggt), 2)`, i.e.
+`r fmt(2^median(dat_model$log2_ggt), 0)` U/L on the raw scale, with an
+interquartile range spanning
+`r fmt(2^quantile(dat_model$log2_ggt, 0.25), 0)` to
+`r fmt(2^quantile(dat_model$log2_ggt, 0.75), 0)` U/L - a factor of about
+`r fmt(2^(quantile(dat_model$log2_ggt, 0.75) - quantile(dat_model$log2_ggt, 0.25)), 1)`
+between the quartiles, which is why a log scale is needed. The cohort is
+`r fmt(100 * mean(dat_model$sex == "Male"), 0)`% male, median age
+`r median(dat_model$age_yrs)` years, and reported alcohol intake has a median of
+only `r fmt(median(dat_model$alcohol_g_per_week), 1)` g/week but an upper
+quartile of `r fmt(quantile(dat_model$alcohol_g_per_week, 0.75), 0)` g/week: half
+the cohort barely drinks and a quarter drinks heavily.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Log2 gamma-GT against ALT, by sex, with linear smooths."}
+ggplot(dat_model, aes(alt, log2_ggt, colour = sex)) +
+  geom_point(alpha = 0.35, size = 1.4) +
+  geom_smooth(method = "lm", se = TRUE, linewidth = 0.9) +
+  scale_x_continuous(trans = "log2",
+                     breaks = c(6, 12, 25, 50, 100, 150)) +
+  scale_colour_manual(values = c(Male = "#2E6F95", Female = "#C46B4A")) +
+  labs(x = "ALT (U/L, log2 axis)", y = "Gamma-GT (log2 U/L)", colour = "Sex")
+```
+
+GGT rises steadily with ALT in both sexes and the two slopes are close to
+parallel, but the male line sits roughly half a log2 unit above the female line
+across the whole range - at any given ALT, men have around
+`r fmt(2^(median(dat_model$log2_ggt[dat_model$sex == "Male"]) - median(dat_model$log2_ggt[dat_model$sex == "Female"])), 1)`
+times the GGT of women.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(lm(reformulate(v, outcome), data = dat_model), conf.int = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 4) {
+  r <- utid[utid$term == term, ]
+  sprintf("%s log2 units (95%% CI %s to %s)", fmt(r$estimate, d),
+          fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+ue <- function(term) utid$estimate[utid$term == term]
+```
+
+Almost everything is associated with GGT crudely. The two other liver enzymes are
+the strongest: each additional U/L of AST is associated with `r ug("ast")`
+(p `r up("ast")`), i.e. GGT multiplied by `r mult(ue("ast"), 10)` per 10 U/L, and
+each additional U/L of ALT with `r ug("alt")` (p `r up("alt")`), a factor of
+`r mult(ue("alt"), 10)` per 10 U/L. Women have `r ug("sexFemale", 3)` lower log2
+GGT than men (p `r up("sexFemale")`), i.e. about
+`r fmt(100 * (1 - 2^ue("sexFemale")), 0)`% lower GGT. Alcohol is associated with
+`r ug("alcohol_g_per_week")` per g/week (p `r up("alcohol_g_per_week")`), a
+factor of `r mult(ue("alcohol_g_per_week"), 100)` per 100 g/week. Triglycerides
+(`r ug("triglycerides")` per mg/dL, p `r up("triglycerides")`), BMI
+(`r ug("bmi", 3)` per kg/m2, p `r up("bmi")`), systolic pressure
+(`r ug("systolic_bp")` per mmHg, p `r up("systolic_bp")`) and fasting glucose
+(`r ug("fasting_glucose")` per mg/dL, p `r up("fasting_glucose")`) are all
+positively associated; HDL cholesterol (`r ug("hdl_cholesterol")` per mg/dL,
+p `r up("hdl_cholesterol")`), eGFR (`r ug("egfr")` per unit,
+p `r up("egfr")`) and regular exercise (`r ug("regular_exerciseYes", 3)`,
+p `r up("regular_exerciseYes")`) negatively. Both former
+(`r ug("smoking_statusFormer", 3)`, p `r up("smoking_statusFormer")`) and current
+smoking (`r ug("smoking_statusCurrent", 3)`, p `r up("smoking_statusCurrent")`)
+are associated with GGT roughly `r fmt(100 * (2^ue("smoking_statusCurrent") - 1), 0)`%
+higher than never smoking. The single exception is age, which shows no crude
+association at all (`r ug("age_yrs")`, p `r up("age_yrs")`).
+
+## Why adjustment is needed
+
+**Sex** is the pivotal confounder for this outcome, and it confounds almost every
+other association in the list. Men have median GGT
+`r fmt(median(2^dat_model$log2_ggt[dat_model$sex == "Male"]), 0)` U/L against
+`r fmt(median(2^dat_model$log2_ggt[dat_model$sex == "Female"]), 0)` U/L in women,
+and men also drink far more (median
+`r fmt(median(dat_model$alcohol_g_per_week[dat_model$sex == "Male"]), 0)` versus
+`r fmt(median(dat_model$alcohol_g_per_week[dat_model$sex == "Female"]), 0)`
+g/week), smoke far more
+(`r fmt(100 * mean(dat_model$smoking_status[dat_model$sex == "Male"] != "Never"), 0)`%
+ever-smokers against
+`r fmt(100 * mean(dat_model$smoking_status[dat_model$sex == "Female"] != "Never"), 0)`%),
+carry more weight and have higher blood pressure. Any crude behavioural or
+metabolic association with GGT is therefore partly a sex association.
+
+**ALT** is the second variable that must be handled explicitly, and it works on
+the BMI association. Adiposity raises GGT largely by causing hepatic steatosis,
+and steatosis raises ALT too (BMI-ALT r =
+`r fmt(cor(dat_model$bmi, dat_model$alt), 2)`), so much of the crude BMI-GGT
+association is really a shared-liver-injury association. This is confounding and
+mediation at the same time: fat in the liver is a common cause of both enzymes
+rising, but it is also the pathway by which body mass acts. **Alcohol** is the
+third: it raises GGT directly, it is strongly patterned by sex, and drinkers here
+are also smokers (median alcohol
+`r fmt(median(dat_model$alcohol_g_per_week[dat_model$smoking_status == "Current"]), 0)`
+g/week in current smokers against
+`r fmt(median(dat_model$alcohol_g_per_week[dat_model$smoking_status == "Never"]), 0)`
+in never smokers), so a crude smoking coefficient is partly a drinking
+coefficient. Mutual adjustment lets each estimate be read as a comparison between
+attendees alike on the other measured characteristics.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE)
+g <- function(term, d = 4) {
+  r <- tid[tid$term == term, ]
+  sprintf("%s log2 units (95%% CI %s to %s)", fmt(r$estimate, d),
+          fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+ge <- function(term) tid$estimate[tid$term == term]
+```
+
+```{r fit-stats}
+s <- summary(fit)
+tibble(
+  Statistic = c("Complete-case N", "Parameters (excl. intercept)",
+                "Observations per parameter", "R-squared", "Adjusted R-squared",
+                "Residual SE (log2 units)", "SD of outcome (log2 units)"),
+  Value = c(as.character(nrow(dat_model)),
+            as.character(length(coef(fit)) - 1L),
+            fmt(nrow(dat_model) / (length(coef(fit)) - 1L), 1),
+            fmt(s$r.squared, 3), fmt(s$adj.r.squared, 3),
+            fmt(s$sigma, 3), fmt(sd(dat_model$log2_ggt), 3))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable linear model for log2 gamma-GT**"))
+```
+
+The model explains `r fmt(100 * s$r.squared, 1)`% of the variance in log2 GGT
+(adjusted R-squared `r fmt(s$adj.r.squared, 3)`). Residual SE is
+`r fmt(s$sigma, 3)` log2 units against an outcome SD of
+`r fmt(sd(dat_model$log2_ggt), 3)`: in raw terms the model still leaves a typical
+error of a factor of `r fmt(2^s$sigma, 2)` in either direction, which is a useful
+reminder of how variable this enzyme is.
+
+Among attendees of the same sex, body mass, blood pressure, smoking, drinking,
+exercise, glucose, lipids, kidney function and other liver enzymes, each
+additional U/L of ALT is associated with `r g("alt")` (p `r gp("alt")`),
+i.e. GGT multiplied by `r mult(ge("alt"), 10)` per 10 U/L, and each additional
+U/L of AST with `r g("ast")` (p `r gp("ast")`), a factor of
+`r mult(ge("ast"), 10)` per 10 U/L. Among attendees alike on everything else,
+each additional gram of weekly alcohol is associated with
+`r g("alcohol_g_per_week")` (p `r gp("alcohol_g_per_week")`), a factor of
+`r mult(ge("alcohol_g_per_week"), 100)` per 100 g/week, and women still have
+`r g("sexFemale", 3)` lower log2 GGT than men (p `r gp("sexFemale")`), about
+`r fmt(100 * (1 - 2^ge("sexFemale")), 0)`% lower. Triglycerides remain associated
+(`r g("triglycerides")` per mg/dL, p `r gp("triglycerides")`), as do age
+(`r g("age_yrs")` per year, p `r gp("age_yrs")`), systolic pressure
+(`r g("systolic_bp")` per mmHg, p `r gp("systolic_bp")`) and regular exercise,
+which is associated with `r g("regular_exerciseYes", 3)`
+(p `r gp("regular_exerciseYes")`), i.e. GGT about
+`r fmt(100 * (1 - 2^ge("regular_exerciseYes")), 0)`% lower.
+
+Four predictors are *not* independently associated: BMI (`r g("bmi", 3)`,
+p `r gp("bmi")`), fasting glucose (`r g("fasting_glucose")`,
+p `r gp("fasting_glucose")`), eGFR (`r g("egfr")`, p `r gp("egfr")`) and both
+smoking contrasts (`r g("smoking_statusFormer", 3)` and
+`r g("smoking_statusCurrent", 3)`). HDL cholesterol is borderline and has changed
+direction (`r g("hdl_cholesterol")`, p `r gp("hdl_cholesterol")`). These are
+associations among the attendees observed, not effects of intervening.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+**BMI is fully explained away.** It falls from `r ug("bmi", 3)` crude
+(p `r up("bmi")`) to `r g("bmi", 3)` adjusted (p `r gp("bmi")`) - a coefficient
+that started clearly positive ends at essentially zero, and slightly negative.
+ALT does most of that on its own: adding ALT alone to the crude BMI model moves
+the coefficient from `r fmt(ue("bmi"), 4)` to
+`r fmt(coef(lm(log2_ggt ~ bmi + alt, data = dat_model))["bmi"], 4)`. The reading
+is that body mass raises GGT *through* liver fat, and once liver fat is proxied
+by ALT there is nothing left for BMI to explain - which makes ALT a mediator here
+rather than a confounder, and the adjusted BMI coefficient correspondingly hard
+to interpret causally.
+
+**Smoking reverses sign and loses significance entirely.** Current smoking goes
+from `r ug("smoking_statusCurrent", 3)` (p `r up("smoking_statusCurrent")`) to
+`r g("smoking_statusCurrent", 3)` (p `r gp("smoking_statusCurrent")`), and former
+smoking likewise. Sex alone accounts for it: adding sex to the crude smoking
+model moves the current-smoking coefficient from
+`r fmt(ue("smoking_statusCurrent"), 3)` to
+`r fmt(coef(lm(log2_ggt ~ smoking_status + sex, data = dat_model))["smoking_statusCurrent"], 3)`.
+Smokers here are `r fmt(100 * mean(dat_model$sex[dat_model$smoking_status == "Current"] == "Male"), 0)`%
+male, and men have much higher GGT, so the crude smoking association was a sex
+association.
+
+**HDL cholesterol changes direction.** Crudely it is `r ug("hdl_cholesterol")`
+(p `r up("hdl_cholesterol")`) - higher HDL, lower GGT - and adjusted it is
+`r g("hdl_cholesterol")` (p `r gp("hdl_cholesterol")`), pointing the other way.
+Sex and triglycerides are jointly responsible: adding those two alone to the
+crude model already moves the coefficient to
+`r fmt(coef(lm(log2_ggt ~ hdl_cholesterol + sex + triglycerides, data = dat_model))["hdl_cholesterol"], 4)`.
+Because HDL is inversely correlated with triglycerides
+(r = `r fmt(cor(dat_model$hdl_cholesterol, dat_model$triglycerides), 2)`) and
+women have both higher HDL and lower GGT, the crude negative association was
+carrying two other variables. The adjusted estimate is borderline and should not
+be over-read.
+
+**Age goes the other way, from null to significant.** It moves *away* from the
+null on adjustment, `r ug("age_yrs")` (p `r up("age_yrs")`) to `r g("age_yrs")`
+(p `r gp("age_yrs")`), because sex was masking it: women are slightly older in
+this cohort (median `r median(dat_model$age_yrs[dat_model$sex == "Female"])`
+versus `r median(dat_model$age_yrs[dat_model$sex == "Male"])` years) and have much
+lower GGT, so the crude age slope was flattened. **AST attenuates sharply**, from
+`r ug("ast")` to `r g("ast")`, retaining significance but at only about
+`r fmt(100 * ge("ast") / ue("ast"), 0)`% of its crude magnitude - that is ALT and
+AST competing, since they correlate at r = `r fmt(cor(dat_model$alt, dat_model$ast), 2)`
+and ALT wins. The surviving AST significance is marginal
+(p `r gp("ast")`) and, as the diagnostics show, does not hold up under robust
+standard errors.
+
+**Two barely move in relative terms.** Alcohol falls only from
+`r ug("alcohol_g_per_week")` to `r g("alcohol_g_per_week")`, retaining about
+`r fmt(100 * ge("alcohol_g_per_week") / ue("alcohol_g_per_week"), 0)`% of its
+crude size and remaining highly significant, and regular exercise from
+`r ug("regular_exerciseYes", 3)` to `r g("regular_exerciseYes", 3)`. These two are
+the behavioural findings that survive everything else in the file.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r het-check}
+het <- check_heteroscedasticity(fit)
+print(het)
+nrm <- check_normality(fit)
+print(nrm)
+```
+
+```{r collin}
+cc <- as.data.frame(check_collinearity(fit))
+check_collinearity(fit)
+```
+
+```{r robust-se}
+rob   <- lmtest::coeftest(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+robci <- lmtest::coefci(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+tibble(
+  Term = rownames(rob),
+  Estimate = fmt(rob[, 1], 4),
+  `SE (OLS)` = fmt(summary(fit)$coefficients[, 2], 4),
+  `SE (HC3)` = fmt(rob[, 2], 4),
+  `95% CI (HC3)` = paste0(fmt(robci[, 1], 3), " to ", fmt(robci[, 2], 3)),
+  `p (HC3)` = fmt(rob[, 4], 3)
+) |>
+  filter(Term != "(Intercept)") |>
+  gt() |>
+  tab_header(title = md("**Table 3. HC3 heteroscedasticity-consistent standard errors.**"))
+```
+
+**Collinearity is real but tolerable, and it is concentrated exactly where
+expected.** The two largest VIFs are `r fmt(cc$VIF[cc$Term == "alt"], 2)` for ALT
+and `r fmt(cc$VIF[cc$Term == "ast"], 2)` for AST - the deliberately retained
+correlated pair - followed by `r fmt(sort(cc$VIF, decreasing = TRUE)[3], 2)` for
+`r cc$Term[order(cc$VIF, decreasing = TRUE)[3]]`. None exceeds the conventional
+threshold of 5, so both enzyme coefficients are estimable, but they are competing:
+the standard error on ALT is inflated by a factor of about
+`r fmt(sqrt(cc$VIF[cc$Term == "alt"]), 2)` relative to an uncorrelated predictor,
+and this is why AST's coefficient collapses on adjustment while ALT's survives.
+Had all three enzymes been available as predictors the situation would be worse;
+had all four lipids been included, worse still (largest VIF
+`r vall("total_cholesterol")` in the 17-predictor model).
+
+**Variance is not constant and residuals are not normal**, even on the log2
+scale. `check_heteroscedasticity()` rejects (p `r pv(as.numeric(het))`) and
+`check_normality()` rejects (p `r pv(as.numeric(nrm))`). The residual-versus-
+fitted panel shows the spread narrowing at high fitted values, and the QQ plot
+shows heavy tails at both ends. This is worth being clear about: the log2
+transformation is doing a great deal of work - the same model on **raw** `ggt`
+has R-squared
+`r fmt(summary(lm(reformulate(predictors, "I(2^log2_ggt)"), data = dat_model))$r.squared, 3)`
+against `r fmt(s$r.squared, 3)` here - but it does not fully normalise the
+residuals. Table 3 therefore reports HC3 standard errors. They are close to the
+OLS ones for most terms (ALT: OLS `r fmt(summary(fit)$coefficients["alt", 2], 4)`
+versus HC3 `r fmt(rob["alt", 2], 4)`), and every substantive conclusion survives
+with **one exception**: **AST loses significance under robust inference**, from
+p `r pv(summary(fit)$coefficients["ast", 4])` under OLS to
+p `r pv(rob["ast", 4])` under HC3, because its HC3 standard error
+(`r fmt(rob["ast", 2], 4)`) is about
+`r fmt(100 * (rob["ast", 2] / summary(fit)$coefficients["ast", 2] - 1), 0)`%
+larger than the OLS one. Combined with the collinearity above, the honest reading
+is that the marginal AST coefficient is not reliable and only ALT should be
+reported as an independently associated enzyme.
+
+**Influence.** The largest Cook's distance is
+`r fmt(max(cooks.distance(fit)), 3)` and the largest leverage
+`r fmt(max(hatvalues(fit)), 3)`. Both are well inside the usual contours; the
+highest-leverage observations are the very heavy drinkers, whose reported intake
+reaches `r max(dat_model$alcohol_g_per_week)` g/week, but no single participant
+determines the fit.
+
+# Discussion
+
+In this Japanese health-check cohort, a raised gamma-GT is best explained by
+three things: ALT, alcohol and sex. Holding everything else
+constant, GGT is multiplied by `r mult(ge("alt"), 10)` per 10 U/L of ALT,
+`r mult(ge("alcohol_g_per_week"), 100)` per 100 g of weekly alcohol, and is about
+`r fmt(100 * (1 - 2^ge("sexFemale")), 0)`% lower in women than in men. Regular
+exercise is associated with GGT about
+`r fmt(100 * (1 - 2^ge("regular_exerciseYes")), 0)`% lower. The crude associations
+with BMI, fasting glucose, kidney function and smoking all disappear once these
+are accounted for; the BMI association in particular is fully absorbed by ALT,
+which is consistent with body mass acting on GGT through hepatic fat rather than
+through any separate route. Practically, this supports the conventional reading
+of a raised GGT at a health check - ask about alcohol and look at the rest of the
+liver panel - and argues against treating it as an independent metabolic marker
+once ALT is known.
+
+**Limitations.** The design is cross-sectional and the "predictors" here include
+two other enzymes measured from the same blood draw, so nothing in the ALT and
+AST coefficients can be read causally at all: they are contemporaneous markers of
+the same organ, not exposures. Adjusting for ALT is adjusting for a mediator of
+the BMI-GGT relationship, so the null BMI coefficient is an over-adjusted
+estimate and should not be reported as "BMI does not affect GGT". Alcohol is
+self-reported in g/week, with `r sum(dat_model$alcohol_g_per_week == 0)`
+attendees reporting exactly zero and under-reporting concentrated among heavy
+drinkers, which will bias the alcohol coefficient toward the null - the true
+alcohol-GGT gradient is almost certainly steeper than the one estimated here.
+Health-check attendees are self-selected and healthier than the general Japanese
+population, and people with known liver disease may avoid or be excluded from
+such programmes, further compressing the range of the outcome. Hepatitis B and C
+serology, medication use (statins, anticonvulsants and several other drug classes
+induce GGT) and body-composition measures beyond BMI are all absent. Residual
+variance is non-constant and residuals are non-normal even after the log2
+transformation; HC3 standard errors address inference but not fit.
+`r n_dropped` of `r nrow(dat)` rows were dropped for missing exercise or alcohol.
+All estimates are associations, not causal effects.
+
+**Future work.** Repeat with a validated alcohol questionnaire and hepatitis
+serology, and model GGT jointly with ALT and AST as correlated markers of a
+single latent liver process rather than treating two of them as covariates for
+the third.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+- **Verdict: USABLE.** `log2_ggt` is complete (0 missing), well behaved on the
+  log2 scale, and produces a model with R-squared `r fmt(s$r.squared, 2)` and
+  several clearly significant, substantively sensible coefficients. It is the
+  most interpretable of the three linear outcomes in this dataset.
+- **FATAL if `ggt` is used as a predictor.** `log2_ggt` is exactly `log2(ggt)`
+  (maximum discrepancy across all `r nrow(dat)` rows:
+  `r format(det_gap, scientific = TRUE, digits = 2)`). A model containing `ggt`
+  is regressing the outcome on a monotone transformation of itself and returns
+  an R-squared of about
+  `r fmt(summary(lm(log2_ggt ~ ggt, data = dat))$r.squared, 3)` from that one
+  term alone. `ggt` is not in the catalogue's suggested predictor list, but it is
+  in the shipped file and it is the obvious thing for a careless student to grab.
+  Worth an explicit caution.
+- **MAJOR: `log2_ggt` must be removed from the suggested predictor list when it
+  is the outcome.** `meta.json` currently lists `log2_ggt` both as an outcome and
+  as a suggested predictor. A student copying the predictor vector verbatim will
+  fit `log2_ggt ~ ... + log2_ggt`. R drops the term with the warning "the
+  response appeared on the right-hand side and was dropped" - but the template's
+  setup chunk sets `warning = FALSE`, so that warning never reaches the knitted
+  document. The model runs, the table looks fine, and it is not the model the
+  student described in their Methods.
+- **MAJOR: ALT and AST are the interesting-but-collinear pair** (r =
+  `r fmt(enz_r, 2)`; VIFs `r fmt(cc$VIF[cc$Term == "alt"], 2)` and
+  `r fmt(cc$VIF[cc$Term == "ast"], 2)`). Both stay under 5, so no automated check
+  will complain, but AST's coefficient drops from `r ug("ast")` crude to
+  `r g("ast")` adjusted, i.e. to about
+  `r fmt(100 * ge("ast") / ue("ast"), 0)`% of its crude value, purely because ALT
+  is in the model. Students will report "AST is only weakly associated with GGT",
+  which is a statement about ALT, not about AST.
+- **MAJOR conceptual problem: the strongest predictors are not exposures.** ALT
+  and AST come from the same blood sample as the outcome and index the same organ.
+  Treating them as predictors of GGT is a prediction exercise dressed as an
+  aetiological one, and adjusting for them turns the BMI coefficient from
+  `r ug("bmi", 3)` into `r g("bmi", 3)` by conditioning on a mediator. A student
+  who omits the enzymes gets a substantively different and arguably more
+  defensible model (BMI coefficient
+  `r fmt(coef(lm(reformulate(setdiff(predictors, c("alt", "ast")), outcome), data = dat_model))["bmi"], 4)`,
+  R-squared
+  `r fmt(summary(lm(reformulate(setdiff(predictors, c("alt", "ast")), outcome), data = dat_model))$r.squared, 3)`).
+  Both are legitimate; the two lead to opposite conclusions about adiposity.
+- **MAJOR: failed diagnostics even after transformation.**
+  Heteroscedasticity p `r pv(as.numeric(het))` and non-normality
+  p `r pv(as.numeric(nrm))`. The log2 scale is a large improvement over raw GGT
+  (skewness `r fmt(skew(dat$ggt), 2)` to `r fmt(skew(dat$log2_ggt), 2)`) but is
+  not sufficient. Under HC3 standard errors **AST loses significance**
+  (p `r pv(summary(fit)$coefficients["ast", 4])` under OLS to
+  p `r pv(rob["ast", 4])` under HC3); every other coefficient keeps its status.
+  So the one borderline enzyme finding in the model is exactly the one that
+  robust inference kills.
+- **MINOR: HDL cholesterol reverses sign** on adjustment
+  (`r ug("hdl_cholesterol")` to `r g("hdl_cholesterol")`, p `r gp("hdl_cholesterol")`),
+  driven by sex and triglycerides. Borderline either way; a good discussion point
+  but an easy one to get wrong.
+- **MINOR: smoking looks like a strong crude predictor and is entirely a sex
+  effect.** Current smokers are
+  `r fmt(100 * mean(dat_model$sex[dat_model$smoking_status == "Current"] == "Male"), 0)`%
+  male. Adding sex alone moves the current-smoking coefficient from
+  `r fmt(ue("smoking_statusCurrent"), 3)` to
+  `r fmt(coef(lm(log2_ggt ~ smoking_status + sex, data = dat_model))["smoking_statusCurrent"], 3)`.
+- **MINOR: alcohol has a very heavy right tail** (median
+  `r fmt(median(dat_model$alcohol_g_per_week), 1)` g/week, maximum
+  `r max(dat_model$alcohol_g_per_week)`, with
+  `r sum(dat_model$alcohol_g_per_week == 0)` exact zeros). It is the source of
+  the highest-leverage observations (maximum hat value
+  `r fmt(max(hatvalues(fit)), 3)`), though none is influential. A student might
+  reasonably log or categorise it; nobody will be penalised for using it raw.
+- **MINOR: complete-case loss is small** - `r nrow(dat_model)` of `r nrow(dat)`
+  (`r fmt(100 * n_dropped / nrow(dat), 1)`%), from `regular_exercise` and
+  `alcohol_g_per_week` only.
+- No separation issues (linear model), no sparse-cell problems, and no predictor
+  with heavy missingness.

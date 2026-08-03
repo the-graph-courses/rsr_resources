@@ -1,0 +1,685 @@
+---
+title: "Brachial-ankle pulse-wave velocity in a Japanese health-check cohort"
+subtitle: "Dataset 9: Liver enzymes and arterial stiffness in a Japanese health-check cohort"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "ggt_arterial_stiffness.csv"),
+                    show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names. The catalogue suggests
+# 18 predictors; 11 are carried forward. The cut is justified in Methods.
+outcome    <- "pwv_max"
+predictors <- c("age_yrs", "sex", "bmi", "systolic_bp", "smoking_status",
+                "alcohol_g_per_week", "regular_exercise", "fasting_glucose",
+                "triglycerides", "hdl_cholesterol", "egfr", "log2_ggt")
+
+# The full catalogue list, used once to document the collinearity that motivated
+# the cut. No inference is drawn from this model.
+predictors_all <- c("age_yrs", "sex", "bmi", "systolic_bp", "diastolic_bp",
+                    "smoking_status", "alcohol_g_per_week", "regular_exercise",
+                    "fasting_glucose", "uric_acid", "total_cholesterol",
+                    "hdl_cholesterol", "ldl_cholesterol", "triglycerides",
+                    "egfr", "log2_ggt", "alt", "ast")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    sex = lab(factor(sex, levels = c("male", "female"), labels = c("Male", "Female")),
+              "Sex"),
+    smoking_status = lab(factor(smoking_status,
+                                levels = c("never", "former", "current"),
+                                labels = c("Never", "Former", "Current")),
+                         "Smoking status"),
+    regular_exercise = lab(factor(regular_exercise, levels = c(0, 1),
+                                  labels = c("No", "Yes")),
+                           "Takes regular exercise"),
+    age_yrs            = lab(age_yrs, "Age (years)"),
+    bmi                = lab(bmi, "BMI (kg/m2)"),
+    systolic_bp        = lab(systolic_bp, "Systolic BP (mmHg)"),
+    diastolic_bp       = lab(diastolic_bp, "Diastolic BP (mmHg)"),
+    alcohol_g_per_week = lab(alcohol_g_per_week, "Alcohol (g/week)"),
+    fasting_glucose    = lab(fasting_glucose, "Fasting glucose (mg/dL)"),
+    uric_acid          = lab(uric_acid, "Uric acid (mg/dL)"),
+    total_cholesterol  = lab(total_cholesterol, "Total cholesterol (mg/dL)"),
+    triglycerides      = lab(triglycerides, "Triglycerides (mg/dL)"),
+    hdl_cholesterol    = lab(hdl_cholesterol, "HDL cholesterol (mg/dL)"),
+    ldl_cholesterol    = lab(ldl_cholesterol, "LDL cholesterol (mg/dL)"),
+    egfr               = lab(egfr, "eGFR (mL/min/1.73m2)"),
+    log2_ggt           = lab(log2_ggt, "Gamma-GT (log2 U/L)"),
+    alt                = lab(alt, "ALT (U/L)"),
+    ast                = lab(ast, "AST (U/L)"),
+    pwv_max            = lab(pwv_max, "baPWV (cm/s)")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", fmt(p, 3)))
+```
+
+```{r collinearity-evidence}
+# Two documented redundancies in the suggested predictor list, quantified once.
+bp_r <- cor(dat$systolic_bp, dat$diastolic_bp)
+
+# Friedewald: total cholesterol ~ LDL + HDL + triglycerides/5.
+fw  <- lm(total_cholesterol ~ ldl_cholesterol + hdl_cholesterol + triglycerides,
+          data = dat)
+fw_r2   <- summary(fw)$r.squared
+fw_coef <- coef(fw)
+
+dat_all <- dat |> select(all_of(c(outcome, predictors_all))) |> drop_na()
+fit_all <- lm(reformulate(predictors_all, outcome), data = dat_all)
+cc_all  <- as.data.frame(check_collinearity(fit_all))
+vall <- function(term, d = 1) fmt(cc_all$VIF[cc_all$Term == term], d)
+
+enz_r <- cor(dat$alt, dat$ast)
+```
+
+# Introduction
+
+Between 2008 and 2010 a general health-check programme in Japan enrolled
+`r nrow(dat)` men and women aged `r min(dat$age_yrs)` to `r max(dat$age_yrs)`
+years and measured brachial-ankle pulse-wave velocity (baPWV) with an automatic
+waveform analyser alongside a standard panel of anthropometric, haemodynamic and
+biochemical measurements; the cohort was assembled to ask whether serum
+gamma-glutamyltranspeptidase (GGT) marks arterial disease, and is reported in
+*BMJ Open* 2014;4:e005413. Pulse-wave velocity is the reference non-invasive
+measure of arterial stiffness and predicts cardiovascular events independently
+of blood pressure, so identifying which routinely collected characteristics
+track with it is a natural question for a screening programme.
+
+**Aim.** Among these health-check attendees, we examined which of age, sex, body
+mass index, systolic blood pressure, smoking status, alcohol intake, regular
+exercise, fasting glucose, triglycerides, HDL cholesterol, kidney function and
+log2 gamma-GT are independently associated with baPWV, mutually adjusting for the
+others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** A cross-sectional Japanese health-check cohort of `r nrow(dat)`
+adults attending a medical health check-up programme that included ultrasound of
+the liver, a fasting blood panel and automated measurement of brachial-ankle
+pulse-wave velocity and the ankle-brachial index. Attendance was voluntary, so
+this is a self-selected screening population rather than a community sample.
+
+**Variables.** The outcome is `pwv_max`, brachial-ankle pulse-wave velocity in
+cm/s (the higher of the two legs), treated as continuous; higher values mean
+stiffer arteries. Predictors are age (years), sex (reference Male, the larger
+group at `r sum(dat$sex == "Male")` of `r nrow(dat)`), BMI (kg/m2), systolic
+blood pressure (mmHg), smoking status (three levels, reference Never, the
+largest group at `r sum(dat$smoking_status == "Never")`), alcohol intake
+(g/week), regular exercise (reference No, the unexposed and larger group),
+fasting glucose (mg/dL), triglycerides (mg/dL), HDL cholesterol (mg/dL),
+estimated glomerular filtration rate (mL/min/1.73m2) and gamma-GT on a log2
+scale (so a one-unit increase is a doubling of GGT).
+
+**The predictor set was cut from 18 to `r length(predictors)` before any model
+was fitted.** With `r nrow(dat_model)` complete cases and
+`r length(coef(lm(reformulate(predictors, outcome), data = dat_model))) - 1L`
+estimated parameters this model has about
+`r fmt(nrow(dat_model) / (length(coef(lm(reformulate(predictors, outcome), data = dat_model))) - 1L), 0)`
+observations per parameter, so the *arithmetic* budget of 10-15 observations per
+parameter would in principle have tolerated all 18. The cut was made for two
+other reasons. First, **redundancy**: the 18 suggested predictors contain three
+sets of near-duplicates. Systolic and diastolic pressure correlate at
+r = `r fmt(bp_r, 2)`, and in a model containing both their variance inflation
+factors are `r vall("systolic_bp")` and `r vall("diastolic_bp")`. The four lipid
+measures are worse: regressing total cholesterol on LDL, HDL and triglycerides
+reproduces it almost exactly (R-squared `r fmt(fw_r2, 3)`, with coefficients
+`r fmt(fw_coef["ldl_cholesterol"], 2)`,
+`r fmt(fw_coef["hdl_cholesterol"], 2)` and
+`r fmt(fw_coef["triglycerides"], 2)` - that is, the Friedewald identity
+total = LDL + HDL + triglycerides/5), and with all four in the model the VIFs
+reach `r vall("total_cholesterol")` for total cholesterol and
+`r vall("ldl_cholesterol")` for LDL. The three liver enzymes are the third set
+(ALT and AST correlate at r = `r fmt(enz_r, 2)`). Second, **interpretability**: a
+table of 18 mutually adjusted coefficients cannot be read as an answer to "which
+predictors survive adjustment", which is the question this analysis is asked to
+answer. We therefore kept one variable per construct: systolic pressure (the
+stronger correlate of baPWV, r = `r fmt(cor(dat$systolic_bp, dat$pwv_max), 2)`
+versus `r fmt(cor(dat$diastolic_bp, dat$pwv_max), 2)` for diastolic) in place of
+both pressures; HDL cholesterol and triglycerides (the two metabolic-syndrome
+lipid components, VIFs `r vall("hdl_cholesterol")` and `r vall("triglycerides")`
+even in the 18-variable model) in place of all four lipids; and log2 gamma-GT,
+the enzyme of interest in the source paper, in place of all three enzymes. Uric
+acid was dropped because it has no distinct a priori role once adiposity and
+kidney function are in the model (it correlates
+r = `r fmt(cor(dat$uric_acid, dat$egfr), 2)` with eGFR and
+r = `r fmt(cor(dat$uric_acid, dat$triglycerides), 2)` with triglycerides).
+
+**Systolic pressure is retained deliberately but is not innocent.** baPWV is
+computed from a cuff-based pressure waveform, and arterial stiffness and blood
+pressure are mutually causal: stiff arteries raise systolic pressure, and higher
+distending pressure raises the measured velocity in an elastic tube. Adjusting
+for systolic pressure is therefore partly adjustment for a common cause and
+partly adjustment for a mediator or even for part of the measurement itself. We
+report the main model with systolic pressure included, and a sensitivity model
+omitting it, and interpret the two together.
+
+**Statistical analysis.** `lm()`, justified because the outcome is a continuous
+measurement in cm/s. We fitted a univariable model for each predictor first,
+then a single multivariable model containing all of them. Predictors were chosen
+in advance on subject-matter grounds, not by significance. Significance threshold
+0.05; estimates are reported with 95% confidence intervals. Assumptions were
+checked with `performance::check_model()`, `check_heteroscedasticity()` and
+`check_collinearity()`, and because non-constant variance was flagged we
+additionally report HC3 heteroscedasticity-consistent standard errors. Analysis
+used `r R.version.string` with tidyverse, gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped). The outcome itself is complete; the
+whole loss comes from `regular_exercise`
+(`r sum(is.na(dat$regular_exercise))` missing) and `alcohol_g_per_week`
+(`r sum(is.na(dat$alcohol_g_per_week))` missing), which do not overlap. Dropping
+total cholesterol from the predictor set incidentally saved a further
+`r sum(is.na(dat$total_cholesterol))` rows. Only
+`r sum(complete.cases(dat_raw))` of `r nrow(dat)` rows are complete on *every*
+column in the file.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(missing = "no") |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics.**")
+```
+
+The cohort is `r fmt(100 * mean(dat_model$sex == "Male"), 0)`% male with a median
+age of `r median(dat_model$age_yrs)` years and a median BMI of
+`r fmt(median(dat_model$bmi), 1)` kg/m2, which is lean by Western standards and
+consistent with a Japanese screening population. Median baPWV is
+`r format(median(dat_model$pwv_max), big.mark = ",")` cm/s with a long right tail
+reaching `r format(max(dat_model$pwv_max), big.mark = ",")` cm/s, and blood
+pressure, glucose and lipids all sit close to the middle of their normal ranges -
+these are people who feel well enough to volunteer for a check-up.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Pulse-wave velocity against log2 gamma-GT, by sex, with linear smooths."}
+ggplot(dat_model, aes(log2_ggt, pwv_max, colour = sex)) +
+  geom_point(alpha = 0.35, size = 1.4) +
+  geom_smooth(method = "lm", se = TRUE, linewidth = 0.9) +
+  scale_colour_manual(values = c(Male = "#2E6F95", Female = "#C46B4A")) +
+  labs(x = "Gamma-GT (log2 U/L)", y = "baPWV (cm/s)", colour = "Sex")
+```
+
+baPWV rises gently with log2 gamma-GT in both sexes, but the scatter is very wide
+and the slope is visibly shallow relative to the spread; the men sit higher than
+the women across the whole range of GGT, which is the first hint that the crude
+GGT-stiffness association may be carrying sex and everything correlated with it.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(lm(reformulate(v, outcome), data = dat_model), conf.int = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 1) {
+  r <- utid[utid$term == term, ]
+  sprintf("%s cm/s (95%% CI %s to %s)", fmt(r$estimate, d),
+          fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+```
+
+Age and systolic pressure dominate the crude picture. Each additional year of age
+is associated with `r ug("age_yrs")` higher baPWV (p `r up("age_yrs")`), roughly
+`r fmt(10 * utid$estimate[utid$term == "age_yrs"], 0)` cm/s per decade, and each
+additional mmHg of systolic pressure with `r ug("systolic_bp")`
+(p `r up("systolic_bp")`). Each doubling of gamma-GT is associated with
+`r ug("log2_ggt")` higher baPWV (p `r up("log2_ggt")`) - a substantial crude
+association, and the one the source paper was built around. Higher fasting
+glucose (`r ug("fasting_glucose")` per mg/dL, p `r up("fasting_glucose")`) and
+higher triglycerides (`r ug("triglycerides")` per mg/dL,
+p `r up("triglycerides")`) also mark stiffer arteries, while better kidney
+function is associated with less stiffness (`r ug("egfr")` per unit of eGFR,
+p `r up("egfr")`). Women average `r ug("sexFemale")` relative to men
+(p `r up("sexFemale")`), and former smokers `r ug("smoking_statusFormer")`
+relative to never-smokers (p `r up("smoking_statusFormer")`) - though current
+smokers do not differ (`r ug("smoking_statusCurrent")`,
+p `r up("smoking_statusCurrent")`), which is not the ordering one would expect
+from a causal smoking effect. BMI (`r ug("bmi")`, p `r up("bmi")`), alcohol
+(`r ug("alcohol_g_per_week")`, p `r up("alcohol_g_per_week")`) and regular
+exercise (`r ug("regular_exerciseYes")`, p `r up("regular_exerciseYes")`) show no
+crude association.
+
+## Why adjustment is needed
+
+**Age** is the single most important confounder in this dataset. It is
+associated with baPWV more strongly than anything else except pressure
+(r = `r fmt(cor(dat_model$age_yrs, dat_model$pwv_max), 2)`), and it is strongly
+associated with kidney function
+(r = `r fmt(cor(dat_model$age_yrs, dat_model$egfr), 2)` with eGFR) and more
+weakly with fasting glucose
+(r = `r fmt(cor(dat_model$age_yrs, dat_model$fasting_glucose), 2)`). The crude
+eGFR association is therefore substantially an age association wearing a kidney's
+clothes: older attendees have both lower eGFR and stiffer arteries for reasons
+that have little to do with the kidney itself. Note that age is *not* a
+confounder of the pressure association here - age and systolic pressure correlate
+only r = `r fmt(cor(dat_model$age_yrs, dat_model$systolic_bp), 2)` in this
+screening cohort - which is why the two of them together carry so much of the
+model without competing.
+
+**Sex** confounds the gamma-GT association. Men in this cohort have far higher
+GGT than women (median `r fmt(median(dat_model$log2_ggt[dat_model$sex == "Male"]), 2)`
+versus `r fmt(median(dat_model$log2_ggt[dat_model$sex == "Female"]), 2)` on the
+log2 scale, i.e. about
+`r fmt(2^(median(dat_model$log2_ggt[dat_model$sex == "Male"]) - median(dat_model$log2_ggt[dat_model$sex == "Female"])), 1)`-fold
+higher on the raw scale) because they drink far more (median alcohol
+`r fmt(median(dat_model$alcohol_g_per_week[dat_model$sex == "Male"]), 0)` versus
+`r fmt(median(dat_model$alcohol_g_per_week[dat_model$sex == "Female"]), 0)` g per
+week), and men also have higher baPWV. **Alcohol** is the third variable that
+must be handled explicitly, for the same reason from the other direction: it
+drives GGT (r = `r fmt(cor(dat_model$alcohol_g_per_week, dat_model$log2_ggt), 2)`
+with log2 GGT) and is itself associated with cardiovascular risk, so a crude
+GGT coefficient is partly a drinking coefficient. **Systolic pressure**
+confounds - or mediates - almost everything, since adiposity, glucose and
+smoking all raise pressure and pressure raises measured baPWV. Mutual adjustment
+lets each coefficient be read as a comparison between attendees alike on the
+other measured characteristics, with the pressure caveat kept in view.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE)
+g <- function(term, d = 1) {
+  r <- tid[tid$term == term, ]
+  sprintf("%s cm/s (95%% CI %s to %s)", fmt(r$estimate, d),
+          fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+```
+
+```{r fit-stats}
+s <- summary(fit)
+tibble(
+  Statistic = c("Complete-case N", "Parameters (excl. intercept)",
+                "Observations per parameter", "R-squared", "Adjusted R-squared",
+                "Residual SE (cm/s)", "SD of outcome (cm/s)"),
+  Value = c(as.character(nrow(dat_model)),
+            as.character(length(coef(fit)) - 1L),
+            fmt(nrow(dat_model) / (length(coef(fit)) - 1L), 1),
+            fmt(s$r.squared, 3), fmt(s$adj.r.squared, 3),
+            fmt(s$sigma, 1), fmt(sd(dat_model$pwv_max), 1))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable linear model for baPWV**"))
+```
+
+The model explains `r fmt(100 * s$r.squared, 1)`% of the variance in baPWV
+(adjusted R-squared `r fmt(s$adj.r.squared, 3)`), which is high for an
+observational model of this kind and is almost entirely the work of age and
+systolic pressure. Residual SE is `r fmt(s$sigma, 1)` cm/s against an outcome SD
+of `r fmt(sd(dat_model$pwv_max), 1)` cm/s.
+
+Among attendees of the same sex, body mass, blood pressure, smoking, drinking,
+exercise, glucose, lipids, kidney function and gamma-GT, each additional year of
+age is associated with `r g("age_yrs")` higher baPWV (p `r gp("age_yrs")`), and
+among attendees alike on everything else each additional mmHg of systolic
+pressure with `r g("systolic_bp")` (p `r gp("systolic_bp")`). Two coefficients
+change character on adjustment. BMI, which showed no crude association, becomes
+`r g("bmi")` per kg/m2 (p `r gp("bmi")`) - *lower* stiffness at higher BMI once
+pressure and the metabolic variables are held constant. Current smoking, which
+was null crudely, becomes `r g("smoking_statusCurrent")` relative to never
+smoking (p `r gp("smoking_statusCurrent")`), while former smoking is
+`r g("smoking_statusFormer")` (p `r gp("smoking_statusFormer")`). Higher fasting
+glucose remains associated with stiffer arteries (`r g("fasting_glucose")` per
+mg/dL, p `r gp("fasting_glucose")`), higher alcohol intake with slightly less
+stiffness (`r g("alcohol_g_per_week")` per g/week,
+p `r gp("alcohol_g_per_week")`), and better kidney function with less stiffness
+(`r g("egfr")`, p `r gp("egfr")`).
+
+**Gamma-GT does not survive adjustment.** Each doubling of GGT is associated with
+`r g("log2_ggt")` (p `r gp("log2_ggt")`), against a crude `r ug("log2_ggt")`: the
+point estimate has fallen by about
+`r fmt(100 * (1 - tid$estimate[tid$term == "log2_ggt"] / utid$estimate[utid$term == "log2_ggt"]), 0)`%
+and the confidence interval now includes zero. Sex, triglycerides, HDL
+cholesterol and regular exercise are also not independently associated. These are
+associations among the attendees observed, not effects of intervening.
+
+```{r sensitivity-nobp}
+fit_nobp <- lm(reformulate(setdiff(predictors, "systolic_bp"), outcome),
+               data = dat_model)
+tid2 <- tidy(fit_nobp, conf.int = TRUE)
+g2 <- function(term, d = 1) {
+  r <- tid2[tid2$term == term, ]
+  sprintf("%s cm/s (95%% CI %s to %s)", fmt(r$estimate, d),
+          fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gp2 <- function(term) pv(tid2$p.value[tid2$term == term])
+
+tibble(
+  Model = c("Main model (systolic BP included)",
+            "Sensitivity model (systolic BP omitted)"),
+  `log2 gamma-GT coefficient` = c(g("log2_ggt"), g2("log2_ggt")),
+  `p` = c(gsub("^= ", "", gp("log2_ggt")), gsub("^= ", "", gp2("log2_ggt"))),
+  `R-squared` = c(fmt(summary(fit)$r.squared, 3), fmt(summary(fit_nobp)$r.squared, 3))
+) |>
+  gt() |>
+  tab_header(title = md("**Sensitivity: gamma-GT with and without systolic pressure in the model**"))
+```
+
+This is the honest version of the gamma-GT finding. With systolic pressure in the
+model, GGT contributes `r g("log2_ggt")` (p `r gp("log2_ggt")`); with pressure
+removed it contributes `r g2("log2_ggt")` (p `r gp2("log2_ggt")`), roughly
+`r fmt(tid2$estimate[tid2$term == "log2_ggt"] / tid$estimate[tid$term == "log2_ggt"], 1)`
+times larger and clearly significant. Because pressure and stiffness are mutually
+causal - and because baPWV is measured *from* a pressure waveform - neither
+number is the "true" GGT effect. The pressure-adjusted estimate is
+conservative to the point of being an over-adjustment; the unadjusted-for-pressure
+estimate contains whatever part of the GGT-stiffness link runs through blood
+pressure. The defensible statement is that any independent contribution of GGT to
+arterial stiffness in this cohort is small, and that most of the crude
+association is explained by age, sex, drinking and pressure.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+Three predictors move a long way. **Sex** collapses from `r ug("sexFemale")`
+crude (p `r up("sexFemale")`) to `r g("sexFemale")` adjusted
+(p `r gp("sexFemale")`) - the entire apparent sex difference in arterial
+stiffness is explained by the other measured characteristics, and the coefficient
+crosses from clearly significant to null and even changes sign. Systolic pressure
+does almost all of that work on its own: adding it alone to the crude model moves
+the female coefficient from `r fmt(utid$estimate[utid$term == "sexFemale"], 1)`
+to
+`r fmt(coef(lm(pwv_max ~ sex + systolic_bp, data = dat_model))["sexFemale"], 1)` cm/s,
+because the women in this cohort have median systolic pressure
+`r fmt(median(dat_model$systolic_bp[dat_model$sex == "Female"]), 1)` mmHg against
+`r fmt(median(dat_model$systolic_bp[dat_model$sex == "Male"]), 1)` mmHg in the
+men. **Gamma-GT** falls from
+`r ug("log2_ggt")` to `r g("log2_ggt")` and likewise loses significance
+(p `r up("log2_ggt")` to p `r gp("log2_ggt")`), which is confounding by age, sex
+and alcohol exactly as anticipated. **BMI** moves in the opposite direction, and
+*through* the null: from `r ug("bmi")` crude (p `r up("bmi")`) to `r g("bmi")`
+adjusted (p `r gp("bmi")`). This sign reversal is not a paradox but a classic
+suppression pattern: heavier attendees have higher blood pressure, glucose and
+triglycerides, all of which raise baPWV, so crudely BMI looks neutral or slightly
+harmful; once those downstream consequences are held fixed, the residual
+association of body mass with measured stiffness is negative, partly because
+baPWV in a larger limb is measured over a longer, more muscular path.
+**Triglycerides** and **eGFR** both attenuate strongly toward the null
+(triglycerides `r ug("triglycerides")` to `r g("triglycerides")`, losing
+significance; eGFR `r ug("egfr")` to `r g("egfr")`, retaining it but at about
+`r fmt(100 * tid$estimate[tid$term == "egfr"] / utid$estimate[utid$term == "egfr"], 0)`%
+of the crude magnitude) - both were largely age.
+
+Two things barely move. **Systolic pressure** goes from `r ug("systolic_bp")` to
+`r g("systolic_bp")`, essentially unchanged, and **age** from `r ug("age_yrs")` to
+`r g("age_yrs")`: these two are not explained by anything else in the file, which
+is why they carry the model. Finally, **smoking changes which level is
+significant**: crudely it is former smoking that differs from never
+(`r ug("smoking_statusFormer")`, p `r up("smoking_statusFormer")`) while current
+smoking does not (`r ug("smoking_statusCurrent")`, p `r up("smoking_statusCurrent")`);
+after adjustment the pattern inverts, with current smoking at
+`r g("smoking_statusCurrent")` (p `r gp("smoking_statusCurrent")`) and former
+smoking null (`r g("smoking_statusFormer")`, p `r gp("smoking_statusFormer")`).
+The crude former-smoker signal was age and sex - former smokers are the oldest
+group - and once that is removed the dose-response one expects from smoking
+appears.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r het-check}
+het <- check_heteroscedasticity(fit)
+print(het)
+nrm <- check_normality(fit)
+print(nrm)
+```
+
+```{r collin}
+cc <- as.data.frame(check_collinearity(fit))
+check_collinearity(fit)
+```
+
+```{r dichot-check, include=FALSE}
+# Feasibility only: what the >= 1400 cm/s dichotomisation would look like.
+dat_dich <- dat_model |> mutate(pwv_high = as.integer(pwv_max >= 1400))
+fit_dich <- glm(reformulate(predictors, "pwv_high"), data = dat_dich,
+                family = binomial)
+dich_events <- sum(dat_dich$pwv_high)
+dich_par    <- length(coef(fit_dich)) - 1L
+dich_tjur   <- as.numeric(r2_tjur(fit_dich))
+dich_bins   <- attr(binned_residuals(fit_dich), "resid_ok")
+```
+
+```{r robust-se}
+rob   <- lmtest::coeftest(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+robci <- lmtest::coefci(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+tibble(
+  Term = rownames(rob),
+  Estimate = fmt(rob[, 1], 2),
+  `SE (OLS)` = fmt(summary(fit)$coefficients[, 2], 2),
+  `SE (HC3)` = fmt(rob[, 2], 2),
+  `95% CI (HC3)` = paste0(fmt(robci[, 1], 1), " to ", fmt(robci[, 2], 1)),
+  `p (HC3)` = fmt(rob[, 4], 3)
+) |>
+  filter(Term != "(Intercept)") |>
+  gt() |>
+  tab_header(title = md("**Table 3. HC3 heteroscedasticity-consistent standard errors.**"))
+```
+
+**Collinearity is not a problem in the reduced model.** The largest VIF is
+`r fmt(max(cc$VIF), 2)` (`r cc$Term[which.max(cc$VIF)]`), and every VIF is below
+`r fmt(ceiling(max(cc$VIF) * 2) / 2, 1)`; nothing approaches the conventional
+threshold of 5. This is the direct pay-off of the a-priori cut: in the
+18-predictor version of this model the largest VIF is
+`r vall("total_cholesterol")`.
+
+**Variance is not constant and residuals are not normal.** The
+residual-versus-fitted panel fans out clearly as fitted baPWV rises, and
+`check_heteroscedasticity()` rejects (p `r pv(as.numeric(het))`); the normal-QQ
+panel shows a heavy right tail and `check_normality()` also rejects
+(p `r pv(as.numeric(nrm))`). Both are driven by the right skew of baPWV
+(skewness `r fmt(mean((dat_model$pwv_max - mean(dat_model$pwv_max))^3) / sd(dat_model$pwv_max)^3, 2)`):
+the stiffest arteries are also the most variable, so the spread of the outcome
+grows with its mean. The posterior-predictive check shows the same thing - the
+fitted symmetric distribution cannot reproduce the tail above about 2,000 cm/s.
+Table 3 therefore reports HC3 robust standard errors. They are modestly wider for
+the strongest predictors (age: OLS SE
+`r fmt(summary(fit)$coefficients["age_yrs", 2], 2)` versus HC3
+`r fmt(rob["age_yrs", 2], 2)`; systolic pressure
+`r fmt(summary(fit)$coefficients["systolic_bp", 2], 2)` versus
+`r fmt(rob["systolic_bp", 2], 2)`) but **no coefficient changes its significance
+status**, so the substantive conclusions stand. Modelling `log(pwv_max)` improves
+R-squared slightly (to
+`r fmt(summary(lm(reformulate(predictors, "log(pwv_max)"), data = dat_model))$r.squared, 3)`)
+but does **not** fix either check, so the skew is not a simple multiplicative
+problem.
+
+**No single observation drives the fit.** The largest Cook's distance is
+`r fmt(max(cooks.distance(fit)), 3)` and the largest leverage
+`r fmt(max(hatvalues(fit)), 3)`, both far inside the usual contours, and the
+influence panel shows no point outside them.
+
+# Discussion
+
+In this Japanese health-check cohort, arterial stiffness measured as baPWV is
+overwhelmingly a function of age and systolic blood pressure: each decade of age
+is associated with about
+`r fmt(10 * tid$estimate[tid$term == "age_yrs"], 0)` cm/s and each 10 mmHg of
+systolic pressure with about
+`r fmt(10 * tid$estimate[tid$term == "systolic_bp"], 0)` cm/s, holding everything
+else constant, and together with the remaining predictors these account for
+`r fmt(100 * s$r.squared, 0)`% of the variance. The crude association between
+gamma-GT and stiffness - `r ug("log2_ggt")` per doubling of GGT - does not
+survive mutual adjustment (`r g("log2_ggt")`), and the residual signal that does
+appear when blood pressure is left out of the model (`r g2("log2_ggt")`) is
+plausibly routed through pressure rather than independent of it. Practically,
+this argues that GGT adds little to age and blood pressure for identifying stiff
+arteries in a screening setting, and that a report claiming a liver-enzyme
+contribution to arterial stiffness needs to be explicit about what it did with
+blood pressure.
+
+**Limitations.** The design is cross-sectional, so nothing here establishes
+temporal order; stiff arteries and raised GGT could both be consequences of a
+shared metabolic process, and reverse causation cannot be excluded. Adjusting for
+systolic pressure is not clean confounder control: pressure is on the causal path
+between most of these risk factors and stiffness, and baPWV is derived from a
+pressure waveform, so the pressure-adjusted coefficients are probably
+over-adjusted while the unadjusted-for-pressure ones are under-adjusted - the
+sensitivity table brackets rather than resolves this. Health-check attendees are
+a self-selected group who are healthier and better resourced than the general
+Japanese population, which compresses the range of every risk factor and will
+attenuate associations relative to a community sample. Residual variance is
+non-constant and residuals are strongly right-skewed; HC3 standard errors repair
+inference but not the model's inability to predict the stiffest attendees.
+Alcohol is self-reported in g/week with `r sum(dat_model$alcohol_g_per_week == 0)`
+attendees reporting exactly zero, so misreporting is likely and probably
+differential by sex. Antihypertensive, lipid-lowering and glucose-lowering
+medication is not recorded at all, which is a serious unmeasured confounder:
+treated hypertensives appear in the data with near-normal pressures but stiff
+arteries. Diet, socioeconomic position and diabetes duration are likewise absent.
+`r n_dropped` of `r nrow(dat)` rows were dropped for missing exercise or alcohol.
+All estimates are associations, not causal effects.
+
+**Future work.** Refit on the log scale with medication use and a repeated baPWV
+measurement, and treat blood pressure explicitly as a mediator with a formal
+decomposition rather than as a covariate to be switched on and off.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+- **Verdict: USABLE.** This is one of the better linear outcomes in the
+  catalogue. `pwv_max` is complete (0 missing), well spread, and has two
+  genuinely strong predictors, so a student's model will "work" and produce an
+  R-squared of about `r fmt(s$r.squared, 2)`. The interesting teaching content is
+  that the headline exposure of the source paper (GGT) *does not* survive.
+- **MAJOR: 18 suggested predictors is too many and the budget rule will not stop
+  a student.** With `r nrow(dat_model)` complete cases, even 20 parameters gives
+  ~44 observations per parameter, so the 10-15 observations-per-parameter rule
+  gives no reason to cut. Students will therefore fit all 18 unless the brief
+  tells them not to, and the resulting table is unreadable *and* collinear. The
+  cut has to be justified on redundancy and interpretability, which is a harder
+  argument for a student to construct unaided. Consider trimming the suggested
+  list in `meta.json`.
+- **MAJOR collinearity if the lipids are all included.** In the 18-predictor
+  model the VIFs are `r vall("total_cholesterol")` (total cholesterol),
+  `r vall("ldl_cholesterol")` (LDL), `r vall("hdl_cholesterol")` (HDL) and
+  `r vall("triglycerides")` (triglycerides). Regressing total cholesterol on the
+  other three gives R-squared `r fmt(fw_r2, 3)` with coefficients
+  `r fmt(fw_coef["ldl_cholesterol"], 2)` / `r fmt(fw_coef["hdl_cholesterol"], 2)`
+  / `r fmt(fw_coef["triglycerides"], 2)`, i.e. the Friedewald identity
+  total = LDL + HDL + triglycerides/5 holds to within rounding. Note it is
+  *near*-deterministic, not exact: LDL here appears to be directly measured, so
+  `total_cholesterol - hdl_cholesterol - triglycerides/5` differs from
+  `ldl_cholesterol` by a median of about
+  `r fmt(median(with(dat, total_cholesterol - hdl_cholesterol - triglycerides/5 - ldl_cholesterol), na.rm = TRUE), 1)`
+  mg/dL. The model does not become singular; it becomes uninterpretable, which is
+  worse because nothing warns the student.
+- **MAJOR collinearity between the blood pressures.** r = `r fmt(bp_r, 2)`;
+  VIFs `r vall("systolic_bp")` and `r vall("diastolic_bp")` when both are
+  included. With both in, the diastolic coefficient is essentially zero and the
+  systolic one absorbs everything.
+- **MAJOR conceptual trap: systolic pressure is partly the outcome.** baPWV is
+  computed from a cuff pressure waveform and is pressure-dependent by
+  construction. Including systolic pressure drives GGT from
+  `r g2("log2_ggt")` (p `r gp2("log2_ggt")`) to `r g("log2_ggt")`
+  (p `r gp("log2_ggt")`), which is the difference between "GGT is associated with
+  arterial stiffness" and "it is not". Any student conclusion about GGT is
+  therefore an artefact of a covariate choice they will not have thought about.
+  This should be flagged in `meta.json` cautions.
+- **MAJOR: failed diagnostics.** Heteroscedasticity p `r pv(as.numeric(het))` and
+  non-normality of residuals p `r pv(as.numeric(nrm))`, both from the right skew
+  of baPWV (skewness
+  `r fmt(mean((dat_model$pwv_max - mean(dat_model$pwv_max))^3) / sd(dat_model$pwv_max)^3, 2)`).
+  A log transformation raises R-squared only slightly and does *not* clear either
+  test, so there is no easy fix; students must report a failed check and use
+  robust SEs. Reassuringly, no coefficient changes significance under HC3.
+- **MINOR: BMI reverses sign on adjustment** (`r ug("bmi")` crude to `r g("bmi")`
+  adjusted, p `r gp("bmi")`). This is a suppression effect via blood pressure and
+  the metabolic variables, and it is a good teaching moment, but a weak student
+  will report "obesity protects the arteries".
+- **MINOR: smoking swaps which level is significant** between the crude and
+  adjusted models (former significant crude, current significant adjusted). With
+  `r sum(dat_model$smoking_status == "Current")` current and
+  `r sum(dat_model$smoking_status == "Former")` former smokers there is enough
+  data for the contrast, but note that smoking is almost entirely a male
+  behaviour here (`r sum(dat$sex == "Female" & dat$smoking_status == "Current")`
+  female current smokers out of `r sum(dat$sex == "Female")` women), so smoking
+  and sex are heavily entangled.
+- **MINOR: complete-case loss is small** - `r nrow(dat_model)` of `r nrow(dat)`
+  (`r fmt(100 * n_dropped / nrow(dat), 1)`%), driven entirely by
+  `regular_exercise` (`r sum(is.na(dat$regular_exercise))`) and
+  `alcohol_g_per_week` (`r sum(is.na(dat$alcohol_g_per_week))`). No predictor
+  here silently costs a large share of the sample.
+- **MINOR: no medication variables.** Antihypertensives, statins and
+  glucose-lowering drugs are not in the file. For an outcome this dependent on
+  blood pressure that is a substantial unmeasured confounder and should be in the
+  cautions.
+- **On the >= 1400 cm/s dichotomisation offered in the catalogue: it works, but
+  it is strictly worse.** `pwv_max >= 1400` gives
+  `r sum(dat_raw$pwv_max >= 1400)` / `r nrow(dat_raw)`
+  (`r fmt(100 * mean(dat_raw$pwv_max >= 1400), 1)`%) events, and in the
+  complete-case sample `r dich_events` events for `r dich_par` parameters, i.e.
+  `r fmt(dich_events / dich_par, 1)` events per parameter - comfortably feasible,
+  no separation, and the logistic model recovers the same ordering of predictors
+  (age and systolic pressure dominant, Tjur's R-squared `r fmt(dich_tjur, 2)`).
+  But the threshold is arbitrary rather than clinical, it throws away a
+  well-measured continuous outcome, and its binned-residual check also fails
+  (only `r fmt(100 * dich_bins, 0)`% of bins inside the error bounds). The
+  catalogue is right to present `pwv_max` as linear; the "either" designation in
+  `meta.json` should not be read as an invitation.
+- No separation issues arise anywhere in the linear model, and there are no
+  deterministic relationships between `pwv_max` and any shipped column
+  (`abi_max` is the closest structurally related variable and correlates
+  r = `r fmt(cor(dat$abi_max, dat$pwv_max, use = "complete.obs"), 2)` with it,
+  i.e. not at all).

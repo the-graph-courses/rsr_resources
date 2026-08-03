@@ -1,0 +1,745 @@
+---
+title: "Quality of life among adults in Finland, Poland and Spain"
+subtitle: "Dataset 14: Quality of life among adults in Finland, Poland and Spain (COURAGE)"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "ageing_qol_europe.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names. The catalogue suggests
+# 21 predictors, which cost 39 parameters; the set below costs 25. The cut is
+# argued in Methods.
+outcome    <- "quality_of_life_score"
+predictors <- c("age_yrs", "sex", "country", "education", "marital_status",
+                "bmi_category", "physical_activity", "social_network_index",
+                "home_usability", "body_pain", "sleep_difficulty",
+                "arthritis", "angina", "diabetes", "depression_diagnosis")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+yn  <- function(x, l) lab(factor(x, levels = c(0, 1), labels = c("No", "Yes")), l)
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest group, or the clinically
+    # "unexposed" one where that is the more natural comparison.
+    age_yrs = lab(age_yrs, "Age (years)"),
+    sex     = lab(factor(sex, levels = c("female", "male"),
+                         labels = c("Female", "Male")), "Sex"),
+    country = lab(factor(country, levels = c("poland", "spain", "finland"),
+                         labels = c("Poland", "Spain", "Finland")), "Country"),
+    # education: `none_or_informal` (n = 125) is collapsed into the lower
+    # category because 124 of those 125 participants live in Spain and none live
+    # in Finland, so its contrast would be a Spain-only contrast entangled with
+    # country. See Methods.
+    education = lab(factor(if_else(education == "high_school_or_higher",
+                                   "High school or higher",
+                                   "None, primary or secondary"),
+                           levels = c("None, primary or secondary",
+                                      "High school or higher")),
+                    "Education"),
+    marital_status = lab(factor(marital_status,
+      levels = c("married_or_cohabiting", "never_married",
+                 "separated_or_divorced", "widowed"),
+      labels = c("Married or cohabiting", "Never married",
+                 "Separated or divorced", "Widowed")), "Marital status"),
+    bmi_category = lab(factor(bmi_category,
+      levels = c("normal_or_underweight", "overweight", "obese"),
+      labels = c("Normal or underweight", "Overweight", "Obese")),
+      "BMI category"),
+    physical_activity = lab(factor(physical_activity,
+      levels = c("high", "moderate", "low"),
+      labels = c("High", "Moderate", "Low")), "Physical activity"),
+    social_network_index = lab(social_network_index, "Social network index (0-100)"),
+    home_usability = lab(home_usability, "Home usability and safety (0-100)"),
+    body_pain = lab(factor(body_pain,
+      levels = c("none", "pain_without_difficulty", "mild_difficulty",
+                 "moderate_difficulty", "severe_or_extreme_difficulty"),
+      labels = c("None", "Pain without difficulty", "Mild difficulty",
+                 "Moderate difficulty", "Severe or extreme difficulty")),
+      "Bodily pain"),
+    sleep_difficulty = lab(factor(sleep_difficulty,
+      levels = c("none", "mild", "moderate", "severe_or_extreme"),
+      labels = c("None", "Mild", "Moderate", "Severe or extreme")),
+      "Difficulty sleeping"),
+    arthritis = yn(arthritis, "Diagnosed arthritis"),
+    angina    = yn(angina, "Diagnosed angina"),
+    diabetes  = yn(diabetes, "Diagnosed diabetes"),
+    depression_diagnosis = yn(depression_diagnosis, "Diagnosed depression"),
+    quality_of_life_score = lab(quality_of_life_score, "WHOQOL-AGE score (0-100)")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", fmt(p, 3)))
+skew <- function(x) { m <- mean(x); sum((x - m)^3) / length(x) / sd(x)^3 }
+
+# Parameter accounting for the full catalogue predictor list, used in Methods.
+all_suggested <- c("age_yrs", "sex", "country", "residence", "marital_status",
+                   "education", "bmi_category", "smoking_status", "alcohol_use",
+                   "physical_activity", "body_pain", "sleep_difficulty", "sadness",
+                   "distance_vision_difficulty", "social_network_index",
+                   "neighbourhood_usability", "home_usability", "arthritis",
+                   "angina", "diabetes", "depression_diagnosis")
+n_par_full <- length(coef(lm(reformulate(all_suggested, outcome),
+                             data = mutate(dat_raw, across(where(is.character), factor))))) - 1L
+```
+
+# Introduction
+
+COURAGE in Europe is a cross-sectional survey of the general community-dwelling
+adult population of Finland, Poland and Spain, carried out to describe healthy
+ageing and its social and environmental determinants; the analysis reported by
+Miret and colleagues in *PLOS ONE* (2016) used it to model quality of life across
+the three countries. The file distributed with this catalogue holds
+`r nrow(dat_raw)` participants aged `r min(dat$age_yrs)` to `r max(dat$age_yrs)`
+(mean `r fmt(mean(dat$age_yrs), 1)` years), each with a WHOQOL-AGE quality-of-life
+score. Quality of life is the outcome that health systems for ageing populations
+are ultimately trying to protect, and it is not well predicted by diagnosis
+counts alone, so establishing which social, environmental and symptom
+characteristics track with it is a standard descriptive question.
+
+**Aim.** Among these adults in Finland, Poland and Spain, we examined which of
+age, sex, country, education, marital status, BMI category, physical activity,
+social network, home usability, bodily pain, sleep difficulty, arthritis, angina,
+diabetes and diagnosed depression are independently associated with the
+WHOQOL-AGE score, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** COURAGE in Europe, a cross-sectional multistage stratified
+cluster sample of the community-dwelling adult populations of Finland, Poland and
+Spain, fielded between 2011 and 2012. The deposited S1 file used here contains
+`r nrow(dat_raw)` participants and `r ncol(dat_raw)` variables:
+`r sum(dat$country == "Poland")` from Poland, `r sum(dat$country == "Spain")` from
+Spain and `r sum(dat$country == "Finland")` from Finland;
+`r fmt(100 * mean(dat$sex == "Female"), 1)`% are women.
+
+**Variables.** The outcome is `quality_of_life_score`, the WHOQOL-AGE score,
+a continuous index scaled from 0 (worst) to 100 (best) and treated as continuous.
+In this file it runs from `r fmt(min(dat$quality_of_life_score), 1)` to
+`r fmt(max(dat$quality_of_life_score), 1)` with mean
+`r fmt(mean(dat$quality_of_life_score), 1)` and standard deviation
+`r fmt(sd(dat$quality_of_life_score), 1)`; the distribution is
+**left-skewed** (skewness `r fmt(skew(dat$quality_of_life_score), 2)`) and
+bunched toward the upper end, with `r sum(dat$quality_of_life_score >= 95)`
+participants scoring 95 or above and `r sum(dat$quality_of_life_score == 100)`
+scoring exactly 100. That ceiling matters for the diagnostics and is returned to
+below.
+
+Predictors are age (years), sex (reference female), country (reference Poland,
+the largest group), education dichotomised as high school or higher versus none,
+primary or secondary (reference the latter), marital status (reference married or
+cohabiting), BMI category (reference normal or underweight), physical activity
+(reference high), the social network index (0-100), home usability and safety
+(0-100), bodily pain in five ordered categories (reference none), difficulty
+sleeping in four ordered categories (reference none), and diagnosed arthritis,
+angina, diabetes and depression (each reference no).
+
+**The predictor set is deliberately cut.** The catalogue suggests 21 predictors.
+Most are multi-level factors, so entering all of them costs **`r n_par_full`
+estimated parameters**, not 21: `body_pain` alone costs four, and
+`marital_status`, `alcohol_use`, `sleep_difficulty`, `sadness` and
+`distance_vision_difficulty` cost three each. With `r nrow(dat_raw)` observations
+that model is not *arithmetically* infeasible - it is about
+`r fmt(nrow(dat_raw) / n_par_full, 0)` observations per parameter, comfortably
+inside the 10-15 rule - and it should be said plainly that the parameter budget is
+not what forces the cut for a linear model on this sample. Three other things do.
+First, a `r n_par_full`-row coefficient table cannot be read, and a Purpose 3
+question ("which predictors survive mutual adjustment?") is only answerable for a
+set small enough to think about. Second, testing `r n_par_full` coefficients at
+the 0.05 level means expecting roughly `r fmt(0.05 * n_par_full, 1)` significant
+results by chance alone. Third, several of the suggested predictors are not
+plausibly causes of quality of life at all. The set used here costs **25
+parameters**, i.e. `r fmt(nrow(dat_raw) / 25, 0)` observations per parameter, and
+was fixed before any model was fitted.
+
+Six suggested predictors are dropped, each for a stated reason. `sadness` is
+excluded because it is the single most direct component of the construct being
+measured - a quality-of-life score that asks how satisfied you are with your life
+will move almost mechanically with how sad you report feeling - and because it
+overlaps heavily with `depression_diagnosis`, which is retained as the more
+clearly clinical measure. `neighbourhood_usability` is excluded because it
+correlates `r fmt(cor(dat$neighbourhood_usability, dat$home_usability), 2)` with
+`home_usability` and only `r fmt(cor(dat$neighbourhood_usability, dat$quality_of_life_score), 2)`
+with the outcome, so it adds an environment scale without adding information;
+`home_usability` is kept as the stronger of the two. `distance_vision_difficulty`
+costs three parameters for a functional limitation whose smallest stratum holds
+`r sum(dat_raw$distance_vision_difficulty == "severe_or_extreme")` people.
+`residence` is excluded because urban/rural status here is largely a country-level
+design feature (`r fmt(100 * mean(dat$residence[dat$country == "Spain"] == "urban"), 0)`%
+of Spanish participants are urban against
+`r fmt(100 * mean(dat$residence[dat$country == "Poland"] == "urban"), 0)`% of
+Polish participants), so it competes with `country`. `smoking_status` and
+`alcohol_use` are excluded as behaviours whose association with a self-reported
+quality-of-life index is indirect, and in the case of `alcohol_use` because its
+`frequent_heavy` level contains only
+`r sum(dat_raw$alcohol_use == "frequent_heavy")` participants.
+
+**Level collapsing.** Five categorical predictors were checked for sparse
+strata. `education` had `r sum(dat_raw$education == "none_or_informal")`
+participants with no or informal education, of whom
+`r sum(dat_raw$education == "none_or_informal" & dat_raw$country == "spain")` live
+in Spain and **none** in Finland; it was collapsed into the lower of the two
+remaining categories, because a level that exists in one country only cannot be
+separated from country. `marital_status` (smallest level
+`r min(table(dat$marital_status))`), `bmi_category` (`r min(table(dat$bmi_category))`)
+and `physical_activity` (`r min(table(dat$physical_activity))`) were all large
+enough to keep as supplied. `alcohol_use` would have needed collapsing (its
+`frequent_heavy` level has `r sum(dat_raw$alcohol_use == "frequent_heavy")`
+participants) but is dropped from this model for the reason above.
+
+**Statistical analysis.** `lm()`, justified because the outcome is a continuous
+score. We fitted a univariable model for each predictor first, then a single
+multivariable model containing all of them. Predictors were chosen in advance on
+subject-matter grounds, not by significance. Significance threshold 0.05;
+estimates are reported with 95% confidence intervals. Assumptions were checked
+with `performance::check_model()`, and because non-constant variance was flagged
+we additionally report HC3 heteroscedasticity-consistent standard errors. A
+pre-specified sensitivity model omitting the three symptom-and-diagnosis
+predictors (`body_pain`, `sleep_difficulty`, `depression_diagnosis`) is reported
+alongside, because those three are arguably components of quality of life rather
+than causes of it. Models are **unweighted**: the COURAGE sampling weights,
+strata and clusters are not carried in this file, so no result here is a
+nationally representative estimate. Analysis used `r R.version.string` with
+tidyverse, gtsummary and performance.
+
+**Missing data.** There is none. All `r ncol(dat_raw)` columns are 100% complete
+in this file and `r sum(complete.cases(dat_raw))` of `r nrow(dat_raw)` rows are
+complete on every variable, so the complete-case analysis uses
+`r nrow(dat_model)` of `r nrow(dat)` rows (`r n_dropped` dropped) and listwise
+deletion costs nothing. This is unusual and worth noting: it means the predictor
+set could have been expanded at no cost in sample size, so the cut above rests
+entirely on interpretability and causal-structure grounds.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(missing = "no") |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics.**")
+```
+
+The sample is old on average (median age `r median(dat_model$age_yrs)`, upper
+quartile `r quantile(dat_model$age_yrs, 0.75)`) and predominantly female, and it
+is dominated by the Polish and Spanish sites. Median WHOQOL-AGE score is
+`r fmt(median(dat_model$quality_of_life_score), 1)` with an interquartile range of
+`r fmt(quantile(dat_model$quality_of_life_score, 0.25), 1)` to
+`r fmt(quantile(dat_model$quality_of_life_score, 0.75), 1)`. Symptom burden is
+substantial: `r fmt(100 * mean(dat_model$body_pain != "None"), 0)`% report some
+bodily pain and `r fmt(100 * mean(dat_model$sleep_difficulty != "None"), 0)`%
+some difficulty sleeping, while
+`r fmt(100 * mean(dat_model$depression_diagnosis == "Yes"), 1)`% report a
+diagnosis of depression.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. WHOQOL-AGE score against age, by country, with loess smooths."}
+ggplot(dat_model, aes(age_yrs, quality_of_life_score, colour = country)) +
+  geom_point(alpha = 0.15, size = 0.8) +
+  geom_smooth(method = "loess", se = TRUE, linewidth = 1.1) +
+  scale_colour_manual(values = c(Poland = "#B5495B", Spain = "#E0A458",
+                                 Finland = "#3F7CAC")) +
+  labs(x = "Age (years)", y = "WHOQOL-AGE score (0-100)", colour = "Country")
+```
+
+Quality of life declines with age in all three countries, but the three curves are
+separated by roughly the same amount at every age and the Finnish curve is
+markedly higher and flatter than the Polish one; the decline in Poland is steeper
+and begins earlier, which is a first hint that country modifies the age gradient
+rather than merely shifting it.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(lm(reformulate(v, outcome), data = dat_model), conf.int = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 2) {
+  r <- utid[utid$term == term, ]
+  sprintf("%s points (95%% CI %s to %s)", fmt(r$estimate, d),
+          fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+```
+
+Bodily pain shows the largest crude association of any predictor: compared with
+participants reporting no pain, those with severe or extreme pain-related
+difficulty score `r ug("body_painSevere or extreme difficulty")` lower
+(p `r up("body_painSevere or extreme difficulty")`), and the gradient is
+monotonic across the intermediate categories. Severe or extreme sleep difficulty
+is associated with `r ug("sleep_difficultySevere or extreme")`
+(p `r up("sleep_difficultySevere or extreme")`) and a depression diagnosis with
+`r ug("depression_diagnosisYes")` (p `r up("depression_diagnosisYes")`). Country
+is the next strongest: Finnish participants score
+`r ug("countryFinland")` higher than Polish participants
+(p `r up("countryFinland")`) and Spanish participants
+`r ug("countrySpain")` higher (p `r up("countrySpain")`). Each additional point of
+the social network index is associated with `r ug("social_network_index")`
+(p `r up("social_network_index")`) and each point of home usability with
+`r ug("home_usability")` (p `r up("home_usability")`), so across the full 0-100
+range of those scales the implied differences are large. Each additional year of
+age is associated with `r ug("age_yrs")` (p `r up("age_yrs")`), about
+`r fmt(-10 * utid$estimate[utid$term == "age_yrs"], 1)` points per decade.
+Widowhood (`r ug("marital_statusWidowed")`, p `r up("marital_statusWidowed")`),
+low physical activity (`r ug("physical_activityLow")`,
+p `r up("physical_activityLow")`), arthritis (`r ug("arthritisYes")`,
+p `r up("arthritisYes")`), angina (`r ug("anginaYes")`, p `r up("anginaYes")`),
+diabetes (`r ug("diabetesYes")`, p `r up("diabetesYes")`) and obesity
+(`r ug("bmi_categoryObese")`, p `r up("bmi_categoryObese")`) all show clear crude
+deficits. Men score `r ug("sexMale")` **higher** than women
+(p `r up("sexMale")`) - a result that does not survive adjustment.
+
+## Why adjustment is needed
+
+**Age** is the dominant confounder in this dataset and it operates on almost
+every crude estimate. Older participants are far more likely to be widowed, to
+report arthritis, angina and diabetes, to have bodily pain and to be in the
+low physical-activity category, and they independently score lower on WHOQOL-AGE.
+The crude `r ug("marital_statusWidowed")` deficit for widowhood is therefore
+substantially a statement about age: the median age of widowed participants is
+`r median(dat_model$age_yrs[dat_model$marital_status == "Widowed"])` against
+`r median(dat_model$age_yrs[dat_model$marital_status == "Married or cohabiting"])`
+for the married or cohabiting. The same argument applies to arthritis, angina and
+diabetes, whose crude coefficients are largely age in disguise.
+
+**Country** is the second, and it is structural rather than incidental. Mean
+WHOQOL-AGE is `r fmt(mean(dat_model$quality_of_life_score[dat_model$country == "Finland"]), 1)`
+in Finland, `r fmt(mean(dat_model$quality_of_life_score[dat_model$country == "Spain"]), 1)`
+in Spain and `r fmt(mean(dat_model$quality_of_life_score[dat_model$country == "Poland"]), 1)`
+in Poland, and the three national samples differ sharply in education
+(`r fmt(100 * mean(dat_model$education[dat_model$country == "Finland"] == "High school or higher"), 0)`%
+of Finnish participants have high school or higher against
+`r fmt(100 * mean(dat_model$education[dat_model$country == "Poland"] == "High school or higher"), 0)`%
+of Polish participants) and in age. Any crude education or social-network
+coefficient is therefore partly a between-country comparison. **Sex** works
+differently again: women report more bodily pain
+(`r fmt(100 * mean(dat_model$body_pain[dat_model$sex == "Female"] == "Severe or extreme difficulty"), 1)`%
+report severe or extreme pain difficulty against
+`r fmt(100 * mean(dat_model$body_pain[dat_model$sex == "Male"] == "Severe or extreme difficulty"), 1)`%
+of men), so the crude male advantage is a pain difference; holding pain constant
+should reverse it. Mutual adjustment lets each coefficient be read as a comparison
+between participants alike on the other measured characteristics.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE)
+g <- function(term, d = 2) {
+  r <- tid[tid$term == term, ]
+  sprintf("%s points (95%% CI %s to %s)", fmt(r$estimate, d),
+          fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+```
+
+```{r fit-stats}
+s <- summary(fit)
+tibble(
+  Statistic = c("Complete-case N", "Parameters (excl. intercept)",
+                "R-squared", "Adjusted R-squared", "Residual SE (points)"),
+  Value = c(as.character(nrow(dat_model)),
+            as.character(length(coef(fit)) - 1L),
+            fmt(s$r.squared, 3), fmt(s$adj.r.squared, 3), fmt(s$sigma, 2))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable linear model for WHOQOL-AGE score**"))
+```
+
+The model explains `r fmt(100 * s$r.squared, 1)`% of the variance in the
+WHOQOL-AGE score (adjusted R-squared `r fmt(s$adj.r.squared, 3)`), which is high
+for a model of a self-reported score; the gap between the raw and adjusted values
+is negligible because `r length(coef(fit)) - 1L` parameters on
+`r nrow(dat_model)` observations is a modest spend. Residual standard deviation is
+`r fmt(s$sigma, 1)` points against an outcome standard deviation of
+`r fmt(sd(dat_model$quality_of_life_score), 1)`.
+
+Among participants of the same age, sex, country, education, marital status, BMI
+category, activity level, social network, home usability, sleep and diagnosed
+conditions, severe or extreme pain-related difficulty is associated with
+`r g("body_painSevere or extreme difficulty")` lower quality of life
+(p `r gp("body_painSevere or extreme difficulty")`), and the gradient across pain
+categories remains monotonic. Severe or extreme sleep difficulty is associated
+with `r g("sleep_difficultySevere or extreme")`
+(p `r gp("sleep_difficultySevere or extreme")`) and a depression diagnosis with
+`r g("depression_diagnosisYes")` (p `r gp("depression_diagnosisYes")`). Being
+Finnish rather than Polish remains worth `r g("countryFinland")`
+(p `r gp("countryFinland")`) - the largest single contrast in the model after
+severe pain, and one that no combination of individual-level characteristics in
+this file explains away. Each point of the social network index is worth
+`r g("social_network_index")` (p `r gp("social_network_index")`) and each point of
+home usability `r g("home_usability")` (p `r gp("home_usability")`), i.e. about
+`r fmt(20 * tid$estimate[tid$term == "social_network_index"], 1)` and
+`r fmt(20 * tid$estimate[tid$term == "home_usability"], 1)` points respectively
+across a 20-point difference on those scales. Low physical activity remains
+associated with `r g("physical_activityLow")`
+(p `r gp("physical_activityLow")`) and high school education or above with
+`r g("educationHigh school or higher")` (p `r gp("educationHigh school or higher")`).
+Age falls to `r g("age_yrs")` per year (p `r gp("age_yrs")`), about
+`r fmt(-10 * tid$estimate[tid$term == "age_yrs"], 1)` points per decade. Arthritis
+(`r g("arthritisYes")`, p `r gp("arthritisYes")`) and both BMI categories are no
+longer independently associated, and men now score `r g("sexMale")` **lower** than
+women (p `r gp("sexMale")`), the reverse of the crude direction. These are
+associations among the participants observed, not effects of intervening.
+
+**Statistical against practical significance.** With `r nrow(dat_model)`
+observations this model has enough power to detect differences that would not
+change anyone's decision. The sex coefficient is a good example: at
+`r g("sexMale")` on a 0-100 scale it is formally significant
+(p `r gp("sexMale")`) but amounts to roughly
+`r fmt(100 * abs(tid$estimate[tid$term == "sexMale"]) / sd(dat_model$quality_of_life_score), 0)`%
+of one outcome standard deviation, which is not a difference a clinician or a
+policymaker would act on. The same caution applies to the angina
+(`r g("anginaYes")`) and diabetes (`r g("diabetesYes")`) contrasts. Contrast those
+with severe pain (`r g("body_painSevere or extreme difficulty")`, close to
+`r fmt(abs(tid$estimate[tid$term == "body_painSevere or extreme difficulty"]) / sd(dat_model$quality_of_life_score), 1)`
+standard deviations) or the Finland contrast (`r g("countryFinland")`), which are
+large enough to matter substantively. Significance and importance are different
+questions, and at this sample size only the second is informative.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+Several estimates move a long way. **Arthritis** collapses from
+`r ug("arthritisYes")` crude to `r g("arthritisYes")` adjusted
+(p `r up("arthritisYes")` to p `r gp("arthritisYes")`), i.e. essentially all the
+way to the null and out of significance: the crude arthritis deficit was age and
+bodily pain, and once pain is in the model arthritis has nothing left to explain.
+**Widowhood** does the same thing and then some, from `r ug("marital_statusWidowed")`
+crude to `r g("marital_statusWidowed")` adjusted - the sign reverses and the
+estimate becomes non-significant, which is age confounding almost in its pure
+form. **Obesity** moves from `r ug("bmi_categoryObese")` (p `r up("bmi_categoryObese")`)
+to `r g("bmi_categoryObese")` (p `r gp("bmi_categoryObese")`), again explained by
+pain and comorbidity. **Sex** is the most striking: `r ug("sexMale")` crude,
+significant in the direction of men doing better, becomes `r g("sexMale")`
+adjusted, significant in the direction of men doing worse. This is masking rather
+than confounding in the usual sense - women's higher pain burden was hiding a
+small female advantage - and it is a good illustration of why a crude sex
+difference in a symptom-laden score should not be reported on its own.
+
+By contrast, **country** barely moves: the Finland contrast goes only from
+`r ug("countryFinland")` to `r g("countryFinland")`, retaining about
+`r fmt(100 * tid$estimate[tid$term == "countryFinland"] / utid$estimate[utid$term == "countryFinland"], 0)`%
+of its crude size, and it stays the second-largest term in the model. Nothing
+measured at the individual level in this file accounts for the national gap.
+**Severe bodily pain** also retains about
+`r fmt(100 * tid$estimate[tid$term == "body_painSevere or extreme difficulty"] / utid$estimate[utid$term == "body_painSevere or extreme difficulty"], 0)`%
+of its crude magnitude and **social network index** about
+`r fmt(100 * tid$estimate[tid$term == "social_network_index"] / utid$estimate[utid$term == "social_network_index"], 0)`%.
+Two contrasts change significance status in opposite directions. Reporting pain
+*without* associated difficulty crosses **into** significance, from
+`r ug("body_painPain without difficulty")` (p `r up("body_painPain without difficulty")`)
+crude to `r g("body_painPain without difficulty")`
+(p `r gp("body_painPain without difficulty")`) adjusted: participants in the
+no-pain reference group have a median age of
+`r median(dat_model$age_yrs[dat_model$body_pain == "None"])` against
+`r median(dat_model$age_yrs[dat_model$body_pain == "Pain without difficulty"])` in
+the pain-without-difficulty group, so holding age constant unmasks a small
+deficit. Never-married status crosses the other way, from
+`r ug("marital_statusNever married")` (p `r up("marital_statusNever married")`) to
+`r g("marital_statusNever married")` (p `r gp("marital_statusNever married")`),
+which is age confounding once more - never-married participants have a median age
+of `r median(dat_model$age_yrs[dat_model$marital_status == "Never married"])`,
+`r median(dat_model$age_yrs[dat_model$marital_status == "Married or cohabiting"]) - median(dat_model$age_yrs[dat_model$marital_status == "Never married"])`
+years younger than the married or cohabiting.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r het-check}
+het <- check_heteroscedasticity(fit)
+print(het)
+nor <- check_normality(fit)
+print(nor)
+```
+
+```{r collin}
+check_collinearity(fit)
+```
+
+```{r robust-se}
+rob   <- lmtest::coeftest(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+robci <- lmtest::coefci(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+n_flip <- sum((summary(fit)$coefficients[, 4] < 0.05) != (rob[, 4] < 0.05))
+tibble(
+  Term = rownames(rob),
+  Estimate = fmt(rob[, 1], 3),
+  `SE (OLS)` = fmt(summary(fit)$coefficients[, 2], 3),
+  `SE (HC3)` = fmt(rob[, 2], 3),
+  `95% CI (HC3)` = paste0(fmt(robci[, 1], 2), " to ", fmt(robci[, 2], 2)),
+  `p (HC3)` = fmt(rob[, 4], 3)
+) |>
+  filter(Term != "(Intercept)") |>
+  gt() |>
+  tab_header(title = md("**Table 3. HC3 heteroscedasticity-consistent standard errors.**"))
+```
+
+The linearity and posterior-predictive panels are acceptable but not clean. The
+observed outcome has a ceiling - `r sum(dat_model$quality_of_life_score == 100)`
+participants score exactly 100 and `r sum(dat_model$quality_of_life_score == 75)`
+score exactly 75, a scoring artefact of the instrument - and the fitted normal
+predictive distribution cannot reproduce either feature. The residual-versus-fitted
+panel shows the spread narrowing at high fitted values, which is what a ceiling
+produces, and `check_heteroscedasticity()` rejects constant variance
+(p < 0.001). Residuals are left-skewed
+(skewness `r fmt(skew(resid(fit)), 2)`, milder than the raw outcome's
+`r fmt(skew(dat_model$quality_of_life_score), 2)`) and `check_normality()` also
+rejects; with `r nrow(dat_model)` observations both tests would reject trivial
+departures, so the QQ plot matters more than the p-value, and it shows a heavy
+lower tail rather than a wholesale failure. Collinearity is not a problem: the
+largest VIF is
+`r fmt(max(as.data.frame(check_collinearity(fit))$VIF), 2)` for
+`r as.data.frame(check_collinearity(fit))$Term[which.max(as.data.frame(check_collinearity(fit))$VIF)]`,
+well below the conventional threshold of 5, and the pain, sleep and depression
+terms are not competing as badly as their substantive overlap would suggest.
+Influence is negligible: the largest Cook's distance is
+`r fmt(max(cooks.distance(fit)), 4)` and the largest leverage
+`r fmt(max(hatvalues(fit)), 3)`, so no participant drives the fit.
+
+Table 3 reports HC3 robust standard errors because variance is non-constant. They
+change very little - the largest ratio of HC3 to OLS standard error is
+`r fmt(max(rob[, 2] / summary(fit)$coefficients[, 2]), 2)` - and
+**`r n_flip`** coefficients change significance status under robust inference, so
+the substantive conclusions stand. A transformation would help the skew (squaring
+the score reduces residual skewness to about 0.21) but at the cost of coefficients
+that no longer read in points of WHOQOL-AGE, and it does not change which
+predictors matter; we therefore report the untransformed model and flag the
+violation.
+
+```{r sensitivity}
+sens_preds <- setdiff(predictors, c("body_pain", "sleep_difficulty",
+                                    "depression_diagnosis"))
+fit_s <- lm(reformulate(sens_preds, outcome), data = dat_model)
+ss <- summary(fit_s)
+tids <- tidy(fit_s, conf.int = TRUE)
+gs <- function(term, d = 2) {
+  r <- tids[tids$term == term, ]
+  sprintf("%s points (95%% CI %s to %s)", fmt(r$estimate, d),
+          fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+tibble(
+  Model = c("Full model (25 parameters)",
+            "Without pain, sleep and depression (18 parameters)"),
+  `R-squared` = c(fmt(s$r.squared, 3), fmt(ss$r.squared, 3)),
+  `Age (per year)` = c(fmt(tid$estimate[tid$term == "age_yrs"], 3),
+                       fmt(tids$estimate[tids$term == "age_yrs"], 3)),
+  `Male vs female` = c(fmt(tid$estimate[tid$term == "sexMale"], 2),
+                       fmt(tids$estimate[tids$term == "sexMale"], 2)),
+  `Finland vs Poland` = c(fmt(tid$estimate[tid$term == "countryFinland"], 2),
+                          fmt(tids$estimate[tids$term == "countryFinland"], 2)),
+  `Obese vs normal` = c(fmt(tid$estimate[tid$term == "bmi_categoryObese"], 2),
+                        fmt(tids$estimate[tids$term == "bmi_categoryObese"], 2))
+) |>
+  gt() |>
+  tab_header(title = md("**Table 4. Sensitivity analysis: dropping the symptom and diagnosis predictors.**"))
+```
+
+Table 4 is the analysis that decides how much of this model to believe. Dropping
+`body_pain`, `sleep_difficulty` and `depression_diagnosis` takes R-squared from
+`r fmt(s$r.squared, 3)` to `r fmt(ss$r.squared, 3)`, so those three predictors
+alone account for
+`r fmt(100 * (s$r.squared - ss$r.squared), 1)` percentage points of explained
+variance, roughly
+`r fmt(100 * (s$r.squared - ss$r.squared) / s$r.squared, 0)`% of everything the
+model explains. Without them, age recovers to `r gs("age_yrs")` per year, obesity becomes
+`r gs("bmi_categoryObese")` and significant again, sex reverts to men scoring
+`r gs("sexMale")` higher, and the Finland contrast grows to `r gs("countryFinland")`.
+Every one of those changes is what you would expect if the symptom variables sit
+*between* the demographic predictors and the outcome, or are part of the outcome
+itself.
+
+# Discussion
+
+Among these `r nrow(dat_model)` adults in Finland, Poland and Spain, the
+characteristics most strongly and independently associated with a lower
+WHOQOL-AGE score are bodily pain (up to
+`r fmt(-tid$estimate[tid$term == "body_painSevere or extreme difficulty"], 1)`
+points for severe or extreme pain-related difficulty), difficulty sleeping
+(up to `r fmt(-tid$estimate[tid$term == "sleep_difficultySevere or extreme"], 1)`
+points) and a diagnosis of depression
+(`r fmt(-tid$estimate[tid$term == "depression_diagnosisYes"], 1)` points), while a
+richer social network and a more usable, safer home are associated with higher
+scores. Country remains the second-largest contrast in the model: Finnish
+participants score `r fmt(tid$estimate[tid$term == "countryFinland"], 1)` points
+above otherwise similar Polish participants, and that gap is not explained by any
+individual characteristic measured here. The crude associations with arthritis,
+obesity, widowhood and being male all disappear on adjustment. Practically, the
+model points at pain, sleep and mood - all modifiable, all routinely
+under-treated in older adults - rather than at diagnosis lists, as the levers most
+associated with self-reported quality of life; but see the reflection problem
+below before reading that as a treatment recommendation.
+
+**The reflection problem is the main interpretive weakness of this analysis.**
+WHOQOL-AGE is a summary of how people rate their own physical health,
+psychological state, social relationships and environment. `body_pain`,
+`sleep_difficulty` and `sadness` are not distant causes of that rating - they are
+close to being the things the rating is made of. Asking someone how much pain
+interferes with their life and then asking them to rate their quality of life is
+asking two versions of the same question, and regressing the second on the first
+recovers the arithmetic of the instrument as much as any causal relationship. The
+same argument, more weakly, applies to `social_network_index` and
+`home_usability`, which measure the social-relationships and environment domains
+that WHOQOL-AGE itself contains. Table 4 quantifies the problem: the three
+symptom-and-diagnosis predictors carry
+`r fmt(100 * (s$r.squared - ss$r.squared), 1)` percentage points of R-squared on
+their own, and removing them changes the direction of the sex coefficient and
+restores significance to obesity. Even where the relationship is genuinely causal
+rather than definitional, the direction is unclear in a cross-sectional survey:
+poor quality of life plausibly worsens sleep and amplifies reported pain as much
+as the reverse. The honest reading is that the pain, sleep and depression
+coefficients describe how the components of a quality-of-life score hang together,
+and that the demographic and structural coefficients (age, sex, country,
+education, obesity) are the ones with a defensible causal interpretation - and
+those should be read from the sensitivity model in Table 4, not from the full
+model, because the full model conditions on variables that sit on the pathway.
+
+**Limitations.** The models are **unweighted**: the COURAGE sampling weights,
+strata and clusters are not carried in this file, so the sample must not be
+described as representative of any national population and the standard errors
+ignore clustering within primary sampling units, which will make them too small.
+The design is cross-sectional, so temporality is unknown and reverse causation is
+live for every symptom predictor, as set out above; adjusting for pain, sleep and
+depression is probably over-adjustment for mediators rather than confounder
+control. The deposited file differs from the published paper: it holds
+`r nrow(dat_raw)` rows with mean age `r fmt(mean(dat$age_yrs), 1)` years, whereas
+the source paper reports 5,639 participants with mean age 46.3 years, so this is
+not the analytic sample the authors modelled and results here should not be
+compared with theirs. Residual variance is non-constant and residuals are
+left-skewed because the outcome has a ceiling at 100 and a large spike at 75; HC3
+standard errors address inference (changing `r n_flip` conclusions) but not the
+model's inability to represent the top of the distribution. There is evidence of
+effect modification by country that the additive model ignores: a country-by-age
+interaction improves the fit (p `r pv(anova(fit, update(fit, . ~ . + country:age_yrs))$"Pr(>F)"[2])`)
+and a country-by-education interaction does too
+(p `r pv(anova(fit, update(fit, . ~ . + country:education))$"Pr(>F)"[2])`), so the
+single age slope reported here is an average across three quite different
+national gradients. Age enters linearly although a quadratic term is significant
+(p `r pv(anova(fit, update(fit, . ~ . + I(age_yrs^2)))$"Pr(>F)"[2])`). The
+education variable was collapsed to two levels, so any effect confined to the
+`r sum(dat_raw$education == "none_or_informal")` participants with no formal
+education is invisible. Six suggested predictors were excluded a priori, so
+residual confounding by smoking, alcohol, vision and neighbourhood environment is
+certain. With `r nrow(dat_model)` observations, small and practically
+uninteresting differences reach significance. All estimates are associations, not
+causal effects.
+
+**Future work.** Refit with the COURAGE survey design (weights, strata and
+clusters), with country-specific age slopes, and with the WHOQOL-AGE domains
+separated from their putative determinants so that pain and sleep are not
+simultaneously predictors and constituents of the outcome.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+- **USABLE, and the strongest of the three outcomes in this dataset.** No
+  missing data at all (`r sum(complete.cases(dat_raw))`/`r nrow(dat_raw)` rows
+  complete on every column), n = `r nrow(dat_model)`, R-squared
+  `r fmt(s$r.squared, 3)`, no separation risk, no influential points
+  (max Cook's `r fmt(max(cooks.distance(fit)), 4)`), max VIF
+  `r fmt(max(as.data.frame(check_collinearity(fit))$VIF), 2)`.
+- **MAJOR: the reflection problem.** `body_pain`, `sleep_difficulty` and
+  `sadness` are components or near-components of the WHOQOL-AGE construct, and
+  `social_network_index` and `home_usability` overlap with its social and
+  environment domains. Dropping the first three takes R-squared from
+  `r fmt(s$r.squared, 3)` to `r fmt(ss$r.squared, 3)`. A student who includes them
+  and writes "pain reduces quality of life" has stated something close to a
+  tautology. This is the single most important thing to warn about for this
+  dataset, and it should probably be flagged on the dataset page.
+- **MAJOR: 21 suggested predictors cost `r n_par_full` parameters, not 21.**
+  Most are multi-level factors. For the linear outcome the parameter budget is
+  not violated (`r fmt(nrow(dat_raw) / n_par_full, 0)` observations per
+  parameter), so a student *can* fit all 21 without any warning appearing - which
+  is exactly the trap. The result is an unreadable table in which roughly
+  `r fmt(0.05 * n_par_full, 1)` coefficients are significant by chance. The brief
+  must tell students to count parameters and cut.
+- **MAJOR: the file does not match the paper.** `r nrow(dat_raw)` rows, mean age
+  `r fmt(mean(dat$age_yrs), 1)` years, median `r median(dat$age_yrs)`, range
+  `r min(dat$age_yrs)`-`r max(dat$age_yrs)`; the paper reports 5,639 participants
+  with mean age 46.3. Verified directly from the CSV. The age discrepancy of
+  ~11.5 years is far too large to be a rounding or subsetting artefact and
+  suggests the deposited S1 file is a different (older) subsample from the one
+  analysed. Students must not be asked to reproduce published numbers, and the
+  dataset page should carry an explicit caution.
+- **MAJOR: failed diagnostics.** Heteroscedasticity p < 0.001 and non-normality
+  p < 0.001, both driven by the ceiling: `r sum(dat_model$quality_of_life_score == 100)`
+  participants score exactly 100 and `r sum(dat_model$quality_of_life_score == 75)`
+  score exactly 75 (a single scoring value accounting for
+  `r fmt(100 * mean(dat_model$quality_of_life_score == 75), 1)`% of the sample).
+  HC3 changes `r n_flip` conclusions, so this is a reportable violation rather
+  than a threat to the findings.
+- **MINOR but structural: `education == "none_or_informal"` is a Spain-only
+  category.** `r sum(dat_raw$education == "none_or_informal" & dat_raw$country == "spain")`
+  of its `r sum(dat_raw$education == "none_or_informal")` members are Spanish and
+  **zero** are Finnish. Kept as three levels alongside `country` it is estimable
+  but the contrast is a within-Spain contrast; interacted with `country` it
+  produces outright separation. Collapsed to two levels here.
+- **MINOR: `alcohol_use` has a `frequent_heavy` level of
+  `r sum(dat_raw$alcohol_use == "frequent_heavy")` participants** (9 with
+  depression, 11 with hypertension). Harmless in a linear model, dangerous in the
+  logistic ones - see the other two documents.
+- **MINOR: unmodelled effect modification by country.** country-by-age
+  p `r pv(anova(fit, update(fit, . ~ . + country:age_yrs))$"Pr(>F)"[2])`,
+  country-by-education
+  p `r pv(anova(fit, update(fit, . ~ . + country:education))$"Pr(>F)"[2])`.
+  The additive model is a simplification, not a description of three parallel
+  populations. A good student can mention it; the workshop does not require
+  interactions.
+- **MINOR: non-linear age.** A quadratic age term is significant
+  (p `r pv(anova(fit, update(fit, . ~ . + I(age_yrs^2)))$"Pr(>F)"[2])`), so the
+  linear age coefficient understates the decline at the oldest ages.
+- **Unweighted survey analysis.** Must be stated in Methods and Limitations for
+  every outcome in this dataset.

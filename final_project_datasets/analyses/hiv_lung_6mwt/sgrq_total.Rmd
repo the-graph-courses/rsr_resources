@@ -1,0 +1,560 @@
+---
+title: "Respiratory quality of life (SGRQ total) in adults with and without HIV"
+subtitle: "Dataset 11: HIV infection and exercise capacity"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "hiv_lung_6mwt.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names. The three SGRQ
+# subscales are NOT predictors: the total is an arithmetic function of them.
+outcome    <- "sgrq_total"
+predictors <- c("hiv_positive", "age_yrs", "sex", "current_smoker", "pack_years",
+                "systolic_bp", "diastolic_bp", "haemoglobin_g_dl",
+                "fev1_pct_predicted", "fvc_pct_predicted", "dlco_pct_predicted")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    hiv_positive = lab(factor(hiv_positive, levels = c(0, 1), labels = c("No", "Yes")),
+                       "Living with HIV"),
+    sex = lab(factor(sex, levels = c("male", "female"), labels = c("Male", "Female")),
+              "Sex"),
+    # Smoking is parameterised as cumulative dose plus a current-smoking indicator;
+    # see Methods for why the three-level factor is not used as-is.
+    current_smoker = lab(factor(if_else(smoking_status == "current", "Yes", "No"),
+                                levels = c("No", "Yes")),
+                         "Current smoker"),
+    smoking_status = lab(factor(smoking_status, levels = c("never", "former", "current"),
+                                labels = c("Never", "Former", "Current")),
+                         "Smoking status"),
+    age_yrs = lab(age_yrs, "Age (years)"),
+    pack_years = lab(pack_years, "Smoking (pack-years)"),
+    systolic_bp = lab(systolic_bp, "Systolic BP (mmHg)"),
+    diastolic_bp = lab(diastolic_bp, "Diastolic BP (mmHg)"),
+    haemoglobin_g_dl = lab(haemoglobin_g_dl, "Haemoglobin (g/dL)"),
+    fev1_pct_predicted = lab(fev1_pct_predicted, "FEV1 (% predicted)"),
+    fvc_pct_predicted  = lab(fvc_pct_predicted, "FVC (% predicted)"),
+    dlco_pct_predicted = lab(dlco_pct_predicted, "DLCO (% predicted)"),
+    six_min_walk_m = lab(six_min_walk_m, "Six-minute walk distance (m)"),
+    sgrq_total = lab(sgrq_total, "SGRQ total score (0-100)")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", fmt(p, 3)))
+```
+
+# Introduction
+
+The Pittsburgh/UCSF lung-function study enrolled adults living with HIV and
+HIV-uninfected comparators from two US clinical centres and assessed all of them
+identically with a six-minute walk test, spirometry, diffusing capacity and the
+St George's Respiratory Questionnaire (Fitzpatrick and colleagues, *PLOS ONE*
+2019). This teaching extract holds `r nrow(dat)` participants,
+`r sum(dat$hiv_positive == "Yes")` of them living with HIV. The SGRQ is the
+standard patient-reported measure of respiratory health status: it runs from 0
+to 100 with higher scores meaning worse quality of life, a four-point change is
+the accepted minimal important difference, and it is the outcome that determines
+whether measured lung impairment actually matters to the person who has it.
+
+**Aim.** Among these adults, we examined which of HIV status, age, sex, current
+smoking, cumulative pack-years, blood pressure, haemoglobin and the three lung
+function measurements (FEV1, FVC and DLCO, each as a percentage of predicted)
+are independently associated with the SGRQ total score, mutually adjusting for
+the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** A cross-sectional analysis of participants enrolled at two US
+clinical centres (Pittsburgh and San Francisco) into a cohort study of lung
+function in HIV. The extract contains `r nrow(dat)` adults aged
+`r min(dat$age_yrs)` to `r max(dat$age_yrs)` and 21 variables;
+`r sum(dat$hiv_positive == "Yes")` (`r fmt(100 * mean(dat$hiv_positive == "Yes"), 1)`%)
+are living with HIV. All measurements were made at a single study visit.
+
+**Variables.** The outcome is `sgrq_total`, the St George's Respiratory
+Questionnaire total score on a 0-100 scale where **higher is worse** (observed
+range `r fmt(min(dat$sgrq_total), 1)` to `r fmt(max(dat$sgrq_total), 1)`),
+treated as continuous. Predictors are HIV status (reference HIV-negative, the
+clinically unexposed group), age (years), sex (reference male, the larger
+group), current smoking (reference not a current smoker), cumulative smoking
+exposure (pack-years), systolic and diastolic blood pressure (mmHg), haemoglobin
+(g/dL), and FEV1, FVC and DLCO each expressed as a percentage of the predicted
+value for a person of the same age, sex and height.
+
+**The three SGRQ subscales are excluded, and this is not negotiable.** The
+questionnaire's total score is a fixed weighted combination of its symptoms,
+activity and impacts components: regressing `sgrq_total` on the three subscales
+in this file returns R-squared
+`r fmt(summary(lm(sgrq_total ~ sgrq_symptoms + sgrq_activity + sgrq_impacts, data = dat))$r.squared, 4)`,
+i.e. they reproduce the outcome to within rounding error. Putting any of them on
+the right-hand side is regressing a score on its own components, which is
+circular and tells us nothing.
+
+**Smoking is entered once, as dose plus a current-smoking indicator.** The
+shipped `smoking_status` variable has three levels (never
+`r sum(dat$smoking_status == "Never")`, former
+`r sum(dat$smoking_status == "Former")`, current
+`r sum(dat$smoking_status == "Current")`) and `pack_years` is **exactly zero for
+all `r sum(dat$pack_years == 0)` never-smokers and strictly positive for every
+ever-smoker**, so the two encode the same never/ever distinction twice. Entering
+the untouched factor alongside pack-years would force the former- and
+current-smoker contrasts to be estimated at zero pack-years, a value no
+ever-smoker in this sample has. We therefore keep `pack_years` as the
+cumulative-dose term and add one binary indicator for *current* smoking, which
+is the piece of information pack-years cannot carry.
+
+**Variables deliberately excluded.** `cd4_count`, `on_antiretroviral` and
+`viral_load_detectable` are **missing by design** for participants without HIV;
+any of them in the model deletes most or all of the HIV-negative comparison
+group. `mmrc_dyspnoea` is excluded on two grounds: it is missing for
+`r sum(is.na(dat$mmrc_dyspnoea))` participants, **all of them HIV-positive**, and
+it is a breathlessness rating that overlaps conceptually with the SGRQ symptoms
+domain. `six_min_walk_m` is excluded because it is analysed as a separate outcome
+and is best regarded as a parallel consequence of lung disease rather than a
+determinant of quality of life.
+
+**Statistical analysis.** `lm()`, justified because the outcome is a continuous
+score with many distinct values. We fitted a univariable model for each predictor
+first, then a single multivariable model containing all of them. Predictors were
+chosen in advance on subject-matter grounds, not by significance. Significance
+threshold 0.05; estimates are reported with 95% confidence intervals.
+Assumptions were checked with `performance::check_model()`, and because
+non-constant variance was flagged we additionally report HC3
+heteroscedasticity-consistent standard errors. Analysis used
+`r R.version.string` with tidyverse, gtsummary and performance.
+
+**Parameter budget.** The model estimates
+`r length(coef(lm(reformulate(predictors, outcome), data = dat_model))) - 1L`
+parameters on `r nrow(dat_model)` complete cases, about
+`r fmt(nrow(dat_model) / (length(coef(lm(reformulate(predictors, outcome), data = dat_model))) - 1L), 0)`
+observations per parameter, comfortably inside the 10-15 rule. No cut to the
+suggested predictor list was needed.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped). The outcome itself is complete
+(`r sum(!is.na(dat$sgrq_total))`/`r nrow(dat)`); the loss is entirely from
+predictors — haemoglobin (`r sum(is.na(dat$haemoglobin_g_dl))` missing),
+spirometry (`r sum(is.na(dat$fev1_pct_predicted))`), blood pressure
+(`r sum(is.na(dat$systolic_bp))`) and DLCO
+(`r sum(is.na(dat$dlco_pct_predicted))`). The analytic sample keeps
+`r sum(dat_model$hiv_positive == "Yes")` participants with HIV and
+`r sum(dat_model$hiv_positive == "No")` without.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(missing = "no") |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics (complete-case analytic sample).**")
+```
+
+The SGRQ distribution is heavily floor-weighted: the median total is
+`r fmt(median(dat_model$sgrq_total), 1)`,
+`r sum(dat_model$sgrq_total == 0)` participants score exactly zero (no
+respiratory impact at all) and the interquartile range runs only to
+`r fmt(quantile(dat_model$sgrq_total, 0.75), 1)`, yet the maximum is
+`r fmt(max(dat_model$sgrq_total), 1)`. The sample is middle-aged (median age
+`r median(dat_model$age_yrs)` years), mostly male, and about
+`r fmt(100 * mean(dat_model$current_smoker == "Yes"), 0)`% are current smokers.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. SGRQ total score against FEV1 (% predicted), by HIV status."}
+ggplot(dat_model, aes(fev1_pct_predicted, sgrq_total, colour = hiv_positive)) +
+  geom_point(alpha = 0.5, size = 1.6) +
+  geom_smooth(method = "lm", se = TRUE, linewidth = 0.9) +
+  scale_colour_manual(values = c(No = "#3F6F9F", Yes = "#B5495B")) +
+  labs(x = "FEV1 (% predicted)", y = "SGRQ total score (0-100, higher = worse)",
+       colour = "Living with HIV")
+```
+
+Respiratory quality of life worsens as FEV1 falls in both groups, but the cloud
+is strongly asymmetric — a dense floor of participants reporting no symptoms at
+every level of lung function, and a scatter of high scores concentrated at low
+FEV1 — which is the pattern that will show up later as non-constant residual
+variance.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(lm(reformulate(v, outcome), data = dat_model), conf.int = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 2) {
+  r <- utid[utid$term == term, ]
+  sprintf("%s points (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+```
+
+Crudely, participants living with HIV score `r ug("hiv_positiveYes")` higher on
+the SGRQ, i.e. worse respiratory quality of life (p `r up("hiv_positiveYes")`),
+a difference just at the four-point minimal important threshold. Airflow is the
+strongest crude correlate: each additional percentage point of predicted FEV1 is
+associated with `r ug("fev1_pct_predicted")` (p `r up("fev1_pct_predicted")`), so
+a 20-point deficit in FEV1 corresponds to about
+`r fmt(abs(20 * utid$estimate[utid$term == "fev1_pct_predicted"]), 1)` SGRQ
+points. FVC (`r ug("fvc_pct_predicted")`, p `r up("fvc_pct_predicted")`) and DLCO
+(`r ug("dlco_pct_predicted")`, p `r up("dlco_pct_predicted")`) show weaker
+gradients in the same direction. Current smokers score
+`r ug("current_smokerYes")` worse (p `r up("current_smokerYes")`), each
+pack-year `r ug("pack_years")` (p `r up("pack_years")`), women
+`r ug("sexFemale")` worse than men (p `r up("sexFemale")`), and each additional
+g/dL of haemoglobin is associated with `r ug("haemoglobin_g_dl")`
+(p `r up("haemoglobin_g_dl")`). Age
+(`r ug("age_yrs")`, p `r up("age_yrs")`) and both blood pressures show no crude
+association.
+
+## Why adjustment is needed
+
+**Current smoking** is the obvious confounder of the HIV association.
+`r fmt(100 * mean(dat$current_smoker[dat$hiv_positive == "Yes"] == "Yes"), 0)`%
+of participants with HIV are current smokers against
+`r fmt(100 * mean(dat$current_smoker[dat$hiv_positive == "No"] == "Yes"), 0)`% of
+the HIV-negative group, and current smoking is itself associated with
+`r ug("current_smokerYes")` on the SGRQ, partly through cough and sputum
+questions in the symptoms domain that ask directly about smoking-related
+complaints. **Airflow obstruction** is the second: FEV1 is the strongest crude
+predictor of the SGRQ here, and it differs between the two groups, so any crude
+HIV difference is partly a lung-function difference. **Sex** is a third and works
+in the opposite direction from the naive expectation: women in this sample have
+*better* measured lung function (median FEV1
+`r fmt(median(dat$fev1_pct_predicted[dat$sex == "Female"], na.rm = TRUE), 0)`%
+versus `r fmt(median(dat$fev1_pct_predicted[dat$sex == "Male"], na.rm = TRUE), 0)`%
+of predicted) but report *worse* respiratory quality of life, so leaving sex out
+would make the lung-function coefficients look smaller than they are. Mutual
+adjustment lets each estimate be read as a comparison between participants alike
+on the other measured characteristics.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE)
+g <- function(term, d = 2) {
+  r <- tid[tid$term == term, ]
+  sprintf("%s points (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+```
+
+```{r fit-stats}
+s <- summary(fit)
+tibble(
+  Statistic = c("Complete-case N", "Parameters (excl. intercept)",
+                "Observations per parameter",
+                "R-squared", "Adjusted R-squared", "Residual SE (SGRQ points)"),
+  Value = c(as.character(nrow(dat_model)),
+            as.character(length(coef(fit)) - 1L),
+            fmt(nrow(dat_model) / (length(coef(fit)) - 1L), 1),
+            fmt(s$r.squared, 3), fmt(s$adj.r.squared, 3), fmt(s$sigma, 1))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable linear model for SGRQ total score**"))
+```
+
+The model explains `r fmt(100 * s$r.squared, 1)`% of the variance in the SGRQ
+total (adjusted R-squared `r fmt(s$adj.r.squared, 3)`), with a residual standard
+deviation of `r fmt(s$sigma, 1)` points — nearly four times the minimal important
+difference, so individual scores are not predictable from these characteristics.
+
+Among participants of the same age, sex, smoking history, blood pressure,
+haemoglobin and lung function, those living with HIV score
+`r g("hiv_positiveYes")` worse (p `r gp("hiv_positiveYes")`). Airflow remains the
+dominant correlate: each percentage point of predicted FEV1 is associated with
+`r g("fev1_pct_predicted")` (p `r gp("fev1_pct_predicted")`). The FVC
+coefficient, `r g("fvc_pct_predicted")` (p `r gp("fvc_pct_predicted")`), has
+flipped to the *opposite* sign from its crude estimate; the two together are
+effectively encoding the FEV1/FVC ratio, so what the model is really saying is
+that quality of life tracks airflow *obstruction* rather than lung size (see
+Diagnostics). Among participants alike on everything else, women score
+`r g("sexFemale")` worse than men (p `r gp("sexFemale")`), current smokers
+`r g("current_smokerYes")` worse than non-current smokers
+(p `r gp("current_smokerYes")`), and each mmHg of systolic pressure
+`r g("systolic_bp")` (p `r gp("systolic_bp")`). Age (`r g("age_yrs")`),
+pack-years (`r g("pack_years")`), diastolic pressure, haemoglobin and DLCO
+(`r g("dlco_pct_predicted")`) are not independently associated. These are
+associations among the participants observed, not effects of intervening.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+The most dramatic movement is **FVC**, which reverses sign entirely: crude
+`r ug("fvc_pct_predicted")` (p `r up("fvc_pct_predicted")`), adjusted
+`r g("fvc_pct_predicted")` (p `r gp("fvc_pct_predicted")`). This is collinearity
+with FEV1, not a substantive finding. The two correlate at
+`r fmt(cor(dat_model$fev1_pct_predicted, dat_model$fvc_pct_predicted), 2)` and
+have VIFs of
+`r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fev1_pct_predicted"], 1)`
+and
+`r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fvc_pct_predicted"], 1)`;
+when a negative FEV1 coefficient and a positive FVC coefficient of similar size
+sit side by side, the pair is behaving as a difference term, which is to say as
+the FEV1/FVC ratio. **DLCO** is the other big mover, from
+`r ug("dlco_pct_predicted")` crude (p `r up("dlco_pct_predicted")`) to
+`r g("dlco_pct_predicted")` adjusted (p `r gp("dlco_pct_predicted")`) — the
+entire crude gas-transfer association is explained by the spirometry and smoking
+variables it travels with. **Pack-years** moves the same way, from
+`r ug("pack_years")` to `r g("pack_years")`, losing significance, while its
+companion **current smoking** attenuates only from `r ug("current_smokerYes")` to
+`r g("current_smokerYes")` and keeps it — of the two smoking terms it is present
+smoking, not lifetime dose, that carries the symptom burden.
+
+Two estimates barely move. **HIV status** goes from `r ug("hiv_positiveYes")` to
+`r g("hiv_positiveYes")`, if anything slightly *stronger* after adjustment, which
+means the HIV difference in respiratory quality of life is not explained by the
+heavier smoking or the lung function of the HIV-positive group. **Sex** likewise
+holds at `r ug("sexFemale")` crude and `r g("sexFemale")` adjusted. One estimate
+crosses into significance: **systolic blood pressure**, from `r ug("systolic_bp")`
+(p `r up("systolic_bp")`) to `r g("systolic_bp")` (p `r gp("systolic_bp")`),
+which appears only once diastolic pressure is held constant and is best read as
+a fragile artefact of adjusting one blood-pressure component for the other rather
+than a discovery about respiratory health.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r collin}
+check_collinearity(fit)
+```
+
+```{r assumption-tests}
+print(check_heteroscedasticity(fit))
+print(check_normality(fit))
+```
+
+```{r robust-se}
+rob   <- lmtest::coeftest(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+robci <- lmtest::coefci(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+tibble(
+  Term = rownames(rob),
+  Estimate = fmt(rob[, 1], 3),
+  `SE (OLS)` = fmt(summary(fit)$coefficients[, 2], 3),
+  `SE (HC3)` = fmt(rob[, 2], 3),
+  `95% CI (HC3)` = paste0(fmt(robci[, 1], 2), " to ", fmt(robci[, 2], 2)),
+  `p (HC3)` = fmt(rob[, 4], 3)
+) |>
+  filter(Term != "(Intercept)") |>
+  gt() |>
+  tab_header(title = md("**Table 3. HC3 heteroscedasticity-consistent standard errors.**"))
+```
+
+```{r sqrt-check}
+fit_sqrt <- lm(reformulate(predictors, "sqrt(sgrq_total)"), data = dat_model)
+```
+
+The diagnostics are the weakest part of this analysis, and the cause is the shape
+of the outcome. The SGRQ total is strongly right-skewed (skewness
+`r fmt(mean((dat_model$sgrq_total - mean(dat_model$sgrq_total))^3) / sd(dat_model$sgrq_total)^3, 2)`)
+with a floor at zero that `r sum(dat_model$sgrq_total == 0)` participants sit on
+exactly. The posterior-predictive check shows the consequence directly: the model
+predicts a symmetric spread including negative scores, which the 0-100 scale
+cannot produce. The residual-versus-fitted panel fans out as fitted values rise —
+participants predicted to have good respiratory quality of life are tightly
+clustered near the floor, those predicted to be worse are widely scattered — and
+`check_heteroscedasticity()` rejects constant variance
+(p `r pv(as.numeric(check_heteroscedasticity(fit)))`). `check_normality()` also
+rejects (p `r pv(as.numeric(check_normality(fit)))`).
+
+Table 3 therefore reports HC3 robust standard errors. They change the numbers a
+little — the FEV1 standard error rises from
+`r fmt(summary(fit)$coefficients["fev1_pct_predicted", 2], 3)` to
+`r fmt(rob["fev1_pct_predicted", 2], 3)` — but no substantive conclusion changes:
+HIV status, sex, current smoking, systolic pressure, FEV1 and FVC all keep their
+significance status under robust inference. A square-root transformation fixes
+the variance problem (heteroscedasticity p
+`r pv(as.numeric(check_heteroscedasticity(fit_sqrt)))` on the transformed scale)
+but not the normality problem
+(p `r pv(as.numeric(check_normality(fit_sqrt)))`), because the pile-up of exact
+zeros survives any monotone transformation; and it costs the direct reading of
+coefficients in SGRQ points against a known four-point important difference. We
+have kept the untransformed model with robust standard errors and flagged the
+violation rather than hiding it.
+
+Collinearity is the other flagged check. The two largest VIFs are
+`r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fev1_pct_predicted"], 2)`
+for FEV1 and
+`r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fvc_pct_predicted"], 2)`
+for FVC, against a maximum of
+`r fmt(max(check_collinearity(fit)$VIF[!check_collinearity(fit)$Term %in% c("fev1_pct_predicted", "fvc_pct_predicted")]), 2)`
+elsewhere in the model. Both are below the conventional threshold of 5 and both
+terms are significant, so nothing is unestimable, but the sign flip on FVC is a
+direct symptom of the two competing and neither coefficient should be quoted
+alone. No observation exceeds the Cook's distance contours (maximum
+`r fmt(max(cooks.distance(fit)), 3)`).
+
+# Discussion
+
+In this two-centre US sample, adults living with HIV reported respiratory
+quality of life about `r fmt(tid$estimate[tid$term == "hiv_positiveYes"], 1)`
+SGRQ points worse than HIV-negative adults of the same age, sex, smoking history,
+blood pressure, haemoglobin and lung function — a difference at the accepted
+minimal important threshold of four points, and one that is not explained by the
+heavier smoking or poorer lung function of the HIV-positive group. Airflow is the
+dominant physiological correlate: the FEV1 and FVC coefficients together amount
+to saying that obstruction, rather than lung size, is what patients feel.
+Diffusing capacity, which is the strongest lung-function correlate of *walking
+distance* in this same dataset, has no independent association with *symptoms* at
+all — a useful reminder that measured impairment and perceived health are
+different outcomes. Practically, respiratory symptoms in people with HIV should
+not be dismissed as smoking alone.
+
+**Limitations.** Participants were recruited at **two clinical centres,
+Pittsburgh and UCSF, and the site variable is not in this deposit**, although the
+source paper shows site matters; it is therefore both an unmeasured confounder
+and an ignored clustering variable, so the standard errors here are probably
+optimistic. Residual variance is non-constant and residuals are non-normal
+because the SGRQ has a hard floor that `r sum(dat_model$sgrq_total == 0)`
+participants occupy; HC3 standard errors repair inference but not the model's
+inability to respect the scale bounds. The design is cross-sectional and the
+outcome is self-reported at the same visit as everything else, so common-method
+bias and reverse causation are both live: a participant feeling unwell may
+report worse symptoms *and* perform worse on spirometry on the day. Current
+smoking and the SGRQ symptoms domain overlap by construction, since the
+questionnaire asks about cough and sputum, so part of the smoking coefficient is
+measurement rather than effect. FEV1 and FVC compete for the same variance and
+the FVC sign flip should not be interpreted substantively. Depression, which is
+common in this population and strongly influences questionnaire-based quality of
+life, is not measured. Complete-case analysis dropped `r n_dropped` of
+`r nrow(dat)` rows (`r fmt(100 * n_dropped / nrow(dat), 1)`%). All estimates are
+associations, not causal effects.
+
+**Future work.** Refit with study site as a fixed effect and with a mental-health
+measure in the adjustment set, and consider a two-part or beta-regression model
+that respects the floor at zero rather than forcing a symmetric error
+distribution onto a bounded score.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+```{r feas-subscales}
+fit_bad <- lm(sgrq_total ~ sgrq_symptoms + sgrq_activity + sgrq_impacts, data = dat)
+r2_bad  <- summary(fit_bad)$r.squared
+
+# What the HIV-restricted columns cost, in one line each.
+cc_cd4 <- dat |> select(all_of(c(outcome, predictors, "cd4_count"))) |> drop_na()
+cc_arv <- dat |> select(all_of(c(outcome, predictors, "on_antiretroviral"))) |> drop_na()
+cc_mmr <- dat |> select(all_of(c(outcome, predictors, "mmrc_dyspnoea"))) |> drop_na()
+```
+
+- **USABLE WITH WARNINGS.** The exposure of interest is significant and stable
+  under adjustment, and the substantive story (obstruction and HIV, not gas
+  transfer) is a good one — but the outcome distribution breaks two assumption
+  checks and the fix costs interpretability.
+- **FATAL: the three SGRQ subscales must never be predictors.** `sgrq_total` is
+  the questionnaire's fixed weighted combination of `sgrq_symptoms`,
+  `sgrq_activity` and `sgrq_impacts`; regressing it on the three returns
+  R-squared `r fmt(r2_bad, 4)`. A student who reaches for "other respiratory
+  measures in the file" will produce a model that explains essentially all of the
+  variance and whose coefficients are the SGRQ scoring algorithm
+  (`r fmt(coef(fit_bad)["sgrq_symptoms"], 2)` for symptoms,
+  `r fmt(coef(fit_bad)["sgrq_activity"], 2)` for activity,
+  `r fmt(coef(fit_bad)["sgrq_impacts"], 2)` for impacts — the published SGRQ
+  weights), not epidemiology. The catalogue lists all four SGRQ columns together
+  and does not warn about this.
+- **FATAL if any HIV-restricted variable is used.** `cd4_count`,
+  `on_antiretroviral` and `viral_load_detectable` exist only for the
+  `r sum(dat$hiv_positive == "Yes")` participants with HIV. Adding
+  `on_antiretroviral` here takes the complete-case N from `r nrow(dat_model)` to
+  `r nrow(cc_arv)` with **`r sum(cc_arv$hiv_positive == "No")` HIV-negative
+  participants left**, so `hiv_positive` becomes a constant and the model will
+  not fit at all; adding `cd4_count` takes N to `r nrow(cc_cd4)` with only
+  `r sum(cc_cd4$hiv_positive == "No")` HIV-negative participants, which is worse
+  because it fails silently. `six_min_walk_m.Rmd` in this folder quantifies the
+  damage in a table.
+- **MAJOR: heteroscedasticity (p
+  `r pv(as.numeric(check_heteroscedasticity(fit)))`) and non-normality (p
+  `r pv(as.numeric(check_normality(fit)))`),** both driven by the floor at zero
+  (`r sum(dat_model$sgrq_total == 0)` participants score exactly 0,
+  `r fmt(100 * mean(dat_model$sgrq_total == 0), 0)`% of the sample) and the long
+  right tail (skewness
+  `r fmt(mean((dat_model$sgrq_total - mean(dat_model$sgrq_total))^3) / sd(dat_model$sgrq_total)^3, 2)`).
+  A square-root transform fixes the variance (p
+  `r pv(as.numeric(check_heteroscedasticity(fit_sqrt)))`) but not the normality
+  (p `r pv(as.numeric(check_normality(fit_sqrt)))`). Any honest student report
+  has to record a failed check here.
+- **MAJOR: the FVC coefficient reverses sign on adjustment**
+  (`r ug("fvc_pct_predicted")` crude to `r g("fvc_pct_predicted")` adjusted,
+  both significant) because FEV1 and FVC are collinear (r
+  `r fmt(cor(dat_model$fev1_pct_predicted, dat_model$fvc_pct_predicted), 2)`,
+  VIFs
+  `r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fev1_pct_predicted"], 2)`
+  and
+  `r fmt(check_collinearity(fit)$VIF[check_collinearity(fit)$Term == "fvc_pct_predicted"], 2)`).
+  This is the single most misinterpretable result in the document: a weak student
+  will report "larger lungs are associated with worse quality of life". It is
+  salvageable as a teaching point about what a pair of opposite-signed collinear
+  terms means, but it needs to be flagged.
+- **MINOR: `mmrc_dyspnoea` is both differentially missing and conceptually
+  circular here.** All `r sum(is.na(dat$mmrc_dyspnoea))` missing values are in
+  HIV-positive participants; adding it would take N to `r nrow(cc_mmr)`. It also
+  measures breathlessness, which the SGRQ activity domain measures again.
+- **MINOR: `pack_years` and `smoking_status` are structurally entangled**
+  (`pack_years == 0` is exactly `smoking_status == "never"` on all
+  `r nrow(dat)` rows). The parameterisation chosen here is documented in
+  Methods; the alternative is defensible but must be justified rather than
+  stumbled into.
+- **Complete-case N `r nrow(dat_model)` of `r nrow(dat)`**
+  (`r fmt(100 * n_dropped / nrow(dat), 1)`% lost), matching the catalogue's
+  advertised 410/427.
+- **Structural: two-site recruitment with no site variable.** Unfixable from the
+  shipped file; belongs in Limitations. Site also plausibly affects a
+  self-reported questionnaire outcome more than a physiological one.

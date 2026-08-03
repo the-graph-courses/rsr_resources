@@ -1,0 +1,624 @@
+---
+title: "Hypertension in adults aged 30 and over in Bharatpur, Nepal"
+subtitle: "Dataset 3: Nepal hypertension and cardiovascular risk-factor survey"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "nepal_hypertension.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+#
+# Deliberately EXCLUDED from the predictor set, and this is the central design
+# decision in this file:
+#   systolic_bp, diastolic_bp,
+#   antihypertensive_drug - `hypertension` is DEFINED as systolic >= 140 or
+#                           diastolic >= 90 or currently taking antihypertensive
+#                           medication. All three are components of the outcome's
+#                           own definition, so using any of them as a predictor is
+#                           tautology, and antihypertensive_drug produces perfect
+#                           separation (every treated person is hypertensive by
+#                           definition).
+#   bp_awareness          - having been told you have raised blood pressure is a
+#                           consequence of having it. In this file all 241 aware
+#                           participants are hypertensive and none of the 918
+#                           unaware non-hypertensive, i.e. awareness perfectly
+#                           predicts the outcome in one direction; it is also
+#                           quasi-separating. Excluded.
+#   mets_min_per_week     - physical_activity is a deterministic cut of it at
+#                           600 MET-min/week, so only one of the pair may enter.
+#   cigarettes_per_week   - zero for every never-smoker, so it is smoking_status
+#                           re-expressed on a different scale.
+#   marital_status        - only 37 unmarried participants and largely a function
+#                           of age and sex.
+outcome    <- "hypertension"
+predictors <- c("sex", "age_group", "education", "occupation",
+                "below_poverty_line", "smoking_status", "smokeless_tobacco",
+                "alcohol_last_month", "fruit_veg_servings", "salt_g_per_day",
+                "physical_activity", "family_history_htn", "bmi")
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    sex = factor(sex, levels = c("female", "male"), labels = c("Female", "Male")),
+    # Youngest band is the reference so the age contrasts read upwards.
+    age_group = factor(age_group,
+                       levels = c("30_39", "40_49", "50_59", "60_plus"),
+                       labels = c("30-39", "40-49", "50-59", "60 or more")),
+    # No or informal schooling is both the largest group and the most deprived.
+    education = factor(education,
+                       levels = c("none_or_informal", "primary", "secondary", "higher"),
+                       labels = c("None or informal", "Primary", "Secondary", "Higher")),
+    # Household work is the largest occupational group.
+    occupation = factor(occupation,
+                        levels = c("household_work", "agriculture_or_labour",
+                                   "job_or_self_employed", "unemployed"),
+                        labels = c("Household work", "Agriculture or labour",
+                                   "Job or self-employed", "Unemployed")),
+    # Never-smoker is the clinically unexposed reference.
+    smoking_status = factor(smoking_status,
+                            levels = c("never", "former", "current"),
+                            labels = c("Never", "Former", "Current")),
+    # The more active group is the reference, so "Low" reads as the risk category.
+    physical_activity = factor(physical_activity,
+                               levels = c("moderate_or_high", "low"),
+                               labels = c("Moderate or high", "Low")),
+    # "Yes" is the second level throughout, so glm() models the odds of "Yes".
+    across(c(below_poverty_line, smokeless_tobacco, alcohol_last_month,
+             family_history_htn, hypertension, bp_awareness, antihypertensive_drug),
+           \(x) factor(x, levels = c(0, 1), labels = c("No", "Yes")))
+  ) |>
+  labelled::set_variable_labels(
+    hypertension          = "Hypertension",
+    sex                   = "Sex",
+    age_group             = "Age band (years)",
+    education             = "Education",
+    occupation            = "Main occupation",
+    below_poverty_line    = "Below poverty line",
+    smoking_status        = "Smoking status",
+    smokeless_tobacco     = "Smokeless tobacco use",
+    alcohol_last_month    = "Alcohol in the last month",
+    fruit_veg_servings    = "Fruit and vegetable servings per day",
+    salt_g_per_day        = "Salt intake (g/day)",
+    physical_activity     = "Physical activity level",
+    family_history_htn    = "Family history of hypertension",
+    bmi                   = "Body mass index (kg/m2)"
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+n_event <- sum(dat_model$hypertension == "Yes")
+```
+
+# Introduction
+
+This is a community-based cross-sectional survey of adults aged 30 years and
+over living in Bharatpur, Chitwan district, Nepal, carried out to estimate the
+prevalence of hypertension and identify its risk factors (Dhungana and
+colleagues, *PLOS ONE* 2016, e0185806). Blood pressure was measured twice with a
+digital device and averaged, the WHO STEPS instrument supplied the behavioural
+information, and height and weight were measured directly. Hypertension is the
+outcome the survey was designed around, and at
+`r round(100 * n_event / nrow(dat_model), 1)`% prevalence it is a substantial
+burden for a population that is largely undiagnosed and untreated.
+
+**Aim.** Among adults aged 30 and over in Bharatpur, we examined which of sex,
+age band, education, occupation, poverty, smoking, smokeless tobacco, alcohol,
+fruit and vegetable intake, salt intake, physical activity, family history of
+hypertension and body mass index are independently associated with the odds of
+being hypertensive, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** A cross-sectional survey of `r nrow(dat_raw)` adults aged 30
+years and over resident in Bharatpur Municipality, Chitwan, Nepal. The source
+study used multistage cluster sampling: four wards were selected at random and
+approximately 300 participants enrolled in each, with the sample size
+calculation assuming a design effect of 1.5. **The ward identifier is not in
+this extract** (see Limitations). Each row is one participant.
+
+**Variables.** The outcome is `hypertension`, coded 1 (the event) if mean
+systolic pressure was at least 140 mmHg **or** mean diastolic pressure at least
+90 mmHg **or** the participant reported taking antihypertensive medication in
+the previous two weeks. There are `r n_event` events among `r nrow(dat_model)`
+participants (`r round(100 * n_event / nrow(dat_model), 1)`%). Predictors are
+sex (reference *Female*); age band in years (reference *30-39*; age was recorded
+only in four bands, so no odds ratio per year of age can be estimated);
+education (reference *None or informal*); main occupation (reference *Household
+work*); family income per head below the poverty line (reference *No*); smoking
+status (reference *Never*); current smokeless tobacco use (reference *No*); any
+alcohol in the last month (reference *No*); fruit and vegetable servings per
+day; estimated salt intake in g/day; physical activity level (reference
+*Moderate or high*); family history of hypertension (reference *No*); and body
+mass index in kg/m2.
+
+**The exclusions matter more here than the inclusions.** Because `hypertension`
+is *defined* from `systolic_bp`, `diastolic_bp` and `antihypertensive_drug`,
+none of those three can be a predictor: they are components of the outcome, not
+risk factors for it. `antihypertensive_drug` is the extreme case -- every one of
+the `r sum(dat$antihypertensive_drug == "Yes")` treated participants is
+hypertensive by definition, so it separates the outcome perfectly and the model
+will not converge to a finite coefficient. `bp_awareness` is only slightly less
+circular: having been told you have raised blood pressure is a consequence of
+having it, and in this file every one of the
+`r sum(dat$bp_awareness == "Yes")` participants who are aware is hypertensive,
+while `r sum(dat$bp_awareness == "No" & dat$hypertension == "Yes")` hypertensive
+participants are unaware. Awareness therefore predicts the outcome perfectly in
+one direction, which is complete separation (see Diagnostics for the fitted
+coefficient). It is excluded on causal grounds first, but it would also break
+the model. Two further pairs measure
+the same construct twice and only one of each may enter: `physical_activity` is
+a deterministic cut of `mets_min_per_week` at 600 MET-minutes per week (the
+"Low" group spans 0-600 and "Moderate or high" spans 620-29,260), and the
+categorical version is used because it is the WHO STEPS classification the
+source paper reports; and `cigarettes_per_week` is zero for every never-smoker,
+so `smoking_status` is used instead because it also separates former from never
+smokers.
+
+**Statistical analysis.** Logistic regression via `glm(family = binomial)`,
+justified because the outcome is binary; the event modelled is being
+hypertensive. We fitted a univariable model for each predictor first, then a
+single multivariable model containing all of them. Predictors were chosen in
+advance on subject-matter grounds, not by significance. Estimates are reported
+as odds ratios with 95% confidence intervals; significance threshold 0.05. Model
+adequacy was assessed with AIC, Tjur's R-squared, events per parameter and
+`performance::check_model()`. Analysis used `r R.version.string` with tidyverse,
+gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped). Every variable in this file is 100%
+complete, so listwise deletion removes
+`r if (n_dropped == 0) "no rows at all" else paste(n_dropped, "rows")`. There is
+no missing-data story: no imputation, no complete-case selection bias, and the
+full event count is available to the model.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(
+    by = hypertension,
+    missing = "no"
+  ) |>
+  add_n() |>
+  add_overall() |>
+  modify_caption("**Table 1. Sample characteristics by hypertension status.**")
+```
+
+```{r table-one-numbers}
+prev <- round(100 * n_event / nrow(dat_model), 1)
+prev_60 <- round(100 * mean(dat_model$hypertension[dat_model$age_group == "60 or more"] == "Yes"), 1)
+prev_30 <- round(100 * mean(dat_model$hypertension[dat_model$age_group == "30-39"] == "Yes"), 1)
+bmi_htn <- mean(dat_model$bmi[dat_model$hypertension == "Yes"])
+bmi_no  <- mean(dat_model$bmi[dat_model$hypertension == "No"])
+n_med_only <- sum(dat$antihypertensive_drug == "Yes" & dat$systolic_bp < 140 & dat$diastolic_bp < 90)
+```
+
+Overall prevalence was `r prev`%, rising from `r prev_30`% in the 30-39 band to
+`r prev_60`% among those aged 60 or more. Hypertensive participants averaged
+`r round(bmi_htn, 1)` kg/m2 against `r round(bmi_no, 1)` kg/m2 in the
+normotensive, and were more often male, less educated and more often former
+smokers. Note one consequence of the composite definition: `r n_med_only`
+participants are counted as hypertensive purely because they take medication,
+despite having entirely normal measured readings on the day. They are correctly
+classified -- treated hypertension is still hypertension -- but they are the
+reason the outcome cannot be reconstructed from blood pressure alone.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 4. Prevalence of hypertension by age band and sex, with 95% Wilson confidence intervals."}
+dat_model |>
+  count(age_group, sex, hypertension) |>
+  group_by(age_group, sex) |>
+  summarise(events = sum(n[hypertension == "Yes"]), total = sum(n),
+            .groups = "drop") |>
+  mutate(p = events / total,
+         se = sqrt(p * (1 - p) / total),
+         lo = pmax(0, p - 1.96 * se), hi = pmin(1, p + 1.96 * se)) |>
+  ggplot(aes(age_group, p, colour = sex, group = sex)) +
+  geom_line(linewidth = 1, position = position_dodge(width = 0.25)) +
+  geom_point(size = 2.5, position = position_dodge(width = 0.25)) +
+  geom_errorbar(aes(ymin = lo, ymax = hi), width = 0.15,
+                position = position_dodge(width = 0.25)) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1)) +
+  scale_colour_viridis_d(option = "D", end = 0.75) +
+  labs(x = "Age band (years)", y = "Prevalence of hypertension", colour = "Sex")
+```
+
+```{r explore-numbers}
+pr <- round(100 * tapply(dat_model$hypertension == "Yes",
+                         list(dat_model$age_group, dat_model$sex), mean), 1)
+```
+
+Prevalence climbs steeply across the four age bands in both sexes, roughly
+tripling in women (`r pr["30-39", "Female"]`% to `r pr["60 or more", "Female"]`%)
+and rising less dramatically in men (`r pr["30-39", "Male"]`% to
+`r pr["60 or more", "Male"]`%). Men are above women in every band, but the gap
+is large only in the 30-39 group -- where it also rests on just
+`r sum(dat_model$age_group == "30-39" & dat_model$sex == "Male")` men -- and has
+essentially closed by age 60, so age is by far the dominant gradient and the sex
+effect is concentrated at younger ages.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = glm,
+    method.args = list(family = binomial),
+    exponentiate = TRUE
+  )
+uv
+```
+
+```{r uv-numbers}
+uv_fit <- function(v) {
+  glm(reformulate(v, outcome), data = dat_model, family = binomial) |>
+    tidy(conf.int = TRUE, exponentiate = TRUE)
+}
+u_age60 <- uv_fit("age_group") |> filter(term == "age_group60 or more")
+u_bmi   <- uv_fit("bmi") |> filter(term == "bmi")
+u_sex   <- uv_fit("sex") |> filter(term == "sexMale")
+u_form  <- uv_fit("smoking_status") |> filter(term == "smoking_statusFormer")
+u_cur   <- uv_fit("smoking_status") |> filter(term == "smoking_statusCurrent")
+u_alc   <- uv_fit("alcohol_last_month") |> filter(term == "alcohol_last_monthYes")
+u_smok  <- uv_fit("smokeless_tobacco") |> filter(term == "smokeless_tobaccoYes")
+u_pa    <- uv_fit("physical_activity") |> filter(term == "physical_activityLow")
+u_fam   <- uv_fit("family_history_htn") |> filter(term == "family_history_htnYes")
+u_pov   <- uv_fit("below_poverty_line") |> filter(term == "below_poverty_lineYes")
+u_sec   <- uv_fit("education") |> filter(term == "educationSecondary")
+u_unemp <- uv_fit("occupation") |> filter(term == "occupationUnemployed")
+u_fv    <- uv_fit("fruit_veg_servings") |> filter(term == "fruit_veg_servings")
+u_salt  <- uv_fit("salt_g_per_day") |> filter(term == "salt_g_per_day")
+```
+
+Age is the dominant crude predictor: participants aged 60 or more have
+`r round(u_age60$estimate, 2)` times the odds of hypertension of those aged
+30-39 (95% CI `r round(u_age60$conf.low, 2)` to `r round(u_age60$conf.high, 2)`,
+p < 0.001). Body mass index is next: each additional kg/m2 multiplies the odds
+by `r round(u_bmi$estimate, 3)` (95% CI `r round(u_bmi$conf.low, 3)` to
+`r round(u_bmi$conf.high, 3)`), which compounds to
+`r round(u_bmi$estimate^5, 2)`-fold across a 5 kg/m2 difference. Former smokers
+have `r round(u_form$estimate, 2)` times the odds of never-smokers (95% CI
+`r round(u_form$conf.low, 2)` to `r round(u_form$conf.high, 2)`) and recent
+drinkers `r round(u_alc$estimate, 2)` times the odds of non-drinkers (95% CI
+`r round(u_alc$conf.low, 2)` to `r round(u_alc$conf.high, 2)`). Men have
+`r round(u_sex$estimate, 2)` times the odds of women. Almost everything else is
+also significant crudely -- smokeless tobacco
+(`r round(u_smok$estimate, 2)`), low physical activity
+(`r round(u_pa$estimate, 2)`), poverty (`r round(u_pov$estimate, 2)`), family
+history (`r round(u_fam$estimate, 2)`), unemployment
+(`r round(u_unemp$estimate, 2)`) and secondary education
+(`r round(u_sec$estimate, 2)`, protective) -- which is precisely the situation
+in which crude estimates should not be trusted. The only clear crude null is
+salt intake (`r round(u_salt$estimate, 3)` per g/day, 95% CI
+`r round(u_salt$conf.low, 3)` to `r round(u_salt$conf.high, 3)`).
+
+## Why adjustment is needed
+
+The crude odds ratios above are shot through with confounding by two variables
+in this dataset. **Age band** is the first and largest. It has an enormous
+independent effect on hypertension (crude odds ratio
+`r round(u_age60$estimate, 2)` for the oldest band) and it is associated with
+nearly every candidate exposure: former smokers are concentrated in the older
+bands because quitting takes years, education is far lower in older cohorts (209
+of the 263 participants aged 60 or more have no or informal schooling against
+114 of 383 in the 30-39 band), unemployment rises with age, and physical
+activity falls. So the crude "protective effect of secondary education" and the
+crude "harm of inactivity" are both partly age. **Sex** is the second, because
+in this population tobacco and alcohol are overwhelmingly male:
+`r round(100 * mean(dat_model$smoking_status[dat_model$sex == "Male"] == "Current"), 0)`%
+of men are current smokers against
+`r round(100 * mean(dat_model$smoking_status[dat_model$sex == "Female"] == "Current"), 0)`%
+of women, and
+`r round(100 * mean(dat_model$alcohol_last_month[dat_model$sex == "Male"] == "Yes"), 0)`%
+of men drank last month against
+`r round(100 * mean(dat_model$alcohol_last_month[dat_model$sex == "Female"] == "Yes"), 0)`%
+of women, while men have higher blood pressure for reasons independent of both.
+Crude tobacco and alcohol odds ratios therefore partly measure being male.
+**Body mass index** is the third: it is a strong independent risk factor and it
+is lower in smokers and in poorer participants, so leaving it out lets the
+tobacco and poverty coefficients absorb an adiposity effect pointing the other
+way. Mutual adjustment is the only way to separate them.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- glm(reformulate(predictors, outcome), data = dat_model, family = binomial)
+
+mv <- tbl_regression(fit, exponentiate = TRUE)
+mv
+```
+
+```{r fit-stats}
+n_par <- length(coef(fit)) - 1  # excluding the intercept
+epp   <- n_event / n_par
+null_fit <- glm(reformulate("1", outcome), data = dat_model, family = binomial)
+
+tibble(
+  Statistic = c("AIC (full model)", "AIC (intercept only)",
+                "Tjur's R-squared", "Events (hypertensive)",
+                "Non-events", "Model parameters (excluding intercept)",
+                "Events per parameter"),
+  Value = c(round(AIC(fit), 1), round(AIC(null_fit), 1),
+            round(as.numeric(r2_tjur(fit)), 3), n_event,
+            nrow(dat_model) - n_event, n_par, round(epp, 1))
+) |>
+  gt() |>
+  tab_header(title = "Model fit")
+```
+
+```{r mv-numbers}
+tid <- tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+g <- function(t) tid |> filter(term == t)
+m_age60 <- g("age_group60 or more")
+m_bmi   <- g("bmi")
+m_sex   <- g("sexMale")
+m_form  <- g("smoking_statusFormer")
+m_cur   <- g("smoking_statusCurrent")
+m_alc   <- g("alcohol_last_monthYes")
+m_smok  <- g("smokeless_tobaccoYes")
+m_pa    <- g("physical_activityLow")
+m_fam   <- g("family_history_htnYes")
+m_pov   <- g("below_poverty_lineYes")
+m_sec   <- g("educationSecondary")
+m_unemp <- g("occupationUnemployed")
+m_fv    <- g("fruit_veg_servings")
+m_salt  <- g("salt_g_per_day")
+```
+
+The full model has AIC `r round(AIC(fit), 1)` against `r round(AIC(null_fit), 1)`
+for an intercept-only model, a drop of `r round(AIC(null_fit) - AIC(fit), 1)`,
+so the predictor set carries real information; Tjur's R-squared is
+`r round(as.numeric(r2_tjur(fit)), 3)`, meaning the average predicted probability
+differs by about `r round(100 * as.numeric(r2_tjur(fit)), 0)` percentage points
+between hypertensive and normotensive participants. With `r n_event` events and
+`r n_par` non-intercept parameters there are `r round(epp, 1)` **events per
+parameter**, comfortably above the conventional minimum of 10, so the model is
+not overfitted and the coefficients are not the product of sparse cells.
+
+Conditional on the other twelve predictors, the odds of hypertension are
+`r round(m_age60$estimate, 2)` times higher in those aged 60 or more than in the
+30-39 band (95% CI `r round(m_age60$conf.low, 2)` to
+`r round(m_age60$conf.high, 2)`); each additional kg/m2 of body mass index
+multiplies the odds by `r round(m_bmi$estimate, 3)` (95% CI
+`r round(m_bmi$conf.low, 3)` to `r round(m_bmi$conf.high, 3)`), that is
+`r round(m_bmi$estimate^5, 2)`-fold across 5 kg/m2; recent drinkers have
+`r round(m_alc$estimate, 2)` times the odds of non-drinkers (95% CI
+`r round(m_alc$conf.low, 2)` to `r round(m_alc$conf.high, 2)`); and participants
+with secondary education have `r round(m_sec$estimate, 2)` times the odds of
+those with no or informal schooling (95% CI `r round(m_sec$conf.low, 2)` to
+`r round(m_sec$conf.high, 2)`).
+
+Two results need caution. Former smokers retain `r round(m_form$estimate, 2)`
+times the odds of never-smokers (95% CI `r round(m_form$conf.low, 2)` to
+`r round(m_form$conf.high, 2)`) while current smokers are not distinguishable
+from never-smokers (`r round(m_cur$estimate, 2)`, 95% CI
+`r round(m_cur$conf.low, 2)` to `r round(m_cur$conf.high, 2)`). Read causally
+this would say quitting is dangerous; read as reverse causation it says people
+quit after being told they have high blood pressure, which is almost certainly
+what is happening in a cross-sectional survey where
+`r sum(dat$bp_awareness == "Yes")` participants already knew their diagnosis.
+Second, **fruit and vegetable servings** come out *positively* associated with
+hypertension (`r round(m_fv$estimate, 3)` per serving, 95% CI
+`r round(m_fv$conf.low, 3)` to `r round(m_fv$conf.high, 3)`, p =
+`r round(m_fv$p.value, 3)`) -- the wrong direction for any dietary story, and
+most plausibly either recall bias among people who know they are hypertensive
+and have been advised to eat more vegetables, or simple confounding by an
+unmeasured aspect of diet. It should not be reported as a finding.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted odds ratios.**")
+```
+
+Adjustment changes the picture substantially, and almost all of the movement is
+toward the null. **Smokeless tobacco** collapses from
+`r round(u_smok$estimate, 2)` crude (95% CI `r round(u_smok$conf.low, 2)` to
+`r round(u_smok$conf.high, 2)`, p = `r round(u_smok$p.value, 3)`) to
+`r round(m_smok$estimate, 2)` adjusted (95% CI `r round(m_smok$conf.low, 2)` to
+`r round(m_smok$conf.high, 2)`, p = `r round(m_smok$p.value, 2)`) -- essentially
+the entire crude association was age and sex. **Low physical activity** falls
+from `r round(u_pa$estimate, 2)` (p = `r round(u_pa$p.value, 4)`) to
+`r round(m_pa$estimate, 2)` (p = `r round(m_pa$p.value, 2)`) and loses
+significance, for the same reason. **Family history of hypertension** goes from
+`r round(u_fam$estimate, 2)` (p = `r round(u_fam$p.value, 3)`) to
+`r round(m_fam$estimate, 2)` (p = `r round(m_fam$p.value, 2)`), which is
+disappointing for a variable with real biological content but reflects the fact
+that people reporting a family history are also older and heavier. **Current
+smoking** moves from `r round(u_cur$estimate, 2)` (p < 0.001) to
+`r round(m_cur$estimate, 2)` (p = `r round(m_cur$p.value, 2)`), **poverty** from
+`r round(u_pov$estimate, 2)` to `r round(m_pov$estimate, 2)`, and
+**unemployment** from `r round(u_unemp$estimate, 2)` (p =
+`r round(u_unemp$p.value, 3)`) to `r round(m_unemp$estimate, 2)` (p =
+`r round(m_unemp$p.value, 2)`); all three lose significance. Even the two
+strongest predictors attenuate: **age 60 or more** from
+`r round(u_age60$estimate, 2)` to `r round(m_age60$estimate, 2)`, and **former
+smoking** from `r round(u_form$estimate, 2)` to `r round(m_form$estimate, 2)`.
+**Sex** moves from `r round(u_sex$estimate, 2)` to `r round(m_sex$estimate, 2)`
+and crosses from significant to marginal (p = `r round(m_sex$p.value, 3)`).
+
+Two coefficients move the other way, *away* from the null. **Body mass index**
+goes from `r round(u_bmi$estimate, 3)` crude to `r round(m_bmi$estimate, 3)`
+adjusted per kg/m2, and **fruit and vegetable servings** from
+`r round(u_fv$estimate, 3)` to `r round(m_fv$estimate, 3)`, becoming *more*
+significant after adjustment (p = `r round(u_fv$p.value, 3)` to p =
+`r round(m_fv$p.value, 3)`). Both are negative confounding: BMI and fruit and
+vegetable intake are both lower in smokers and in the poorest participants, who
+are themselves at higher risk, so the crude estimates were pulled down. None of
+this is collinearity -- the maximum variance inflation factor is
+`r round(max(check_collinearity(fit)$VIF), 2)`. The overall message of Table 2
+is that in a crude analysis of this dataset almost every risk factor looks
+significant, and after mutual adjustment only age, BMI, alcohol, former smoking
+and education survive.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r diag-numbers}
+vifs <- check_collinearity(fit)
+max_vif <- round(max(vifs$VIF), 2)
+infl <- sum(cooks.distance(fit) > 4 / nobs(fit))
+sep_fit <- glm(hypertension ~ bp_awareness, data = dat, family = binomial)
+sep_coef <- coef(sep_fit)[2]
+sep_se <- sqrt(diag(vcov(sep_fit)))[2]
+```
+
+For a logistic model the panels that matter are different from the linear case;
+homogeneity of variance and normality of residuals do not apply and can be
+ignored here. The **binned residuals** panel is the key one: the binned average
+residuals fall almost entirely inside the error bounds across the range of
+fitted probabilities, with only one or two bins straying, so there is no
+systematic region of the probability scale where the model is badly calibrated
+and no strong evidence that a continuous predictor needs a non-linear term. The
+**posterior-predictive check** shows the predicted distribution of the binary
+outcome matching the observed proportions. **Collinearity** is unproblematic:
+the maximum VIF is `r max_vif`, which is only achievable because the definitional
+components (`systolic_bp`, `diastolic_bp`, `antihypertensive_drug`) and the
+deterministic twins (`mets_min_per_week`, `cigarettes_per_week`) were kept out;
+including `antihypertensive_drug` instead produces complete separation rather
+than merely a high VIF. **Influential observations** shows
+`r infl` points above the conventional 4/n Cook's distance cut-off out of
+`r nobs(fit)`, none of them extreme, which is unremarkable at this sample size.
+**Events per parameter** is `r round(epp, 1)` (`r n_event` events,
+`r n_par` parameters), well above 10, so the estimates are not sparse-data
+biased and the Wald confidence intervals can be trusted.
+
+As a demonstration of what the excluded variables would have done: regressing
+hypertension on `bp_awareness` alone gives a log-odds coefficient of
+`r round(sep_coef, 1)` with a standard error of `r round(sep_se, 0)`, that is an
+odds ratio of the order of 10^8 with an infinitely wide confidence interval --
+the classic signature of complete separation, and a reminder that this variable
+is a consequence of the outcome, not a predictor of it.
+
+# Discussion
+
+Roughly two in five adults aged 30 and over in Bharatpur are hypertensive, and
+after mutual adjustment the drivers are age, body mass index and alcohol, with a
+protective association for education. The odds of hypertension are
+`r round(m_age60$estimate, 1)` times higher in those aged 60 or more than in
+those in their thirties, and each 5 kg/m2 of body mass index multiplies the odds
+by about `r round(m_bmi$estimate^5, 2)`. Recent alcohol use nearly doubles the
+odds (`r round(m_alc$estimate, 2)`). What does *not* survive adjustment is
+equally important for programme design: smokeless tobacco, low physical
+activity, poverty, unemployment and even family history all look like risk
+factors crudely and are null once age, sex and BMI are held fixed. Practically,
+this argues for age- and weight-based screening and for alcohol as the one
+behavioural target with an independent signal here, rather than a broad
+lifestyle campaign.
+
+**Limitations.** First, and specific to this outcome, **the composite definition
+makes several apparently obvious predictors unusable**. `hypertension` is raised
+measured pressure *or* current treatment, so `systolic_bp`, `diastolic_bp` and
+`antihypertensive_drug` are components of it and cannot appear on the right-hand
+side; `bp_awareness` is a consequence of it and separates the outcome perfectly.
+A student who includes any of them gets an impressive-looking model that means
+nothing. Second, the composite also mixes two rather different states:
+`r n_med_only` participants are classified hypertensive on the basis of
+medication alone despite normal readings on the day, so the outcome is partly
+"has been diagnosed and treated" and partly "has a high reading now" -- and
+access to diagnosis and treatment is itself socially patterned, which will bias
+the education and poverty coefficients in an unknown direction. Third, **the
+cluster sampling cannot be modelled**: only four wards were randomly selected
+with roughly 300 participants each, and the sample size calculation assumed a
+design effect of 1.5, but no ward identifier exists in this extract. All
+confidence intervals reported here are therefore too narrow, plausibly by around
+20%, and no mixed-effects or survey-design correction can repair that; nor can
+results from four clusters be generalised to Nepal or even to Bharatpur as a
+whole. Fourth, **age is available only in four bands**, so no odds ratio per year
+of age is estimable and the oldest band is open-ended. Fifth, the design is
+cross-sectional, so nothing here is a causal effect: the former-smoker result and
+the positive fruit-and-vegetable coefficient are both best explained by reverse
+causation or by behaviour change after diagnosis, and the same mechanism could be
+operating more subtly for salt and physical activity. Sixth, hypertension was
+defined on a single visit with two readings, whereas clinical diagnosis requires
+readings on separate occasions, so some participants are misclassified by
+white-coat effect. On the credit side, **the file has no missing data at all**
+(all `r nrow(dat_raw)` rows complete on all `r ncol(dat_raw)` variables) and the
+event count of `r n_event` is generous relative to the number of parameters.
+
+**Future work.** Refit with a ward random effect if the identifier can be
+obtained; and split the outcome into "raised measured pressure" and "treated"
+to see whether the socio-economic coefficients differ between the two, which
+would test the access-to-treatment explanation directly.
+
+# Feasibility notes
+
+*Not part of a student report.*
+
+- **The strongest of the four outcomes in this dataset.** `r n_event` events in
+  `r nrow(dat_model)` participants, `r round(epp, 1)` events per parameter, no
+  missing data, maximum VIF `r max_vif`, binned residuals acceptable, AIC drop of
+  `r round(AIC(null_fit) - AIC(fit), 1)` against the null model, and adjustment
+  that genuinely reorders the findings.
+- **The definitional trap is severe and will catch students.** `hypertension` =
+  raised measured BP **or** on treatment. `systolic_bp`, `diastolic_bp` and
+  `antihypertensive_drug` are therefore components of the outcome.
+  `hypertension ~ systolic_bp` alone gives an odds ratio of about 1.21 per mmHg
+  with z = 16; `hypertension ~ antihypertensive_drug` and
+  `hypertension ~ bp_awareness` give complete separation (fitted log-odds
+  `r round(sep_coef, 1)`, standard error `r round(sep_se, 0)`). The brief must
+  name these four variables explicitly as forbidden, because every one of them
+  produces a "great" model.
+- **`bp_awareness` deserves its own warning.** It is not literally part of the
+  definition, so a student may argue for it, but all
+  `r sum(dat$bp_awareness == "Yes")` aware participants are hypertensive and the
+  model does not converge to a finite estimate. Exclude it.
+- **Deterministic twins.** `physical_activity` is exactly
+  `mets_min_per_week <= 600`; `cigarettes_per_week` is zero for all
+  never-smokers. Never use both members of either pair.
+- **Two counter-intuitive survivors.** Former smoking is strongly and
+  independently associated with hypertension while current smoking is not
+  (reverse causation after diagnosis), and fruit and vegetable intake is
+  *positively* associated and becomes more significant after adjustment. Both
+  are excellent teaching material but will be reported as findings by an
+  uncritical student.
+- **Massive crude-to-adjusted attenuation.** Smokeless tobacco
+  (`r round(u_smok$estimate, 2)` to `r round(m_smok$estimate, 2)`), physical
+  activity (`r round(u_pa$estimate, 2)` to `r round(m_pa$estimate, 2)`), family
+  history (`r round(u_fam$estimate, 2)` to `r round(m_fam$estimate, 2)`) and
+  unemployment (`r round(u_unemp$estimate, 2)` to
+  `r round(m_unemp$estimate, 2)`) all lose significance. This is the best
+  demonstration of confounding in the whole dataset.
+- **No ward identifier**, so the assumed design effect of 1.5 cannot be honoured
+  and all standard errors are too narrow.
+- **Age in bands only**, so no odds ratio per year of age is available.
+- **`r n_med_only` participants are hypertensive on medication alone** with
+  normal readings. Worth pointing out to students who try to "check" the outcome
+  against the blood pressure columns and find it does not match.

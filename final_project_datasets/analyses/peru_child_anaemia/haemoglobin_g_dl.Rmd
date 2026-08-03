@@ -1,0 +1,405 @@
+---
+title: "Haemoglobin concentration in Peruvian children aged 6-59 months"
+subtitle: "Dataset 5: Peru DHS child anaemia and growth extract"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "peru_child_anaemia.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "haemoglobin_g_dl"
+predictors <- c("child_age_months", "child_sex", "natural_region",
+                "wealth_index", "mother_education", "mother_indigenous")
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    child_sex = factor(child_sex, levels = c("female", "male"),
+                       labels = c("Female", "Male")),
+    # Lima metropolitan is the best-resourced, lowest-altitude region and is the
+    # natural comparator for the three other regions.
+    natural_region = factor(natural_region,
+                            levels = c("lima_metropolitan", "rest_of_coast",
+                                       "highlands", "jungle"),
+                            labels = c("Lima metropolitan", "Rest of coast",
+                                       "Highlands", "Jungle")),
+    # Poorest is both the largest quintile in this extract and the group with the
+    # greatest expected burden, so every other quintile is read against it.
+    wealth_index = factor(wealth_index,
+                          levels = c("poorest", "poorer", "middle",
+                                     "richer", "richest"),
+                          labels = c("Poorest", "Poorer", "Middle",
+                                     "Richer", "Richest")),
+    # Lowest schooling is the reference so higher categories read as "more
+    # education than the reference".
+    mother_education = factor(mother_education,
+                              levels = c("primary_or_none", "secondary", "higher"),
+                              labels = c("Primary or none", "Secondary", "Higher")),
+    mother_indigenous = factor(mother_indigenous, levels = c(0, 1),
+                               labels = c("No", "Yes"))
+  ) |>
+  labelled::set_variable_labels(
+    haemoglobin_g_dl  = "Haemoglobin (g/dL)",
+    child_age_months  = "Child age (months)",
+    child_sex         = "Child sex",
+    natural_region    = "Natural region",
+    wealth_index      = "Household wealth quintile",
+    mother_education  = "Mother's education",
+    mother_indigenous = "Mother indigenous"
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+```
+
+# Introduction
+
+The Peruvian Demographic and Health Survey (ENDES) measures altitude-adjusted
+haemoglobin in every surveyed child aged 6-59 months, alongside detailed
+household, maternal and geographic information. Childhood anaemia remains one of
+Peru's most persistent public-health problems: roughly a third of preschool
+children in this extract fall below the 11 g/dL threshold, with a strong
+socio-economic and regional patterning that has been described in DHS-based
+analyses of ENDES (for example Gonzales and colleagues' work on anaemia and
+altitude in Peruvian children). Haemoglobin is analysed here on its continuous
+scale rather than dichotomised, which preserves information and avoids the loss
+of power that comes with cut-points.
+
+**Aim.** Among Peruvian children aged 6-59 months, we examined which of child
+age, child sex, natural region, household wealth, maternal education and
+maternal indigenous identity are independently associated with altitude-adjusted
+haemoglobin concentration, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** A cross-sectional extract of `r nrow(dat_raw)` children aged
+6-59 months from the Peru Demographic and Health Survey (ENDES), a nationally
+implemented household survey. Each row is one child with a valid
+altitude-adjusted haemoglobin measurement, linked to their mother's interview
+and to household characteristics.
+
+**Variables.** The outcome is `haemoglobin_g_dl`, altitude-adjusted haemoglobin
+in g/dL, measured by HemoCue on a capillary blood sample. Predictors are child
+age in months (continuous, 6-59); child sex (reference *Female*); natural region
+of Peru (reference *Lima metropolitan*, the lowest-altitude and best-resourced
+region, versus rest of coast, highlands and jungle); household wealth quintile
+(reference *Poorest*); mother's highest education (reference *Primary or none*);
+and whether the mother belongs to an indigenous ethnic group (reference *No*).
+These six were chosen in advance because they capture the three routes by which
+haemoglobin varies in this age group: biological maturation (age, sex),
+geography and altitude-related erythropoiesis (region), and household
+socio-economic position (wealth, education, ethnicity).
+
+**Statistical analysis.** Linear regression via `lm()`, justified because the
+outcome is continuous and approximately symmetric. We fitted a univariable model
+for each predictor first, then a single multivariable model containing all of
+them. Predictors were chosen in advance on subject-matter grounds, not by
+significance. Significance threshold 0.05; estimates are reported with 95%
+confidence intervals. Assumptions were checked with `performance::check_model()`.
+Analysis used `r R.version.string` with tidyverse, gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped). All six predictors and the outcome
+are complete in this extract, so listwise deletion removes
+`r if (n_dropped == 0) "no rows at all" else paste(n_dropped, "rows")` and
+selection bias from missingness is not a concern for this particular model.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(
+    missing = "no"
+  ) |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics.**")
+```
+
+```{r table-one-numbers}
+hb_med <- median(dat_model$haemoglobin_g_dl)
+hb_q   <- quantile(dat_model$haemoglobin_g_dl, c(.25, .75))
+pct_poorest <- round(100 * mean(dat_model$wealth_index == "Poorest"), 1)
+pct_high    <- round(100 * mean(dat_model$natural_region == "Highlands"), 1)
+```
+
+Median haemoglobin was `r hb_med` g/dL (IQR `r hb_q[1]` to `r hb_q[2]`), which
+sits only marginally above the 11 g/dL anaemia threshold, so a large share of
+this sample is close to or below the cut-point. The sample is weighted towards
+the poorer end of the wealth distribution (`r pct_poorest`% in the poorest
+quintile) and towards the highlands (`r pct_high`%), reflecting the DHS design
+which oversamples rural and less-populated departments.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Haemoglobin against child age, by natural region, with LOESS smoothers."}
+ggplot(dat_model, aes(child_age_months, haemoglobin_g_dl, colour = natural_region)) +
+  geom_point(alpha = 0.05, size = 0.5) +
+  geom_smooth(method = "loess", se = TRUE, linewidth = 1) +
+  geom_hline(yintercept = 11, linetype = "dashed") +
+  scale_colour_viridis_d(option = "D", end = 0.9) +
+  labs(x = "Child age (months)", y = "Haemoglobin (g/dL)",
+       colour = "Natural region",
+       caption = "Dashed line: 11 g/dL anaemia threshold")
+```
+
+Haemoglobin rises steeply across the second year of life and then flattens after
+about 24 months in every region, and the four regional curves are separated by
+roughly 0.4 g/dL across the whole age range, with the highlands and jungle
+sitting below Lima and the rest of the coast.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+```
+
+```{r uv-numbers}
+uv_age <- lm(haemoglobin_g_dl ~ child_age_months, data = dat_model) |>
+  tidy(conf.int = TRUE) |> filter(term == "child_age_months")
+```
+
+Child age is the strongest single predictor: each additional month of age is
+associated with a `r round(uv_age$estimate, 4)` g/dL higher haemoglobin (95% CI
+`r round(uv_age$conf.low, 4)` to `r round(uv_age$conf.high, 4)`, p < 0.001),
+which over the 53-month span of the sample amounts to about
+`r round(uv_age$estimate * 53, 2)` g/dL between the youngest and oldest children
+-- clinically the single largest contrast in the table. All other predictors
+also reach significance in crude models, which is unsurprising at this sample
+size and is a reason to read the effect sizes rather than the p-values.
+
+## Why adjustment is needed
+
+The crude regional and ethnic contrasts are almost certainly confounded by
+household socio-economic position and by child age. **Household wealth** is
+associated with region -- the highlands and jungle contain almost no children in
+the richest quintile whereas Lima contains almost no children in the poorest --
+and wealth is independently associated with haemoglobin through diet quality,
+access to iron supplementation and infection burden; so part of any raw
+"highlands effect" is really a poverty effect. **Child age** confounds the
+socio-economic contrasts in the opposite direction: haemoglobin climbs sharply
+with age in this window, and the age distribution is not identical across wealth
+quintiles or regions, so a crude comparison between, say, indigenous and
+non-indigenous mothers partly compares younger children with older ones.
+**Maternal education** plays the same role for the indigenous contrast:
+indigenous mothers in this extract have systematically less schooling, and
+schooling predicts feeding practice and health-service use, so an unadjusted
+indigenous coefficient absorbs the education effect. Mutual adjustment separates
+these overlapping gradients.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+```
+
+```{r fit-stats}
+gl <- glance(fit)
+tibble(
+  Statistic = c("R-squared", "Adjusted R-squared", "Residual SD (g/dL)",
+                "Observations", "Model parameters"),
+  Value = c(round(gl$r.squared, 3), round(gl$adj.r.squared, 3),
+            round(sigma(fit), 3), nobs(fit), length(coef(fit)))
+) |>
+  gt() |>
+  tab_header(title = "Model fit")
+```
+
+```{r mv-numbers}
+tid <- tidy(fit, conf.int = TRUE)
+g <- function(t) tid |> filter(term == t)
+mv_age  <- g("child_age_months")
+mv_jung <- g("natural_regionJungle")
+mv_rich <- g("wealth_indexRichest")
+mv_indig <- g("mother_indigenousYes")
+mv_sex  <- g("child_sexMale")
+```
+
+The model explains `r round(100 * gl$r.squared, 1)`% of the variance in
+haemoglobin (adjusted R-squared `r round(gl$adj.r.squared, 3)`), so the great
+majority of between-child variation is left unexplained by these six
+characteristics. Conditional on the other five predictors, each additional month
+of age is associated with a `r round(mv_age$estimate, 4)` g/dL higher
+haemoglobin (95% CI `r round(mv_age$conf.low, 4)` to
+`r round(mv_age$conf.high, 4)`); children in the jungle average
+`r round(mv_jung$estimate, 2)` g/dL relative to Lima
+(95% CI `r round(mv_jung$conf.low, 2)` to `r round(mv_jung$conf.high, 2)`); and
+children in the richest quintile average `r round(mv_rich$estimate, 2)` g/dL
+compared with the poorest (95% CI `r round(mv_rich$conf.low, 2)` to
+`r round(mv_rich$conf.high, 2)`). Boys average `r round(mv_sex$estimate, 3)`
+g/dL relative to girls, a difference that only just clears p = 0.05 and is far
+too small to matter clinically.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+```{r compare-numbers}
+uv_fit <- function(v) {
+  lm(reformulate(v, outcome), data = dat_model) |> tidy(conf.int = TRUE)
+}
+u_indig <- uv_fit("mother_indigenous") |> filter(term == "mother_indigenousYes")
+u_rich  <- uv_fit("wealth_index") |> filter(term == "wealth_indexRichest")
+u_jung  <- uv_fit("natural_region") |> filter(term == "natural_regionJungle")
+u_sec   <- uv_fit("mother_education") |> filter(term == "mother_educationSecondary")
+mv_sec  <- g("mother_educationSecondary")
+u_age   <- uv_age
+```
+
+Several estimates move substantially, and all of them toward the null. The
+**richest-versus-poorest** wealth contrast shrinks from
+`r round(u_rich$estimate, 2)` g/dL crude to `r round(mv_rich$estimate, 2)` g/dL
+adjusted, a `r round(100 * (1 - mv_rich$estimate / u_rich$estimate))`% reduction,
+because much of the raw wealth gradient is really a regional and educational
+gradient. The **maternal indigenous** coefficient moves from
+`r round(u_indig$estimate, 2)` g/dL crude to `r round(mv_indig$estimate, 2)` g/dL
+adjusted, consistent with indigenous households being concentrated in the poorer
+quintiles and in the highlands: roughly two thirds of the crude indigenous
+deficit is confounding by wealth, education and region. The **jungle** contrast
+likewise halves, from `r round(u_jung$estimate, 2)` to
+`r round(mv_jung$estimate, 2)` g/dL. By contrast **child age** barely moves
+(`r round(u_age$estimate, 4)` to `r round(mv_age$estimate, 4)` g/dL per month),
+as expected for a variable essentially unrelated to the household covariates.
+One predictor changes significance and even sign: **secondary versus primary or
+no maternal education** is `r round(u_sec$estimate, 3)` g/dL crude
+(p `r format.pval(u_sec$p.value, digits = 2, eps = 0.001)`) but
+`r round(mv_sec$estimate, 3)` g/dL adjusted
+(p = `r round(mv_sec$p.value, 2)`) -- the crude "benefit" of secondary schooling
+was wealth and region in disguise. With n = `r nobs(fit)` the fact that most
+other predictors stay significant is unremarkable: at this size even trivial
+differences clear p = 0.05, so the comparison worth making is between effect
+sizes, not between p-values.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r diag-numbers}
+vifs <- check_collinearity(fit)
+max_vif <- round(max(vifs$VIF), 2)
+```
+
+The **posterior-predictive check** and **linearity** panel show the fitted model
+tracking the observed haemoglobin distribution well, with only a mild
+under-prediction in the upper tail. The **homogeneity of variance** panel is
+close to flat, so constant residual variance is a defensible assumption. The
+**collinearity** panel is entirely in the low range (maximum VIF
+`r max_vif`), so the wealth, region and education coefficients can be
+interpreted separately despite their correlation. **Influential observations**:
+no point approaches Cook's distance thresholds, which is expected with
+`r nobs(fit)` observations. The **normality of residuals** panel shows mild
+departure in the tails only; with a sample this large the central limit theorem
+makes the coefficient standard errors robust to that. The most substantive
+diagnostic problem is not visible in these panels at all: the LOESS curves in
+Figure 1 show haemoglobin rising steeply then plateauing with age, so a single
+linear age term is a simplification and a spline or quadratic term would fit
+better.
+
+# Discussion
+
+Haemoglobin in Peruvian preschool children is dominated by age: the youngest
+children are the anaemic ones, and haemoglobin climbs roughly
+`r round(mv_age$estimate * 12, 2)` g/dL per year of life over this window,
+independent of household circumstances. Region and wealth add smaller but real
+gradients -- children in the jungle and in the poorest quintile average a few
+tenths of a gram per decilitre lower than their Lima and richest-quintile
+counterparts. Practically, this points supplementation and screening effort at
+children in their second year of life, and at jungle and highland communities,
+rather than at broad socio-economic categories.
+
+**Limitations.** This is a cross-sectional survey, so all estimates are
+associations and not causal effects; a child's haemoglobin today reflects diet,
+infection and supplementation history that this extract does not measure at all
+(iron supplementation, recent fever or diarrhoea, dietary diversity, maternal
+anaemia). The source ENDES analysis used the DHS complex design -- cluster
+(HV001), stratum (HV022) and sampling weights -- whereas this extract contains
+only the weight variable and it is deliberately not used here; consequently the
+standard errors are too narrow, the estimates are not design-corrected, and
+**this sample must not be described as nationally representative**. With
+`r nrow(dat_model)` rows almost every comparison is statistically significant,
+so conclusions should lead with effect sizes: a sex difference of
+`r round(mv_sex$estimate, 3)` g/dL is clinically meaningless whatever its
+p-value.
+Haemoglobin was measured by capillary HemoCue, which is noisier than venous
+laboratory measurement, and the altitude adjustment is a formula rather than a
+measured correction, so residual altitude confounding may persist inside the
+highlands category. The linear age term understates the curvature visible in
+Figure 1. Finally, wealth, region, education and ethnicity are strongly
+intertwined in Peru, and although VIFs are acceptable, the mutually adjusted
+coefficients should be read as "holding the others fixed", a contrast that is
+partly hypothetical for combinations that barely exist (there are almost no
+richest-quintile jungle households).
+
+**Future work.** Refit with the DHS survey design and a spline for age, and add
+maternal haemoglobin and supplementation history if the fuller ENDES recode file
+can be obtained.
+
+# Feasibility notes
+
+*Not part of a student report.*
+
+- **Works well.** This is the cleanest of the five outcomes in this dataset.
+  Complete data on outcome and all six predictors (`r n_dropped` rows dropped),
+  a symmetric continuous outcome, no collinearity problems (max VIF
+  `r max_vif`), and a genuinely interesting Purpose 3 story with confounding that
+  actually moves estimates.
+- **Deterministic-twin trap.** `anaemia` is exactly `haemoglobin_g_dl < 11` and
+  must never appear as a predictor here. `stunting`/`height_for_age_z` are also
+  co-outcomes of undernutrition rather than exposures and were excluded on
+  those grounds, not for statistical reasons.
+- **Low R-squared.** Adjusted R-squared is only
+  `r round(gl$adj.r.squared, 3)`. Students who expect a "good model" will be
+  disappointed; this needs framing in advance as normal for individual-level
+  biomarker data.
+- **Non-linear age.** A single linear term for `child_age_months` visibly
+  misfits (steep rise then plateau). This is a *teaching opportunity* rather
+  than a defect, but a student who never plots the smoother will miss it.
+- **Sample size.** At `r nrow(dat_model)` rows everything is significant. The
+  brief must force effect-size-led interpretation or students will simply list
+  stars.
+- **Design not honoured.** Only the weight is present, not cluster or stratum,
+  so a correct survey analysis is impossible from this extract. This is fine for
+  a course exercise provided the limitation is stated.

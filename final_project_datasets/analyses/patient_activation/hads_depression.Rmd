@@ -1,0 +1,369 @@
+---
+title: "Depressive symptoms (HADS-D) in adults with chronic disease"
+subtitle: "Dataset 8: Patient activation for self-management in chronic disease"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "patient_activation.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "hads_depression"
+predictors <- c("age_yrs", "sex", "education_level", "financial_distress",
+                "disease", "charlson_index", "social_support_total")
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    sex = factor(sex, levels = c("male", "female"), labels = c("Male", "Female")),
+    education_level = factor(education_level, levels = c("lower", "middle", "higher"),
+                             labels = c("Lower", "Middle", "Higher")),
+    financial_distress = factor(financial_distress, levels = c("none", "low", "high"),
+                                labels = c("None", "Low", "High")),
+    smoking_status = factor(smoking_status, levels = c("never", "former", "current"),
+                            labels = c("Never", "Former", "Current")),
+    disease = factor(disease,
+                     levels = c("diabetes_t2", "copd", "heart_failure", "renal_disease"),
+                     labels = c("Type 2 diabetes", "COPD", "Heart failure", "Renal disease")),
+    disease_duration = factor(disease_duration,
+                              levels = c("under_2_yrs", "2_to_5_yrs", "over_5_yrs"),
+                              labels = c("<2 years", "2-5 years", ">5 years")),
+    living_alone = factor(living_alone, levels = c(0, 1), labels = c("No", "Yes"))
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+# Missing questionnaire answers were coded 99 in the original deposit; the
+# conversion to NA was already applied upstream, so no re-coding is done here.
+# The only 99 anywhere in the file is a participant identifier (id == 99).
+n99 <- dat_raw |>
+  select(-id) |>
+  select(where(is.numeric)) |>
+  summarise(across(everything(), ~ sum(.x == 99, na.rm = TRUE))) |>
+  rowSums()
+```
+
+# Introduction
+
+Depressive symptoms are common in long-term physical illness and are associated
+with worse self-care, more hospital use and higher mortality. These data come
+from a cross-sectional survey of 1,154 Dutch adults treated in primary and
+secondary care for type 2 diabetes, COPD, chronic heart failure or chronic renal
+disease (Bos-Touwen et al., *PLoS ONE* 2015;10(5):e0126400), in which the
+Hospital Anxiety and Depression Scale was administered alongside measures of
+social and economic circumstances. Knowing which patients carry the heaviest
+symptom burden helps target psychological support in chronic-disease clinics.
+
+**Aim.** Among Dutch adults with one of four chronic conditions, we examined
+which of age, sex, education, financial distress, index disease, comorbidity
+burden and perceived social support are independently associated with HADS
+depression score, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** Cross-sectional survey of adults with type 2 diabetes, COPD,
+chronic heart failure or chronic renal disease recruited from Dutch general
+practices and hospital outpatient clinics; `r nrow(dat_raw)` participants, all
+measured on a single occasion.
+
+**Variables.** The outcome is `hads_depression`, the HADS depression subscale
+scored 0-21, where higher means more depressive symptoms and a score of 8 or
+more is conventionally taken to suggest probable caseness. Predictors are
+`age_yrs` (years), `sex` (reference: male), `education_level` (reference: lower,
+the largest group), `financial_distress` (none / low / high, reference: none —
+the clinically "unexposed" group and the largest), `disease` (reference: type 2
+diabetes, the largest group), `charlson_index` (points; higher = more
+comorbidity) and `social_support_total` (MSPSS total, 12-84; higher = more
+perceived support).
+
+**Sibling scale deliberately excluded.** `hads_anxiety` is the other subscale of
+the same 14-item instrument, completed at the same sitting, and correlates 0.66
+with the outcome. Entering it would give a variance-inflation factor of only
+1.19 — collinearity is *not* the reason to leave it out — but adjusted R² would
+jump from 0.19 to 0.49, and essentially all of that gain is the HADS predicting
+itself. That is a restatement of the outcome, not an explanation of it, so
+`hads_anxiety` is excluded. `sf12_mental` is excluded for the same reason: it
+is a mental-health summary score that overlaps conceptually with HADS-D
+(r = -0.71). `bmi` in this file is exactly `weight_kg / (height_cm/100)^2`, so
+those three would never appear together; none is used here.
+`n_comorbidities` correlates 0.78 with `charlson_index`, so only the Charlson
+index is used.
+
+**Statistical analysis.** Linear regression (`lm()`), justified because the
+outcome is a continuous 0-21 score. We fitted a univariable model for each
+predictor first, then a single multivariable model containing all of them.
+Predictors were chosen in advance on subject-matter grounds, not by significance.
+Significance threshold 0.05; estimates are reported with 95% confidence
+intervals. Assumptions were checked with `performance::check_model()`; because
+non-constant error variance was detected, heteroscedasticity-consistent (HC3)
+standard errors were also computed with `lmtest::coeftest()` and
+`sandwich::vcovHC()`. Analysis used `r R.version.string` with tidyverse,
+gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped). Missing questionnaire answers were
+coded 99 in the original deposit, but that conversion to `NA` has already been
+applied in this CSV; a check across all numeric columns other than `id` found
+`r n99` remaining values equal to 99, so no further re-coding was needed.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(missing = "no") |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics.**")
+```
+
+The HADS depression distribution is strongly right-skewed: the median is 4 with
+an interquartile range of roughly 2 to 8, so most of this sample is well below
+the caseness threshold while a minority score in the teens. Financial distress
+is uncommon at the "high" level (fewer than one in ten), which makes that
+comparison the least precise in the model.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. HADS depression score by self-reported financial distress, within index disease group. Boxes show medians and interquartile ranges; the dashed line is the caseness threshold of 8."}
+ggplot(dat_model, aes(x = financial_distress, y = hads_depression)) +
+  geom_hline(yintercept = 8, linetype = "dashed", colour = "grey50") +
+  geom_boxplot(outlier.shape = NA, fill = "#a6bddb") +
+  geom_jitter(width = 0.18, height = 0.15, alpha = 0.2, size = 0.8) +
+  facet_wrap(~ disease) +
+  labs(x = "Financial distress", y = "HADS depression score (0-21)")
+```
+
+Depressive symptoms rise steadily across the three financial-distress
+categories, and the gradient is visible in all four disease groups, though the
+"high" group is small everywhere.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+```
+
+Financial distress is the strongest crude predictor: compared with patients
+reporting no financial distress, those reporting high distress score 3.69 HADS
+points higher (95% CI 2.84 to 4.54, p < 0.001) and those reporting low distress
+1.54 points higher (p < 0.001) — a difference large enough to move a typical
+patient from well below the caseness threshold to at or above it. Perceived
+social support runs the other way (-0.06 points per support point, 95% CI -0.075
+to -0.046, p < 0.001; about -3.3 points across the interquartile range of
+support). Comorbidity burden (+0.43 per Charlson point, 95% CI 0.30 to 0.56),
+higher education (-2.09 versus lower education), age (+0.037 per year,
+p < 0.001) and female sex (+0.55, p = 0.025) are all crudely associated, as are
+COPD (+1.06, p < 0.001) and heart failure (+0.99, p = 0.004) relative to
+diabetes.
+
+## Why adjustment is needed
+
+The crude associations here are heavily entangled. `education_level` is an
+obvious confounder of the financial-distress association: less-educated patients
+are both more likely to report financial distress and, independently, report
+more depressive symptoms, so part of the crude distress gradient is really
+educational disadvantage. `charlson_index` is a second: comorbidity burden rises
+with age (r = 0.34), differs sharply between the four disease groups, and is
+itself associated with depressive symptoms, so both the crude age association
+and the crude COPD/heart-failure associations partly reflect how sick these
+patients are overall rather than anything specific to age or diagnosis.
+`social_support_total` is a third candidate, since patients who live in
+financially precarious circumstances also report thinner support networks. And
+because the four disease groups were pooled by design and differ in age, sex mix
+and comorbidity, `disease` must be in the model for any other coefficient to be
+read as a within-disease comparison.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+```
+
+```{r fit-stats}
+gl <- glance(fit)
+tibble(
+  Statistic = c("R-squared", "Adjusted R-squared", "Residual SE", "N", "Model df"),
+  Value = c(round(gl$r.squared, 3), round(gl$adj.r.squared, 3),
+            round(gl$sigma, 2), nrow(dat_model), gl$df)
+) |>
+  gt() |>
+  tab_header(title = "Model fit")
+```
+
+Conditional on all other predictors, high financial distress remains associated
+with a 2.94-point higher HADS depression score than no distress (95% CI 2.11 to
+3.78, p < 0.001) and low distress with a 1.10-point increase (95% CI 0.64 to
+1.55, p < 0.001). Each additional point of perceived social support is
+associated with a 0.054-point lower score (95% CI -0.068 to -0.040, p < 0.001),
+and each Charlson point with a 0.39-point higher score (95% CI 0.25 to 0.53,
+p < 0.001). Higher education retains a 1.39-point advantage over lower education
+(95% CI -2.04 to -0.73, p < 0.001). Age (p = 0.070) and sex (p = 0.097) are no
+longer associated once socioeconomic circumstances and comorbidity are held
+constant. The model explains R² = `r round(gl$r.squared, 3)` of the variance
+(adjusted R² = `r round(gl$adj.r.squared, 3)`).
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+Two estimates move a long way towards the null. High financial distress falls
+from +3.69 to +2.94 and low distress from +1.54 to +1.10, so roughly a quarter
+of the crude socioeconomic gradient in depressive symptoms is accounted for by
+education, comorbidity and social support — but three-quarters of it survives.
+The disease coefficients also shrink: COPD from +1.06 to +0.77 (still
+significant, p = 0.006), heart failure from +0.99 to +0.46 (now
+non-significant, p = 0.16) and renal disease from +0.47 to -0.24, i.e. the
+heart-failure excess is largely explained by comorbidity burden. Two predictors
+change significance: age (p < 0.001 crude to p = 0.070 adjusted) and sex
+(p = 0.025 to p = 0.097), both attenuated by the Charlson index and by
+socioeconomic variables respectively. Social support barely moves (-0.061 to
+-0.054) and the Charlson index only modestly (0.43 to 0.39), which indicates
+these two carry information not duplicated by the rest of the model. The overall
+picture is classic confounding by socioeconomic position and comorbidity rather
+than mediation or collinearity — all VIFs are below 1.5.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r diag-tests}
+check_heteroscedasticity(fit)
+check_normality(fit)
+check_collinearity(fit)
+```
+
+The linearity panel is acceptable but the homogeneity-of-variance panel is not:
+`check_heteroscedasticity()` rejects constant error variance (p < 0.001). This
+is expected for a floor-bounded symptom score — patients predicted to have low
+scores cannot vary much below zero, while patients predicted to have high scores
+vary widely — and it is visible as a fan opening to the right. Normality of
+residuals is also rejected (p < 0.001) because of the right skew and the floor
+at zero. Collinearity is not an issue (all VIFs below 1.5, largest
+`charlson_index` 1.43), and no observation exceeds the Cook's distance
+threshold.
+
+Because heteroscedasticity was flagged, the model was re-tested with HC3
+heteroscedasticity-consistent standard errors:
+
+```{r robust-se}
+robust <- lmtest::coeftest(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+tibble(
+  Term = rownames(robust),
+  Estimate = round(robust[, 1], 3),
+  `Model SE` = round(sqrt(diag(vcov(fit))), 3),
+  `HC3 SE` = round(robust[, 2], 3),
+  `HC3 p` = format.pval(robust[, 4], digits = 2, eps = 0.001)
+) |>
+  gt() |>
+  tab_header(title = "HC3 robust standard errors",
+             subtitle = "Compared with the model-based standard errors")
+```
+
+The robust standard errors are close to the model-based ones for every term: the
+largest inflation is for `social_support_total` (HC3 SE 12% larger than the
+model-based SE) and for the heart-failure contrast (8% larger), while the
+education contrasts actually become 7-9% *tighter*. The financial-distress
+standard errors are essentially unchanged (0.425 versus 0.425). No conclusion
+changes: every predictor significant under model-based inference remains
+significant under HC3, and age and sex remain non-significant. The
+heteroscedasticity is therefore real but benign for these estimates.
+
+# Discussion
+
+Among Dutch adults with one of four chronic conditions, self-reported financial
+distress is the characteristic most strongly and independently associated with
+depressive symptoms, followed by low perceived social support, higher
+comorbidity burden and lower education. Index disease adds little once these
+are accounted for, and age and sex add nothing. Practically, this argues for
+asking about money worries and social isolation in chronic-disease review
+appointments, since these mark out patients at psychological risk far better
+than the diagnosis does.
+
+**Limitations.** The design is cross-sectional, so the direction of the
+financial-distress and social-support associations cannot be established:
+depression could plausibly cause a person to perceive their finances and their
+support network more negatively, which is exactly the reverse of the causal
+story above. Financial distress and social support are self-reported on the same
+questionnaire occasion as the HADS, so common-method bias will inflate those
+associations. The file has no disease-specific severity markers — no eGFR or
+dialysis status, no NYHA class, no GOLD stage — so severity is proxied only by
+the generic Charlson index and residual confounding by severity is likely.
+The "high" financial-distress cell contains fewer than 100 people, so that
+estimate is the least precise. Error variance is non-constant and residuals are
+non-normal; HC3 standard errors were reported and changed nothing, but a count
+or ordinal model would be a more principled fit for a floor-bounded 0-21 score.
+Complete-case analysis dropped `r n_dropped` participants
+(`r round(100*n_dropped/nrow(dat), 1)`%), and non-response to mood items is
+plausibly related to mood itself. All estimates are associations, not effects.
+
+**Future work.** A longitudinal design measuring financial circumstances and
+mood repeatedly would separate the "poverty causes distress" and "distress
+colours reporting" explanations.
+
+# Feasibility notes
+
+*Not part of a student report.*
+
+- **Works well, with one assumption caveat.** Real socioeconomic gradients, a
+  clean dose-response in `financial_distress`, and a good mix of predictors that
+  survive and predictors that disappear after adjustment.
+- **Complete-case N = `r nrow(dat_model)`** of `r nrow(dat)` (`r n_dropped`
+  dropped, `r round(100*n_dropped/nrow(dat), 1)`% — the largest loss of the five
+  outcomes here, driven mainly by `financial_distress` and the HADS items
+  themselves).
+- **Heteroscedasticity is genuinely flagged** (p < 0.001) and normality is
+  rejected. This is a feature, not a bug, for teaching: it forces the student
+  through `check_heteroscedasticity()` and HC3 robust SEs. The robust SEs are
+  almost identical to the model-based ones, so the conclusions are stable and
+  the student does not end up with a broken analysis.
+- **The sibling-scale trap is live.** `hads_anxiety` gives VIF 1.19 — students
+  will look at the VIF, see no collinearity, and keep it. Adjusted R² then goes
+  from 0.186 to 0.485 and the "finding" is that the HADS predicts the HADS.
+  `sf12_mental` (r = -0.71) is the same trap in a different costume. Both need
+  to be explicitly ruled out in the brief.
+- **No collinearity problem** in the chosen set: max VIF 1.43.
+- **Sparse cell**: `financial_distress = high` has fewer than 100 participants;
+  fine for a main effect, hopeless for an interaction.

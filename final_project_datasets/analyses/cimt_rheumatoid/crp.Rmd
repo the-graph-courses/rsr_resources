@@ -1,0 +1,689 @@
+---
+title: "C-reactive protein in adults with and without rheumatoid arthritis"
+subtitle: "Dataset 10: Cardiovascular risk and carotid artery thickness in rheumatoid arthritis"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "cimt_rheumatoid.csv"),
+                    show_col_types = FALSE)
+
+# The outcome is CRP on the log scale (see the transformation section). `crp`
+# appears in meta.json's suggested predictor list and is of course dropped from
+# the predictors here: it is the outcome.
+outcome    <- "log_crp"
+predictors <- c("age_yrs", "sex", "has_ra", "bmi", "systolic_bp",
+                "current_smoker", "statins", "antihypertensives",
+                "total_cholesterol", "hdl_cholesterol", "triglycerides",
+                "glucose")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the clinically "unexposed" group throughout.
+    sex    = lab(factor(sex, levels = c("female", "male"),
+                        labels = c("Female", "Male")), "Sex"),
+    has_ra = lab(factor(has_ra, levels = c(0, 1),
+                        labels = c("Control", "RA")), "Rheumatoid arthritis"),
+    current_smoker    = lab(factor(current_smoker, levels = c(0, 1),
+                                   labels = c("No", "Yes")), "Current smoker"),
+    statins           = lab(factor(statins, levels = c(0, 1),
+                                   labels = c("No", "Yes")), "Taking a statin"),
+    antihypertensives = lab(factor(antihypertensives, levels = c(0, 1),
+                                   labels = c("No", "Yes")),
+                            "Taking antihypertensives"),
+    log_crp = lab(log(crp), "log CRP"),
+    crp = lab(crp, "CRP (mg/L)"),
+    age_yrs = lab(age_yrs, "Age (years)"),
+    bmi = lab(bmi, "BMI (kg/m2)"),
+    systolic_bp = lab(systolic_bp, "Systolic BP (mmHg)"),
+    total_cholesterol = lab(total_cholesterol, "Total cholesterol (mmol/L)"),
+    hdl_cholesterol = lab(hdl_cholesterol, "HDL cholesterol (mmol/L)"),
+    triglycerides = lab(triglycerides, "Triglycerides (mmol/L)"),
+    glucose = lab(glucose, "Fasting glucose (mmol/L)")
+  )
+
+# `crp` is carried alongside the log outcome for Table 1 and Figure 1 only; the
+# models use `dat_fit`, which contains the log outcome and the predictors.
+dat_model <- dat |> select(all_of(c("crp", outcome, predictors))) |> drop_na()
+dat_fit   <- dat_model |> select(-crp)
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", fmt(p, 3)))
+skew <- function(x) { x <- na.omit(x); mean((x - mean(x))^3) / sd(x)^3 }
+
+# gtsummary refuses `exponentiate = TRUE` for an lm(), which is correct in
+# general but unhelpful when the outcome is already logged: exponentiating a
+# log-outcome coefficient gives a ratio of geometric means, which is exactly how
+# these estimates should be read. A custom tidier does the job, and the estimate
+# column is widened to three decimals because several ratios sit close to 1.
+tidy_exp <- function(x, exponentiate = FALSE, conf.level = 0.95, ...) {
+  broom::tidy(x, conf.int = TRUE, conf.level = conf.level, exponentiate = TRUE)
+}
+est3 <- function(x) style_number(x, digits = 3)
+
+crp_skew     <- skew(dat$crp)
+logcrp_skew  <- skew(dat$log_crp)
+p_at_floor   <- mean(dat_model$crp == 1)
+
+sex_vals    <- sort(unique(na.omit(dat_raw$sex)))
+ht_min      <- min(dat_raw$height_cm, na.rm = TRUE)
+ht_max      <- max(dat_raw$height_cm, na.rm = TRUE)
+n_ht_metres <- sum(dat_raw$height_cm < 3, na.rm = TRUE)
+friedewald  <- dat_raw$total_cholesterol - dat_raw$hdl_cholesterol -
+               dat_raw$triglycerides / 2.2
+ldl_r       <- cor(dat_raw$ldl_cholesterol, friedewald, use = "complete.obs")
+```
+
+# Introduction
+
+The source study recruited adults with rheumatoid arthritis (RA) and healthy
+controls without RA in the Netherlands, and put every participant through the
+same physical examination and fasting laboratory panel, including C-reactive
+protein (Hollan and colleagues, *PLOS ONE*, 2015). This teaching extract holds
+`r nrow(dat)` participants, `r sum(dat_raw$has_ra == 1)` with RA and
+`r sum(dat_raw$has_ra == 0)` controls. C-reactive protein is the standard
+clinical marker of systemic inflammation: it is the laboratory value used to
+judge whether rheumatoid disease is active, and independently of that it is one
+of the best-established biomarkers of cardiovascular risk, so the question of
+what raises it in a mixed RA and non-RA population sits at the junction of the
+two literatures.
+
+**Aim.** Among these Dutch adults, we examined which of RA status, age, sex,
+adiposity, blood pressure, smoking, lipid-lowering and antihypertensive
+treatment, the fasting lipid panel and glucose are independently associated with
+C-reactive protein, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** A cross-sectional case-control comparison conducted in the
+Netherlands and published in *PLOS ONE* in 2015. Cases were adults with
+established rheumatoid arthritis; controls were adults without RA recruited from
+the same setting. This extract contains `r nrow(dat)` participants and 25
+variables. Ages run from `r min(dat$age_yrs, na.rm = TRUE)` to
+`r max(dat$age_yrs, na.rm = TRUE)` years.
+
+**Variables.** The outcome is `crp`, C-reactive protein, recorded as whole
+numbers running from `r min(dat$crp, na.rm = TRUE)` to
+`r max(dat$crp, na.rm = TRUE)` with a median of
+`r median(dat$crp, na.rm = TRUE)`; the units are not stated in the deposit but
+the values are consistent with mg/L. **It is modelled on the natural-log scale**
+for the reasons set out below, so every coefficient is reported as a
+multiplicative ratio of geometric mean CRP. Predictors are rheumatoid arthritis
+status (reference Control), age in years, sex (reference Female), BMI in kg/m2,
+systolic blood pressure in mmHg, current smoking (reference No), statin use
+(reference No), antihypertensive use (reference No), total cholesterol, HDL
+cholesterol and triglycerides in mmol/L, and fasting glucose in mmol/L.
+
+**`crp` is removed from the predictor set.** The catalogue's suggested predictor
+list for this dataset includes `crp`, because that list is shared across all
+three outcomes. Regressing CRP on itself is circular, so it is dropped here.
+`r length(predictors)` predictors remain.
+
+**Variables excluded on structural grounds.** `ldl_cholesterol` is not
+independently measured in this file: against the Friedewald formula
+(`total - HDL - triglycerides/2.2`) it correlates `r fmt(ldl_r, 4)`, so
+including it alongside all three of its inputs creates a near-exact linear
+dependency and inflates the lipid variance inflation factors into the hundreds.
+`waist_cm` duplicates `bmi`
+(r `r fmt(cor(dat$bmi, dat$waist_cm, use = "complete.obs"), 2)`) and
+`diastolic_bp` duplicates `systolic_bp`
+(r `r fmt(cor(dat$systolic_bp, dat$diastolic_bp, use = "complete.obs"), 2)`);
+one of each pair is kept. `apo_a` and `apo_b` are alternative measurements of
+the HDL and total-cholesterol fractions
+(r `r fmt(cor(dat$apo_a, dat$hdl_cholesterol, use = "complete.obs"), 2)` and
+`r fmt(cor(dat$apo_b, dat$total_cholesterol, use = "complete.obs"), 2)`).
+`weight_kg` and `height_cm` are excluded because `bmi` is exactly
+`weight_kg/(height_cm/100)^2`. `prednisone` is excluded because it is an
+anti-inflammatory drug given almost exclusively to the RA group
+(`r sum(dat_raw$prednisone == 1 & dat_raw$has_ra == 0, na.rm = TRUE)` of
+`r sum(dat_raw$prednisone == 1, na.rm = TRUE)` users are controls) and would sit
+directly on the pathway between RA and CRP.
+
+**Parameter budget.** `r nrow(dat_model)` complete cases for
+`r length(predictors)` parameters, all single degree-of-freedom terms, is
+`r fmt(nrow(dat_model) / length(predictors), 0)` observations per parameter -
+comfortably inside the 10-15 per parameter a linear model needs. The binding
+constraint on this model is collinearity and interpretability, not sample size.
+
+**Statistical analysis.** `lm()`, justified because the outcome is a continuous
+laboratory measurement. Raw CRP is severely right-skewed (skewness
+`r fmt(crp_skew, 1)`; the largest value, `r max(dat$crp, na.rm = TRUE)`, is
+`r fmt(max(dat$crp, na.rm = TRUE) / median(dat$crp, na.rm = TRUE), 0)` times the
+median), so a model on the raw scale would be dominated by a handful of
+participants with an acute inflammatory episode. Taking natural logs reduces the
+skewness to `r fmt(logcrp_skew, 1)` and, as reported in the Diagnostics, roughly
+halves the residual skewness and doubles the explained variance, so **the
+analysis is carried out on log CRP**. We fitted a univariable model for each
+predictor first, then a single multivariable model containing all `r length(predictors)`.
+Predictors were chosen in advance on subject-matter grounds, not by
+significance. Significance threshold 0.05; estimates are reported with 95%
+confidence intervals and, for readability, exponentiated to ratios of geometric
+mean CRP. Assumptions were checked with `performance::check_model()` and
+`check_collinearity()`, and because non-constant variance was flagged even after
+transformation we additionally report HC3 heteroscedasticity-consistent standard
+errors. Analysis used `r R.version.string` with tidyverse, gtsummary and
+performance.
+
+**Data integrity.** The catalogue notes that in the original Zenodo deposit
+`sex` was coded 0 = woman / 1 = man and the height column mixed metres and
+centimetres. Both are corrected here: `sex` ships as the strings
+`r paste(sex_vals, collapse = " and ")` and `height_cm` runs from `r ht_min` to
+`r ht_max` cm with `r n_ht_metres` values below 3. One defect remains: row
+`id = "control_row1"` is entirely blank apart from `id`, `has_ra` and
+`hypertension_or_hyperchol`.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped,
+`r fmt(100 * n_dropped / nrow(dat), 1)`%). The outcome is
+`r fmt(100 * mean(!is.na(dat$crp)), 1)`% complete (`r sum(is.na(dat$crp))`
+missing); the rest of the attrition is spread thinly across the predictors, the
+largest contributors being `statins` (`r sum(is.na(dat$statins))` missing),
+`antihypertensives` (`r sum(is.na(dat$antihypertensives))`) and
+`current_smoker` (`r sum(is.na(dat$current_smoker))`). Only
+`r sum(complete.cases(dat_raw))` of `r nrow(dat)` rows are complete on *every*
+column in the file.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  select(-all_of(outcome)) |>
+  tbl_summary(
+    by = has_ra,
+    missing = "no"
+  ) |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics of the analytic sample, by rheumatoid arthritis status.**")
+```
+
+The RA group has markedly higher CRP (median
+`r median(dat_model$crp[dat_model$has_ra == "RA"])`, interquartile range
+`r quantile(dat_model$crp[dat_model$has_ra == "RA"], 0.25)` to
+`r quantile(dat_model$crp[dat_model$has_ra == "RA"], 0.75)`) than the controls
+(median `r median(dat_model$crp[dat_model$has_ra == "Control"])`, interquartile
+range `r quantile(dat_model$crp[dat_model$has_ra == "Control"], 0.25)` to
+`r quantile(dat_model$crp[dat_model$has_ra == "Control"], 0.75)`), which is
+exactly what an inflammatory arthritis should produce. The RA arm is also older
+and more female, and differs modestly in BMI and blood pressure, but the two
+groups' lipid profiles are close.
+
+## Outcome distribution and the log transformation
+
+```{r dist, fig.cap="Figure 1. Distribution of C-reactive protein on the raw scale (left) and after log transformation (right). The dashed line marks the lower reporting limit of 1."}
+bind_rows(
+  tibble(value = dat_model$crp, scale = "Raw CRP"),
+  tibble(value = dat_model$log_crp, scale = "log CRP")
+) |>
+  mutate(scale = factor(scale, levels = c("Raw CRP", "log CRP"))) |>
+  ggplot(aes(value, fill = scale)) +
+  geom_histogram(bins = 30, colour = "white", linewidth = 0.2) +
+  geom_vline(data = tibble(scale = factor(c("Raw CRP", "log CRP"),
+                                          levels = c("Raw CRP", "log CRP")),
+                           x = c(1, 0)),
+             aes(xintercept = x), linetype = "dashed", colour = "grey30") +
+  facet_wrap(~scale, scales = "free") +
+  scale_fill_manual(values = c("Raw CRP" = "#B5495B", "log CRP" = "#3F7CAC"),
+                    guide = "none") +
+  labs(x = NULL, y = "Participants")
+```
+
+Raw CRP is extremely right-skewed (skewness `r fmt(crp_skew, 1)`), with a long
+thin tail out to `r max(dat_model$crp)`; logging pulls the skewness down to
+`r fmt(skew(dat_model$log_crp), 1)`. The transformation does not fix everything,
+though: `r fmt(100 * p_at_floor, 0)`% of the analytic sample sits exactly at the
+lower reporting limit of 1 (log 0), the spike at the left of the right-hand
+panel. That point mass is a censoring artefact - these participants' true CRP is
+"below the assay's reporting threshold", not "exactly 1" - and no transformation
+can remove it.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 2. C-reactive protein (log scale) against BMI, separately for participants with rheumatoid arthritis and controls, with linear smoothers and 95% confidence bands."}
+ggplot(dat_model, aes(bmi, crp, colour = has_ra, fill = has_ra)) +
+  geom_point(alpha = 0.45, size = 1.5,
+             position = position_jitter(width = 0, height = 0.12)) +
+  geom_smooth(method = "lm", alpha = 0.18, linewidth = 0.9) +
+  scale_y_continuous(trans = "log", breaks = c(1, 2, 5, 10, 20, 50)) +
+  scale_colour_manual(values = c(Control = "#3F7CAC", RA = "#B5495B")) +
+  scale_fill_manual(values = c(Control = "#3F7CAC", RA = "#B5495B")) +
+  labs(x = "BMI (kg/m2)", y = "CRP (log scale)", colour = "Group",
+       fill = "Group")
+```
+
+CRP rises with BMI at a similar rate in both groups, and the RA line sits
+roughly a factor of two above the control line across the whole BMI range; the
+flat band of points along the bottom of each panel is the
+`r fmt(100 * p_at_floor, 0)`% of participants at the reporting floor.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_fit |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    tidy_fun = tidy_exp,
+    estimate_fun = est3
+  ) |>
+  modify_header(estimate = "**Ratio**")
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(lm(reformulate(v, outcome), data = dat_fit), conf.int = TRUE,
+       exponentiate = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 3) {
+  r <- utid[utid$term == term, ]
+  sprintf("%s (95%% CI %s to %s)", fmt(r$estimate, d),
+          fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+```
+
+Because the outcome is logged, each coefficient below is a **multiplicative
+ratio of geometric mean CRP**; a ratio of 1 means no association. Rheumatoid
+arthritis is by far the strongest crude predictor: RA cases have
+`r ug("has_raRA")` times the geometric mean CRP of controls
+(p `r up("has_raRA")`), i.e. roughly a
+`r fmt(100 * (utid$estimate[utid$term == "has_raRA"] - 1), 0)`% higher CRP.
+Adiposity follows - each additional kg/m2 of BMI is associated with
+a ratio of `r ug("bmi")` (p `r up("bmi")`), which compounds to about
+`r fmt(utid$estimate[utid$term == "bmi"]^5, 2)`-fold across 5 kg/m2 - then HDL
+cholesterol, where each additional mmol/L is associated with a ratio of
+`r ug("hdl_cholesterol")`
+(p `r up("hdl_cholesterol")`), fasting glucose (`r ug("glucose")` per mmol/L,
+p `r up("glucose")`), systolic pressure (`r ug("systolic_bp")` per mmHg,
+p `r up("systolic_bp")`) and total cholesterol (`r ug("total_cholesterol")` per
+mmol/L, p `r up("total_cholesterol")`). Age (p `r up("age_yrs")`), sex
+(p `r up("sexMale")`), current smoking (p `r up("current_smokerYes")`), statin
+use (p `r up("statinsYes")`), antihypertensive use
+(p `r up("antihypertensivesYes")`) and triglycerides
+(p `r up("triglycerides")`) show no crude association.
+
+## Why adjustment is needed
+
+**BMI** is the clearest confounder in this dataset, and it works on the lipid
+associations. Adipose tissue secretes interleukin-6, which drives hepatic CRP
+production, so BMI is a direct cause of higher CRP (a ratio of `r ug("bmi")` crude); it is
+also strongly related to the lipid panel, being correlated
+`r fmt(cor(dat_model$bmi, dat_model$hdl_cholesterol), 2)` with HDL cholesterol
+and `r fmt(cor(dat_model$bmi, dat_model$triglycerides), 2)` with triglycerides.
+The crude "low HDL means high CRP" association is therefore partly an adiposity
+association wearing a lipid label: adding BMI alone moves the HDL ratio from
+`r ug("hdl_cholesterol")` to
+`r fmt(exp(coef(lm(log_crp ~ hdl_cholesterol + bmi, data = dat_fit)))["hdl_cholesterol"], 3)`.
+The same argument applies to fasting glucose, which is correlated
+`r fmt(cor(dat_model$bmi, dat_model$glucose), 2)` with BMI.
+
+**RA status** is the second variable that must be handled explicitly, because it
+is associated with almost everything else here. RA cases have higher CRP by
+construction of the disease, and they also have higher BMI (mean
+`r fmt(mean(dat_model$bmi[dat_model$has_ra == "RA"]), 1)` versus
+`r fmt(mean(dat_model$bmi[dat_model$has_ra == "Control"]), 1)` kg/m2), higher
+blood pressure, and a much lower rate of statin use
+(`r fmt(100 * mean(dat_model$statins[dat_model$has_ra == "RA"] == "Yes"), 1)`%
+versus
+`r fmt(100 * mean(dat_model$statins[dat_model$has_ra == "Control"] == "Yes"), 1)`%
+of controls). Any crude coefficient in this file is therefore partly a
+case-control contrast. **Statin use** deserves its own warning: it is confounded
+by indication, and here also confounded by group membership, since it is largely
+the controls who are on statins. Mutual adjustment lets each ratio be read as a
+comparison between participants of the same RA status, age, sex, body mass,
+blood pressure, treatment and lipid profile.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_fit)
+
+mv <- tbl_regression(fit, tidy_fun = tidy_exp, estimate_fun = est3) |>
+  modify_header(estimate = "**Ratio**")
+mv
+
+tid <- tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+g <- function(term, d = 3) {
+  r <- tid[tid$term == term, ]
+  sprintf("%s (95%% CI %s to %s)", fmt(r$estimate, d),
+          fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+```
+
+```{r fit-stats}
+s     <- summary(fit)
+fit_raw <- lm(reformulate(predictors, "crp"), data = dat_model)
+tibble(
+  Statistic = c("Complete-case N", "Parameters (excl. intercept)",
+                "Observations per parameter", "R-squared", "Adjusted R-squared",
+                "Residual SE (log scale)",
+                "R-squared, same model on untransformed CRP"),
+  Value = c(as.character(nrow(dat_fit)),
+            as.character(length(coef(fit)) - 1L),
+            fmt(nrow(dat_fit) / (length(coef(fit)) - 1L), 1),
+            fmt(s$r.squared, 3), fmt(s$adj.r.squared, 3), fmt(s$sigma, 3),
+            fmt(summary(fit_raw)$r.squared, 3))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable linear model for log CRP**"))
+```
+
+The model explains `r fmt(100 * s$r.squared, 1)`% of the variance in log CRP
+(adjusted R-squared `r fmt(s$adj.r.squared, 3)`). The same twelve predictors
+applied to untransformed CRP explain only
+`r fmt(100 * summary(fit_raw)$r.squared, 1)`%, so the transformation roughly
+doubles the explained variance as well as fixing the skew.
+
+Six predictors survive adjustment. The exposure of primary interest holds up:
+among participants of the same age, sex, body mass, blood pressure, treatment
+and lipid profile, RA cases have `r g("has_raRA")` times the geometric mean CRP
+of controls (p `r gp("has_raRA")`). Among participants alike on everything else,
+each additional kg/m2 of BMI is associated with a ratio of `r g("bmi")`
+(p `r gp("bmi")`),
+or about `r fmt(tid$estimate[tid$term == "bmi"]^5, 2)`-fold per 5 kg/m2; each
+mmol/L of total cholesterol with a ratio of `r g("total_cholesterol")`
+(p `r gp("total_cholesterol")`); each mmHg of systolic pressure with
+a ratio of `r g("systolic_bp")` (p `r gp("systolic_bp")`); men have `r g("sexMale")` the
+CRP of women (p `r gp("sexMale")`); and statin users `r g("statinsYes")` that of
+non-users (p `r gp("statinsYes")`). Triglycerides fall just short
+(`r g("triglycerides")`, p `r gp("triglycerides")`). Age (`r g("age_yrs")`,
+p `r gp("age_yrs")`), current smoking (`r g("current_smokerYes")`,
+p `r gp("current_smokerYes")`), antihypertensive use
+(`r g("antihypertensivesYes")`, p `r gp("antihypertensivesYes")`), HDL
+cholesterol (`r g("hdl_cholesterol")`, p `r gp("hdl_cholesterol")`) and glucose
+(`r g("glucose")`, p `r gp("glucose")`) are not independently associated. These
+are associations among the participants observed, not effects of intervening.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted ratios of geometric mean CRP.**")
+```
+
+Two predictors move substantially toward the null and lose significance. **HDL
+cholesterol** falls from `r ug("hdl_cholesterol")` crude
+(p `r up("hdl_cholesterol")`) to `r g("hdl_cholesterol")` adjusted
+(p `r gp("hdl_cholesterol")`); adding BMI alone accounts for most of that shift,
+so the crude association was largely adiposity. **Fasting glucose** does the
+same, from `r ug("glucose")` (p `r up("glucose")`) to `r g("glucose")`
+(p `r gp("glucose")`), attenuated first by BMI and then by RA status. In both
+cases the explanation is confounding by body mass rather than a change in
+precision: the confidence intervals are of similar width in the two columns.
+
+Two predictors move the other way, **away from the null and into significance**.
+Sex goes from `r ug("sexMale")` (p `r up("sexMale")`) to `r g("sexMale")`
+(p `r gp("sexMale")`); the masking variable is HDL cholesterol, since men have
+substantially lower HDL (mean
+`r fmt(mean(dat_model$hdl_cholesterol[dat_model$sex == "Male"]), 2)` versus
+`r fmt(mean(dat_model$hdl_cholesterol[dat_model$sex == "Female"]), 2)` mmol/L)
+and low HDL travels with high CRP, so the men's lower intrinsic CRP was hidden
+until HDL was held constant. Statin use goes from `r ug("statinsYes")`
+(p `r up("statinsYes")`) to `r g("statinsYes")` (p `r gp("statinsYes")`); no
+single covariate drives this - the lipid and glucose terms each strengthen it
+while RA status weakens it - and given that statin users are disproportionately
+controls, this coefficient should be treated as fragile.
+
+The predictor of primary interest attenuates but survives comfortably: RA status
+goes from `r ug("has_raRA")` to `r g("has_raRA")`, losing about
+`r fmt(100 * (utid$estimate[utid$term == "has_raRA"] - tid$estimate[tid$term == "has_raRA"]) / (utid$estimate[utid$term == "has_raRA"] - 1), 0)`%
+of its excess over 1, with BMI and systolic pressure accounting for most of the
+attenuation. **Total cholesterol barely moves**, from
+`r ug("total_cholesterol")` to `r g("total_cholesterol")`, and if anything
+strengthens - nothing else in the model stands in for it. Age is unchanged and
+null in both columns (`r ug("age_yrs")` to `r g("age_yrs")`), which is worth
+noting because age is the dominant predictor of both other outcomes in this
+dataset.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r collin}
+check_collinearity(fit)
+```
+
+```{r assumption-tests}
+het  <- check_heteroscedasticity(fit)
+print(het)
+norm <- check_normality(fit)
+print(norm)
+```
+
+```{r transform-table}
+res_skew <- function(m) { r <- resid(m); mean((r - mean(r))^3) / sd(r)^3 }
+tibble(
+  Outcome = c("CRP (untransformed)", "log CRP"),
+  `Outcome skewness` = fmt(c(skew(dat_model$crp), skew(dat_model$log_crp)), 2),
+  `Residual skewness` = fmt(c(res_skew(fit_raw), res_skew(fit)), 2),
+  `Shapiro-Wilk p` = formatC(c(shapiro.test(resid(fit_raw))$p.value,
+                               shapiro.test(resid(fit))$p.value),
+                             format = "e", digits = 1),
+  `R-squared` = fmt(c(summary(fit_raw)$r.squared, summary(fit)$r.squared), 3)
+) |>
+  gt() |>
+  tab_header(title = md("**Table 3. Untransformed versus log-transformed outcome.**"))
+```
+
+```{r robust-se}
+rob   <- lmtest::coeftest(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+robci <- lmtest::coefci(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+tibble(
+  Term = rownames(rob),
+  `Ratio` = fmt(exp(rob[, 1]), 3),
+  `SE (OLS)` = fmt(summary(fit)$coefficients[, 2], 3),
+  `SE (HC3)` = fmt(rob[, 2], 3),
+  `95% CI (HC3), ratio scale` = paste0(fmt(exp(robci[, 1]), 3), " to ",
+                                       fmt(exp(robci[, 2]), 3)),
+  `p (HC3)` = fmt(rob[, 4], 3)
+) |>
+  filter(Term != "(Intercept)") |>
+  gt() |>
+  tab_header(title = md("**Table 4. HC3 heteroscedasticity-consistent standard errors, on the ratio scale.**"))
+```
+
+**The transformation was the right call, and Table 3 is the evidence.** Residual
+skewness drops from `r fmt(res_skew(fit_raw), 2)` on the raw scale to
+`r fmt(res_skew(fit), 2)` after logging, the Shapiro-Wilk p-value improves by
+more than twenty orders of magnitude, and R-squared rises from
+`r fmt(summary(fit_raw)$r.squared, 3)` to `r fmt(summary(fit)$r.squared, 3)`. On
+the raw scale the residual-versus-fitted plot is a wedge dominated by a dozen
+participants with CRP above 20; on the log scale it is broadly flat.
+
+**But the log model still fails both formal checks, and the reason is the
+reporting floor.** `check_heteroscedasticity()` rejects constant variance
+(p < 0.001) and `check_normality()` rejects normal residuals (p < 0.001). The
+posterior-predictive and normal-QQ panels show why: `r fmt(100 * p_at_floor, 0)`%
+of participants sit exactly at CRP = 1, so the outcome is not really continuous
+at its lower end but a point mass with a continuous distribution above it. No
+model that assumes a smooth conditional distribution can reproduce that spike,
+and no transformation will help. The honest description is that CRP here is
+**left-censored at the assay's reporting limit** and that a tobit or
+censored-normal model would be the correct specification; that is beyond what
+this analysis attempts, so Table 4 reports HC3 robust standard errors instead.
+They change nothing substantive - the HC3 standard error for the RA coefficient
+is `r fmt(rob["has_raRA", 2], 3)` against an OLS
+`r fmt(summary(fit)$coefficients["has_raRA", 2], 3)`, and every predictor keeps
+its significance status under robust inference except triglycerides, which was
+borderline in both.
+
+**Collinearity is not a problem.** The largest variance inflation factor is
+`r fmt(max(as.data.frame(check_collinearity(fit))$VIF), 2)`, for
+`r as.data.frame(check_collinearity(fit))$Term[which.max(as.data.frame(check_collinearity(fit))$VIF)]`,
+and every VIF is below 2 - well short of the conventional threshold of 5. That
+follows directly from the exclusions in Methods; the same model with
+`ldl_cholesterol`, `waist_cm` and `diastolic_bp` added has lipid VIFs of about
+`r fmt(max(as.data.frame(check_collinearity(lm(reformulate(c(predictors, "ldl_cholesterol", "waist_cm", "diastolic_bp"), outcome), data = dat |> select(all_of(c(outcome, predictors, "ldl_cholesterol", "waist_cm", "diastolic_bp"))) |> drop_na())))$VIF), 0)`.
+
+**No influential observations.** The largest Cook's distance is
+`r fmt(max(cooks.distance(fit)), 3)` and the largest leverage
+`r fmt(max(hatvalues(fit)), 3)`, so no single participant drives the fit -
+another benefit of the log scale, since on the raw scale the participant with
+CRP `r max(dat_model$crp)` is enormously influential.
+
+# Discussion
+
+In this Dutch case-control sample, C-reactive protein is raised most clearly by
+rheumatoid arthritis and by adiposity. RA cases have `r g("has_raRA")` times the
+geometric mean CRP of controls of the same age, sex, body mass, blood pressure
+and lipid profile, and each 5 kg/m2 of BMI multiplies CRP by about
+`r fmt(tid$estimate[tid$term == "bmi"]^5, 2)`. Systolic blood pressure and total
+cholesterol contribute smaller independent associations, and men have about
+`r fmt(100 * (1 - tid$estimate[tid$term == "sexMale"]), 0)`% lower CRP than
+women once lipids are held constant. Practically, the finding that matters is
+that a substantial part of the raised CRP in RA patients is not the arthritis:
+adjustment for conventional cardiovascular risk factors removes about
+`r fmt(100 * (utid$estimate[utid$term == "has_raRA"] - tid$estimate[tid$term == "has_raRA"]) / (utid$estimate[utid$term == "has_raRA"] - 1), 0)`%
+of the crude excess, most of it attributable to body mass and blood pressure.
+Clinicians reading a raised CRP in an RA patient as evidence of active joint
+disease should note how much of it adiposity can explain.
+
+The statin coefficient is the one that must not be over-read. Taken at face
+value, the statin ratio of `r g("statinsYes")` says statin users have around
+`r fmt(100 * (1 - tid$estimate[tid$term == "statinsYes"]), 0)`% lower CRP, and
+there is a real pharmacological literature reporting exactly that. But statins
+in this dataset are **confounded by indication in both directions at once**.
+People are prescribed statins because their lipids and cardiovascular risk are
+poor: users here are on average
+`r fmt(mean(dat_model$age_yrs[dat_model$statins == "Yes"]) - mean(dat_model$age_yrs[dat_model$statins == "No"]), 1)`
+years older and, despite treatment, still have total cholesterol of
+`r fmt(mean(dat_model$total_cholesterol[dat_model$statins == "Yes"]), 1)` mmol/L
+against `r fmt(mean(dat_model$total_cholesterol[dat_model$statins == "No"]), 1)`
+in non-users - that pushes their apparent CRP up. At the same time, statin use
+is concentrated in the control group
+(`r fmt(100 * mean(dat_model$statins[dat_model$has_ra == "Control"] == "Yes"), 1)`%
+of controls versus
+`r fmt(100 * mean(dat_model$statins[dat_model$has_ra == "RA"] == "Yes"), 1)`% of
+RA cases), and controls have much lower CRP for reasons that have nothing to do
+with statins - that pushes it down. The adjusted coefficient additionally
+conditions on total cholesterol and HDL, which are the very quantities statins
+are given to change, so it is adjusting for a mediator. The same logic applies
+to `antihypertensives`. Neither column of Table 2 is a treatment effect, and a
+randomised comparison is the only thing that would be.
+
+**Limitations.** The design is cross-sectional, so nothing here establishes
+temporal order; in particular the BMI-CRP association is bidirectional in
+principle, though the adipose-tissue mechanism makes the BMI-to-CRP direction the
+more plausible one. **CRP is left-censored**: `r fmt(100 * p_at_floor, 0)`% of
+participants sit at the reporting limit of 1, and the linear model treats these
+as exact values, which biases coefficients toward the null and is the direct
+cause of the failed normality and variance checks. CRP is also an *acute-phase*
+reactant, so a single measurement partly reflects incidental infection at the
+time of sampling rather than chronic inflammatory burden; that is
+non-differential noise which will attenuate all associations. RA disease
+activity, disease duration and disease-modifying treatment - the variables that
+actually determine CRP within the RA group - are **not in this extract at all**,
+being undefined for the `r sum(dat_raw$has_ra == 0)` controls, so the RA
+coefficient is an average across patients whose disease may be quiescent or
+raging. `prednisone`, an anti-inflammatory that directly suppresses CRP, was
+excluded as a pathway variable, so its effect is folded into the RA coefficient.
+Statins and antihypertensives are confounded by indication as described above.
+Complete-case analysis dropped `r n_dropped` of `r nrow(dat)` rows. The sample is
+a single Dutch centre. All estimates are associations, not causal effects.
+
+**Future work.** Refit as a censored-normal (tobit) model with the reporting
+limit at 1, and, within the RA cases only, replace the RA indicator with DAS28
+disease activity from the full deposit to test whether CRP tracks disease
+activity or simply the RA label.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+- **USABLE WITH WARNINGS.** `r nrow(dat_fit)` complete cases, R-squared
+  `r fmt(s$r.squared, 3)` on the log scale, a strong and substantively sensible
+  signal (RA status and BMI), and no collinearity or influence problems. The
+  warnings are about the outcome's distribution, not about the model.
+- **FATAL if untransformed.** Raw CRP has skewness `r fmt(crp_skew, 1)` and runs
+  from `r min(dat$crp, na.rm = TRUE)` to `r max(dat$crp, na.rm = TRUE)`. The
+  untransformed model has residual skewness `r fmt(res_skew(fit_raw), 2)`,
+  R-squared `r fmt(summary(fit_raw)$r.squared, 3)` (against
+  `r fmt(s$r.squared, 3)` logged), and is dominated by a dozen participants in an
+  acute-phase response. A student who reports untransformed CRP has an
+  uninterpretable model, not merely an assumption violation. **The catalogue's
+  "consider log-transforming" note should be firmed up to "log-transform".**
+- **MAJOR: CRP is left-censored at the reporting limit.**
+  `r fmt(100 * p_at_floor, 0)`% of the analytic sample has CRP exactly 1, which
+  is "below the assay threshold" rather than a measured value. This point mass is
+  why `check_normality()` and `check_heteroscedasticity()` still reject **after**
+  logging, and it is not fixable by transformation. Students will report failed
+  diagnostics no matter what they do; the correct answer is to name the censoring
+  and move on (or fit a tobit model, which is beyond the course). This should be
+  in the caution list.
+- **MAJOR: `crp` is in `meta.json`'s suggested predictor list** and must be
+  dropped when CRP is the outcome. A student who leaves it in gets R-squared
+  = 1. This is the one genuinely circular pairing in the dataset.
+- **MAJOR trap: `ldl_cholesterol` is the Friedewald calculation, not a
+  measurement** (correlation `r fmt(ldl_r, 4)` with
+  `total - HDL - triglycerides/2.2`). Including it with all three inputs sends
+  the lipid VIFs into the hundreds.
+- **MAJOR interpretive trap: `statins` and `antihypertensives` are confounded by
+  indication**, and here the confounding is doubly awkward because statin use is
+  concentrated in the *control* group
+  (`r fmt(100 * mean(dat_model$statins[dat_model$has_ra == "Control"] == "Yes"), 1)`%
+  of controls versus
+  `r fmt(100 * mean(dat_model$statins[dat_model$has_ra == "RA"] == "Yes"), 1)`%
+  of RA cases). The statin coefficient crosses into significance on adjustment
+  (`r ug("statinsYes")` to `r g("statinsYes")`) and looks like a beautiful
+  anti-inflammatory effect. It is not evidence of one.
+- **MINOR: `prednisone` sits on the causal pathway.** It is an anti-inflammatory
+  given almost exclusively to RA patients
+  (`r sum(dat_raw$prednisone == 1 & dat_raw$has_ra == 0, na.rm = TRUE)` of
+  `r sum(dat_raw$prednisone == 1, na.rm = TRUE)` users are controls). Adding it
+  to a model with `has_ra` is adjusting for a mediator and shrinks the RA
+  coefficient for the wrong reason.
+- **MINOR: redundant pairs.** `bmi`/`waist_cm`
+  (r `r fmt(cor(dat$bmi, dat$waist_cm, use = "complete.obs"), 2)`),
+  `systolic_bp`/`diastolic_bp`
+  (r `r fmt(cor(dat$systolic_bp, dat$diastolic_bp, use = "complete.obs"), 2)`),
+  `apo_a`/`hdl_cholesterol`
+  (r `r fmt(cor(dat$apo_a, dat$hdl_cholesterol, use = "complete.obs"), 2)`),
+  `apo_b`/`total_cholesterol`
+  (r `r fmt(cor(dat$apo_b, dat$total_cholesterol, use = "complete.obs"), 2)`).
+  With the chosen subset the maximum VIF is
+  `r fmt(max(as.data.frame(check_collinearity(fit))$VIF), 2)`.
+- **MINOR: the units of `crp` are not documented.** The codebook says only
+  "C-reactive protein (inflammatory marker)". The integer-valued 1-71 range is
+  consistent with mg/L but nothing in the deposit confirms it, so students cannot
+  compare their numbers with published reference ranges with any confidence.
+- **MINOR: CRP is an acute-phase reactant measured once.** Incidental infection
+  at the time of sampling is measurement error that will attenuate every
+  association; there is no way to detect or adjust for it here.
+- **MINOR data defect: row `id = "control_row1"` is entirely blank.**
+- **Verified clean:** `sex` ships as `r paste(sex_vals, collapse = "/")` and
+  `height_cm` as `r ht_min`-`r ht_max` cm with `r n_ht_metres` values in metres,
+  so both documented Zenodo defects are fixed in this catalogue's CSV. No
+  RA-specific columns are present.

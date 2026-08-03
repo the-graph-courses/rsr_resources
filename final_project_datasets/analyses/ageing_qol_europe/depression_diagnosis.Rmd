@@ -1,0 +1,771 @@
+---
+title: "Diagnosed depression among adults in Finland, Poland and Spain"
+subtitle: "Dataset 14: Quality of life among adults in Finland, Poland and Spain (COURAGE)"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "ageing_qol_europe.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names. The catalogue's own
+# predictor list contains `depression_diagnosis`, which is the outcome here and
+# is therefore removed. `sadness` and `sleep_difficulty` are removed as symptoms
+# of the outcome. The cut is argued in Methods.
+outcome    <- "depression_diagnosis"
+predictors <- c("age_yrs", "sex", "country", "residence", "education",
+                "marital_status", "physical_activity", "social_network_index",
+                "body_pain", "arthritis", "angina", "diabetes")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+yn  <- function(x, l) lab(factor(x, levels = c(0, 1), labels = c("No", "Yes")), l)
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest group, or the clinically
+    # "unexposed" one where that is the more natural comparison.
+    age_yrs = lab(age_yrs, "Age (years)"),
+    sex     = lab(factor(sex, levels = c("female", "male"),
+                         labels = c("Female", "Male")), "Sex"),
+    country = lab(factor(country, levels = c("poland", "spain", "finland"),
+                         labels = c("Poland", "Spain", "Finland")), "Country"),
+    residence = lab(factor(residence, levels = c("urban", "rural"),
+                           labels = c("Urban", "Rural")), "Residence"),
+    # education: `none_or_informal` (n = 125) is collapsed into the lower
+    # category because 124 of those 125 participants live in Spain and none live
+    # in Finland. See Methods.
+    education = lab(factor(if_else(education == "high_school_or_higher",
+                                   "High school or higher",
+                                   "None, primary or secondary"),
+                           levels = c("None, primary or secondary",
+                                      "High school or higher")),
+                    "Education"),
+    marital_status = lab(factor(marital_status,
+      levels = c("married_or_cohabiting", "never_married",
+                 "separated_or_divorced", "widowed"),
+      labels = c("Married or cohabiting", "Never married",
+                 "Separated or divorced", "Widowed")), "Marital status"),
+    physical_activity = lab(factor(physical_activity,
+      levels = c("high", "moderate", "low"),
+      labels = c("High", "Moderate", "Low")), "Physical activity"),
+    social_network_index = lab(social_network_index, "Social network index (0-100)"),
+    body_pain = lab(factor(body_pain,
+      levels = c("none", "pain_without_difficulty", "mild_difficulty",
+                 "moderate_difficulty", "severe_or_extreme_difficulty"),
+      labels = c("None", "Pain without difficulty", "Mild difficulty",
+                 "Moderate difficulty", "Severe or extreme difficulty")),
+      "Bodily pain"),
+    sadness = lab(factor(sadness,
+      levels = c("none", "mild", "moderate", "severe_or_extreme"),
+      labels = c("None", "Mild", "Moderate", "Severe or extreme")), "Sadness"),
+    arthritis = yn(arthritis, "Diagnosed arthritis"),
+    angina    = yn(angina, "Diagnosed angina"),
+    diabetes  = yn(diabetes, "Diagnosed diabetes"),
+    depression_diagnosis = lab(depression_diagnosis, "Diagnosed depression")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+n_events  <- sum(dat_model[[outcome]])
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", fmt(p, 3)))
+
+# Parameter accounting for the catalogue predictor list minus the outcome.
+all_suggested <- c("age_yrs", "sex", "country", "residence", "marital_status",
+                   "education", "bmi_category", "smoking_status", "alcohol_use",
+                   "physical_activity", "body_pain", "sleep_difficulty", "sadness",
+                   "distance_vision_difficulty", "social_network_index",
+                   "neighbourhood_usability", "home_usability", "arthritis",
+                   "angina", "diabetes")
+fit_full   <- glm(reformulate(all_suggested, outcome), family = binomial,
+                  data = mutate(dat_raw, across(where(is.character), factor)))
+n_par_full <- length(coef(fit_full)) - 1L
+
+# Sadness circularity check (reported in Methods, not used in the model).
+sad_tab <- table(dat$sadness, dat$depression_diagnosis)
+sad_chi <- suppressWarnings(chisq.test(sad_tab))
+cramer_v <- sqrt(as.numeric(sad_chi$statistic) /
+                   (sum(sad_tab) * (min(dim(sad_tab)) - 1)))
+
+# Demonstration only: `sadness` is a symptom of the outcome and is NOT in the
+# model. Fitted here purely to show how well it would have "worked".
+dat_sad  <- dat |> select(all_of(c(outcome, predictors, "sadness"))) |> drop_na()
+fit_base <- glm(reformulate(predictors, outcome), data = dat_sad, family = binomial)
+fit_sad  <- glm(reformulate(c(predictors, "sadness"), outcome), data = dat_sad,
+                family = binomial)
+r2_base  <- as.numeric(r2_tjur(fit_base))
+r2_sad   <- as.numeric(r2_tjur(fit_sad))
+or_sad   <- exp(coef(fit_sad)[["sadnessSevere or extreme"]])
+
+# Demonstration only: country x alcohol_use separates because the Polish
+# frequent-heavy stratum has zero events.
+sep_fit <- suppressWarnings(glm(depression_diagnosis ~ country * alcohol_use,
+                                data = mutate(dat, alcohol_use = factor(alcohol_use)),
+                                family = binomial))
+sep_cf  <- summary(sep_fit)$coefficients["alcohol_usefrequent_heavy", ]
+```
+
+# Introduction
+
+COURAGE in Europe is a cross-sectional survey of the general community-dwelling
+adult population of Finland, Poland and Spain, designed to describe healthy
+ageing and its social and environmental determinants; the source paper is Miret
+and colleagues, *PLOS ONE* (2016). The file distributed with this catalogue holds
+`r nrow(dat_raw)` participants aged `r min(dat$age_yrs)` to `r max(dat$age_yrs)`
+(mean `r fmt(mean(dat$age_yrs), 1)` years), of whom
+`r sum(dat_raw$depression_diagnosis)`
+(`r fmt(100 * mean(dat_raw$depression_diagnosis), 1)`%) report having been
+diagnosed with depression. Depression is the leading cause of years lived with
+disability in European adults and is heavily under-diagnosed in older people, so
+identifying which social, physical and national characteristics mark higher
+diagnosed prevalence is a standard question in ageing research.
+
+**Aim.** Among these adults in Finland, Poland and Spain, we examined which of
+age, sex, country, urban or rural residence, education, marital status, physical
+activity, social network, bodily pain, arthritis, angina and diabetes are
+independently associated with having a diagnosis of depression, mutually
+adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** COURAGE in Europe, a cross-sectional multistage stratified
+cluster sample of the community-dwelling adult populations of Finland, Poland and
+Spain, fielded between 2011 and 2012. The deposited S1 file used here contains
+`r nrow(dat_raw)` participants and `r ncol(dat_raw)` variables:
+`r sum(dat$country == "Poland")` from Poland, `r sum(dat$country == "Spain")` from
+Spain and `r sum(dat$country == "Finland")` from Finland.
+
+**Variables.** The outcome is `depression_diagnosis`, a binary indicator where the
+**event is a reported diagnosis of depression** (`r sum(dat_raw$depression_diagnosis)`
+events in the full file, `r fmt(100 * mean(dat_raw$depression_diagnosis), 1)`%).
+Predictors are age (years), sex (reference female), country (reference Poland, the
+largest group), residence (reference urban), education dichotomised as high school
+or higher versus none, primary or secondary (reference the latter), marital status
+(reference married or cohabiting), physical activity (reference high), the social
+network index (0-100), bodily pain in five ordered categories (reference none) and
+diagnosed arthritis, angina and diabetes (each reference no).
+
+**`depression_diagnosis` appears in the catalogue's own predictor list and has
+been removed from it.** It is the outcome here; regressing a variable on itself is
+not an analysis. This is worth stating explicitly because the suggested-predictor
+list shipped with the dataset does contain it, and a student copying that list
+verbatim will produce a model with an infinite coefficient.
+
+**`sadness` and `sleep_difficulty` are excluded as symptoms of the outcome.**
+Depressed mood and sleep disturbance are two of the nine diagnostic criteria for a
+major depressive episode, so a model in which they "predict" a depression
+diagnosis is measuring the outcome twice rather than explaining it. The
+association is strong but, importantly, **not deterministic**: among participants
+reporting severe or extreme sadness,
+`r fmt(100 * sad_tab["Severe or extreme", "1"] / sum(sad_tab["Severe or extreme", ]), 1)`%
+report a depression diagnosis, against
+`r fmt(100 * sad_tab["None", "1"] / sum(sad_tab["None", ]), 1)`% of those
+reporting none - a strong gradient (Cramer's V `r fmt(cramer_v, 3)`,
+chi-squared p `r pv(sad_chi$p.value)`) but nowhere near a one-to-one mapping, and
+no cell of the cross-tabulation is empty. So this is *not* a separation problem
+that R would warn about; it is a conceptual problem that only subject-matter
+reasoning catches, which makes it more dangerous rather than less. Adding
+`sadness` to the final model raises Tjur's R-squared from
+`r fmt(r2_base, 3)` to `r fmt(r2_sad, 3)`
+and gives severe or extreme sadness an odds ratio of about `r fmt(or_sad, 1)`
+- i.e. it "works" beautifully, which is exactly why it is tempting. The
+cross-tabulation is shown in the Results.
+
+**The predictor set is deliberately cut.** Excluding the outcome, the catalogue
+suggests 20 predictors. Most are multi-level factors, so entering all of them
+costs **`r n_par_full` estimated parameters**, not 20: `body_pain` alone costs
+four, and `marital_status`, `alcohol_use`, `sleep_difficulty`, `sadness` and
+`distance_vision_difficulty` cost three each. With
+`r sum(dat_raw$depression_diagnosis)` events that is
+`r fmt(sum(dat_raw$depression_diagnosis) / n_par_full, 1)` events per parameter,
+which still clears the conventional minimum of ten - so on this outcome too the
+global events-per-parameter rule does not by itself force the cut, and a student
+who fits everything will see no warning. What does force it is the combination of
+four things: a `r n_par_full`-row odds ratio table cannot be interpreted; testing
+`r n_par_full` coefficients at 0.05 means expecting about
+`r fmt(0.05 * n_par_full, 1)` significant results by chance; two of the suggested
+predictors are symptoms of the outcome; and the *global* events-per-parameter
+figure hides the fact that individual levels are thin - the `frequent_heavy`
+alcohol category has `r sum(dat_raw$alcohol_use == "frequent_heavy")` participants
+and `r sum(dat_raw$alcohol_use == "frequent_heavy" & dat_raw$depression_diagnosis == 1)`
+events, and crossed with country it contains a **zero-event cell**
+(`r sum(dat_raw$alcohol_use == "frequent_heavy" & dat_raw$country == "poland")`
+Polish heavy-frequent drinkers, none with a depression diagnosis), which produces
+complete separation in any model that interacts the two. The set used here costs
+**19 parameters**, i.e. `r fmt(n_events / 19, 1)` events per parameter, and was
+fixed before any model was fitted.
+
+Six further suggested predictors are dropped. `bmi_category`, `smoking_status` and
+`alcohol_use` are behaviours whose relationship with a *diagnosis* of depression is
+weak and heavily bidirectional, and `alcohol_use` carries the sparse-level problem
+above. `distance_vision_difficulty` costs three parameters for a functional
+limitation whose smallest stratum holds
+`r sum(dat_raw$distance_vision_difficulty == "severe_or_extreme")` people.
+`neighbourhood_usability` and `home_usability` are environmental scales whose
+natural outcome in this dataset is quality of life rather than a clinical
+diagnosis; `social_network_index` is retained as the one psychosocial scale with a
+well-established literature linking it to depression.
+
+**Level collapsing.** Five categorical predictors were checked for sparse strata.
+`education` had `r sum(dat_raw$education == "none_or_informal")` participants with
+no or informal education, of whom
+`r sum(dat_raw$education == "none_or_informal" & dat_raw$country == "spain")` live
+in Spain and **none** in Finland; it was collapsed to two levels, because a
+category that exists in one country only cannot be separated from country.
+`alcohol_use` would have needed collapsing (`frequent_heavy`,
+`r sum(dat_raw$alcohol_use == "frequent_heavy")` participants) but is dropped for
+the reasons above. `marital_status` (smallest level `r min(table(dat$marital_status))`),
+`bmi_category` (`r min(table(dat$bmi_category))`) and `physical_activity`
+(`r min(table(dat$physical_activity))`) were large enough to keep as supplied, and
+the thinnest retained cell is
+`r min(sapply(dat_model[, predictors][sapply(dat_model[, predictors], is.factor)], function(v) min(table(v, dat_model$depression_diagnosis)[, 2])))`
+events, so there is no zero cell and no separation.
+
+**Statistical analysis.** `glm(family = binomial)`, justified because the outcome
+is binary. We fitted a univariable model for each predictor first, then a single
+multivariable model containing all of them. Predictors were chosen in advance on
+subject-matter grounds, not by significance. Coefficients are exponentiated and
+reported as odds ratios with 95% confidence intervals; significance threshold
+0.05. Model adequacy was assessed with `performance::check_model()`, focusing on
+binned residuals, collinearity, influential observations and events per parameter.
+Models are **unweighted**: the COURAGE sampling weights, strata and clusters are
+not carried in this file, so no result here is a nationally representative
+estimate. Analysis used `r R.version.string` with tidyverse, gtsummary and
+performance.
+
+**Missing data.** There is none. All `r ncol(dat_raw)` columns are 100% complete
+in this file and `r sum(complete.cases(dat_raw))` of `r nrow(dat_raw)` rows are
+complete on every variable, so the complete-case analysis uses
+`r nrow(dat_model)` of `r nrow(dat)` rows (`r n_dropped` dropped), leaving
+`r n_events` events. Listwise deletion costs nothing here, so the predictor cut
+rests entirely on interpretability and causal-structure grounds.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  mutate(depression_diagnosis = factor(depression_diagnosis, levels = c(0, 1),
+                                       labels = c("No depression diagnosis",
+                                                  "Depression diagnosis"))) |>
+  tbl_summary(
+    by = depression_diagnosis,
+    missing = "no"
+  ) |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics by depression diagnosis.**")
+```
+
+Participants with a depression diagnosis are much more often women
+(`r fmt(100 * mean(dat_model$sex[dat_model$depression_diagnosis == 1] == "Female"), 0)`%
+versus `r fmt(100 * mean(dat_model$sex[dat_model$depression_diagnosis == 0] == "Female"), 0)`%),
+much more often Spanish
+(`r fmt(100 * mean(dat_model$country[dat_model$depression_diagnosis == 1] == "Spain"), 0)`%
+versus `r fmt(100 * mean(dat_model$country[dat_model$depression_diagnosis == 0] == "Spain"), 0)`%),
+and carry a far heavier pain burden
+(`r fmt(100 * mean(dat_model$body_pain[dat_model$depression_diagnosis == 1] == "Severe or extreme difficulty"), 0)`%
+report severe or extreme pain-related difficulty versus
+`r fmt(100 * mean(dat_model$body_pain[dat_model$depression_diagnosis == 0] == "Severe or extreme difficulty"), 0)`%).
+Median age is almost identical in the two groups
+(`r median(dat_model$age_yrs[dat_model$depression_diagnosis == 1])` versus
+`r median(dat_model$age_yrs[dat_model$depression_diagnosis == 0])` years), which
+is the first sign that the crude age association is weak and will change under
+adjustment.
+
+## The `sadness` cross-tabulation
+
+```{r sadness-tab}
+as.data.frame.matrix(sad_tab) |>
+  rownames_to_column("Sadness severity") |>
+  transmute(
+    `Sadness severity`,
+    `No depression diagnosis` = `0`,
+    `Depression diagnosis` = `1`,
+    `Total` = `0` + `1`,
+    `% with diagnosis` = fmt(100 * `1` / (`0` + `1`), 1)
+  ) |>
+  gt() |>
+  tab_header(title = md("**Table 2. `sadness` against `depression_diagnosis` (excluded predictor).**"))
+```
+
+The gradient is steep and monotonic, from
+`r fmt(100 * sad_tab["None", "1"] / sum(sad_tab["None", ]), 1)`% in the no-sadness
+group to `r fmt(100 * sad_tab["Severe or extreme", "1"] / sum(sad_tab["Severe or extreme", ]), 1)`%
+in the severe group, but the relationship is far from deterministic - most
+participants reporting severe or extreme sadness have **no** recorded depression
+diagnosis, and `r fmt(100 * sad_tab["None", "1"] / sum(sad_tab["None", ]), 1)`% of
+those reporting no sadness do have one. Every cell is populated, so nothing here
+would trigger a separation warning. `sadness` is excluded on the conceptual
+grounds set out in Methods, not because the model refuses to fit it.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Proportion with a depression diagnosis by country and sex."}
+dat_model |>
+  group_by(country, sex) |>
+  summarise(p = mean(depression_diagnosis), n = n(), .groups = "drop") |>
+  ggplot(aes(country, p, fill = sex)) +
+  geom_col(position = position_dodge(0.8), width = 0.7) +
+  geom_text(aes(label = paste0("n=", n)), position = position_dodge(0.8),
+            vjust = -0.4, size = 3, colour = "grey30") +
+  scale_y_continuous(labels = scales::percent, expand = expansion(c(0, 0.12))) +
+  scale_fill_manual(values = c(Female = "#B5495B", Male = "#3F7CAC")) +
+  labs(x = "Country", y = "Proportion with a depression diagnosis", fill = "Sex")
+```
+
+Diagnosed depression is roughly twice as common in Spain
+(`r fmt(100 * mean(dat_model$depression_diagnosis[dat_model$country == "Spain"]), 1)`%)
+as in Poland
+(`r fmt(100 * mean(dat_model$depression_diagnosis[dat_model$country == "Poland"]), 1)`%),
+with Finland in between
+(`r fmt(100 * mean(dat_model$depression_diagnosis[dat_model$country == "Finland"]), 1)`%),
+and within every country women are diagnosed far more often than men; the sex gap
+is proportionally similar in all three, which argues against strong effect
+modification by country on this particular contrast.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = glm,
+    method.args = list(family = binomial),
+    exponentiate = TRUE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(glm(reformulate(v, outcome), data = dat_model, family = binomial),
+       conf.int = TRUE, exponentiate = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 2) {
+  r <- utid[utid$term == term, ]
+  sprintf("OR %s (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d),
+          fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+```
+
+Sex shows the strongest crude association: men have `r ug("sexMale")`
+(p `r up("sexMale")`) of a depression diagnosis relative to women, a reduction of
+about `r fmt(100 * (1 - utid$estimate[utid$term == "sexMale"]), 0)`% in the odds.
+Bodily pain shows a steep monotonic gradient, from
+`r ug("body_painPain without difficulty")` for pain without difficulty
+(p `r up("body_painPain without difficulty")`) to
+`r ug("body_painSevere or extreme difficulty")` for severe or extreme
+pain-related difficulty (p `r up("body_painSevere or extreme difficulty")`).
+Separation or divorce carries `r ug("marital_statusSeparated or divorced")`
+(p `r up("marital_statusSeparated or divorced")`) and widowhood
+`r ug("marital_statusWidowed")` (p `r up("marital_statusWidowed")`) relative to
+being married or cohabiting. Arthritis is associated with `r ug("arthritisYes")`
+(p `r up("arthritisYes")`), angina with `r ug("anginaYes")`
+(p `r up("anginaYes")`) and diabetes with `r ug("diabetesYes")`
+(p `r up("diabetesYes")`). Spanish participants have `r ug("countrySpain")`
+(p `r up("countrySpain")`) and Finnish participants `r ug("countryFinland")`
+(p `r up("countryFinland")`) relative to Polish participants. Each additional
+point of the social network index is associated with `r ug("social_network_index")`
+(p `r up("social_network_index")`), which compounds to about
+`r fmt(100 * (1 - utid$estimate[utid$term == "social_network_index"]^20), 0)`%
+lower odds across a 20-point difference. Low physical activity carries
+`r ug("physical_activityLow")` (p `r up("physical_activityLow")`) and higher
+education `r ug("educationHigh school or higher")`
+(p `r up("educationHigh school or higher")`). Two crude results should be flagged
+in advance as unstable: **rural residence appears protective**
+(`r ug("residenceRural")`, p `r up("residenceRural")`), and **each year of age is
+associated with slightly *higher* odds** (`r ug("age_yrs")`,
+p `r up("age_yrs")`) - both reverse or vanish on adjustment.
+
+## Why adjustment is needed
+
+**Country** is the confounder that matters most here, and it explains the rural
+result directly. Rural residence is overwhelmingly a Polish phenomenon in this
+sample:
+`r fmt(100 * mean(dat_model$residence[dat_model$country == "Poland"] == "Rural"), 0)`%
+of Polish participants live rurally against
+`r fmt(100 * mean(dat_model$residence[dat_model$country == "Spain"] == "Rural"), 0)`%
+of Spanish participants, and Poland has by far the lowest diagnosed prevalence
+(`r fmt(100 * mean(dat_model$depression_diagnosis[dat_model$country == "Poland"]), 1)`%
+against `r fmt(100 * mean(dat_model$depression_diagnosis[dat_model$country == "Spain"]), 1)`%
+in Spain). The crude protective rural odds ratio is therefore a statement about
+which country people live in, not about rurality. The same argument applies to
+education and to the social network index, both of which differ markedly between
+the three national samples.
+
+**Age** is the second, and it works in the opposite direction from the usual case.
+Older participants are far more likely to be widowed
+(median age `r median(dat_model$age_yrs[dat_model$marital_status == "Widowed"])`
+against `r median(dat_model$age_yrs[dat_model$marital_status == "Married or cohabiting"])`
+for the married or cohabiting), to report bodily pain and to have arthritis, and
+all of those are associated with a depression diagnosis. Age therefore *inflates*
+the crude widowhood, arthritis and pain coefficients, while the crude age
+coefficient itself is propped up by exactly those variables. Holding pain,
+arthritis and marital status constant should push the age coefficient below one -
+which is what happens, and is consistent with under-diagnosis of depression in the
+oldest old. **Bodily pain** is a third: it is associated with arthritis, angina,
+low physical activity and widowhood as well as with the outcome, so it will absorb
+part of each of those coefficients. Mutual adjustment lets each odds ratio be read
+as a comparison between participants of the same age, sex, country, residence,
+education, marital status, activity level, social network, pain and chronic
+disease status.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- glm(reformulate(predictors, outcome), data = dat_model, family = binomial)
+
+mv <- tbl_regression(fit, exponentiate = TRUE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+g <- function(term, d = 2) {
+  r <- tid[tid$term == term, ]
+  sprintf("OR %s (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d),
+          fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+```
+
+```{r fit-stats}
+n_par  <- length(coef(fit)) - 1L
+epp    <- n_events / n_par
+null_fit <- glm(reformulate("1", outcome), data = dat_model, family = binomial)
+tibble(
+  Statistic = c("Complete-case N", "Events (depression_diagnosis = 1)",
+                "Parameters (excl. intercept)", "Events per parameter",
+                "AIC (null model)", "AIC (full model)", "Tjur's R-squared"),
+  Value = c(as.character(nrow(dat_model)), as.character(n_events),
+            as.character(n_par), fmt(epp, 1), fmt(AIC(null_fit), 1),
+            fmt(AIC(fit), 1), fmt(as.numeric(r2_tjur(fit)), 3))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable logistic model for diagnosed depression**"))
+```
+
+The model has `r n_events` events for `r n_par` estimated parameters, i.e.
+**`r fmt(epp, 1)` events per parameter**, four times the conventional minimum, so
+over-fitting is not a concern. AIC falls from `r fmt(AIC(null_fit), 1)` for the
+intercept-only model to `r fmt(AIC(fit), 1)`, a drop of
+`r fmt(AIC(null_fit) - AIC(fit), 1)`, but Tjur's R-squared is only
+`r fmt(as.numeric(r2_tjur(fit)), 3)` - the predictors carry real information yet
+discriminate poorly between individuals, which is what one would expect of a
+diagnosis that depends heavily on unmeasured help-seeking behaviour.
+
+Among participants of the same age, sex, residence, education, marital status,
+activity level, social network, pain and chronic disease status, **country is the
+largest contrast in the model**: Spanish participants have `r g("countrySpain")`
+(p `r gp("countrySpain")`) and Finnish participants `r g("countryFinland")`
+(p `r gp("countryFinland")`) relative to Polish participants. Men have
+`r g("sexMale")` (p `r gp("sexMale")`), i.e. roughly
+`r fmt(100 * (1 - tid$estimate[tid$term == "sexMale"]), 0)`% lower odds than
+women. Bodily pain retains its full gradient, from
+`r g("body_painMild difficulty")` for mild difficulty
+(p `r gp("body_painMild difficulty")`) to
+`r g("body_painSevere or extreme difficulty")` for severe or extreme difficulty
+(p `r gp("body_painSevere or extreme difficulty")`). Separation or divorce carries
+`r g("marital_statusSeparated or divorced")`
+(p `r gp("marital_statusSeparated or divorced")`), arthritis
+`r g("arthritisYes")` (p `r gp("arthritisYes")`) and angina `r g("anginaYes")`
+(p `r gp("anginaYes")`). Each point of the social network index is associated with
+`r g("social_network_index")` (p `r gp("social_network_index")`), about
+`r fmt(100 * (1 - tid$estimate[tid$term == "social_network_index"]^20), 0)`% lower
+odds across 20 points. Age now runs the other way: each additional year is
+associated with `r g("age_yrs")` (p `r gp("age_yrs")`). Rural residence
+(`r g("residenceRural")`), education (`r g("educationHigh school or higher")`),
+widowhood (`r g("marital_statusWidowed")`), diabetes (`r g("diabetesYes")`) and
+both physical-activity contrasts (`r g("physical_activityLow")` for low activity)
+are not independently associated. These are associations among the participants
+observed, not effects of intervening.
+
+**Statistical against practical significance.** With `r nrow(dat_model)`
+observations and `r n_events` events, this model has power to detect associations
+too small to be useful. Age is the clearest case: `r g("age_yrs")` per year is
+significant (p `r gp("age_yrs")`) but corresponds to only
+`r fmt(100 * (1 - tid$estimate[tid$term == "age_yrs"]^10), 0)`% lower odds per
+decade, which no clinician would act on. Angina (`r g("anginaYes")`,
+p `r gp("anginaYes")`) is a second: significant, but the confidence interval runs
+from `r fmt(tid$conf.low[tid$term == "anginaYes"], 2)` to
+`r fmt(tid$conf.high[tid$term == "anginaYes"], 2)`, so the data are compatible
+with a nearly negligible association. Contrast those with the Spain contrast
+(`r g("countrySpain")`), the sex contrast (`r g("sexMale")`) and severe pain
+(`r g("body_painSevere or extreme difficulty")`), which are large enough to change
+how one would think about service planning. At this sample size, statistical
+significance separates "non-zero" from "zero", not "important" from
+"unimportant".
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 3. Unadjusted and adjusted odds ratios.**")
+```
+
+**Age** is the coefficient that changes most fundamentally: it reverses direction,
+from `r ug("age_yrs")` crude (p `r up("age_yrs")`, higher odds with age) to
+`r g("age_yrs")` adjusted (p `r gp("age_yrs")`, lower odds with age). This is
+exactly the confounding structure anticipated above - the crude positive slope was
+carried by pain, arthritis and widowhood, all of which accumulate with age, and
+once they are held constant the residual age association is protective, most
+plausibly because depression is under-recognised in the oldest participants.
+**Rural residence** does something similar: from `r ug("residenceRural")`
+(p `r up("residenceRural")`, apparently protective and significant) to
+`r g("residenceRural")` (p `r gp("residenceRural")`, exactly null). The whole crude
+association was country. **Widowhood** collapses from `r ug("marital_statusWidowed")`
+(p `r up("marital_statusWidowed")`) to `r g("marital_statusWidowed")`
+(p `r gp("marital_statusWidowed")`), losing significance: widows are old and in
+pain, and neither of those is caused by widowhood in any useful sense.
+**Arthritis** attenuates from `r ug("arthritisYes")` to `r g("arthritisYes")`,
+**diabetes** from `r ug("diabetesYes")` (p `r up("diabetesYes")`) to
+`r g("diabetesYes")` (p `r gp("diabetesYes")`, null), and **low physical activity**
+from `r ug("physical_activityLow")` (p `r up("physical_activityLow")`) to
+`r g("physical_activityLow")` (p `r gp("physical_activityLow")`, null) - in each
+case bodily pain and age absorb the crude association.
+
+Two estimates move **away** from the null. **Spain** goes from `r ug("countrySpain")`
+to `r g("countrySpain")`, and **Finland** from `r ug("countryFinland")` to
+`r g("countryFinland")`: the Polish sample is more rural and more often in pain,
+which was masking part of the national gap, so adjustment widens it. By contrast
+the two strongest predictors **barely move at all**. Severe or extreme pain goes
+from `r ug("body_painSevere or extreme difficulty")` to
+`r g("body_painSevere or extreme difficulty")` - essentially unchanged, retaining
+`r fmt(100 * (tid$estimate[tid$term == "body_painSevere or extreme difficulty"] - 1) / (utid$estimate[utid$term == "body_painSevere or extreme difficulty"] - 1), 0)`%
+of its crude excess odds - and sex from `r ug("sexMale")` to `r g("sexMale")`. Neither
+is explained by anything else measured here. One estimate crosses out of
+significance without moving far: education, from
+`r ug("educationHigh school or higher")` (p `r up("educationHigh school or higher")`)
+to `r g("educationHigh school or higher")` (p `r gp("educationHigh school or higher")`),
+because most of the crude educational gradient was country and age.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r binned-resid}
+br <- binned_residuals(fit)
+print(br)
+```
+
+```{r collin}
+check_collinearity(fit)
+```
+
+```{r sep-check}
+cf <- summary(fit)$coefficients
+tibble(
+  Check = c("Largest |coefficient| (log-odds)", "Largest standard error",
+            "Largest VIF", "Largest Cook's distance", "Largest leverage",
+            "Smallest event count in any predictor level",
+            "Binned residuals inside bounds"),
+  Value = c(fmt(max(abs(cf[-1, 1])), 2), fmt(max(cf[, 2]), 3),
+            fmt(max(as.data.frame(check_collinearity(fit))$VIF), 2),
+            fmt(max(cooks.distance(fit)), 4), fmt(max(hatvalues(fit)), 3),
+            as.character(min(sapply(dat_model[, predictors][sapply(dat_model[, predictors], is.factor)],
+                                    function(v) min(table(v, dat_model$depression_diagnosis)[, 2])))),
+            paste0(fmt(100 * attributes(br)$resid_ok, 0), "%"))
+) |>
+  gt() |>
+  tab_header(title = md("**Table 4. Separation, influence and collinearity checks.**"))
+```
+
+The binned-residual check is the diagnostic that matters for a logistic model and
+it **fails badly**: only about `r fmt(100 * attributes(br)$resid_ok, 0)`% of binned
+residuals fall inside the error bounds against a target of 95% or more, and
+`performance` prints a "probably bad model fit" warning. This is the worst
+calibration of the three models in this dataset, and with `r nrow(dat_model)`
+observations it is not a small-bin artefact. The model systematically
+under-predicts at some parts of the probability range and over-predicts at others,
+which is consistent with a Tjur's R-squared of only
+`r fmt(as.numeric(r2_tjur(fit)), 3)`: the linear predictor simply does not separate
+the `r n_events` cases from the `r nrow(dat_model) - n_events` non-cases well.
+Collinearity is not a problem: the largest VIF is
+`r fmt(max(as.data.frame(check_collinearity(fit))$VIF), 2)` for
+`r as.data.frame(check_collinearity(fit))$Term[which.max(as.data.frame(check_collinearity(fit))$VIF)]`,
+comfortably below the conventional threshold of 5, although it is the highest of
+the three models here and reflects the entanglement of country with residence and
+education described earlier. Influence is negligible: the largest Cook's distance
+is `r fmt(max(cooks.distance(fit)), 4)` and the largest leverage
+`r fmt(max(hatvalues(fit)), 3)`. There is **no separation**: every coefficient is
+finite, the largest standard error is
+`r fmt(max(summary(fit)$coefficients[, 2]), 3)`, and every level of every
+categorical predictor contains events (Table 4). Homogeneity of variance and
+normality of residuals do not apply to a logistic model and are not interpreted;
+the corresponding panels of `check_model()` should be ignored here.
+
+# Discussion
+
+Among these `r nrow(dat_model)` adults in Finland, Poland and Spain, the
+characteristics most strongly and independently associated with having a
+depression diagnosis are country, sex and bodily pain. Spanish participants have
+about `r fmt(tid$estimate[tid$term == "countrySpain"], 1)` times the odds of
+otherwise similar Polish participants, men about
+`r fmt(100 * (1 - tid$estimate[tid$term == "sexMale"]), 0)`% lower odds than
+women, and participants with severe or extreme pain-related difficulty about
+`r fmt(tid$estimate[tid$term == "body_painSevere or extreme difficulty"], 1)` times
+the odds of those with no pain. Separation or divorce, arthritis and a poorer
+social network are also independently associated. The crude associations with
+rural residence, widowhood, diabetes, low physical activity and education all
+disappear on adjustment, and the crude *positive* age association reverses.
+Practically, the results point at chronic pain and social disconnection as the two
+modifiable characteristics most closely tracking diagnosed depression, and they
+underline how much of the variation is between countries rather than between
+individuals - a `r fmt(tid$estimate[tid$term == "countrySpain"], 1)`-fold
+difference in diagnosis odds between two European countries, unexplained by any
+individual characteristic measured here, is more likely to be a statement about
+health systems than about mental health.
+
+**The outcome is a *diagnosis*, not depression.** Being counted as a case requires
+having consulted a clinician, having been assessed, and having been given a label.
+Under-diagnosis in older adults, in men and in countries with less accessible
+primary mental-health care will all be misclassified as absence of disease.
+That makes the reversed age coefficient
+(`r g("age_yrs")`) genuinely ambiguous: it is at least as plausible that
+depression is *under-recognised* in the oldest participants as that they are less
+depressed. The country contrasts are open to exactly the same reading. Bodily pain
+is the other interpretive difficulty: pain and depression are bidirectionally
+related, chronic pain is a recognised consequence of depression as well as a cause
+of it, and in a cross-sectional survey nothing distinguishes the two directions.
+
+**Limitations.** The models are **unweighted**: the COURAGE sampling weights,
+strata and clusters are not carried in this file, so the sample must not be
+described as representative of any national population, and the standard errors
+ignore clustering within primary sampling units, which will make them too narrow.
+The design is cross-sectional, so reverse causation is live for bodily pain,
+physical activity, social network and marital status alike - depression plausibly
+causes social withdrawal, inactivity and relationship breakdown as readily as the
+reverse. The outcome is self-reported diagnosis, with the differential
+misclassification by age, sex, country and healthcare access described above. Two
+suggested predictors, `sadness` and `sleep_difficulty`, were excluded because they
+are diagnostic criteria for the outcome rather than causes of it, and
+`depression_diagnosis` itself had to be removed from the catalogue's suggested
+predictor list; six others were excluded a priori, so residual confounding by
+smoking, alcohol, body mass and vision is certain. The binned-residual check fails
+(`r fmt(100 * attributes(br)$resid_ok, 0)`% inside bounds) and Tjur's R-squared is
+`r fmt(as.numeric(r2_tjur(fit)), 3)`, so the model is poorly calibrated and
+discriminates weakly; its coefficients describe average contrasts, not a usable
+prediction rule. There is evidence of effect modification the additive model
+ignores: country-by-age
+(likelihood-ratio p `r pv(anova(fit, update(fit, . ~ . + country:age_yrs), test = "LRT")[["Pr(>Chi)"]][2])`)
+and country-by-marital-status
+(p `r pv(anova(fit, update(fit, . ~ . + country:marital_status), test = "LRT")[["Pr(>Chi)"]][2])`)
+both improve the fit, so the single age slope reported here averages over three
+different national gradients; country-by-sex does not
+(p `r pv(anova(fit, update(fit, . ~ . + country:sex), test = "LRT")[["Pr(>Chi)"]][2])`),
+consistent with Figure 1. The deposited file differs from the published paper: it
+holds `r nrow(dat_raw)` rows with mean age `r fmt(mean(dat$age_yrs), 1)` years,
+whereas the source paper reports 5,639 participants with mean age 46.3 years, so
+results here should not be compared with the published analysis. The `education`
+variable was collapsed to two levels, hiding any effect confined to the
+`r sum(dat_raw$education == "none_or_informal")` participants with no formal
+education. With `r nrow(dat_model)` observations, small and practically
+uninteresting differences reach significance. All estimates are associations, not
+causal effects.
+
+**Future work.** Refit with the COURAGE survey design (weights, strata and
+clusters) and with the study's symptom-based depression algorithm rather than
+self-reported diagnosis, which would remove the help-seeking filter that dominates
+the country and age contrasts here.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+- **USABLE WITH WARNINGS.** `r n_events` events in `r nrow(dat_model)` complete
+  rows, no missing data anywhere, `r fmt(epp, 1)` events per parameter at 19
+  parameters, no separation, no influential points (max Cook's
+  `r fmt(max(cooks.distance(fit)), 4)`), max VIF
+  `r fmt(max(as.data.frame(check_collinearity(fit))$VIF), 2)`. The warnings are
+  about interpretation and calibration, not about whether the model can be fitted.
+- **FATAL if uncorrected: `depression_diagnosis` is in `meta.json`'s own
+  suggested predictor list for this dataset.** A student copying that list gets
+  the outcome as a predictor of itself. `build/meta.json` should drop it from
+  `predictors`, or the dataset page should carry an explicit note. This is the
+  single most likely way this outcome is wrecked, and it is our error, not the
+  student's.
+- **MAJOR: `sadness` is a symptom of the outcome, and it is NOT detectable as a
+  data problem.** Cramer's V `r fmt(cramer_v, 3)`;
+  `r fmt(100 * sad_tab["Severe or extreme", "1"] / sum(sad_tab["Severe or extreme", ]), 1)`%
+  of the severe-sadness group has a diagnosis against
+  `r fmt(100 * sad_tab["None", "1"] / sum(sad_tab["None", ]), 1)`% of the
+  no-sadness group, every cell populated, no separation, no warning of any kind.
+  Adding it raises Tjur's R-squared from `r fmt(as.numeric(r2_tjur(fit)), 3)` to
+  `r fmt(r2_sad, 3)` and gives severe sadness an odds ratio of about
+  `r fmt(or_sad, 1)`. It will look like
+  the best finding in the report. `sleep_difficulty` has the same problem more
+  weakly (sleep disturbance is a diagnostic criterion for major depression). Both
+  should be flagged on the dataset page as not-predictors for this outcome.
+- **MAJOR: binned residuals fail badly** - only
+  `r fmt(100 * attributes(br)$resid_ok, 0)`% inside bounds against a 95% target,
+  the worst of the three outcomes, with a "probably bad model fit" warning. Tjur's
+  R-squared `r fmt(as.numeric(r2_tjur(fit)), 3)`. A student following the
+  diagnostics honestly must report a failed check and a weakly discriminating
+  model.
+- **MAJOR: 20 usable suggested predictors cost `r n_par_full` parameters, not
+  20.** At `r sum(dat_raw$depression_diagnosis)` events that is
+  `r fmt(sum(dat_raw$depression_diagnosis) / n_par_full, 1)` events per parameter,
+  which *passes* the rule of ten, so the full model fits with no warning. The
+  global EPP figure is therefore misleading here; what matters is the individual
+  cell counts.
+- **MAJOR: the file does not match the paper.** `r nrow(dat_raw)` rows, mean age
+  `r fmt(mean(dat$age_yrs), 1)`, median `r median(dat$age_yrs)`, range
+  `r min(dat$age_yrs)`-`r max(dat$age_yrs)`; the paper reports 5,639 participants
+  with mean age 46.3. Verified directly from the CSV. The dataset page should
+  carry an explicit caution.
+- **MAJOR trap: separation via `country * alcohol_use`.** `frequent_heavy` has
+  `r sum(dat_raw$alcohol_use == "frequent_heavy")` participants in total, and the
+  Poland stratum has **`r sum(dat_raw$alcohol_use == "frequent_heavy" & dat_raw$country == "poland")`
+  participants with 0 depression events**. Fitting
+  `glm(depression_diagnosis ~ country * alcohol_use)` produces a coefficient of
+  `r fmt(sep_cf[["Estimate"]], 1)` with a standard error of about
+  `r fmt(sep_cf[["Std. Error"]], 0)` - textbook complete separation -
+  and a "fitted probabilities numerically 0 or 1" warning. Even without the
+  interaction, `frequent_heavy` carries only
+  `r sum(dat_raw$alcohol_use == "frequent_heavy" & dat_raw$depression_diagnosis == 1)`
+  events. `alcohol_use` should be collapsed or dropped.
+- **MINOR but structural: `education == "none_or_informal"` is a Spain-only
+  category** -
+  `r sum(dat_raw$education == "none_or_informal" & dat_raw$country == "spain")` of
+  `r sum(dat_raw$education == "none_or_informal")` are Spanish, **zero** are
+  Finnish. Interacted with `country` it separates. Collapsed to two levels here.
+- **MINOR: the crude age association reverses on adjustment**
+  (`r ug("age_yrs")` to `r g("age_yrs")`). Excellent teaching material for
+  confounding, but a weak student will report one direction in the univariable
+  section and the opposite in the multivariable section without noticing.
+- **MINOR: unmodelled effect modification by country.** country-by-age
+  likelihood-ratio
+  p `r pv(anova(fit, update(fit, . ~ . + country:age_yrs), test = "LRT")[["Pr(>Chi)"]][2])`,
+  country-by-marital-status
+  p `r pv(anova(fit, update(fit, . ~ . + country:marital_status), test = "LRT")[["Pr(>Chi)"]][2])`.
+  Country is the strongest predictor in the model and is doing more than shifting
+  the intercept.
+- **Unweighted survey analysis.** Must be stated in Methods and Limitations.

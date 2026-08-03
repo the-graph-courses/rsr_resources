@@ -1,0 +1,924 @@
+---
+title: "Asymptomatic malaria parasitaemia in household members of confirmed malaria patients"
+subtitle: "Dataset 13: Asymptomatic malaria in households of confirmed cases in Abuja"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "nigeria_malaria_households.csv"),
+                    show_col_types = FALSE)
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+
+# --------------------------------------------------------------------------
+# Derived variables. Three of the fourteen shipped predictors are reshaped
+# before modelling; the reasoning is set out in Methods.
+#   1. age_group    6 levels -> 4 (the 20-24 stratum holds only 50 people)
+#   2. owns_llin + used_llin_previous_night -> one 3-level net variable, because
+#      the two are exactly nested (you cannot use a net you do not own)
+#   3. the five house_* variables -> one 3-level housing-quality index
+# --------------------------------------------------------------------------
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest group, or the "unexposed" one.
+    age_grp = lab(factor(
+      case_when(age_group == "under_5"  ~ "Under 5",
+                age_group == "5_to_9"   ~ "5-9",
+                age_group == "10_to_19" ~ "10-19",
+                TRUE                    ~ "20 and over"),
+      levels = c("20 and over", "10-19", "5-9", "Under 5")),
+      "Age group (years)"),
+
+    sex = lab(factor(sex, levels = c("female", "male"), labels = c("Female", "Male")),
+              "Sex"),
+
+    educ = lab(factor(education, levels = c("none", "primary", "secondary", "tertiary"),
+                      labels = c("None", "Primary", "Secondary", "Tertiary")),
+               "Highest education level"),
+
+    council = lab(factor(area_council,
+                         levels = c("abuja_municipal", "kuje", "kwali"),
+                         labels = c("Abuja Municipal", "Kuje", "Kwali")),
+                  "Area council"),
+
+    bushes = lab(factor(bushes_near_home, levels = c(0, 1), labels = c("No", "Yes")),
+                 "Bushes around the home"),
+
+    llin = lab(factor(
+      case_when(owns_llin == 0                 ~ "No net",
+                used_llin_previous_night == 0  ~ "Owns, not used last night",
+                TRUE                           ~ "Owns, used last night"),
+      levels = c("No net", "Owns, not used last night", "Owns, used last night")),
+      "Insecticidal net"),
+
+    # Housing-quality index: one point for each of five "improved" features.
+    house_score = as.integer(house_floor == "ceramictiles") +
+                  as.integer(house_wall  == "cement_plastered") +
+                  as.integer(house_roof  %in% c("metal", "roofshingles")) +
+                  as.integer(house_window == "screenorglasswindows") +
+                  as.integer(house_type  != "hut"),
+
+    housing = lab(factor(
+      cut(house_score, breaks = c(-1, 2, 4, 5),
+          labels = c("Basic (0-2 features)", "Intermediate (3-4)", "Improved (all 5)")),
+      levels = c("Improved (all 5)", "Intermediate (3-4)", "Basic (0-2 features)")),
+      "Housing quality index"),
+
+    same_room = lab(factor(same_room_as_index_case, levels = c(0, 1),
+                           labels = c("No", "Yes")),
+                    "Sleeps in same room as index case"),
+
+    water = lab(factor(uncovered_water_receptacles, levels = c(0, 1),
+                       labels = c("No", "Yes")),
+                "Uncovered water receptacles"),
+
+    malaria_parasitaemia = lab(malaria_parasitaemia, "Malaria parasitaemia")
+  )
+
+outcome    <- "malaria_parasitaemia"
+predictors <- c("age_grp", "sex", "educ", "council", "bushes", "llin",
+                "housing", "same_room", "water")
+
+dat_model  <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped  <- nrow(dat) - nrow(dat_model)
+n_events   <- sum(dat_model[[outcome]])
+n_nonevent <- nrow(dat_model) - n_events
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", fmt(p, 3)))
+pct <- function(x) fmt(100 * x, 1)
+
+# Parameter arithmetic for the full shipped predictor set versus the reduced one.
+shipped_preds <- c("age_group", "sex", "education", "area_council", "bushes_near_home",
+                   "owns_llin", "used_llin_previous_night", "house_floor", "house_roof",
+                   "house_type", "house_wall", "house_window", "same_room_as_index_case",
+                   "uncovered_water_receptacles")
+n_par_shipped <- dat_raw |>
+  mutate(across(all_of(shipped_preds), as.factor)) |>
+  select(all_of(shipped_preds)) |>
+  summarise(across(everything(), ~ nlevels(.x) - 1L)) |>
+  rowSums() |>
+  as.integer()
+
+n_par_final <- length(coef(glm(reformulate(predictors, outcome),
+                               data = dat_model, family = binomial))) - 1L
+
+# Correlations among the five binary "improved housing" indicators, quoted in
+# Methods as the justification for collapsing them into one index.
+house_cor <- dat |>
+  transmute(floor  = as.integer(house_floor == "ceramictiles"),
+            wall   = as.integer(house_wall  == "cement_plastered"),
+            roof   = as.integer(house_roof  %in% c("metal", "roofshingles")),
+            window = as.integer(house_window == "screenorglasswindows"),
+            type   = as.integer(house_type  != "hut")) |>
+  cor()
+house_cor_lo <- min(house_cor[lower.tri(house_cor)])
+house_cor_hi <- max(house_cor[lower.tri(house_cor)])
+```
+
+# Introduction
+
+Onyiah and colleagues carried out a cross-sectional household survey in the
+Federal Capital Territory, Abuja, Nigeria between March and August 2016
+(*PLOS ONE* 2018, doi:10.1371/journal.pone.0203686). Laboratory-confirmed
+malaria patients were recruited consecutively from twelve health facilities in
+three randomly selected area councils; their households were then visited within
+seven days and all consenting members were enrolled and screened, giving
+`r nrow(dat)` participants from 107 households. Asymptomatic parasitaemia
+matters because people carrying parasites without symptoms are not treated, and
+so act as a silent reservoir that sustains transmission around a treated index
+case.
+
+**Aim.** Among household members of confirmed malaria patients in Abuja, we
+examined which of age, sex, education, area council, bushes around the home,
+insecticidal net use, housing quality, sleeping in the same room as the index
+case and uncovered water receptacles are independently associated with
+asymptomatic malaria parasitaemia, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** A cross-sectional household survey in three of the six Abuja
+area councils (Abuja Municipal, Kuje, Kwali), March to August 2016. Index cases
+were patients with microscopy- or RDT-confirmed malaria attending twelve
+selected health facilities; the sampling unit for this analysis is the household
+member, and this teaching extract holds `r nrow(dat)` household members with
+`r ncol(dat_raw)` variables. Because entry into the sample required living with
+a confirmed malaria patient, **the sample is selected on exposure to a household
+infection** and nothing here is a population prevalence estimate.
+
+**Variables.** The outcome is `malaria_parasitaemia`, a binary indicator where
+the **event is a positive thick-film microscopy result**. There are
+`r n_events` events and `r n_nonevent` non-events in the file, i.e.
+`r pct(mean(dat_raw$malaria_parasitaemia))`% positive. This is worth pausing on:
+the event is the *majority* class, which is unusual for a disease outcome and
+has a practical consequence noted under the parameter budget below. Predictors
+are age group (reference 20 and over), sex (reference female), highest education
+(reference none), area council (reference Abuja Municipal, the largest),
+bushes around the home (reference no), insecticidal net status (reference no
+net), a housing-quality index (reference improved, the largest group), sleeping
+in the same room as the index case (reference no) and uncovered water
+receptacles near the home (reference no).
+
+**Three predictors were reshaped before any model was fitted.** *(i)* The five
+housing variables `house_floor`, `house_roof`, `house_type`, `house_wall` and
+`house_window` are five correlated measurements of one underlying construct,
+housing quality; pairwise correlations between the "improved" indicators derived
+from them run from `r fmt(house_cor_lo, 2)` to `r fmt(house_cor_hi, 2)`,
+and the cross-tabulations contain structural zeros (every one of the
+`r sum(dat$house_type == "hut")` huts has mud walls and none has screened or
+glass windows; all `r sum(dat$house_floor == "ceramictiles")` ceramic-tiled
+dwellings have screened or glass windows). Entered together they cost
+`r 2 + 2 + 3 + 1 + 3` parameters and generate a variance inflation factor of
+about 27 for `house_window`. They were therefore replaced by a single index
+counting how many of five "improved" features a dwelling has (ceramic-tiled
+floor, cement-plastered walls, metal or shingle roof, screened or glass windows,
+a dwelling other than a hut), collapsed to three levels. *(ii)* `owns_llin` and
+`used_llin_previous_night` are **exactly nested**: all
+`r sum(dat_raw$used_llin_previous_night)` participants who used a net owned one,
+and all `r sum(dat_raw$owns_llin == 0)` non-owners are coded 0 for use, so the
+"did not use" category silently mixes people with no net and people with an
+unused net. They were combined into one three-level variable. *(iii)*
+`age_group` was collapsed from six levels to four, because the 20-24 stratum
+holds only `r sum(dat_raw$age_group == "20_to_24")` participants and the three
+adult strata have nearly identical parasitaemia
+(`r pct(mean(dat_raw$malaria_parasitaemia[dat_raw$age_group == "20_to_24"]))`%,
+`r pct(mean(dat_raw$malaria_parasitaemia[dat_raw$age_group == "25_to_34"]))`% and
+`r pct(mean(dat_raw$malaria_parasitaemia[dat_raw$age_group == "35_plus"]))`%);
+the childhood strata, which are the clinically interesting ones, are kept
+separate.
+
+**Parameter budget.** The fourteen predictors as shipped cost
+`r n_par_shipped` parameters. The relevant denominator for the ten-events-per-
+parameter rule is not the `r n_events` positives but the `r n_nonevent`
+**negatives**, because a logistic model is constrained by the smaller of the two
+outcome classes; the shipped set therefore runs at
+`r fmt(n_nonevent / n_par_shipped, 1)` per parameter, below the conventional
+minimum. The reduced set above costs `r n_par_final` parameters, i.e.
+`r fmt(n_nonevent / n_par_final, 1)` negatives per parameter, which clears it.
+The budget was fixed before any model was fitted.
+
+**Statistical analysis.** `glm(family = binomial)`, justified because the
+outcome is binary. We fitted a univariable model for each predictor first, then
+a single multivariable model containing all of them. Predictors were chosen in
+advance on subject-matter grounds, not by significance. Coefficients are
+exponentiated and reported as odds ratios with 95% confidence intervals;
+significance threshold 0.05. Model adequacy was assessed with
+`performance::check_model()`, focusing on binned residuals, collinearity,
+influential observations and events per parameter, and every categorical
+predictor was cross-tabulated against the outcome to check for separation before
+fitting. **The models treat the `r nrow(dat)` participants as independent, which
+they are not**: they sit inside 107 households, and no household identifier is
+shipped in this extract, so the clustering cannot be adjusted for here. The
+consequences are set out under Limitations. Analysis used `r R.version.string`
+with tidyverse, gtsummary and performance.
+
+**Missing data.** There is none. All `r ncol(dat_raw)` columns are 100%
+complete, so the complete-case analysis retains `r nrow(dat_model)` of
+`r nrow(dat)` rows (`r n_dropped` dropped) and all `r n_events` events. This is
+the one respect in which the dataset is unusually easy to work with.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  mutate(malaria_parasitaemia = factor(malaria_parasitaemia, levels = c(0, 1),
+                                       labels = c("Negative", "Positive"))) |>
+  tbl_summary(
+    by = malaria_parasitaemia,
+    missing = "no"
+  ) |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics by microscopy result.**")
+```
+
+Positives outnumber negatives in every stratum of every predictor, which is the
+direct consequence of a `r pct(mean(dat_model[[outcome]]))`% overall positivity
+rate; the informative comparisons are therefore between columns rather than
+within them. The clearest contrast is bushes around the home, present for
+`r pct(mean(dat_model$bushes[dat_model[[outcome]] == 1] == "Yes"))`% of positives
+against `r pct(mean(dat_model$bushes[dat_model[[outcome]] == 0] == "Yes"))`% of
+negatives, and education, where
+`r pct(mean(dat_model$educ[dat_model[[outcome]] == 1] == "None"))`% of positives
+have no formal education against
+`r pct(mean(dat_model$educ[dat_model[[outcome]] == 0] == "None"))`% of negatives.
+Net status and sleeping in the same room as the index case look almost identical
+in the two columns.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Percentage of household members with microscopy-positive malaria parasitaemia, by age group and whether there are bushes around the home."}
+dat_model |>
+  mutate(age_grp = factor(age_grp, levels = c("Under 5", "5-9", "10-19", "20 and over"))) |>
+  group_by(age_grp, bushes) |>
+  summarise(p = mean(.data[[outcome]]), n = n(), .groups = "drop") |>
+  ggplot(aes(age_grp, p, fill = bushes)) +
+  geom_col(position = position_dodge(0.85), width = 0.78) +
+  geom_text(aes(label = paste0("n=", n)), position = position_dodge(0.85),
+            vjust = -0.4, size = 2.9, colour = "grey30") +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1),
+                     expand = expansion(c(0, 0.08))) +
+  scale_fill_manual(values = c("No" = "#7FA9C9", "Yes" = "#B5495B")) +
+  labs(x = "Age group (years)", y = "Positive by microscopy",
+       fill = "Bushes around the home")
+```
+
+Parasitaemia is higher where there are bushes around the home in every age
+group, and the age pattern is a childhood peak at 5-9 years rather than a
+gradient: the school-age children in bushy compounds are the highest-prevalence
+cell in the figure at
+`r {t <- dat_model |> filter(age_grp == "5-9", bushes == "Yes"); pct(mean(t[[outcome]]))}`%.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = glm,
+    method.args = list(family = binomial),
+    exponentiate = TRUE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(glm(reformulate(v, outcome), data = dat_model, family = binomial),
+       conf.int = TRUE, exponentiate = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 2) {
+  r <- utid[utid$term == term, ]
+  sprintf("OR %s (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+```
+
+Bushes around the home carry the strongest crude association: their presence
+multiplies the odds of parasitaemia by `r ug("bushesYes")`
+(p `r up("bushesYes")`). Education shows a monotone crude gradient against the
+no-education reference — primary `r ug("educPrimary")` (p `r up("educPrimary")`),
+secondary `r ug("educSecondary")` (p `r up("educSecondary")`) and tertiary
+`r ug("educTertiary")` (p `r up("educTertiary")`) — and age shows a peak rather
+than a gradient, with children aged 5-9 at `r ug("age_grp5-9")`
+(p `r up("age_grp5-9")`) relative to adults while under-5s
+(`r ug("age_grpUnder 5")`, p `r up("age_grpUnder 5")`) and 10-19 year-olds
+(`r ug("age_grp10-19")`, p `r up("age_grp10-19")`) are not distinguishable from
+them. Men have `r ug("sexMale")` (p `r up("sexMale")`), just inside the
+threshold. Intermediate housing sits at `r ug("housingIntermediate (3-4)")`
+(p `r up("housingIntermediate (3-4)")`) but basic housing does not
+(`r ug("housingBasic (0-2 features)")`, p `r up("housingBasic (0-2 features)")`),
+so the housing "gradient" is not monotone and should not be read as one.
+
+Three predictors that the study design puts front and centre are flatly null in
+crude analysis. Sleeping in the same room as the index case gives
+`r ug("same_roomYes")` (p `r up("same_roomYes")`) — the point estimate is if
+anything *protective*. Owning and using a net the previous night gives
+`r ug("llinOwns, used last night")` (p `r up("llinOwns, used last night")`), and
+owning a net but not using it gives
+`r ug("llinOwns, not used last night")`
+(p `r up("llinOwns, not used last night")`), so neither ownership nor use marks
+lower parasitaemia. Uncovered water receptacles give `r ug("waterYes")`
+(p `r up("waterYes")`), and neither of the two non-reference area councils
+differs from Abuja Municipal (Kuje `r ug("councilKuje")`,
+p `r up("councilKuje")`; Kwali `r ug("councilKwali")`, p `r up("councilKwali")`).
+
+## Why adjustment is needed
+
+**Area council** confounds the housing and bushes associations. The three
+councils differ sharply in dwelling stock: only
+`r {t <- dat_model |> filter(council == "Abuja Municipal"); pct(mean(t$housing == "Basic (0-2 features)"))}`%
+of Abuja Municipal participants live in basic housing against
+`r {t <- dat_model |> filter(council == "Kuje"); pct(mean(t$housing == "Basic (0-2 features)"))}`%
+in Kuje, and bushes around the home are reported by
+`r {t <- dat_model |> filter(council == "Abuja Municipal"); pct(mean(t$bushes == "Yes"))}`%
+of Abuja Municipal households against
+`r {t <- dat_model |> filter(council == "Kuje"); pct(mean(t$bushes == "Yes"))}`%
+in Kuje. Area council is also plausibly related to the outcome independently of
+either, because the councils differ in transmission intensity, vector density
+and distance to care. Without adjustment, a housing coefficient is partly a
+geography coefficient.
+
+**Age** confounds the education association, and severely. Education in a
+household survey is largely an age marker for children: of the
+`r sum(dat_model$age_grp %in% c("Under 5", "5-9"))` participants under ten,
+`r sum(dat_model$age_grp %in% c("Under 5", "5-9") & dat_model$educ %in% c("None", "Primary"))`
+are recorded as having no education or primary education only and the remaining
+`r sum(dat_model$age_grp %in% c("Under 5", "5-9") & dat_model$educ == "Secondary")`
+as secondary; not one is recorded as tertiary, whereas
+`r pct(mean(dat_model$educ[dat_model$age_grp == "20 and over"] == "Tertiary"))`%
+of the adults are. The low-education strata are therefore
+dominated by exactly the young children who have the highest parasitaemia for
+immunological reasons. Age is independently related to the outcome through
+acquired immunity, and it is related to recorded education by construction. The
+crude education gradient therefore cannot be read as an effect of schooling or
+of the socioeconomic position it proxies until age is held constant.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- glm(reformulate(predictors, outcome), data = dat_model, family = binomial)
+
+mv <- tbl_regression(fit, exponentiate = TRUE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+g <- function(term, d = 2) {
+  r <- tid[tid$term == term, ]
+  sprintf("OR %s (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+```
+
+```{r fit-stats}
+n_par    <- length(coef(fit)) - 1L
+epp      <- n_events / n_par
+enpp     <- n_nonevent / n_par
+null_fit <- glm(reformulate("1", outcome), data = dat_model, family = binomial)
+tibble(
+  Statistic = c("Complete-case N", "Events (parasitaemia = 1)",
+                "Non-events (parasitaemia = 0)", "Parameters (excl. intercept)",
+                "Events per parameter", "Non-events per parameter (binding)",
+                "AIC (null model)", "AIC (full model)", "Tjur's R-squared"),
+  Value = c(as.character(nrow(dat_model)), as.character(n_events),
+            as.character(n_nonevent), as.character(n_par),
+            fmt(epp, 1), fmt(enpp, 1),
+            fmt(AIC(null_fit), 1), fmt(AIC(fit), 1),
+            fmt(as.numeric(r2_tjur(fit)), 3))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable logistic model for malaria parasitaemia**"))
+```
+
+The model carries `r n_par` parameters. On the usual count that is
+`r fmt(epp, 1)` events per parameter, comfortably clear of ten, but that number
+flatters the model: because the event is the majority class the binding
+constraint is the `r n_nonevent` negatives, giving
+`r fmt(enpp, 1)` per parameter. AIC falls only from `r fmt(AIC(null_fit), 1)`
+for the intercept-only model to `r fmt(AIC(fit), 1)`, a drop of
+`r fmt(AIC(null_fit) - AIC(fit), 1)`, and Tjur's R-squared is
+`r fmt(as.numeric(r2_tjur(fit)), 3)`. The nine predictors together explain very
+little: with `r pct(mean(dat_model[[outcome]]))`% of everybody positive, the
+model has limited room to discriminate.
+
+Among participants of the same sex, education, area council, housing, net
+status, room-sharing and water storage, bushes around the home remain associated
+with `r g("bushesYes")` (p `r gp("bushesYes")`) — essentially unchanged from the
+crude estimate and the only predictor significant at 0.05 with a wide margin.
+Among participants alike on everything else, children aged 5-9 have
+`r g("age_grp5-9")` (p `r gp("age_grp5-9")`) relative to adults, while under-5s
+(`r g("age_grpUnder 5")`) and 10-19 year-olds (`r g("age_grp10-19")`) are
+indistinguishable from adults. Education retains a gradient after adjustment:
+tertiary `r g("educTertiary")` (p `r gp("educTertiary")`) and primary
+`r g("educPrimary")` (p `r gp("educPrimary")`) against no education, though
+secondary (`r g("educSecondary")`, p `r gp("educSecondary")`) is not significant
+and the levels are not ordered as a clean dose-response.
+
+The three design-relevant exposures stay null. Sleeping in the same room as the
+index case gives `r g("same_roomYes")` (p `r gp("same_roomYes")`); using a net
+the previous night gives `r g("llinOwns, used last night")`
+(p `r gp("llinOwns, used last night")`), and owning an unused net
+`r g("llinOwns, not used last night")`
+(p `r gp("llinOwns, not used last night")`). Housing quality
+(`r g("housingIntermediate (3-4)")` for intermediate,
+`r g("housingBasic (0-2 features)")` for basic) and uncovered water receptacles
+(`r g("waterYes")`) are also null. These are associations among the participants
+observed, not effects of intervening.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted odds ratios.**")
+```
+
+The coefficient that moves furthest is **age under 5**, from
+`r ug("age_grpUnder 5")` crude to `r g("age_grpUnder 5")` adjusted — the whole
+of the apparent excess in the youngest children disappears, moving all the way
+to the null. This is the education entanglement described above operating in
+reverse: under-5s are almost all in the "no education" reference stratum, so
+once education is in the model the "no education" coefficient absorbs the
+childhood excess and nothing is left for age to carry. Fitting the same model
+without education returns the under-5 estimate to
+`r {f_noed <- glm(reformulate(setdiff(predictors, "educ"), outcome), data = dat_model, family = binomial); fmt(exp(coef(f_noed)["age_grpUnder 5"]), 2)}`,
+close to its crude value, which confirms the mechanism. **Area council** moves
+in the opposite direction, away from the null: Kuje goes from
+`r ug("councilKuje")` to `r g("councilKuje")`. Crudely Kuje looks like Abuja
+Municipal, but Kuje households have far poorer housing and lower education, both
+of which are associated with more parasitaemia; hold those constant and a lower
+Kuje odds emerges. This is classic masking rather than confounding away a real
+signal. **Uncovered water receptacles** move the same way, from
+`r ug("waterYes")` to `r g("waterYes")`, though null in both columns.
+
+Two coefficients barely move. **Bushes** goes from `r ug("bushesYes")` to
+`r g("bushesYes")`, a shift of a few percent, so its association is essentially
+independent of everything else measured; and **tertiary education** goes from
+`r ug("educTertiary")` to `r g("educTertiary")`.
+
+Three contrasts change significance, all in the same direction — losing it.
+**Sex** goes from p `r up("sexMale")` to p `r gp("sexMale")`, crossing 0.05 with
+almost no change in the point estimate (`r ug("sexMale")` to `r g("sexMale")`),
+which is a loss of precision rather than confounding. **Secondary education**
+goes from `r ug("educSecondary")` (p `r up("educSecondary")`) to
+`r g("educSecondary")` (p `r gp("educSecondary")`), attenuating toward the null
+because secondary-educated participants are disproportionately adolescents and
+young adults, so age adjustment removes part of the crude contrast. **Intermediate
+housing** goes from `r ug("housingIntermediate (3-4)")`
+(p `r up("housingIntermediate (3-4)")`) to `r g("housingIntermediate (3-4)")`
+(p `r gp("housingIntermediate (3-4)")`), confounded by area council as
+anticipated. Nothing becomes significant on adjustment.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r binned-resid}
+br <- binned_residuals(fit)
+print(br)
+```
+
+```{r collin}
+collin <- check_collinearity(fit)
+collin
+resid_ok <- attr(br, "resid_ok")
+```
+
+```{r separation}
+# Explicit separation audit: every shipped categorical predictor crossed with the
+# outcome, plus the estimated coefficients and standard errors of the final model.
+sep_tab <- map_dfr(shipped_preds, function(v) {
+  t <- table(dat_raw[[v]], dat_raw[[outcome]])
+  tibble(Variable = v, Levels = nrow(t),
+         `Zero cells` = sum(t == 0),
+         `Smallest cell` = min(t),
+         `Level with smallest cell` = rownames(t)[which.min(apply(t, 1, min))])
+})
+sep_tab |>
+  gt() |>
+  tab_header(title = md("**Separation audit: every shipped categorical predictor against the outcome**"))
+```
+
+**Separation.** No shipped predictor separates the outcome on its own: every one
+of the `r nrow(sep_tab)` variables has both a positive and a negative in every
+level, so `Zero cells` is `r max(sep_tab[["Zero cells"]])` throughout. The
+smallest cell anywhere is `r min(sep_tab[["Smallest cell"]])` observations,
+in `r sep_tab$Variable[which.min(sep_tab[["Smallest cell"]])]` at level
+"`r sep_tab[["Level with smallest cell"]][which.min(sep_tab[["Smallest cell"]])]`",
+which has only `r sum(dat_raw$house_type == "bungalow" & dat_raw[[outcome]] == 0)`
+negatives among `r sum(dat_raw$house_type == "bungalow")` participants. In the
+fitted model no coefficient is extreme: the largest absolute log-odds is
+`r fmt(max(abs(coef(fit)[-1])), 2)`, the largest standard error is
+`r fmt(max(summary(fit)$coefficients[-1, 2]), 2)`, and fitted probabilities span
+`r fmt(min(fitted(fit)), 2)` to `r fmt(max(fitted(fit)), 2)`, nowhere near 0 or
+1. There is no separation in this model. Sparse *combinations* are a different
+matter and are documented in the feasibility notes.
+
+**Collinearity.** All variance inflation factors are modest once the housing
+variables have been reduced to an index: the largest is
+`r fmt(max(collin$VIF), 2)` for `r collin$Term[which.max(collin$VIF)]`, and
+because most of these are multi-level factors the fairer figure is the standard-
+error inflation factor, whose maximum across all nine terms is
+`r fmt(max(collin$SE_factor), 2)`. The five raw housing variables entered
+together would have given a VIF near 27 for `house_window`; the index removes
+that entirely.
+
+**Binned residuals.** Only `r fmt(100 * resid_ok, 0)`% of binned
+residuals lie inside their error bounds, against a target of 95% or more, so the
+model is imperfectly calibrated. With so few negatives spread across
+`r nrow(dat_model)` observations each bin contains only a handful of them, which
+makes the check noisy, but the shortfall is real and should be reported rather
+than waved away.
+
+**Influence.** No observation dominates: the largest Cook's distance is
+`r fmt(max(cooks.distance(fit)), 3)` and the largest leverage is
+`r fmt(max(hatvalues(fit)), 3)`, both far below any conventional threshold. This
+is expected in a dataset with no continuous predictors and no rare categories.
+
+**What does not apply.** Homogeneity of variance and normality of residuals are
+assumptions of the linear model, not of logistic regression, and the panels
+`check_model()` produces for them are not interpreted here.
+
+# Discussion
+
+Among household members of confirmed malaria patients in Abuja,
+`r pct(mean(dat_model[[outcome]]))`% carried malaria parasites without symptoms,
+and almost nothing measured in this survey distinguishes those who did from
+those who did not. The one robust finding is that having bushes around the home
+is associated with roughly `r fmt(tid$estimate[tid$term == "bushesYes"], 1)`-fold
+higher odds of parasitaemia, an association that is essentially unchanged by
+adjustment for age, sex, education, geography, housing quality, net use and room
+sharing. Children aged 5-9 also stand out, at `r g("age_grp5-9")` relative to
+adults. Practically, this points at peridomestic vector breeding habitat and at
+school-age children as the targets for reactive case detection around a treated
+index case.
+
+The negative findings are as important as the positive one. Sleeping in the same
+room as the index case — the exposure the study design exists to measure — shows
+no association at all (`r g("same_roomYes")`), and neither owning nor using an
+insecticidal net the previous night is associated with lower parasitaemia
+(`r g("llinOwns, used last night")` for use). With a positivity rate of
+`r pct(mean(dat_model[[outcome]]))`% across the whole sample, infection is close
+to universal in these compounds, and a within-household exposure contrast has
+very little variation left to explain.
+
+**Limitations.** The most serious problem is **clustering**. The
+`r nrow(dat_model)` participants come from 107 households, an average of about
+`r fmt(nrow(dat_model) / 107, 1)` people each, and household members share the
+same compound, the same vector exposure, the same bushes, the same roof and the
+same index case. Every standard error and p-value above assumes they are
+independent, which they plainly are not, so the confidence intervals are too
+narrow and the p-values too small — most acutely for the household-level
+variables (bushes, housing, area council, water receptacles), which really have
+at most 107 independent values, not `r nrow(dat_model)`. **No household
+identifier is shipped in this extract**, so this cannot be corrected here; the
+published analysis used generalised estimating equations with the household code
+as the clustering variable, which is not reproducible from these columns. The
+quantitative size of the problem is estimated in the feasibility notes.
+
+The sample is **selected on household exposure**: everybody here lives with a
+laboratory-confirmed malaria patient, so `r pct(mean(dat_model[[outcome]]))`%
+must not be quoted as a prevalence for Abuja or for Nigeria, and the null net
+and room-sharing associations may reflect a ceiling effect in a very
+high-transmission subset rather than genuine absence of effect. The design is
+**cross-sectional**, so reverse causation is live for the modifiable exposures:
+households that have recently had a malaria case may have acquired or started
+using nets in response, which would bias the net association toward or past the
+null. Exposure measurement is crude — bushes around the home, uncovered water
+receptacles and net use the previous night are single self-reported or
+observed-once items, and net *use* says nothing about how the net was used or
+whether it was still insecticidal. The **housing index is a construction**, not
+a validated instrument; it weights five features equally and its middle category
+is not intermediate in risk, so its coefficients should be read as descriptive.
+**Education is substantively invalid for a large part of the sample**:
+`r sum(dat_model$age_grp %in% c("Under 5", "5-9"))` participants are under ten
+and `r sum(dat_raw$age_group == "under_5" & dat_raw$education == "primary")`
+under-fives are recorded as having primary education, so the variable is partly
+an age marker and partly noise, and its coefficients cannot be given a schooling
+interpretation. The binned-residual check fails. Unmeasured confounders that
+matter here — indoor residual spraying, recent antimalarial treatment, altitude
+and proximity to standing water, whether the index case was still parasitaemic —
+are simply not in the file. All estimates are associations, not causal effects.
+
+**Future work.** Refit with the household identifier as a clustering variable,
+using either generalised estimating equations or a household random intercept,
+and add parasite density so that low-density carriage can be distinguished from
+clinically meaningful infection.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+```{r feas-cluster}
+# --------------------------------------------------------------------------
+# The shipped CSV carries no household identifier. To quantify how much the
+# clustering matters, the household code was recovered from the PLOS ONE
+# supporting-information file (row order is identical: sex, age group and
+# room-sharing match row for row) and is embedded here in run-length form.
+# STUDENTS CANNOT DO THIS. It exists only to size the problem for the brief.
+# --------------------------------------------------------------------------
+suppressMessages({library(sandwich); library(lme4)})
+
+rl <- c(1,8, 2,5, 3,3, 4,7, 5,2, 6,4, 107,1, 7,3, 8,1, 9,4, 10,6, 11,3, 12,5,
+        13,6, 14,2, 15,1, 16,8, 17,4, 18,1, 19,9, 21,4, 22,12, 23,7, 24,4, 25,4,
+        26,3, 27,6, 28,10, 29,3, 30,5, 31,4, 32,3, 33,4, 34,3, 35,5, 36,2, 38,4,
+        39,2, 40,1, 41,1, 42,9, 43,3, 44,1, 46,4, 47,6, 48,3, 49,1, 50,2, 49,4,
+        50,3, 52,4, 53,3, 54,2, 55,5, 56,6, 57,4, 58,8, 59,5, 60,11, 61,5, 62,3,
+        63,8, 64,3, 65,3, 66,15, 67,2, 68,3, 69,10, 70,3, 71,5, 72,7, 73,8, 74,1,
+        75,4, 76,3, 77,4, 78,3, 79,4, 80,4, 81,1, 82,4, 83,20, 84,4, 85,16, 86,4,
+        87,3, 88,2, 89,3, 90,3, 91,8, 92,6, 93,5, 94,10, 96,4, 97,3, 98,5, 99,3,
+        100,4, 101,4, 102,4, 104,7, 105,12, 106,8, 12,2, 15,4, 18,2, 20,5, 23,1,
+        29,1, 34,5, 36,5, 37,2, 41,6, 44,2, 45,3, 46,2, 51,4, 59,1, 61,6, 63,5,
+        67,3, 69,5, 70,1, 74,4, 76,5, 78,1, 86,3, 89,2, 90,7, 91,2, 93,1, 95,3,
+        96,1, 97,5, 98,1, 99,1, 103,4, 105,2)
+hh <- factor(rep(rl[c(TRUE, FALSE)], rl[c(FALSE, TRUE)]))
+
+dat_hh   <- dat_model |> mutate(hh = hh)
+hh_sizes <- as.numeric(table(hh))
+hh_pos   <- tapply(dat_hh[[outcome]], hh, mean)
+
+# Naive versus cluster-robust standard errors on the very same model.
+se_naive <- summary(fit)$coefficients[, 2]
+se_clust <- sqrt(diag(vcovCL(fit, cluster = hh)))
+ratio    <- se_clust / se_naive
+p_naive  <- 2 * pnorm(-abs(coef(fit) / se_naive))
+p_clust  <- 2 * pnorm(-abs(coef(fit) / se_clust))
+
+is_hh_level  <- grepl("^council|^bushes|^housing|^water", names(se_naive))
+is_ind_level <- grepl("^age_grp|^sexM|^educ|^same_room", names(se_naive))
+
+# Household random intercept, for the intraclass correlation.
+ctrl <- glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 2e5))
+m_null <- glmer(malaria_parasitaemia ~ 1 + (1 | hh), data = dat_hh,
+                family = binomial, control = ctrl)
+m_full <- glmer(reformulate(c(predictors, "(1 | hh)"), outcome), data = dat_hh,
+                family = binomial, control = ctrl)
+v_null <- as.numeric(VarCorr(m_null)$hh)
+v_full <- as.numeric(VarCorr(m_full)$hh)
+icc_null <- v_null / (v_null + pi^2 / 3)
+icc_full <- v_full / (v_full + pi^2 / 3)
+deff <- 1 + (mean(hh_sizes) - 1) * icc_null
+
+tibble(
+  Term = names(se_naive),
+  `SE (naive glm)` = fmt(se_naive, 3),
+  `SE (cluster-robust)` = fmt(se_clust, 3),
+  `Inflation` = fmt(ratio, 2),
+  `p (naive)` = ifelse(p_naive < 0.001, "<0.001", fmt(p_naive, 3)),
+  `p (clustered)` = ifelse(p_clust < 0.001, "<0.001", fmt(p_clust, 3))
+) |>
+  gt() |>
+  tab_header(title = md("**How much the clustering costs: naive versus cluster-robust standard errors**"))
+```
+
+```{r feas-separation}
+# Deliberate attempts to break the outcome. Warnings are captured rather than
+# printed so that their presence can be reported in the table.
+dat_fac <- dat_raw |> mutate(across(all_of(shipped_preds), as.factor))
+
+sep_check <- function(label, form, data = dat_fac) {
+  w <- character()
+  f <- withCallingHandlers(
+    glm(form, data = data, family = binomial),
+    warning = function(cond) { w <<- c(w, conditionMessage(cond)); invokeRestart("muffleWarning") }
+  )
+  co <- summary(f)$coefficients
+  tibble(Model = label,
+         Parameters = length(coef(f)) - 1L,
+         `Aliased (NA) terms` = sum(is.na(coef(f))),
+         `Max |coefficient|` = fmt(max(abs(coef(f)[-1]), na.rm = TRUE), 1),
+         `Max SE` = fmt(max(co[-1, 2]), 1),
+         `Max fitted prob.` = fmt(max(fitted(f)), 7),
+         `0/1 fitted warning` = if (any(grepl("numerically 0 or 1", w))) "YES" else "no")
+}
+
+stress <- bind_rows(
+  sep_check("All 14 shipped predictors",
+            reformulate(shipped_preds, outcome)),
+  sep_check("All five house_* variables + area_council",
+            reformulate(c("house_floor", "house_roof", "house_type", "house_wall",
+                          "house_window", "area_council"), outcome)),
+  sep_check("house_window * house_wall",
+            as.formula(paste(outcome, "~ house_window * house_wall"))),
+  sep_check("age_group * education",
+            as.formula(paste(outcome, "~ age_group * education"))),
+  sep_check("house_type * area_council",
+            as.formula(paste(outcome, "~ house_type * area_council"))),
+  sep_check("Final reduced model (this document)",
+            reformulate(predictors, outcome), data = dat_model)
+)
+stress |>
+  gt() |>
+  tab_header(title = md("**Separation stress tests**"))
+
+sv <- function(label, col) stress[[col]][stress$Model == label]
+
+n_cw_open <- sum(dat_raw$house_wall == "cement_plastered" & dat_raw$house_window == "openwindows")
+n_cw_open_pos <- sum(dat_raw$house_wall == "cement_plastered" &
+                     dat_raw$house_window == "openwindows" &
+                     dat_raw[[outcome]] == 1)
+
+fit_shipped <- glm(reformulate(shipped_preds, outcome), data = dat_fac, family = binomial)
+fit_noeduc  <- glm(reformulate(setdiff(predictors, "educ"), outcome),
+                   data = dat_model, family = binomial)
+```
+
+- **MAJOR (structural, and the dominant problem): the 602 participants sit in
+  107 households and no household identifier is shipped.** Household sizes run
+  from `r min(hh_sizes)` to `r max(hh_sizes)` with a mean of
+  `r fmt(mean(hh_sizes), 1)`. Recovering the household code from the source
+  supporting file (see the chunk above; students cannot do this) gives an
+  intraclass correlation of `r fmt(icc_null, 2)` on the latent scale from an
+  empty random-intercept model — household variance `r fmt(v_null, 2)` against
+  the logistic residual variance of `r fmt(pi^2 / 3, 2)` — and it stays at
+  `r fmt(icc_full, 2)` after adjustment for all nine predictors, so the
+  covariates explain almost none of the household-level variation. At a mean
+  cluster size of `r fmt(mean(hh_sizes), 1)` that is a design effect of about
+  **`r fmt(deff, 1)`**: the effective sample size is roughly
+  `r round(nrow(dat_model) / deff)` participants, not `r nrow(dat_model)`, and
+  the effective number of negatives is about `r round(n_nonevent / deff)`, which
+  turns the model's `r fmt(enpp, 1)` negatives per parameter into about
+  `r fmt((n_nonevent / deff) / n_par, 1)`. On the same fitted model,
+  cluster-robust standard errors are a median of
+  `r fmt(median(ratio), 2)` times the naive ones overall, but the split is the
+  instructive part: a median of `r fmt(median(ratio[is_hh_level]), 2)` for the
+  household-level predictors (worst:
+  `r names(se_naive)[which.max(ratio)]` at `r fmt(max(ratio), 2)`) against
+  `r fmt(median(ratio[is_ind_level]), 2)` for individual-level ones, and one
+  individual-level term (`sexMale`) actually gets *smaller*. In all,
+  `r sum(xor(p_naive < 0.05, p_clust < 0.05))` coefficients cross 0.05 when the
+  clustering is respected:
+  `r paste0("\x60", names(se_naive)[p_naive < 0.05 & p_clust >= 0.05], "\x60", collapse = " and ")`
+  lose significance and
+  `r paste0("\x60", names(se_naive)[p_naive >= 0.05 & p_clust < 0.05], "\x60", collapse = " and ")`
+  gains it. A household random intercept inflates the standard errors further
+  still (`bushesYes` from `r fmt(se_naive["bushesYes"], 3)` to
+  `r fmt(sqrt(diag(vcov(m_full)))[names(fixef(m_full)) == "bushesYes"], 3)`).
+  **Recommendation: ship `household_id` in the CSV.** It is one integer column,
+  it is present in the source file, the published paper's own analysis depends
+  on it, and without it a student cannot do anything about the single largest
+  methodological problem in the dataset. If it stays out, the caution needs to
+  say plainly that the clustering cannot be corrected, not merely that a simple
+  model "does not account for" it.
+- **MAJOR: selection on exposure.** Every participant lives with a
+  laboratory-confirmed malaria patient. The `r pct(mean(dat_raw[[outcome]]))`%
+  positivity is a within-outbreak-household figure and must never be quoted as a
+  population prevalence. It also compresses the exposure contrasts: with seven in
+  ten positive, `same_room_as_index_case`, `owns_llin` and
+  `used_llin_previous_night` have almost no discriminating room left, which is
+  the likeliest explanation for all three being null.
+- **MAJOR: the outcome is the majority class**, `r n_events` positive versus
+  `r n_nonevent` negative. Students who count "events" as the 1s will compute
+  `r fmt(epp, 1)` events per parameter and conclude they can afford a large
+  model; the binding constraint is the `r n_nonevent` negatives
+  (`r fmt(enpp, 1)` per parameter here, and only about
+  `r fmt((n_nonevent / deff) / n_par, 1)` once clustering is allowed for). The
+  full fourteen-predictor set costs `r n_par_shipped` parameters, i.e.
+  `r fmt(n_nonevent / n_par_shipped, 1)` negatives per parameter, which is
+  over-fitting. Worth flagging in the brief because every other logistic dataset
+  in this catalogue has a minority-class event.
+- **MAJOR: the five `house_*` variables are one construct with structural
+  zeros.** `house_type` and `house_wall` are nearly aliased (all
+  `r sum(dat_raw$house_type == "hut")` huts have mud walls; all
+  `r sum(dat_raw$house_type %in% c("bungalow", "duplex"))` bungalows and duplexes
+  have cement-plastered walls), and all
+  `r sum(dat_raw$house_floor == "ceramictiles")` ceramic-tiled dwellings have
+  screened or glass windows. Entered together they give `house_window` a VIF of
+  about 27 and `house_type` about 9 while adding almost nothing: the crude
+  positivity rates across the three levels of the composite index are
+  `r paste(pct(tapply(dat$malaria_parasitaemia, dat$housing, mean)[c("Basic (0-2 features)", "Intermediate (3-4)", "Improved (all 5)")]), collapse = "%, ")`%
+  respectively, i.e. non-monotone and essentially flat. Housing quality simply
+  does not predict this outcome, so the choice between the five raw variables
+  and a composite changes nothing substantive — but the five raw variables will
+  produce nonsense-looking coefficients that a student then has to explain.
+- **MAJOR: `age_group * education` separates completely.** The interaction is
+  the obvious thing to reach for once someone notices the education gradient is
+  age-driven, and it fails hard:
+  `r sv("age_group * education", "Aliased (NA) terms")` terms are aliased (no
+  under-5 has secondary or tertiary education, no 5-9 year-old has tertiary),
+  the largest surviving interaction coefficient is
+  `r sv("age_group * education", "Max |coefficient|")` on the log-odds scale
+  with a standard error of `r sv("age_group * education", "Max SE")`, and the
+  largest fitted probability is
+  `r sv("age_group * education", "Max fitted prob.")`. An interaction between
+  two of the housing variables does the same: `house_window * house_wall`
+  produces a coefficient of `r sv("house_window * house_wall", "Max |coefficient|")`
+  with a standard error of `r sv("house_window * house_wall", "Max SE")`,
+  because only `r n_cw_open` participants have cement-plastered walls and open
+  windows and **all `r n_cw_open_pos` of them are positive**. That single
+  four-person cell is the specific culprit. `house_type * area_council` does not
+  diverge but aliases `r sv("house_type * area_council", "Aliased (NA) terms")`
+  terms, because duplexes occur only in Abuja Municipal and huts only in Kuje and
+  Kwali.
+- **MAJOR, and easy to miss: R issues no separation warning in any of these
+  models.** The `0/1 fitted warning` column in the stress-test table reads "no"
+  throughout, including for `age_group * education`, because `glm()` only warns
+  when a fitted probability exceeds `1 - 1e-8` and the largest here is
+  `r sv("age_group * education", "Max fitted prob.")` — just under the trigger.
+  A student who treats "no warning" as "no separation" will report a coefficient
+  of `r sv("age_group * education", "Max |coefficient|")` with a standard error
+  of `r sv("age_group * education", "Max SE")` as a finding. The reliable
+  detectors here are the standard errors, the aliased `NA` coefficients and the
+  cross-tabulations, not the warning.
+- **MAJOR: `owns_llin` and `used_llin_previous_night` are exactly nested.** All
+  `r sum(dat_raw$used_llin_previous_night == 1)` users are owners; all
+  `r sum(dat_raw$owns_llin == 0)` non-owners are coded 0 for use. Putting both in
+  a model does not separate — the model runs — but the "did not use" reference
+  then pools `r sum(dat_raw$owns_llin == 0)` people with no net and
+  `r sum(dat_raw$owns_llin == 1 & dat_raw$used_llin_previous_night == 0)` people
+  with an unused net, the two coefficients become uninterpretable mirror images
+  (in the full shipped model they are
+  `r fmt(coef(fit_shipped)["owns_llin1"], 2)` and
+  `r fmt(coef(fit_shipped)["used_llin_previous_night1"], 2)` on the log-odds
+  scale, cancelling almost exactly), and each carries a variance inflation factor
+  above 4.5. The three-level recode used here is the only coherent
+  parameterisation.
+- **MINOR but worth knowing: `education` is fully observed and substantively
+  meaningless for a third of the sample.** There is no missingness to warn
+  about — which is itself the trap, because nothing flags the problem.
+  `r sum(dat_raw$age_group == "under_5")` participants are under five, of whom
+  `r sum(dat_raw$age_group == "under_5" & dat_raw$education == "primary")` are
+  recorded as having *primary* education, and
+  `r sum(dat_raw$age_group %in% c("under_5", "5_to_9") & dat_raw$education == "secondary")`
+  children under ten are recorded as *secondary*. The variable is an age proxy
+  below age ten and an SES proxy above it, and the two age groups it entangles
+  are the ones with the highest parasitaemia. Concretely, adding `educ` to the
+  model moves the under-5 odds ratio from
+  `r fmt(exp(coef(fit_noeduc)["age_grpUnder 5"]), 2)` to
+  `r fmt(tid$estimate[tid$term == "age_grpUnder 5"], 2)` — the childhood signal
+  is transferred wholesale to the education term.
+- **MINOR: `area_council` is thin at one level.** Kwali holds only
+  `r sum(dat_raw$area_council == "kwali")` participants
+  (`r sum(dat_raw$area_council == "kwali" & dat_raw[[outcome]] == 0)` negatives),
+  so its confidence interval is wide (`r g("councilKwali")`), and Kwali contains
+  no roof-shingle dwellings at all, which is part of why the raw housing
+  variables behave badly alongside it. Three levels is still workable; two would
+  not be an unreasonable collapse.
+- **MINOR: `house_type = bungalow` is the sparsest single cell**, with
+  `r sum(dat_raw$house_type == "bungalow" & dat_raw[[outcome]] == 0)` negatives
+  out of `r sum(dat_raw$house_type == "bungalow")` participants
+  (`r pct(mean(dat_raw[[outcome]][dat_raw$house_type == "bungalow"]))`% positive),
+  and `house_window = metal_shutters` has only
+  `r sum(dat_raw$house_window == "metal_shutters")` participants in total. Neither
+  produces separation on its own, but both are one dropped observation away from
+  it.
+- **MINOR: binned residuals fail** (`r fmt(100 * resid_ok, 0)`% inside the
+  bounds against a 95% target). With `r n_nonevent` negatives spread over
+  `r nrow(dat_model)` rows the check is genuinely noisy, but a student following
+  the diagnostics honestly will have to report a failed check and should not be
+  penalised for it.
+- **MINOR: the outcome is test-dependent, and the source file shows the tests
+  disagree.** The supporting file carries both a microscopy result and an RDT
+  result for every participant. Microscopy gives
+  `r sum(dat_raw[[outcome]])` positives; the RDT gives 83, the two agree on only
+  39.9% of participants, and Cohen's kappa is 0.07 — no better than chance. Only
+  the microscopy result is shipped, which is defensible (it is the result the
+  paper's headline figure uses), but it means the
+  `r pct(mean(dat_raw[[outcome]]))`% figure is a property of one assay, not a
+  robust fact about the households.
+- **Not a problem: missing data.** All `r ncol(dat_raw)` columns are 100%
+  complete, so the complete-case sample is the full `r nrow(dat_model)` rows with
+  all `r n_events` events. There is no listwise-deletion story to tell here at
+  all, which makes this a good dataset for teaching everything *except* missing
+  data.
+- **Not a problem: model stability.** The final nine-predictor model has a
+  maximum standard error of
+  `r fmt(max(summary(fit)$coefficients[-1, 2]), 2)`, a maximum Cook's distance of
+  `r fmt(max(cooks.distance(fit)), 3)`, a maximum leverage of
+  `r fmt(max(hatvalues(fit)), 3)` and fitted probabilities confined to
+  `r fmt(min(fitted(fit)), 2)`-`r fmt(max(fitted(fit)), 2)`. Nothing is unstable;
+  the trouble with this dataset is conceptual, not numerical.
+- **Overall verdict: usable, with warnings.** The outcome supports a real
+  Purpose 3 analysis with a defensible reduced predictor set, and it produces one
+  clear finding (bushes), one clear age pattern and a set of instructive nulls.
+  But Tjur's R-squared is only `r fmt(as.numeric(r2_tjur(fit)), 3)` and the AIC
+  gain over the null model is `r fmt(AIC(null_fit) - AIC(fit), 1)`, so students
+  should be warned in advance that a well-executed analysis here will find very
+  little, and that the interesting write-up is about *why*.

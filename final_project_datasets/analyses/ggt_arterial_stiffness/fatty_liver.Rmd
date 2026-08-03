@@ -1,0 +1,638 @@
+---
+title: "Ultrasound-diagnosed fatty liver in a Japanese health-check cohort"
+subtitle: "Dataset 9: Liver enzymes and arterial stiffness in a Japanese health-check cohort"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "ggt_arterial_stiffness.csv"),
+                    show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names. The catalogue suggests
+# 18 predictors; 12 are carried forward. The cut is justified in Methods.
+outcome    <- "fatty_liver"
+predictors <- c("age_yrs", "sex", "bmi", "systolic_bp", "smoking_status",
+                "alcohol_g_per_week", "regular_exercise", "fasting_glucose",
+                "triglycerides", "hdl_cholesterol", "egfr", "log2_ggt")
+
+# The full catalogue list, used once to document the collinearity that motivated
+# the cut. No inference is drawn from that model.
+predictors_all <- c("age_yrs", "sex", "bmi", "systolic_bp", "diastolic_bp",
+                    "smoking_status", "alcohol_g_per_week", "regular_exercise",
+                    "fasting_glucose", "uric_acid", "total_cholesterol",
+                    "hdl_cholesterol", "ldl_cholesterol", "triglycerides",
+                    "egfr", "log2_ggt", "alt", "ast")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    sex = lab(factor(sex, levels = c("male", "female"), labels = c("Male", "Female")),
+              "Sex"),
+    smoking_status = lab(factor(smoking_status,
+                                levels = c("never", "former", "current"),
+                                labels = c("Never", "Former", "Current")),
+                         "Smoking status"),
+    regular_exercise = lab(factor(regular_exercise, levels = c(0, 1),
+                                  labels = c("No", "Yes")),
+                           "Takes regular exercise"),
+    age_yrs            = lab(age_yrs, "Age (years)"),
+    bmi                = lab(bmi, "BMI (kg/m2)"),
+    systolic_bp        = lab(systolic_bp, "Systolic BP (mmHg)"),
+    diastolic_bp       = lab(diastolic_bp, "Diastolic BP (mmHg)"),
+    alcohol_g_per_week = lab(alcohol_g_per_week, "Alcohol (g/week)"),
+    fasting_glucose    = lab(fasting_glucose, "Fasting glucose (mg/dL)"),
+    uric_acid          = lab(uric_acid, "Uric acid (mg/dL)"),
+    total_cholesterol  = lab(total_cholesterol, "Total cholesterol (mg/dL)"),
+    triglycerides      = lab(triglycerides, "Triglycerides (mg/dL)"),
+    hdl_cholesterol    = lab(hdl_cholesterol, "HDL cholesterol (mg/dL)"),
+    ldl_cholesterol    = lab(ldl_cholesterol, "LDL cholesterol (mg/dL)"),
+    egfr               = lab(egfr, "eGFR (mL/min/1.73m2)"),
+    log2_ggt           = lab(log2_ggt, "Gamma-GT (log2 U/L)"),
+    alt                = lab(alt, "ALT (U/L)"),
+    ast                = lab(ast, "AST (U/L)"),
+    fatty_liver        = lab(fatty_liver, "Fatty liver on ultrasound")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+n_events  <- sum(dat_model[[outcome]])
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", fmt(p, 3)))
+```
+
+```{r collinearity-evidence}
+# Two documented redundancies in the suggested predictor list, quantified once.
+bp_r <- cor(dat$systolic_bp, dat$diastolic_bp)
+
+# Friedewald: total cholesterol ~ LDL + HDL + triglycerides/5.
+fw  <- lm(total_cholesterol ~ ldl_cholesterol + hdl_cholesterol + triglycerides,
+          data = dat)
+fw_r2   <- summary(fw)$r.squared
+fw_coef <- coef(fw)
+
+dat_all <- dat |> select(all_of(c(outcome, predictors_all))) |> drop_na()
+fit_all <- glm(reformulate(predictors_all, outcome), data = dat_all,
+               family = binomial)
+cc_all  <- as.data.frame(check_collinearity(fit_all))
+vall <- function(term, d = 1) fmt(cc_all$VIF[cc_all$Term == term], d)
+
+enz_r <- cor(dat$alt, dat$ast)
+```
+
+# Introduction
+
+A general health-check programme in Japan enrolled `r nrow(dat)` men and women
+aged `r min(dat$age_yrs)` to `r max(dat$age_yrs)` years and combined abdominal
+ultrasound, a fasting blood panel and automated vascular measurements in a single
+visit; the cohort is reported in *BMJ Open* 2014;4:e005413. Fatty liver was
+present on ultrasound in `r sum(dat_raw$fatty_liver, na.rm = TRUE)`
+(`r fmt(100 * mean(dat_raw$fatty_liver, na.rm = TRUE), 1)`%) of those scanned.
+Non-alcoholic fatty liver disease is now the commonest chronic liver condition in
+high-income countries and is a marker of insulin resistance as much as of liver
+injury, so knowing which routinely measured characteristics identify it at a
+health check is directly useful for triage.
+
+**Aim.** Among these health-check attendees, we examined which of age, sex, body
+mass index, systolic blood pressure, smoking status, alcohol intake, regular
+exercise, fasting glucose, triglycerides, HDL cholesterol, kidney function and
+log2 gamma-GT are independently associated with ultrasound-diagnosed fatty liver,
+mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** A cross-sectional Japanese health-check cohort of `r nrow(dat)`
+adults attending a voluntary medical check-up programme that included abdominal
+ultrasound, a fasting blood panel and automated measurement of pulse-wave
+velocity and the ankle-brachial index.
+
+**Variables.** The outcome is `fatty_liver`, a binary indicator where the **event
+is fatty liver visible on abdominal ultrasound**
+(`r sum(dat_raw$fatty_liver, na.rm = TRUE)` events among the
+`r sum(!is.na(dat_raw$fatty_liver))` participants scanned). Predictors are age
+(years), sex (reference Male, the larger group at `r sum(dat$sex == "Male")` of
+`r nrow(dat)`), BMI (kg/m2), systolic blood pressure (mmHg), smoking status
+(three levels, reference Never, the largest group at
+`r sum(dat$smoking_status == "Never")`), alcohol intake (g/week), regular
+exercise (reference No, the unexposed and larger group), fasting glucose (mg/dL),
+triglycerides (mg/dL), HDL cholesterol (mg/dL), estimated glomerular filtration
+rate (mL/min/1.73m2) and gamma-GT on a log2 scale, so that a one-unit increase is
+a doubling of GGT.
+
+**The predictor set was cut from 18 to `r length(predictors)` before any model
+was fitted.** The events budget alone would not have forced this: with
+`r n_events` events, the conventional ten-events-per-parameter rule supports
+about `r floor(n_events / 10)` parameters, and all 18 predictors would cost only
+`r length(coef(fit_all)) - 1L`. The cut was made instead for **redundancy** and
+**interpretability**. The suggested list contains three sets of near-duplicates.
+Systolic and diastolic pressure correlate at r = `r fmt(bp_r, 2)` (VIFs
+`r vall("systolic_bp")` and `r vall("diastolic_bp")` with both in the model). The
+four lipid measures satisfy the Friedewald identity
+total = LDL + HDL + triglycerides/5 to within rounding: regressing total
+cholesterol on the other three gives R-squared `r fmt(fw_r2, 3)` with
+coefficients `r fmt(fw_coef["ldl_cholesterol"], 2)`,
+`r fmt(fw_coef["hdl_cholesterol"], 2)` and `r fmt(fw_coef["triglycerides"], 2)`,
+and with all four in the model the VIFs reach `r vall("total_cholesterol")`
+(total cholesterol) and `r vall("ldl_cholesterol")` (LDL). ALT, AST and gamma-GT
+are the third set (ALT-AST r = `r fmt(enz_r, 2)`). We therefore kept systolic
+pressure in place of both pressures; HDL cholesterol and triglycerides, the two
+metabolic-syndrome lipid components, in place of all four lipids; and log2
+gamma-GT, the enzyme of interest in the source paper, in place of all three
+enzymes. Uric acid was dropped because it duplicates information already carried
+by adiposity and kidney function (r = `r fmt(cor(dat$uric_acid, dat$egfr), 2)`
+with eGFR, r = `r fmt(cor(dat$uric_acid, dat$bmi), 2)` with BMI). Beyond the
+statistics, a table of 18 mutually adjusted odds ratios cannot be read as an
+answer to "which predictors survive adjustment", which is the question here.
+
+**Statistical analysis.** `glm(family = binomial)`, justified because the outcome
+is binary. We fitted a univariable model for each predictor first, then a single
+multivariable model containing all of them. Predictors were chosen in advance on
+subject-matter grounds, not by significance. Coefficients are exponentiated and
+reported as odds ratios with 95% confidence intervals; significance threshold
+0.05. Model adequacy was assessed with `performance::check_model()`, focusing on
+binned residuals, collinearity, influential observations and events per
+parameter. Analysis used `r R.version.string` with tidyverse, gtsummary and
+performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped), leaving **`r n_events` events**. The
+outcome itself is missing for `r sum(is.na(dat$fatty_liver))` participant; the
+rest of the loss is `regular_exercise` (`r sum(is.na(dat$regular_exercise))`
+missing) and `alcohol_g_per_week` (`r sum(is.na(dat$alcohol_g_per_week))`
+missing), which do not overlap. Only `r sum(complete.cases(dat_raw))` of
+`r nrow(dat)` rows are complete on *every* column in the file.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  mutate(fatty_liver = factor(fatty_liver, levels = c(0, 1),
+                              labels = c("No fatty liver", "Fatty liver"))) |>
+  tbl_summary(
+    by = fatty_liver,
+    missing = "no"
+  ) |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics by fatty-liver status.**")
+```
+
+Participants with fatty liver are markedly heavier (median BMI
+`r fmt(median(dat_model$bmi[dat_model$fatty_liver == 1]), 1)` versus
+`r fmt(median(dat_model$bmi[dat_model$fatty_liver == 0]), 1)` kg/m2), have higher
+gamma-GT (median `r fmt(median(dat_model$log2_ggt[dat_model$fatty_liver == 1]), 2)`
+versus `r fmt(median(dat_model$log2_ggt[dat_model$fatty_liver == 0]), 2)` on the
+log2 scale, i.e. about
+`r fmt(2^(median(dat_model$log2_ggt[dat_model$fatty_liver == 1]) - median(dat_model$log2_ggt[dat_model$fatty_liver == 0])), 1)`-fold
+higher on the raw scale), higher fasting glucose and triglycerides and lower HDL
+cholesterol. They are overwhelmingly male
+(`r fmt(100 * mean(dat_model$sex[dat_model$fatty_liver == 1] == "Male"), 0)`%
+versus
+`r fmt(100 * mean(dat_model$sex[dat_model$fatty_liver == 0] == "Male"), 0)`%), and
+their median age is essentially the same as the unaffected group, which is
+already a clue that this is a metabolic rather than a degenerative condition.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Proportion with ultrasound fatty liver by gamma-GT quartile and BMI category."}
+dat_model |>
+  mutate(
+    ggt_q = cut(log2_ggt, breaks = quantile(log2_ggt, c(0, .25, .5, .75, 1)),
+                include.lowest = TRUE,
+                labels = c("Q1 (lowest)", "Q2", "Q3", "Q4 (highest)")),
+    bmi_grp = cut(bmi, breaks = c(0, 22, 25, Inf), right = FALSE,
+                  labels = c("<22", "22-24.9", "25+"))
+  ) |>
+  group_by(ggt_q, bmi_grp) |>
+  summarise(p = mean(fatty_liver), n = n(), .groups = "drop") |>
+  ggplot(aes(ggt_q, p, fill = bmi_grp)) +
+  geom_col(position = position_dodge(0.85), width = 0.78) +
+  geom_text(aes(label = paste0("n=", n)), position = position_dodge(0.85),
+            vjust = -0.4, size = 2.8, colour = "grey30") +
+  scale_y_continuous(labels = scales::percent, expand = expansion(c(0, 0.12))) +
+  scale_fill_manual(values = c("<22" = "#7FA9C9", "22-24.9" = "#E0A458",
+                               "25+" = "#B5495B")) +
+  labs(x = "Gamma-GT quartile", y = "Proportion with fatty liver",
+       fill = "BMI (kg/m2)")
+```
+
+Fatty-liver prevalence rises across gamma-GT quartiles within every BMI band, but
+the BMI gradient is by far the steeper of the two: it is below 10% in the leanest
+attendees at every level of GGT and above two-thirds in those with BMI 25 or more
+in the top GGT quartile. (Both variables are categorised here for display only;
+each enters the models as a continuous variable.)
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = glm,
+    method.args = list(family = binomial),
+    exponentiate = TRUE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(glm(reformulate(v, outcome), data = dat_model, family = binomial),
+       conf.int = TRUE, exponentiate = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 2) {
+  r <- utid[utid$term == term, ]
+  sprintf("OR %s (95%% CI %s to %s)", fmt(r$estimate, d),
+          fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+```
+
+BMI is the strongest crude predictor by a wide margin: each additional kg/m2
+multiplies the odds of fatty liver by `r ug("bmi")` (p `r up("bmi")`), which
+compounds to about
+`r fmt(utid$estimate[utid$term == "bmi"]^5, 1)`-fold per 5 kg/m2. Each doubling
+of gamma-GT multiplies the odds by `r ug("log2_ggt")` (p `r up("log2_ggt")`).
+Women have `r ug("sexFemale")` the odds of men (p `r up("sexFemale")`), a nearly
+four-fold male excess. The metabolic panel behaves as expected: fasting glucose
+`r ug("fasting_glucose")` per mg/dL (p `r up("fasting_glucose")`), triglycerides
+`r ug("triglycerides", 4)` per mg/dL (p `r up("triglycerides")`, i.e. about
+`r fmt(utid$estimate[utid$term == "triglycerides"]^50, 2)`-fold per 50 mg/dL),
+HDL cholesterol `r ug("hdl_cholesterol")` per mg/dL
+(p `r up("hdl_cholesterol")`), and systolic pressure `r ug("systolic_bp")` per
+mmHg (p `r up("systolic_bp")`). Regular exercise is associated with
+`r ug("regular_exerciseYes")` (p `r up("regular_exerciseYes")`), and both former
+(`r ug("smoking_statusFormer")`, p `r up("smoking_statusFormer")`) and current
+smoking (`r ug("smoking_statusCurrent")`, p `r up("smoking_statusCurrent")`) with
+raised odds. Two predictors show no crude association at all: age
+(`r ug("age_yrs")`, p `r up("age_yrs")`) and - strikingly, for a liver outcome -
+alcohol intake (`r ug("alcohol_g_per_week", 4)`, p `r up("alcohol_g_per_week")`).
+
+## Why adjustment is needed
+
+**Sex** confounds the gamma-GT association hard. Men have roughly
+`r fmt(2^(median(dat_model$log2_ggt[dat_model$sex == "Male"]) - median(dat_model$log2_ggt[dat_model$sex == "Female"])), 1)`
+times the GGT of women on the raw scale (medians
+`r fmt(median(dat_model$log2_ggt[dat_model$sex == "Male"]), 2)` versus
+`r fmt(median(dat_model$log2_ggt[dat_model$sex == "Female"]), 2)` on the log2
+scale) and, independently of GGT, roughly four times the crude odds of fatty
+liver, so part of any apparent GGT effect is simply a male effect. **BMI** is the
+second, and it confounds nearly everything else in the list: heavier attendees
+have higher GGT (r = `r fmt(cor(dat_model$bmi, dat_model$log2_ggt), 2)`), higher
+triglycerides (r = `r fmt(cor(dat_model$bmi, dat_model$triglycerides), 2)`),
+lower HDL (r = `r fmt(cor(dat_model$bmi, dat_model$hdl_cholesterol), 2)`), higher
+blood pressure and higher glucose, and adiposity is the dominant cause of hepatic
+steatosis. Any crude lipid, pressure or enzyme association is therefore partly a
+body-mass association. **Alcohol** matters for the opposite reason. Drinking here
+is almost a proxy for being male
+(`r fmt(100 * mean(dat_model$alcohol_g_per_week[dat_model$sex == "Male"] > 0), 0)`%
+of men report any alcohol against
+`r fmt(100 * mean(dat_model$alcohol_g_per_week[dat_model$sex == "Female"] > 0), 0)`%
+of women) and it is strongly associated with GGT
+(r = `r fmt(cor(dat_model$alcohol_g_per_week, dat_model$log2_ggt), 2)`) and with
+triglycerides
+(r = `r fmt(cor(dat_model$alcohol_g_per_week, dat_model$triglycerides), 2)`).
+Being male and having high GGT both raise the odds of fatty liver sharply, so
+those two push the crude alcohol coefficient upward and cancel whatever the
+drinking itself is doing. Within men alone the pattern is already visible:
+`r fmt(100 * mean(dat_model$fatty_liver[dat_model$sex == "Male" & dat_model$alcohol_g_per_week == 0]), 0)`%
+of male non-drinkers have fatty liver against
+`r fmt(100 * mean(dat_model$fatty_liver[dat_model$sex == "Male" & dat_model$alcohol_g_per_week > 0]), 0)`%
+of male drinkers. Mutual adjustment lets each odds ratio be read as a
+comparison between attendees of the same age, sex, body mass, pressure, smoking,
+drinking, activity and metabolic profile.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- glm(reformulate(predictors, outcome), data = dat_model, family = binomial)
+
+mv <- tbl_regression(fit, exponentiate = TRUE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+g <- function(term, d = 2) {
+  r <- tid[tid$term == term, ]
+  sprintf("OR %s (95%% CI %s to %s)", fmt(r$estimate, d),
+          fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+```
+
+```{r fit-stats}
+n_par    <- length(coef(fit)) - 1L
+epp      <- n_events / n_par
+null_fit <- glm(reformulate("1", outcome), data = dat_model, family = binomial)
+tibble(
+  Statistic = c("Complete-case N", "Events (fatty liver = 1)",
+                "Parameters (excl. intercept)", "Events per parameter",
+                "AIC (null model)", "AIC (full model)", "Tjur's R-squared"),
+  Value = c(as.character(nrow(dat_model)), as.character(n_events),
+            as.character(n_par), fmt(epp, 1),
+            fmt(AIC(null_fit), 1), fmt(AIC(fit), 1),
+            fmt(as.numeric(r2_tjur(fit)), 3))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable logistic model for fatty liver**"))
+```
+
+The model has `r n_events` events for `r n_par` estimated parameters, i.e.
+**`r fmt(epp, 1)` events per parameter**, comfortably clear of the conventional
+minimum of ten. AIC falls from `r fmt(AIC(null_fit), 1)` for the intercept-only
+model to `r fmt(AIC(fit), 1)`, a drop of
+`r fmt(AIC(null_fit) - AIC(fit), 1)`, and Tjur's R-squared is
+`r fmt(as.numeric(r2_tjur(fit)), 3)` - a genuinely well-discriminating model by
+the standards of observational epidemiology.
+
+Among attendees of the same age, sex, blood pressure, smoking, drinking,
+exercise, glucose, lipids, kidney function and gamma-GT, each additional kg/m2 of
+BMI multiplies the odds of fatty liver by `r g("bmi")` (p `r gp("bmi")`), about
+`r fmt(tid$estimate[tid$term == "bmi"]^5, 1)`-fold per 5 kg/m2. Among attendees
+alike on everything else, each additional mg/dL of fasting glucose multiplies the
+odds by `r g("fasting_glucose")` (p `r gp("fasting_glucose")`) and each
+additional mg/dL of HDL cholesterol by `r g("hdl_cholesterol")`
+(p `r gp("hdl_cholesterol")`), i.e. about
+`r fmt(tid$estimate[tid$term == "hdl_cholesterol"]^10, 2)`-fold per 10 mg/dL of
+HDL. Women retain `r g("sexFemale")` the odds of men (p `r gp("sexFemale")`).
+
+Two coefficients are worth dwelling on. **Gamma-GT survives, but barely**: each
+doubling gives `r g("log2_ggt")` (p `r gp("log2_ggt")`), against a crude
+`r ug("log2_ggt")`. **Alcohol becomes protective**: `r g("alcohol_g_per_week", 4)`
+per g/week (p `r gp("alcohol_g_per_week")`), which compounds to about
+`r fmt(tid$estimate[tid$term == "alcohol_g_per_week"]^100, 2)`-fold per 100 g of
+weekly alcohol, having been exactly null in the crude model. Age
+(`r g("age_yrs")`), systolic pressure (`r g("systolic_bp")`), triglycerides
+(`r g("triglycerides", 4)`), eGFR (`r g("egfr")`), regular exercise
+(`r g("regular_exerciseYes")`) and both smoking contrasts are not independently
+associated at the 0.05 level. These are associations among the attendees
+observed, not effects of intervening.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted odds ratios.**")
+```
+
+**Gamma-GT moves furthest.** It falls from `r ug("log2_ggt")` crude
+(p `r up("log2_ggt")`) to `r g("log2_ggt")` adjusted (p `r gp("log2_ggt")`), which
+on the log-odds scale is about
+`r fmt(100 * (1 - log(tid$estimate[tid$term == "log2_ggt"]) / log(utid$estimate[utid$term == "log2_ggt"])), 0)`%
+of the way toward the null; the crude doubling-of-odds-per-doubling-of-GGT was
+mostly adiposity and sex. It only just clears 0.05 after adjustment, so the
+headline exposure of the source dataset is the most fragile coefficient in the
+model. **Sex** moves the same way, from `r ug("sexFemale")` to `r g("sexFemale")`
+(p `r up("sexFemale")` to p `r gp("sexFemale")`): roughly half of the crude
+four-fold male excess is explained by men being heavier, drinking more and having
+worse metabolic profiles, though a real excess remains. **Triglycerides** attenuate
+from `r ug("triglycerides", 4)` to `r g("triglycerides", 4)` and lose significance
+entirely; so does systolic pressure (`r ug("systolic_bp")` to `r g("systolic_bp")`,
+p `r up("systolic_bp")` to p `r gp("systolic_bp")`). Both were largely BMI.
+
+**Smoking reverses sign.** Crude odds ratios were above one for both former
+(`r ug("smoking_statusFormer")`, p `r up("smoking_statusFormer")`) and current
+(`r ug("smoking_statusCurrent")`, p `r up("smoking_statusCurrent")`) smoking;
+adjusted they are below one and null (`r g("smoking_statusFormer")` and
+`r g("smoking_statusCurrent")`). Smoking here is overwhelmingly a male behaviour -
+`r sum(dat$sex == "Female" & dat$smoking_status == "Current")` of
+`r sum(dat$sex == "Female")` women smoke currently, against
+`r sum(dat$sex == "Male" & dat$smoking_status == "Current")` of
+`r sum(dat$sex == "Male")` men - so the crude smoking association was a sex
+association. **Alcohol goes the other way, from null to significant**:
+`r ug("alcohol_g_per_week", 4)` crude (p `r up("alcohol_g_per_week")`) to
+`r g("alcohol_g_per_week", 4)` adjusted (p `r gp("alcohol_g_per_week")`). This is
+classic masking, and it can be traced variable by variable: adding sex alone to
+the crude alcohol model moves the log-odds coefficient from
+`r fmt(1000 * coef(glm(fatty_liver ~ alcohol_g_per_week, data = dat_model, family = binomial))["alcohol_g_per_week"], 2)`
+to
+`r fmt(1000 * coef(glm(fatty_liver ~ alcohol_g_per_week + sex, data = dat_model, family = binomial))["alcohol_g_per_week"], 2)`
+per 1,000 g/week, and adding log2 gamma-GT alone moves it to
+`r fmt(1000 * coef(glm(fatty_liver ~ alcohol_g_per_week + log2_ggt, data = dat_model, family = binomial))["alcohol_g_per_week"], 2)`.
+Drinkers are male and have high GGT, and both of those raise the odds of fatty
+liver; holding them constant unmasks a negative residual association.
+
+**Two barely move.** BMI goes from `r ug("bmi")` to `r g("bmi")` and fasting
+glucose from `r ug("fasting_glucose")` to `r g("fasting_glucose")` - modest
+attenuation in both cases, but they remain the two strongest predictors in the
+model and are not explained away by anything else measured here.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r binned-resid}
+br <- binned_residuals(fit)
+print(br)
+br_pct <- attr(br, "resid_ok")
+```
+
+```{r collin}
+cc <- as.data.frame(check_collinearity(fit))
+check_collinearity(fit)
+```
+
+```{r sep-check}
+# Smallest cross-classified cells a student might create, and the enzyme trap.
+sparse_tab <- with(dat_model, table(sex, smoking_status, fatty_liver))
+fit_enz <- glm(reformulate(c(predictors, "alt", "ast"), outcome),
+               data = dat |> select(all_of(c(outcome, predictors, "alt", "ast"))) |>
+                 drop_na(),
+               family = binomial)
+tid_enz <- tidy(fit_enz, conf.int = TRUE, exponentiate = TRUE)
+ge <- function(term, d = 2) {
+  r <- tid_enz[tid_enz$term == term, ]
+  sprintf("OR %s (95%% CI %s to %s)", fmt(r$estimate, d),
+          fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gpe <- function(term) pv(tid_enz$p.value[tid_enz$term == term])
+```
+
+**Binned residuals are the check that fails.** Only
+`r fmt(100 * br_pct, 0)`% of binned residuals lie inside their error bounds,
+against a target of 95% or more, so the model is measurably miscalibrated
+somewhere across the fitted-probability range. With `r n_events` events spread
+over `r nrow(dat_model)` observations each bin holds around
+`r round(nrow(dat_model) / nrow(br))` participants, so the check is noisy, but the
+pattern is consistent with the linear-in-log-odds assumption failing for BMI: the
+BMI-steatosis relationship is steeper in the middle of the range than at either
+extreme, and a single linear term cannot capture that.
+
+**Collinearity is not a problem in the reduced model.** The largest VIF is
+`r fmt(max(cc$VIF), 2)` (`r cc$Term[which.max(cc$VIF)]`), well below the
+conventional threshold of 5. In the 18-predictor version the largest VIF is
+`r vall("total_cholesterol")`, so the a-priori cut is doing real work.
+
+**There is no separation.** All coefficients are finite, the largest standard
+error on the log-odds scale is
+`r fmt(max(summary(fit)$coefficients[-1, 2]), 2)`, and every level of every
+categorical predictor contains events (the smallest cell is
+`r min(sparse_tab)` - female current smokers with fatty liver - which is thin but
+not empty). That cell is worth noting because it is where a student adding a
+`sex * smoking_status` interaction would run into trouble: with
+`r sum(dat_model$sex == "Female" & dat_model$smoking_status == "Current")` female
+current smokers in total, the interaction contrast is estimated from almost
+nothing and its standard error explodes.
+
+**Influence is unremarkable.** The largest Cook's distance is
+`r fmt(max(cooks.distance(fit)), 3)` and the largest leverage
+`r fmt(max(hatvalues(fit)), 3)`; no single participant drives the fit.
+
+**Homogeneity of variance and normality of residuals do not apply** to a logistic
+model and are not interpreted; the corresponding panels of `check_model()` should
+be ignored here.
+
+Finally, a targeted check of the liver-enzyme decision. Adding ALT and AST back
+alongside gamma-GT does not produce alarming VIFs (largest
+`r fmt(max(as.data.frame(check_collinearity(fit_enz))$VIF), 2)`), but it
+**reverses the sign of the gamma-GT coefficient**: GGT goes from `r g("log2_ggt")`
+in the model above to `r ge("log2_ggt")` (p `r gpe("log2_ggt")`) with the other
+two enzymes present, while ALT takes over as the enzyme of record
+(`r ge("alt")` per U/L, p `r gpe("alt")`). Three correlated markers of the same
+organ competing for the same variance is exactly the situation in which a
+conditional coefficient stops meaning what its name suggests, and it is the main
+reason only one enzyme is carried in the primary model.
+
+# Discussion
+
+In this Japanese health-check cohort, ultrasound fatty liver is above all a
+metabolic condition: body mass index and fasting glucose are the two dominant
+independent predictors, with each 5 kg/m2 of BMI multiplying the odds by about
+`r fmt(tid$estimate[tid$term == "bmi"]^5, 1)` and each 10 mg/dL of HDL
+cholesterol dividing them by about
+`r fmt(1 / tid$estimate[tid$term == "hdl_cholesterol"]^10, 2)`, holding everything
+else constant. Gamma-GT, the marker this cohort was assembled to study, retains a
+small independent association (`r g("log2_ggt")` per doubling) that only just
+reaches significance, and roughly three-quarters of its crude association is
+explained by adiposity and sex. Alcohol intake is *inversely* associated with
+fatty liver once body mass and GGT are held constant, which is a reminder that
+ultrasound steatosis in a screening population is largely non-alcoholic. In
+practice, BMI and a fasting glucose identify most of the risk; the liver enzymes
+add little beyond them.
+
+**Limitations.** The design is cross-sectional, so temporal order is unknown and
+reverse causation is entirely plausible - a fatty liver raises GGT, so the
+GGT-steatosis association almost certainly runs partly backwards from outcome to
+"predictor". The outcome is ultrasound-defined, which is operator-dependent, has
+limited sensitivity for mild steatosis and is degraded by obesity itself, so
+misclassification is probably differential with respect to BMI, the strongest
+predictor. Health-check attendees are self-selected and healthier than the
+general Japanese population, which compresses the range of every risk factor and
+will attenuate the odds ratios. Alcohol is self-reported in g/week with
+`r sum(dat_model$alcohol_g_per_week == 0)` attendees reporting exactly zero, and
+under-reporting by heavy drinkers is the standard failure mode - the protective
+alcohol coefficient should not be read as evidence that drinking prevents fatty
+liver. No medication data are available, so statins, antihypertensives and
+glucose-lowering drugs are unmeasured confounders. Waist circumference, insulin,
+HOMA-IR and viral hepatitis status are absent, and the first two are more direct
+measures of the visceral adiposity and insulin resistance that drive this
+condition than BMI is. The binned-residual check fails
+(`r fmt(100 * br_pct, 0)`% inside bounds), indicating miscalibration that a
+non-linear term for BMI would probably improve. Complete-case analysis dropped
+`r n_dropped` of `r nrow(dat)` rows. All estimates are associations, not causal
+effects.
+
+**Future work.** Refit with a spline or fractional polynomial for BMI to address
+the calibration failure, and add waist circumference and a fasting insulin
+measure so that the model separates visceral adiposity from body mass.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+- **Verdict: USABLE.** This is the strongest of the four outcomes in this
+  dataset. `r n_events` events on `r nrow(dat_model)` complete cases,
+  `r fmt(epp, 1)` events per parameter, Tjur's R-squared
+  `r fmt(as.numeric(r2_tjur(fit)), 3)`, no separation, no collinearity problem
+  and a clear, real signal. A competent student will get a clean model.
+- **MAJOR: binned residuals fail** - only `r fmt(100 * br_pct, 0)`% of bins
+  inside the error bounds against a 95% target. This is genuine miscalibration
+  (the BMI-steatosis relationship is not linear in the log odds) rather than pure
+  noise, and an honest student has to report a failed check. It is a good
+  teaching case, but it will unsettle students who expect diagnostics to pass.
+- **MAJOR: three correlated liver enzymes, and the choice between them changes
+  the sign of the answer.** With only `log2_ggt` in the model, GGT is
+  `r g("log2_ggt")` (p `r gp("log2_ggt")`). Add `alt` and `ast` and GGT becomes
+  `r ge("log2_ggt")` (p `r gpe("log2_ggt")`) - a *protective* association - while
+  ALT becomes the dominant enzyme (`r ge("alt")`, p `r gpe("alt")`). The VIFs
+  never exceed `r fmt(max(as.data.frame(check_collinearity(fit_enz))$VIF), 1)`, so
+  nothing warns the student that this has happened. This is the single most
+  likely way a student produces a confidently wrong conclusion from this outcome,
+  and it belongs in the `meta.json` cautions.
+- **MAJOR collinearity if all four lipids are used.** VIFs in the 18-predictor
+  logistic model: `r vall("total_cholesterol")` (total cholesterol),
+  `r vall("ldl_cholesterol")` (LDL), `r vall("hdl_cholesterol")` (HDL),
+  `r vall("triglycerides")` (triglycerides). Regressing total cholesterol on the
+  other three gives R-squared `r fmt(fw_r2, 3)` with coefficients
+  `r fmt(fw_coef["ldl_cholesterol"], 2)` / `r fmt(fw_coef["hdl_cholesterol"], 2)` /
+  `r fmt(fw_coef["triglycerides"], 2)`, i.e. the Friedewald identity. It is
+  *near*-deterministic, not exact - the residual
+  `total_cholesterol - hdl_cholesterol - triglycerides/5 - ldl_cholesterol` has a
+  median of about
+  `r fmt(median(with(dat, total_cholesterol - hdl_cholesterol - triglycerides/5 - ldl_cholesterol), na.rm = TRUE), 1)`
+  mg/dL - so the model fits without complaint and simply becomes
+  uninterpretable.
+- **MAJOR collinearity between the blood pressures** (r = `r fmt(bp_r, 2)`; VIFs
+  `r vall("systolic_bp")` and `r vall("diastolic_bp")` with both in).
+- **MAJOR: the exposure of interest is plausibly downstream of the outcome.**
+  A steatotic liver leaks enzymes; GGT rises *because* of fatty liver at least as
+  much as the reverse. Every GGT-fatty-liver statement in a cross-sectional file
+  is uninterpretable causally, and the "predictor" framing invites students to
+  get this backwards.
+- **MINOR: near-separation risk only via interactions.** No main-effect term
+  separates. The thinnest cell is `r min(sparse_tab)` (female current smokers
+  with fatty liver, out of
+  `r sum(dat_model$sex == "Female" & dat_model$smoking_status == "Current")` female
+  current smokers). A `sex * smoking_status` interaction is therefore estimated
+  from almost nothing; the coefficients stay finite but the standard errors are
+  useless. Smoking is `r fmt(100 * mean(dat$sex[dat$smoking_status != "Never"] == "Male"), 0)`%
+  male in this file.
+- **MINOR: alcohol flips from exactly null to significantly protective on
+  adjustment** (`r ug("alcohol_g_per_week", 4)` to
+  `r g("alcohol_g_per_week", 4)`). Correct arithmetic, dangerous prose - a weak
+  student will write that alcohol protects the liver. The mechanism is masking by
+  BMI and sex, and the real explanation is under-reporting plus the fact that
+  ultrasound steatosis here is mostly non-alcoholic.
+- **MINOR: complete-case loss is small** - `r nrow(dat_model)` of `r nrow(dat)`
+  (`r fmt(100 * n_dropped / nrow(dat), 1)`%), from `regular_exercise`
+  (`r sum(is.na(dat$regular_exercise))` missing), `alcohol_g_per_week`
+  (`r sum(is.na(dat$alcohol_g_per_week))` missing) and one missing outcome. Events fall
+  from `r sum(dat_raw$fatty_liver, na.rm = TRUE)` to `r n_events`, which changes
+  nothing.
+- **MINOR: no medication, waist circumference, insulin or hepatitis serology.**
+  Residual confounding is certain, and BMI is a blunt proxy for the visceral
+  adiposity that actually drives steatosis.
+- The outcome is **not** a deterministic function of any shipped column: the
+  best single-variable discrimination is BMI, and even a BMI-only model reaches
+  Tjur's R-squared only
+  `r fmt(as.numeric(r2_tjur(glm(fatty_liver ~ bmi, data = dat_model, family = binomial))), 2)`.
