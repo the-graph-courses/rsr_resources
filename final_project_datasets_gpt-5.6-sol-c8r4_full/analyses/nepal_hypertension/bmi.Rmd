@@ -1,0 +1,550 @@
+---
+title: "Body mass index in adults aged 30 and over in Bharatpur, Nepal"
+subtitle: "Dataset 4: Nepal hypertension and cardiovascular risk-factor survey"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+library(sandwich)
+library(lmtest)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "nepal_hypertension.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+#
+# Deliberately EXCLUDED from the predictor set:
+#   systolic_bp, diastolic_bp, hypertension, bp_awareness,
+#   antihypertensive_drug - all of these sit DOWNSTREAM of body mass index.
+#                           Adiposity raises blood pressure, not the reverse, so
+#                           putting blood pressure on the right-hand side would
+#                           be adjusting for a consequence of the outcome.
+#   mets_min_per_week     - physical_activity is a deterministic cut of it at
+#                           600 MET-min/week, so only one of the pair may enter.
+#   cigarettes_per_week   - zero for every never-smoker, so it is smoking_status
+#                           re-expressed on a different scale.
+#   marital_status        - only 37 unmarried participants and largely a function
+#                           of age and sex.
+outcome    <- "bmi"
+predictors <- c("sex", "age_group", "education", "occupation",
+                "below_poverty_line", "smoking_status", "smokeless_tobacco",
+                "alcohol_last_month", "fruit_veg_servings", "salt_g_per_day",
+                "physical_activity", "family_history_htn")
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    sex = factor(sex, levels = c("female", "male"), labels = c("Female", "Male")),
+    # Youngest band is the reference so the age contrasts read upwards.
+    age_group = factor(age_group,
+                       levels = c("30_39", "40_49", "50_59", "60_plus"),
+                       labels = c("30-39", "40-49", "50-59", "60 or more")),
+    # No or informal schooling is both the largest group and the most deprived.
+    education = factor(education,
+                       levels = c("none_or_informal", "primary", "secondary", "higher"),
+                       labels = c("None or informal", "Primary", "Secondary", "Higher")),
+    # Household work is the largest occupational group.
+    occupation = factor(occupation,
+                        levels = c("household_work", "agriculture_or_labour",
+                                   "job_or_self_employed", "unemployed"),
+                        labels = c("Household work", "Agriculture or labour",
+                                   "Job or self-employed", "Unemployed")),
+    # Never-smoker is the clinically unexposed reference.
+    smoking_status = factor(smoking_status,
+                            levels = c("never", "former", "current"),
+                            labels = c("Never", "Former", "Current")),
+    # The more active group is the reference, so "Low" reads as the risk category.
+    physical_activity = factor(physical_activity,
+                               levels = c("moderate_or_high", "low"),
+                               labels = c("Moderate or high", "Low")),
+    across(c(below_poverty_line, smokeless_tobacco, alcohol_last_month,
+             family_history_htn, hypertension, bp_awareness, antihypertensive_drug),
+           \(x) factor(x, levels = c(0, 1), labels = c("No", "Yes")))
+  ) |>
+  labelled::set_variable_labels(
+    bmi                   = "Body mass index (kg/m2)",
+    sex                   = "Sex",
+    age_group             = "Age band (years)",
+    education             = "Education",
+    occupation            = "Main occupation",
+    below_poverty_line    = "Below poverty line",
+    smoking_status        = "Smoking status",
+    smokeless_tobacco     = "Smokeless tobacco use",
+    alcohol_last_month    = "Alcohol in the last month",
+    fruit_veg_servings    = "Fruit and vegetable servings per day",
+    salt_g_per_day        = "Salt intake (g/day)",
+    physical_activity     = "Physical activity level",
+    family_history_htn    = "Family history of hypertension"
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+```
+
+# Introduction
+
+This is a community-based cross-sectional survey of adults aged 30 years and
+over living in Bharatpur, Chitwan district, Nepal, run to estimate the
+prevalence of hypertension and its cardiovascular risk factors (Dhungana and
+colleagues, *PLOS ONE* 2016, e0185806). Height and weight were measured directly
+by trained enumerators rather than self-reported, and the WHO STEPS instrument
+supplied the behavioural and socio-economic information. Body mass index is
+worth analysing in its own right in this setting: Nepal is in the middle of a
+nutrition transition in which under- and over-nutrition coexist in the same
+communities, and the classical Western socio-economic gradient in adiposity
+(poorer people heavier) is often reversed in South Asia.
+
+**Aim.** Among adults aged 30 and over in Bharatpur, we examined which of sex,
+age band, education, occupation, poverty, smoking, smokeless tobacco, alcohol,
+fruit and vegetable intake, salt intake, physical activity and family history of
+hypertension are independently associated with body mass index, mutually
+adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** A cross-sectional survey of `r nrow(dat_raw)` adults aged 30
+years and over resident in Bharatpur Municipality, Chitwan, Nepal. The source
+study used multistage cluster sampling: four wards were selected at random and
+roughly 300 participants enrolled in each, with the sample size calculation
+assuming a design effect of 1.5. **The ward identifier is not present in this
+extract** (see Limitations). Each row is one participant.
+
+**Variables.** The outcome is `bmi`, measured body mass index in kg/m2.
+Predictors are sex (reference *Female*); age band in years (reference *30-39*;
+age was recorded only in four bands, so a per-year effect cannot be estimated);
+education (reference *None or informal*); main occupation (reference *Household
+work*); family income per head below the poverty line (reference *No*); smoking
+status (reference *Never*); current smokeless tobacco use (reference *No*); any
+alcohol in the last month (reference *No*); fruit and vegetable servings per
+day; estimated salt intake in g/day; physical activity level (reference
+*Moderate or high*); and family history of hypertension (reference *No*).
+
+Because body mass index is the outcome here it is of course not also a
+predictor, and -- less obviously -- neither are `systolic_bp`, `diastolic_bp`,
+`hypertension`, `bp_awareness` or `antihypertensive_drug`. Adiposity raises
+blood pressure, so blood pressure is a *consequence* of the outcome; conditioning
+on it would be adjusting for a mediator of everything upstream and would bias
+every remaining coefficient. This is the mirror image of the systolic and
+diastolic analyses in this catalogue, where `bmi` is a legitimate predictor.
+Two further pairs of variables measure the same construct twice and only one of
+each may enter a model: `physical_activity` is a deterministic cut of
+`mets_min_per_week` at 600 MET-minutes per week (the "Low" group spans 0-600 and
+"Moderate or high" spans 620-29,260), and the categorical version is used here
+because it is the WHO STEPS classification the source paper reports and because
+the continuous version is extremely right-skewed; and `cigarettes_per_week` is
+zero for every never-smoker, so `smoking_status` is used instead because it also
+separates former from never smokers.
+
+**Statistical analysis.** Linear regression via `lm()`, justified because the
+outcome is continuous. We fitted a univariable model for each predictor first,
+then a single multivariable model containing all of them. Predictors were chosen
+in advance on subject-matter grounds, not by significance. Significance
+threshold 0.05; estimates are reported with 95% confidence intervals.
+Assumptions were checked with `performance::check_model()` and
+`performance::check_heteroscedasticity()`. Analysis used `r R.version.string`
+with tidyverse, gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped). Every variable in this file is 100%
+complete, so listwise deletion removes
+`r if (n_dropped == 0) "no rows at all" else paste(n_dropped, "rows")` and there
+is no missing-data story: no imputation, no complete-case selection bias.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(
+    missing = "no"
+  ) |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics.**")
+```
+
+```{r table-one-numbers}
+bmi_mean <- mean(dat_model$bmi)
+bmi_sd   <- sd(dat_model$bmi)
+pct_over23 <- round(100 * mean(dat_model$bmi >= 23), 1)
+pct_over275 <- round(100 * mean(dat_model$bmi >= 27.5), 1)
+pct_under185 <- round(100 * mean(dat_model$bmi < 18.5), 1)
+pct_female <- round(100 * mean(dat_model$sex == "Female"), 1)
+```
+
+Mean body mass index was `r round(bmi_mean, 1)` kg/m2 (SD `r round(bmi_sd, 1)`),
+with a mildly right-skewed distribution running from 13.4 to 41.7 kg/m2. Using
+the WHO Asian action points, `r pct_over23`% of the sample is at or above 23
+kg/m2 and `r pct_over275`% at or above 27.5 kg/m2, while `r pct_under185`% are
+below 18.5 kg/m2 -- the coexistence of under- and over-nutrition that
+characterises the Nepali nutrition transition. The sample is `r pct_female`%
+female, a consequence of daytime household recruitment in the source survey.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 3. Body mass index by age band and sex. Dashed lines mark the WHO Asian action points of 23 and 27.5 kg/m2."}
+dat_model |>
+  ggplot(aes(age_group, bmi, fill = sex)) +
+  geom_violin(alpha = 0.5, position = position_dodge(width = 0.85),
+              trim = TRUE, colour = NA) +
+  geom_boxplot(width = 0.18, position = position_dodge(width = 0.85),
+               outlier.alpha = 0.3, alpha = 0.9) +
+  geom_hline(yintercept = c(23, 27.5), linetype = "dashed") +
+  scale_fill_viridis_d(option = "D", end = 0.75) +
+  labs(x = "Age band (years)", y = "Body mass index (kg/m2)", fill = "Sex",
+       caption = "Dashed lines: WHO Asian action points at 23 and 27.5 kg/m2")
+```
+
+Body mass index is remarkably flat across the age bands until the oldest group,
+where it drops by about a kilogram per square metre in both sexes, and women sit
+slightly above men at every age -- so unlike blood pressure, adiposity in this
+population is not primarily an age story.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+```
+
+```{r uv-numbers}
+uv_fit <- function(v) lm(reformulate(v, outcome), data = dat_model) |> tidy(conf.int = TRUE)
+u_sex   <- uv_fit("sex") |> filter(term == "sexMale")
+u_age60 <- uv_fit("age_group") |> filter(term == "age_group60 or more")
+u_pov   <- uv_fit("below_poverty_line") |> filter(term == "below_poverty_lineYes")
+u_cur   <- uv_fit("smoking_status") |> filter(term == "smoking_statusCurrent")
+u_form  <- uv_fit("smoking_status") |> filter(term == "smoking_statusFormer")
+u_smok  <- uv_fit("smokeless_tobacco") |> filter(term == "smokeless_tobaccoYes")
+u_fam   <- uv_fit("family_history_htn") |> filter(term == "family_history_htnYes")
+u_fv    <- uv_fit("fruit_veg_servings") |> filter(term == "fruit_veg_servings")
+u_alc   <- uv_fit("alcohol_last_month") |> filter(term == "alcohol_last_monthYes")
+u_agri  <- uv_fit("occupation") |> filter(term == "occupationAgriculture or labour")
+u_job   <- uv_fit("occupation") |> filter(term == "occupationJob or self-employed")
+u_pa    <- uv_fit("physical_activity") |> filter(term == "physical_activityLow")
+u_salt  <- uv_fit("salt_g_per_day") |> filter(term == "salt_g_per_day")
+```
+
+The crude associations are all small. The largest is **family history of
+hypertension**, whose presence is associated with a `r round(u_fam$estimate, 2)`
+kg/m2 higher body mass index (95% CI `r round(u_fam$conf.low, 2)` to
+`r round(u_fam$conf.high, 2)`, p `r format.pval(u_fam$p.value, digits = 2, eps = 0.001)`)
+-- plausible, since familial hypertension and familial adiposity share both
+genes and household food environment. **Current smoking** is associated with a
+`r round(u_cur$estimate, 2)` kg/m2 *lower* BMI (95% CI
+`r round(u_cur$conf.low, 2)` to `r round(u_cur$conf.high, 2)`), and **smokeless
+tobacco** with `r round(u_smok$estimate, 2)` kg/m2 (95% CI
+`r round(u_smok$conf.low, 2)` to `r round(u_smok$conf.high, 2)`), both familiar
+findings. **Poverty** is associated with `r round(u_pov$estimate, 2)` kg/m2
+(95% CI `r round(u_pov$conf.low, 2)` to `r round(u_pov$conf.high, 2)`) -- the
+South Asian direction, in which the poor are thinner, the opposite of the
+high-income-country gradient. Men average `r round(u_sex$estimate, 2)` kg/m2
+below women, and the oldest band averages `r round(u_age60$estimate, 2)` kg/m2
+below the 30-39 band. Salt intake is flat (`r round(u_salt$estimate, 3)` kg/m2
+per g/day) and, notably, so is **low physical activity**
+(`r round(u_pa$estimate, 3)` kg/m2, 95% CI `r round(u_pa$conf.low, 2)` to
+`r round(u_pa$conf.high, 2)`, p = `r round(u_pa$p.value, 2)`), which is not what
+one would predict and is the first sign that the behavioural variables in this
+file carry little information about adiposity.
+
+## Why adjustment is needed
+
+The crude estimates above are entangled through two variables in particular.
+**Sex** is the main one, because every tobacco and alcohol variable in this
+dataset is strongly sex-patterned while sex is itself associated with BMI:
+`r round(100 * mean(dat_model$smoking_status[dat_model$sex == "Male"] == "Current"), 0)`%
+of men are current smokers against
+`r round(100 * mean(dat_model$smoking_status[dat_model$sex == "Female"] == "Current"), 0)`%
+of women, and
+`r round(100 * mean(dat_model$alcohol_last_month[dat_model$sex == "Male"] == "Yes"), 0)`%
+of men drank in the last month against
+`r round(100 * mean(dat_model$alcohol_last_month[dat_model$sex == "Female"] == "Yes"), 0)`%
+of women, while men average `r abs(round(u_sex$estimate, 2))` kg/m2 less than
+women. A crude "smoking lowers BMI" coefficient therefore contains a large "being
+male lowers BMI" component. **Occupation** is the second, and it is confounded
+with sex in an extreme way in this sample: 595 of the 659 people doing household
+work are women, whereas paid employment is `r round(100 * mean(dat_model$sex[dat_model$occupation == "Job or self-employed"] == "Male"), 0)`%
+male. Occupation is also a proxy for both physical exertion at work and
+household income, both of which act on BMI. **Age band** plays a third, smaller
+role: BMI falls in the oldest band while smoking cessation, low education and
+low physical activity all rise with age, so crude coefficients for those
+variables absorb some of the age-related weight loss. Mutual adjustment is
+needed to tell these apart.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+```
+
+```{r fit-stats}
+gl <- glance(fit)
+tibble(
+  Statistic = c("R-squared", "Adjusted R-squared", "Residual SD (kg/m2)",
+                "Observations", "Model parameters (incl. intercept)",
+                "Observations per parameter"),
+  Value = c(round(gl$r.squared, 3), round(gl$adj.r.squared, 3),
+            round(sigma(fit), 2), nobs(fit), length(coef(fit)),
+            round(nobs(fit) / length(coef(fit)), 1))
+) |>
+  gt() |>
+  tab_header(title = "Model fit")
+```
+
+```{r mv-numbers}
+tid <- tidy(fit, conf.int = TRUE)
+g <- function(t) tid |> filter(term == t)
+m_sex   <- g("sexMale")
+m_age60 <- g("age_group60 or more")
+m_pov   <- g("below_poverty_lineYes")
+m_cur   <- g("smoking_statusCurrent")
+m_form  <- g("smoking_statusFormer")
+m_smok  <- g("smokeless_tobaccoYes")
+m_fam   <- g("family_history_htnYes")
+m_fv    <- g("fruit_veg_servings")
+m_alc   <- g("alcohol_last_monthYes")
+m_agri  <- g("occupationAgriculture or labour")
+m_job   <- g("occupationJob or self-employed")
+m_pa    <- g("physical_activityLow")
+m_salt  <- g("salt_g_per_day")
+```
+
+The model explains `r round(100 * gl$r.squared, 1)`% of the variance in body
+mass index (adjusted R-squared `r round(gl$adj.r.squared, 3)`), so more than 90%
+of the variation between these adults is unexplained by twelve
+socio-demographic and behavioural characteristics. That is the headline result
+and it is a real one, not a technical failure: this predictor set simply does
+not contain the determinants of adiposity. There are `r nobs(fit)` observations
+for `r length(coef(fit))` parameters
+(`r round(nobs(fit) / length(coef(fit)), 1)` per parameter), so the weak fit is
+not an overfitting artefact.
+
+Conditional on the other eleven predictors, **family history of hypertension**
+remains the largest effect at `r round(m_fam$estimate, 2)` kg/m2 (95% CI
+`r round(m_fam$conf.low, 2)` to `r round(m_fam$conf.high, 2)`, p
+`r format.pval(m_fam$p.value, digits = 2, eps = 0.001)`). **Current smokers**
+average `r round(m_cur$estimate, 2)` kg/m2 below never-smokers (95% CI
+`r round(m_cur$conf.low, 2)` to `r round(m_cur$conf.high, 2)`), **smokeless
+tobacco users** `r round(m_smok$estimate, 2)` kg/m2 below non-users (95% CI
+`r round(m_smok$conf.low, 2)` to `r round(m_smok$conf.high, 2)`), and people
+**below the poverty line** `r round(m_pov$estimate, 2)` kg/m2 below those above
+it (95% CI `r round(m_pov$conf.low, 2)` to `r round(m_pov$conf.high, 2)`).
+Participants in **paid employment or self-employment** average
+`r round(m_job$estimate, 2)` kg/m2 above those doing household work (95% CI
+`r round(m_job$conf.low, 2)` to `r round(m_job$conf.high, 2)`), and the **oldest
+band** `r round(m_age60$estimate, 2)` kg/m2 below the youngest (95% CI
+`r round(m_age60$conf.low, 2)` to `r round(m_age60$conf.high, 2)`). Every one of
+these is under one and a half kg/m2 -- roughly 4 kg for an adult of average
+height -- so even the "significant" findings are modest.
+
+Physical activity is the striking null: low activity is associated with
+`r round(m_pa$estimate, 2)` kg/m2 (95% CI `r round(m_pa$conf.low, 2)` to
+`r round(m_pa$conf.high, 2)`, p = `r round(m_pa$p.value, 2)`), pointing in the
+wrong direction of nothing at all. Salt (`r round(m_salt$estimate, 3)` kg/m2 per
+g/day) and education (all categories p > 0.2) are equally flat.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+Three predictors move meaningfully and all three move toward the null. **Sex**
+goes from `r round(u_sex$estimate, 2)` kg/m2 crude (95% CI
+`r round(u_sex$conf.low, 2)` to `r round(u_sex$conf.high, 2)`, p =
+`r round(u_sex$p.value, 3)`) to `r round(m_sex$estimate, 2)` kg/m2 adjusted
+(95% CI `r round(m_sex$conf.low, 2)` to `r round(m_sex$conf.high, 2)`, p =
+`r round(m_sex$p.value, 2)`) and loses significance: about a third of the crude
+male--female difference in BMI is really the fact that men smoke, chew tobacco
+and work outside the home. **Smokeless tobacco** shrinks from
+`r round(u_smok$estimate, 2)` to `r round(m_smok$estimate, 2)` kg/m2, a
+`r round(100 * (1 - m_smok$estimate / u_smok$estimate))`% reduction, and only
+just keeps significance (p = `r round(m_smok$p.value, 3)`), for the same reason.
+**Fruit and vegetable servings** moves from `r round(u_fv$estimate, 3)` kg/m2
+per serving crude (p = `r round(u_fv$p.value, 3)`) to `r round(m_fv$estimate, 3)`
+adjusted (p = `r round(m_fv$p.value, 2)`), crossing from significant to not.
+**Occupation in agriculture or labour** likewise falls from
+`r round(u_agri$estimate, 2)` kg/m2 (p = `r round(u_agri$p.value, 3)`) to
+`r round(m_agri$estimate, 2)` (p = `r round(m_agri$p.value, 2)`), confirming that
+the crude occupational gradient was mostly sex.
+
+One predictor flips sign. **Alcohol in the last month** is
+`r round(u_alc$estimate, 2)` kg/m2 crude (95% CI `r round(u_alc$conf.low, 2)` to
+`r round(u_alc$conf.high, 2)`, p = `r round(u_alc$p.value, 2)`) but
+`r round(m_alc$estimate, 2)` kg/m2 adjusted (95% CI
+`r round(m_alc$conf.low, 2)` to `r round(m_alc$conf.high, 2)`, p =
+`r round(m_alc$p.value, 2)`) -- neither estimate significant, but the direction
+reverses because drinkers are overwhelmingly male and men are lighter; once sex
+is held fixed, alcohol's own calorie contribution shows through. This is textbook
+negative confounding, and worth pointing out precisely because neither estimate
+is significant: sign changes are not confined to significant coefficients.
+
+Two predictors barely move. **Family history of hypertension** goes from
+`r round(u_fam$estimate, 2)` to `r round(m_fam$estimate, 2)` kg/m2 (a shift of
+under 5%) and stays highly significant, which is what one expects of a variable
+essentially unrelated to the others in the model. **Low physical activity** goes
+from `r round(u_pa$estimate, 3)` to `r round(m_pa$estimate, 3)` kg/m2 and is null
+throughout. The maximum variance inflation factor is
+`r round(max(check_collinearity(fit)$VIF), 2)`, so none of these movements
+reflect collinearity; they are confounding by sex, occupation and age.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r het}
+het <- check_heteroscedasticity(fit)
+het_p <- as.numeric(het)
+het_ok <- het_p >= 0.05
+rob <- coeftest(fit, vcov = vcovHC(fit, type = "HC3"))
+keep <- c("sexMale", "age_group60 or more", "below_poverty_lineYes",
+          "smoking_statusCurrent", "smokeless_tobaccoYes", "family_history_htnYes")
+tibble(
+  Term = keep,
+  Estimate = round(rob[keep, "Estimate"], 3),
+  `SE (OLS)` = round(summary(fit)$coefficients[keep, "Std. Error"], 3),
+  `SE (HC3)` = round(rob[keep, "Std. Error"], 3),
+  `p (OLS)` = format.pval(summary(fit)$coefficients[keep, "Pr(>|t|)"], digits = 2, eps = 0.001),
+  `p (HC3)` = format.pval(rob[keep, "Pr(>|t|)"], digits = 2, eps = 0.001)
+) |>
+  gt() |>
+  tab_header(title = "HC3 standard errors, shown for completeness",
+             subtitle = "Heteroscedasticity was NOT flagged for this model")
+```
+
+The **homogeneity of variance** panel is the one that matters most for a linear
+model and here it passes: `check_heteroscedasticity()` returns p =
+`r round(het_p, 3)`, so constant error variance is a defensible assumption and
+robust standard errors are not required. They are shown above anyway for
+comparison and, as expected when the assumption holds, they are almost identical
+to the ordinary ones. The **posterior-predictive check** shows the model
+tracking the centre of the BMI distribution while under-predicting the right
+tail, because BMI is right-skewed and a linear model with additive terms
+generates a symmetric predictive distribution; the **normality of residuals**
+panel says the same thing, with a clear upward departure in the upper QQ tail
+(`check_normality()` flags it at p < 0.001). Neither is a serious threat with
+`r nobs(fit)` observations, but it does mean prediction intervals for individuals
+would be wrong even though the coefficient estimates are fine. The **linearity**
+panel is flat. **Collinearity** is unproblematic despite the strong sex--occupation
+association: maximum VIF `r round(max(check_collinearity(fit)$VIF), 2)`.
+**Influential observations** shows the handful of participants with BMI above 40
+approaching but not crossing the Cook's distance contour. The real diagnostic
+problem is not in these panels at all: it is that adjusted R-squared is
+`r round(gl$adj.r.squared, 3)`, so the model is a poor description of adiposity
+whatever its assumptions.
+
+# Discussion
+
+Body mass index in these Bharatpur adults is barely predicted by the
+socio-demographic and behavioural variables collected in a STEPS survey. The
+associations that survive adjustment are all small and mostly point the way
+South Asian nutrition-transition literature would predict: people below the
+poverty line are lighter, not heavier (`r round(m_pov$estimate, 2)` kg/m2);
+tobacco users of both kinds are lighter; people in paid employment are heavier
+than those doing household work; and BMI declines in the oldest band. Family
+history of hypertension carries the largest single association at
+`r round(m_fam$estimate, 2)` kg/m2, consistent with shared familial and
+household determinants of cardiometabolic risk. Physical activity, salt, fruit
+and vegetables and education are all null. In practical terms, the message is
+that adiposity in this population is not readily explained by, or targeted
+through, the behaviours this instrument measures.
+
+**Limitations.** The dominant limitation is the **weak model**: adjusted
+R-squared `r round(gl$adj.r.squared, 3)` means that essentially nothing here
+explains BMI, and the most important determinants -- total energy intake, dietary
+composition beyond fruit and vegetable servings, sedentary time, parity and
+menopausal status in women, genetics -- are simply not measured. Second, the
+**cluster sampling cannot be accounted for**: only four wards were randomly
+selected with around 300 participants each and a design effect of 1.5 assumed in
+the sample size calculation, but this extract contains no ward identifier, so all
+confidence intervals above are too narrow (plausibly by around 20%) and cannot be
+corrected. Estimates from four clusters cannot be generalised to Nepal or even to
+all of Bharatpur. Third, **age is available only in four bands**, so no per-year
+change in BMI can be estimated and the top band is open-ended. Fourth, this is
+cross-sectional, so the smoking and tobacco coefficients cannot be read causally:
+low body weight may lead to continued smoking as much as the reverse, and people
+who gain weight may quit. Fifth, `physical_activity` is a crude binary derived
+from a self-reported MET score with well-known over-reporting problems, which may
+explain its complete lack of association. Sixth, BMI itself does not distinguish
+fat from lean mass and performs poorly in South Asian populations, where
+cardiometabolic risk begins at lower BMI values -- waist circumference would have
+been a better outcome but is not in this extract. On the credit side, **the file
+has no missing data at all** (all `r nrow(dat_raw)` rows complete on all
+`r ncol(dat_raw)` variables), and height and weight were measured rather than
+self-reported, so the outcome itself is of good quality.
+
+**Future work.** Repeat with waist circumference or waist-to-height ratio as the
+outcome, add dietary energy intake and sedentary time, and refit with the ward
+identifier as a random effect.
+
+# Feasibility notes
+
+*Not part of a student report.*
+
+- **Technically clean but substantively thin.** Complete data, a well-behaved
+  continuous outcome, homoscedastic residuals (p = `r round(het_p, 3)`), maximum
+  VIF `r round(max(check_collinearity(fit)$VIF), 2)`, `r nobs(fit)` rows over
+  `r length(coef(fit))` parameters. The problem is that adjusted R-squared is
+  `r round(gl$adj.r.squared, 3)` -- this predictor set does not explain BMI.
+- **Set expectations in the brief.** A student who equates a good report with a
+  high R-squared will conclude they have done something wrong. The teaching
+  value is the opposite: this is what an honest, well-conducted, largely null
+  Purpose 3 analysis looks like.
+- **BMI is a predictor in the other files in this dataset and the outcome here.**
+  It must be dropped from the predictor set in this file, and blood pressure
+  (`systolic_bp`, `diastolic_bp`, `hypertension`, `bp_awareness`,
+  `antihypertensive_drug`) must *not* be added as predictors: BP is downstream
+  of adiposity, so conditioning on it adjusts away the very pathway of interest.
+  This is the single most likely student error in this file, and it is seductive
+  because adding systolic BP would roughly triple R-squared.
+- **Deterministic twins.** `physical_activity` is exactly
+  `mets_min_per_week <= 600`; `cigarettes_per_week` is zero for all
+  never-smokers. Never both.
+- **The interesting stories are counter-intuitive.** Poverty is associated with
+  *lower* BMI, and physical activity with nothing at all. Both are correct for
+  this setting but will read as errors to students trained on Western data, so
+  they need framing.
+- **One genuine sign flip** (alcohol, `r round(u_alc$estimate, 2)` crude to
+  `r round(m_alc$estimate, 2)` adjusted) makes this a good file for teaching
+  negative confounding, though neither estimate is significant.
+- **No ward identifier**, so the assumed design effect of 1.5 cannot be
+  honoured; standard errors are too narrow throughout.
+- **Age in bands only**, so no per-year BMI trajectory is estimable.
+- **Residual non-normality** from the right tail of BMI is flagged and will
+  worry students unnecessarily; it does not threaten the coefficients at this
+  sample size.

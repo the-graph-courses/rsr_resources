@@ -1,0 +1,501 @@
+id,age_group,sex,marital_status,education_level,employment_status,household_size,gp_visits_past_year,health_professional_in_family,knowledge_score,adequate_knowledge,self_medication
+1,>65,male,divorced_widowed,primary,pensioner,1-3,more than 10,0,2,0,1
+2,18-24,male,single,secondary,unemployed,3-5,1-4,0,2,0,1
+3,>65,female,divorced_widowed,primary,pensioner,more than 5,more than 10,1,4,0,1
+4,25-34,female,single,tertiary,employed,1-3,0,0,4,0,1
+5,>65,female,divorced_widowed,secondary,pensioner,1-3,1-4,0,4,0,1
+6,45-54,male,single,secondary,employed,1-3,1-4,0,4,0,1
+7,45-54,male,married,secondary,employed,3-5,0,0,4,0,1
+8,>65,female,divorced_widowed,primary,pensioner,1-3,1-4,1,4,0,0
+9,>65,female,divorced_widowed,primary,pensioner,3-5,5-10,0,4,0,1
+10,>65,female,divorced_widowed,secondary,pensioner,more than 5,1-4,0,4,0,0
+11,>65,female,divorced_widowed,secondary,pensioner,1-3,more than 10,0,4,0,1
+12,45-54,male,married,secondary,employed,3-5,0,0,4,0,0
+13,>65,female,divorced_widowed,secondary,pensioner,1-3,more than 10,0,4,0,1
+14,>65,male,divorced_widowed,primary,unemployed,1-3,5-10,0,5,0,1
+15,>65,female,married,secondary,unemployed,3-5,1-4,0,5,0,1
+16,>65,male,married,secondary,pensioner,1-3,0,0,5,0,1
+17,>65,female,married,secondary,unemployed,3-5,1-4,0,5,0,1
+18,>65,male,married,secondary,pensioner,1-3,more than 10,0,5,0,0
+19,>65,male,divorced_widowed,primary,pensioner,1-3,1-4,0,5,0,0
+20,55-64,male,married,tertiary,employed,3-5,5-10,0,5,0,1
+21,>65,female,divorced_widowed,primary,pensioner,1-3,5-10,0,5,0,1
+22,55-64,male,single,secondary,employed,1-3,1-4,0,5,0,1
+23,45-54,female,single,secondary,employed,1-3,0,0,5,0,1
+24,45-54,male,divorced_widowed,secondary,employed,more than 5,0,0,5,0,0
+25,45-54,female,single,secondary,employed,1-3,more than 10,0,5,0,1
+26,>65,female,divorced_widowed,primary,pensioner,3-5,1-4,0,5,0,1
+27,25-34,female,married,tertiary,employed,1-3,1-4,0,5,0,1
+28,>65,male,married,primary,unemployed,3-5,1-4,0,6,0,1
+29,>65,female,divorced_widowed,primary,unemployed,3-5,5-10,0,6,0,1
+30,55-64,male,married,secondary,employed,3-5,0,0,6,0,1
+31,>65,female,divorced_widowed,primary,pensioner,3-5,1-4,0,6,0,1
+32,45-54,female,married,secondary,unemployed,3-5,1-4,0,6,0,1
+33,35-44,male,married,secondary,employed,3-5,0,0,6,0,1
+34,>65,male,divorced_widowed,secondary,unemployed,1-3,1-4,0,6,0,1
+35,55-64,male,married,secondary,employed,3-5,0,0,6,0,1
+36,>65,female,divorced_widowed,primary,pensioner,3-5,more than 10,0,6,0,1
+37,55-64,female,divorced_widowed,secondary,unemployed,1-3,1-4,0,6,0,1
+38,25-34,female,single,secondary,employed,1-3,1-4,0,6,0,0
+39,25-34,female,married,tertiary,unemployed,1-3,1-4,0,6,0,0
+40,45-54,female,married,secondary,employed,3-5,1-4,0,6,0,1
+41,>65,female,married,secondary,pensioner,3-5,1-4,1,6,0,0
+42,>65,female,divorced_widowed,secondary,pensioner,1-3,more than 10,0,6,0,1
+43,>65,male,divorced_widowed,secondary,pensioner,1-3,5-10,0,6,0,1
+44,>65,male,married,secondary,pensioner,more than 5,1-4,0,6,0,1
+45,>65,female,married,secondary,pensioner,1-3,more than 10,0,6,0,0
+46,45-54,female,divorced_widowed,secondary,pensioner,3-5,0,0,6,0,1
+47,45-54,female,married,primary,employed,3-5,5-10,0,6,0,1
+48,45-54,female,married,secondary,employed,1-3,0,0,6,0,1
+49,>65,male,divorced_widowed,primary,pensioner,1-3,more than 10,0,6,0,0
+50,25-34,female,married,tertiary,employed,1-3,1-4,1,6,0,1
+51,35-44,male,married,secondary,employed,1-3,1-4,1,6,0,1
+52,>65,male,married,tertiary,pensioner,1-3,more than 10,1,6,0,0
+53,55-64,male,single,secondary,pensioner,1-3,1-4,0,6,0,0
+54,35-44,female,married,secondary,unemployed,more than 5,0,0,6,0,0
+55,45-54,female,single,secondary,unemployed,1-3,more than 10,0,6,0,1
+56,25-34,male,married,primary,employed,1-3,1-4,0,7,0,1
+57,>65,male,divorced_widowed,secondary,pensioner,1-3,1-4,0,7,0,1
+58,>65,female,divorced_widowed,secondary,pensioner,1-3,1-4,0,7,0,1
+59,35-44,male,single,secondary,employed,1-3,1-4,0,7,0,1
+60,>65,female,divorced_widowed,primary,pensioner,3-5,1-4,0,7,0,1
+61,55-64,male,married,secondary,employed,3-5,1-4,0,7,0,0
+62,>65,female,divorced_widowed,primary,pensioner,1-3,more than 10,0,7,0,0
+63,25-34,female,single,tertiary,employed,3-5,0,0,7,0,1
+64,>65,male,married,tertiary,employed,3-5,1-4,1,7,0,1
+65,>65,male,married,secondary,pensioner,1-3,5-10,0,7,0,0
+66,>65,male,divorced_widowed,secondary,pensioner,1-3,1-4,0,7,0,1
+67,55-64,male,divorced_widowed,secondary,pensioner,1-3,0,0,7,0,1
+68,>65,male,married,secondary,employed,1-3,more than 10,0,7,0,1
+69,45-54,male,married,secondary,unemployed,3-5,0,1,7,0,1
+70,55-64,female,married,secondary,unemployed,1-3,1-4,1,7,0,1
+71,45-54,female,married,tertiary,employed,3-5,1-4,0,7,0,1
+72,>65,female,divorced_widowed,primary,pensioner,1-3,1-4,0,7,0,1
+73,25-34,female,single,tertiary,unemployed,1-3,1-4,0,7,0,1
+74,>65,female,divorced_widowed,secondary,pensioner,1-3,more than 10,0,7,0,1
+75,35-44,male,married,secondary,unemployed,3-5,0,0,7,0,1
+76,35-44,female,married,secondary,employed,3-5,5-10,0,7,0,1
+77,45-54,female,married,secondary,unemployed,1-3,1-4,0,7,0,0
+78,25-34,female,married,tertiary,unemployed,1-3,5-10,0,7,0,1
+79,55-64,female,divorced_widowed,secondary,employed,more than 5,1-4,0,7,0,0
+80,55-64,female,married,tertiary,pensioner,3-5,1-4,1,7,0,0
+81,55-64,male,married,secondary,employed,more than 5,1-4,0,7,0,1
+82,45-54,female,married,tertiary,employed,more than 5,0,0,7,0,1
+83,25-34,male,single,secondary,unemployed,1-3,1-4,0,7,0,1
+84,35-44,female,married,secondary,employed,more than 5,1-4,0,7,0,1
+85,>65,male,divorced_widowed,tertiary,pensioner,more than 5,5-10,0,7,0,1
+86,18-24,male,single,secondary,unemployed,1-3,0,0,7,0,1
+87,25-34,female,married,tertiary,employed,more than 5,1-4,1,7,0,1
+88,25-34,female,single,secondary,unemployed,3-5,0,0,7,0,1
+89,>65,male,married,secondary,unemployed,1-3,1-4,1,7,0,1
+90,55-64,female,divorced_widowed,secondary,employed,1-3,5-10,0,7,0,0
+91,>65,female,divorced_widowed,secondary,pensioner,1-3,1-4,1,7,0,1
+92,55-64,male,married,tertiary,employed,1-3,1-4,1,7,0,1
+93,25-34,female,married,secondary,employed,1-3,5-10,0,7,0,1
+94,>65,male,divorced_widowed,secondary,pensioner,1-3,5-10,1,7,0,1
+95,35-44,female,married,tertiary,employed,3-5,0,0,7,0,1
+96,>65,male,divorced_widowed,secondary,pensioner,1-3,more than 10,0,7,0,1
+97,55-64,male,married,secondary,employed,1-3,0,0,7,0,0
+98,35-44,female,married,secondary,employed,more than 5,1-4,0,7,0,1
+99,25-34,female,single,secondary,unemployed,1-3,0,0,7,0,0
+100,>65,female,divorced_widowed,secondary,pensioner,1-3,5-10,0,7,0,0
+101,25-34,male,single,secondary,unemployed,3-5,0,0,7,0,1
+102,55-64,male,married,tertiary,employed,1-3,1-4,0,7,0,1
+103,>65,male,married,primary,employed,3-5,5-10,0,7,0,1
+104,>65,male,divorced_widowed,secondary,pensioner,1-3,more than 10,0,7,0,0
+105,>65,female,divorced_widowed,secondary,pensioner,1-3,more than 10,0,7,0,1
+106,>65,female,divorced_widowed,secondary,pensioner,3-5,1-4,0,7,0,0
+107,25-34,male,married,secondary,employed,1-3,5-10,0,7,0,1
+108,>65,male,married,secondary,unemployed,1-3,more than 10,0,7,0,1
+109,>65,female,divorced_widowed,secondary,pensioner,1-3,1-4,0,7,0,1
+110,>65,female,divorced_widowed,secondary,pensioner,1-3,more than 10,1,7,0,1
+111,>65,female,divorced_widowed,secondary,pensioner,1-3,1-4,0,7,0,1
+112,45-54,male,married,secondary,unemployed,3-5,0,0,7,0,0
+113,35-44,female,married,secondary,employed,more than 5,1-4,0,7,0,0
+114,55-64,female,divorced_widowed,secondary,pensioner,1-3,1-4,0,7,0,1
+115,55-64,female,married,secondary,pensioner,1-3,1-4,0,7,0,0
+116,18-24,female,single,primary,unemployed,1-3,0,0,8,0,0
+117,18-24,female,single,primary,unemployed,1-3,0,0,8,0,0
+118,>65,male,divorced_widowed,primary,pensioner,1-3,1-4,0,8,0,1
+119,55-64,female,divorced_widowed,secondary,unemployed,3-5,1-4,0,8,0,1
+120,55-64,female,divorced_widowed,secondary,pensioner,1-3,more than 10,0,8,0,0
+121,45-54,male,married,tertiary,employed,3-5,0,1,8,0,0
+122,45-54,female,single,secondary,unemployed,1-3,1-4,0,8,0,1
+123,55-64,female,married,secondary,unemployed,1-3,1-4,0,8,0,1
+124,55-64,male,married,secondary,employed,1-3,0,0,8,0,1
+125,55-64,male,married,secondary,pensioner,1-3,more than 10,0,8,0,0
+126,45-54,male,married,secondary,employed,3-5,0,1,8,0,0
+127,35-44,male,married,tertiary,employed,3-5,1-4,0,8,0,0
+128,55-64,female,married,secondary,employed,3-5,1-4,0,8,0,1
+129,45-54,female,single,secondary,employed,1-3,1-4,0,8,0,0
+130,55-64,female,married,tertiary,pensioner,3-5,0,0,8,0,1
+131,>65,female,divorced_widowed,primary,pensioner,1-3,1-4,1,8,0,1
+132,25-34,female,married,tertiary,unemployed,3-5,0,0,8,0,1
+133,>65,male,married,secondary,pensioner,3-5,0,0,8,0,1
+134,>65,female,divorced_widowed,primary,pensioner,more than 5,more than 10,1,8,0,0
+135,55-64,female,married,secondary,unemployed,1-3,1-4,0,8,0,0
+136,25-34,female,married,tertiary,employed,1-3,1-4,0,8,0,0
+137,>65,female,divorced_widowed,secondary,pensioner,1-3,more than 10,1,8,0,0
+138,55-64,female,married,secondary,unemployed,1-3,5-10,1,8,0,1
+139,55-64,female,divorced_widowed,primary,pensioner,1-3,5-10,1,8,0,0
+140,25-34,female,married,secondary,employed,1-3,0,1,8,0,1
+141,45-54,male,married,secondary,employed,1-3,1-4,0,8,0,1
+142,35-44,female,single,tertiary,employed,1-3,5-10,0,8,0,1
+143,45-54,male,married,tertiary,unemployed,3-5,5-10,0,8,0,1
+144,55-64,male,married,secondary,pensioner,more than 5,more than 10,0,8,0,1
+145,35-44,male,married,secondary,unemployed,1-3,more than 10,0,8,0,0
+146,35-44,female,single,tertiary,employed,3-5,1-4,0,8,0,0
+147,>65,female,married,tertiary,pensioner,3-5,5-10,0,8,0,0
+148,>65,male,married,secondary,pensioner,more than 5,5-10,1,8,0,0
+149,>65,male,divorced_widowed,tertiary,pensioner,more than 5,5-10,0,8,0,1
+150,35-44,female,married,secondary,employed,1-3,0,1,8,0,1
+151,45-54,male,married,tertiary,employed,3-5,1-4,1,8,0,1
+152,35-44,female,single,secondary,unemployed,1-3,5-10,0,8,0,1
+153,45-54,male,married,tertiary,employed,3-5,1-4,0,8,0,1
+154,>65,male,divorced_widowed,secondary,pensioner,1-3,5-10,0,8,0,0
+155,45-54,female,married,tertiary,employed,more than 5,0,0,8,0,1
+156,25-34,male,single,secondary,unemployed,1-3,0,0,8,0,0
+157,35-44,male,married,secondary,employed,3-5,1-4,0,8,0,1
+158,55-64,female,married,secondary,pensioner,3-5,5-10,0,8,0,0
+159,25-34,male,divorced_widowed,secondary,employed,1-3,1-4,0,8,0,0
+160,45-54,female,divorced_widowed,secondary,employed,more than 5,1-4,0,8,0,1
+161,45-54,male,married,tertiary,employed,1-3,1-4,0,8,0,1
+162,>65,male,married,secondary,pensioner,1-3,1-4,1,8,0,1
+163,45-54,male,married,secondary,employed,more than 5,5-10,0,8,0,0
+164,45-54,female,married,secondary,pensioner,1-3,5-10,1,8,0,0
+165,>65,female,divorced_widowed,secondary,unemployed,1-3,5-10,0,8,0,0
+166,45-54,male,married,tertiary,employed,3-5,0,0,8,0,1
+167,18-24,female,single,tertiary,unemployed,3-5,0,0,8,0,1
+168,>65,male,married,tertiary,pensioner,1-3,5-10,0,8,0,1
+169,45-54,female,married,secondary,unemployed,3-5,1-4,0,8,0,1
+170,25-34,male,single,tertiary,unemployed,more than 5,1-4,0,8,0,0
+171,25-34,male,married,secondary,unemployed,3-5,0,0,8,0,0
+172,>65,female,divorced_widowed,primary,pensioner,1-3,5-10,1,8,0,0
+173,45-54,male,married,secondary,employed,1-3,1-4,1,8,0,1
+174,>65,female,divorced_widowed,secondary,pensioner,1-3,more than 10,0,8,0,1
+175,45-54,female,married,secondary,employed,3-5,1-4,1,8,0,1
+176,>65,female,divorced_widowed,primary,unemployed,1-3,1-4,0,8,0,1
+177,35-44,male,divorced_widowed,secondary,employed,1-3,5-10,0,8,0,1
+178,55-64,female,married,secondary,employed,3-5,1-4,0,8,0,1
+179,35-44,female,single,secondary,employed,more than 5,more than 10,0,8,0,1
+180,18-24,female,single,secondary,pensioner,3-5,5-10,0,8,0,0
+181,35-44,female,married,tertiary,unemployed,3-5,5-10,0,8,0,1
+182,45-54,female,married,secondary,unemployed,3-5,1-4,0,8,0,1
+183,18-24,male,single,tertiary,employed,1-3,0,0,8,0,0
+184,>65,female,divorced_widowed,primary,pensioner,more than 5,5-10,1,8,0,1
+185,25-34,male,single,tertiary,employed,1-3,0,0,8,0,0
+186,55-64,female,divorced_widowed,secondary,pensioner,more than 5,1-4,0,8,0,0
+187,55-64,female,married,secondary,pensioner,1-3,1-4,1,8,0,1
+188,55-64,male,married,secondary,employed,1-3,0,0,8,0,1
+189,35-44,male,married,secondary,employed,more than 5,1-4,0,8,0,0
+190,45-54,female,married,secondary,unemployed,3-5,1-4,0,8,0,1
+191,25-34,male,married,secondary,unemployed,1-3,1-4,0,8,0,1
+192,>65,female,divorced_widowed,secondary,pensioner,1-3,5-10,0,8,0,1
+193,35-44,female,married,secondary,employed,more than 5,1-4,0,9,1,1
+194,55-64,female,married,secondary,unemployed,3-5,0,0,9,1,1
+195,55-64,female,divorced_widowed,secondary,unemployed,1-3,0,0,9,1,1
+196,55-64,male,married,tertiary,employed,3-5,1-4,0,9,1,0
+197,>65,male,married,secondary,pensioner,1-3,more than 10,0,9,1,0
+198,25-34,male,married,tertiary,employed,3-5,0,0,9,1,0
+199,45-54,male,married,secondary,employed,1-3,1-4,0,9,1,0
+200,55-64,male,married,tertiary,employed,1-3,1-4,1,9,1,1
+201,55-64,female,married,tertiary,employed,1-3,0,0,9,1,0
+202,>65,female,divorced_widowed,secondary,pensioner,1-3,more than 10,0,9,1,1
+203,45-54,female,single,tertiary,employed,1-3,0,0,9,1,1
+204,>65,male,married,secondary,pensioner,1-3,5-10,0,9,1,0
+205,>65,female,divorced_widowed,tertiary,pensioner,1-3,more than 10,0,9,1,0
+206,>65,male,married,secondary,pensioner,1-3,more than 10,0,9,1,0
+207,45-54,female,married,secondary,employed,1-3,more than 10,0,9,1,0
+208,55-64,female,married,tertiary,employed,3-5,0,1,9,1,0
+209,55-64,female,married,secondary,unemployed,1-3,more than 10,0,9,1,0
+210,45-54,female,divorced_widowed,tertiary,employed,3-5,5-10,0,9,1,1
+211,35-44,female,married,secondary,employed,more than 5,0,0,9,1,0
+212,>65,male,married,secondary,pensioner,1-3,5-10,0,9,1,0
+213,25-34,male,married,secondary,employed,more than 5,0,0,9,1,1
+214,35-44,female,married,secondary,unemployed,3-5,1-4,0,9,1,1
+215,45-54,female,married,secondary,employed,1-3,more than 10,1,9,1,0
+216,45-54,male,single,secondary,employed,1-3,more than 10,0,9,1,0
+217,>65,female,divorced_widowed,primary,pensioner,1-3,more than 10,0,9,1,0
+218,45-54,female,divorced_widowed,tertiary,employed,1-3,more than 10,0,9,1,0
+219,45-54,female,divorced_widowed,secondary,unemployed,1-3,1-4,1,9,1,0
+220,55-64,female,married,secondary,employed,3-5,0,1,9,1,1
+221,55-64,female,married,secondary,pensioner,3-5,more than 10,0,9,1,0
+222,45-54,female,single,secondary,employed,1-3,more than 10,0,9,1,0
+223,18-24,male,single,tertiary,employed,1-3,1-4,0,9,1,0
+224,45-54,male,divorced_widowed,tertiary,employed,1-3,more than 10,0,9,1,1
+225,45-54,female,married,secondary,employed,3-5,1-4,0,9,1,1
+226,>65,male,divorced_widowed,primary,pensioner,3-5,5-10,1,9,1,1
+227,45-54,female,married,tertiary,employed,3-5,1-4,1,9,1,1
+228,>65,female,divorced_widowed,secondary,pensioner,1-3,1-4,0,9,1,0
+229,55-64,male,single,tertiary,pensioner,1-3,1-4,0,9,1,1
+230,55-64,male,divorced_widowed,secondary,employed,1-3,5-10,0,9,1,1
+231,45-54,female,married,tertiary,employed,3-5,1-4,0,9,1,0
+232,>65,female,divorced_widowed,secondary,pensioner,more than 5,0,0,9,1,1
+233,55-64,female,married,secondary,employed,1-3,1-4,0,9,1,1
+234,>65,male,married,secondary,pensioner,3-5,5-10,0,9,1,0
+235,>65,male,married,secondary,unemployed,1-3,5-10,0,9,1,1
+236,55-64,male,divorced_widowed,secondary,unemployed,3-5,1-4,0,9,1,1
+237,45-54,female,married,tertiary,employed,3-5,1-4,0,9,1,0
+238,45-54,female,married,tertiary,employed,1-3,1-4,1,9,1,0
+239,>65,male,single,primary,unemployed,3-5,0,0,9,1,1
+240,55-64,female,single,secondary,employed,1-3,1-4,1,9,1,1
+241,25-34,female,married,secondary,employed,1-3,1-4,0,9,1,0
+242,55-64,female,married,tertiary,employed,more than 5,more than 10,1,9,1,0
+243,45-54,female,married,secondary,employed,more than 5,1-4,0,9,1,0
+244,45-54,male,married,secondary,employed,3-5,1-4,0,9,1,1
+245,>65,male,single,tertiary,pensioner,1-3,more than 10,0,9,1,0
+246,18-24,female,single,secondary,unemployed,3-5,1-4,0,9,1,0
+247,>65,female,divorced_widowed,secondary,pensioner,1-3,more than 10,0,9,1,1
+248,18-24,male,single,secondary,unemployed,3-5,0,0,9,1,0
+249,18-24,female,married,secondary,unemployed,1-3,0,0,9,1,0
+250,>65,female,married,secondary,pensioner,1-3,more than 10,0,9,1,0
+251,45-54,female,married,secondary,employed,1-3,1-4,0,9,1,0
+252,25-34,male,single,tertiary,employed,1-3,1-4,1,9,1,0
+253,55-64,male,married,secondary,employed,1-3,0,0,9,1,0
+254,35-44,female,married,secondary,employed,3-5,1-4,1,9,1,0
+255,25-34,male,single,tertiary,employed,3-5,0,1,9,1,0
+256,>65,female,divorced_widowed,tertiary,pensioner,1-3,1-4,1,9,1,0
+257,25-34,male,married,tertiary,employed,1-3,0,0,9,1,0
+258,55-64,female,married,secondary,unemployed,1-3,0,0,9,1,1
+259,25-34,female,married,secondary,employed,1-3,1-4,0,9,1,0
+260,18-24,female,single,tertiary,unemployed,3-5,1-4,0,9,1,0
+261,18-24,female,single,tertiary,unemployed,3-5,0,0,9,1,0
+262,45-54,male,married,tertiary,employed,3-5,1-4,0,9,1,1
+263,>65,female,divorced_widowed,secondary,pensioner,3-5,5-10,0,9,1,1
+264,45-54,female,married,secondary,employed,3-5,1-4,0,9,1,0
+265,45-54,female,married,tertiary,employed,1-3,0,1,9,1,1
+266,>65,male,divorced_widowed,tertiary,pensioner,1-3,5-10,0,9,1,1
+267,45-54,female,married,tertiary,employed,3-5,0,1,9,1,0
+268,>65,female,divorced_widowed,secondary,unemployed,1-3,1-4,1,9,1,1
+269,55-64,male,married,secondary,employed,3-5,1-4,0,9,1,1
+270,25-34,female,married,tertiary,employed,1-3,1-4,1,9,1,1
+271,>65,male,married,secondary,unemployed,3-5,more than 10,1,9,1,1
+272,>65,female,divorced_widowed,secondary,pensioner,1-3,0,0,9,1,0
+273,>65,female,divorced_widowed,tertiary,pensioner,1-3,more than 10,1,9,1,1
+274,45-54,female,married,secondary,unemployed,3-5,1-4,0,9,1,1
+275,45-54,female,married,tertiary,employed,3-5,1-4,0,9,1,0
+276,55-64,male,married,tertiary,pensioner,1-3,1-4,1,9,1,1
+277,18-24,female,single,secondary,pensioner,3-5,1-4,0,9,1,1
+278,45-54,male,married,tertiary,pensioner,3-5,more than 10,0,9,1,1
+279,35-44,male,married,secondary,employed,1-3,0,0,9,1,0
+280,>65,male,married,secondary,pensioner,more than 5,1-4,0,9,1,1
+281,45-54,male,married,secondary,employed,more than 5,5-10,0,9,1,1
+282,45-54,female,single,secondary,employed,3-5,more than 10,0,9,1,1
+283,55-64,female,divorced_widowed,tertiary,employed,1-3,5-10,1,9,1,1
+284,>65,male,married,tertiary,pensioner,1-3,0,1,9,1,0
+285,35-44,male,single,secondary,unemployed,1-3,0,0,9,1,1
+286,>65,female,divorced_widowed,primary,pensioner,3-5,1-4,1,9,1,0
+287,45-54,female,married,secondary,employed,3-5,1-4,0,9,1,0
+288,>65,male,married,tertiary,pensioner,1-3,5-10,1,9,1,1
+289,45-54,male,married,tertiary,employed,3-5,0,0,9,1,0
+290,55-64,male,married,tertiary,pensioner,1-3,1-4,1,9,1,1
+291,18-24,female,single,secondary,unemployed,3-5,1-4,1,9,1,0
+292,45-54,female,married,secondary,employed,3-5,0,1,9,1,1
+293,>65,female,divorced_widowed,secondary,pensioner,1-3,more than 10,0,9,1,1
+294,55-64,female,married,secondary,employed,1-3,1-4,0,9,1,1
+295,45-54,female,married,secondary,pensioner,1-3,5-10,1,9,1,0
+296,35-44,female,married,tertiary,employed,1-3,0,1,9,1,1
+297,25-34,male,married,tertiary,employed,3-5,0,0,9,1,0
+298,18-24,male,single,primary,unemployed,3-5,0,0,10,1,1
+299,25-34,female,single,tertiary,unemployed,1-3,0,0,10,1,0
+300,25-34,male,married,tertiary,employed,3-5,0,1,10,1,0
+301,55-64,female,divorced_widowed,secondary,employed,1-3,1-4,0,10,1,1
+302,35-44,female,married,tertiary,employed,3-5,0,1,10,1,1
+303,35-44,female,married,secondary,employed,more than 5,1-4,0,10,1,0
+304,55-64,female,married,secondary,unemployed,more than 5,1-4,0,10,1,1
+305,55-64,male,married,tertiary,employed,1-3,1-4,0,10,1,0
+306,>65,female,divorced_widowed,secondary,pensioner,3-5,1-4,0,10,1,1
+307,25-34,male,single,tertiary,employed,1-3,0,1,10,1,0
+308,55-64,female,married,secondary,pensioner,1-3,1-4,1,10,1,1
+309,>65,male,married,secondary,pensioner,1-3,more than 10,0,10,1,0
+310,55-64,female,married,secondary,pensioner,1-3,1-4,1,10,1,1
+311,25-34,female,single,tertiary,unemployed,1-3,0,0,10,1,0
+312,45-54,male,married,secondary,employed,3-5,1-4,1,10,1,0
+313,35-44,female,married,tertiary,employed,1-3,1-4,1,10,1,1
+314,45-54,female,divorced_widowed,secondary,employed,1-3,1-4,1,10,1,0
+315,45-54,male,married,secondary,employed,3-5,more than 10,0,10,1,1
+316,45-54,male,divorced_widowed,secondary,employed,1-3,more than 10,0,10,1,0
+317,35-44,female,married,secondary,employed,3-5,1-4,0,10,1,0
+318,35-44,female,married,tertiary,employed,3-5,1-4,0,10,1,1
+319,55-64,male,married,secondary,pensioner,1-3,more than 10,0,10,1,0
+320,45-54,female,married,secondary,employed,1-3,5-10,1,10,1,0
+321,45-54,female,married,tertiary,employed,3-5,1-4,0,10,1,0
+322,>65,male,divorced_widowed,tertiary,pensioner,1-3,1-4,0,10,1,0
+323,>65,female,divorced_widowed,secondary,pensioner,1-3,more than 10,1,10,1,0
+324,35-44,female,single,secondary,employed,1-3,1-4,0,10,1,1
+325,55-64,female,married,secondary,employed,3-5,more than 10,1,10,1,1
+326,45-54,female,divorced_widowed,secondary,unemployed,1-3,1-4,0,10,1,0
+327,55-64,female,married,tertiary,employed,3-5,more than 10,0,10,1,0
+328,55-64,female,married,secondary,pensioner,1-3,5-10,0,10,1,0
+329,35-44,female,married,tertiary,employed,3-5,more than 10,1,10,1,0
+330,35-44,female,married,tertiary,employed,3-5,1-4,1,10,1,0
+331,45-54,female,single,tertiary,employed,1-3,0,0,10,1,1
+332,55-64,male,married,tertiary,unemployed,1-3,1-4,0,10,1,0
+333,25-34,female,single,tertiary,employed,1-3,1-4,0,10,1,1
+334,55-64,female,married,tertiary,employed,1-3,5-10,1,10,1,0
+335,>65,male,married,secondary,pensioner,1-3,5-10,0,10,1,0
+336,55-64,female,married,tertiary,employed,more than 5,1-4,0,10,1,0
+337,45-54,female,married,secondary,unemployed,1-3,1-4,0,10,1,0
+338,45-54,female,married,tertiary,employed,more than 5,1-4,0,10,1,1
+339,45-54,male,single,tertiary,employed,1-3,1-4,0,10,1,0
+340,>65,female,married,secondary,pensioner,1-3,1-4,0,10,1,0
+341,25-34,female,married,tertiary,employed,3-5,0,0,10,1,0
+342,>65,male,married,secondary,pensioner,1-3,more than 10,0,10,1,0
+343,55-64,male,married,tertiary,employed,more than 5,1-4,0,10,1,0
+344,>65,female,married,secondary,pensioner,more than 5,more than 10,0,10,1,1
+345,25-34,female,single,tertiary,unemployed,1-3,0,0,10,1,0
+346,25-34,male,single,tertiary,employed,1-3,0,0,10,1,0
+347,25-34,male,married,tertiary,employed,1-3,0,0,10,1,0
+348,35-44,female,married,tertiary,employed,1-3,1-4,0,10,1,0
+349,55-64,female,married,tertiary,employed,1-3,1-4,0,10,1,1
+350,45-54,female,married,tertiary,employed,1-3,1-4,0,10,1,0
+351,35-44,female,married,tertiary,unemployed,1-3,1-4,1,10,1,1
+352,55-64,male,married,secondary,pensioner,3-5,1-4,0,10,1,0
+353,55-64,male,married,secondary,pensioner,3-5,0,0,10,1,0
+354,25-34,male,single,tertiary,employed,1-3,0,1,10,1,0
+355,35-44,female,married,tertiary,employed,3-5,1-4,0,10,1,0
+356,18-24,male,single,secondary,unemployed,1-3,0,1,10,1,0
+357,18-24,female,single,secondary,unemployed,1-3,1-4,1,10,1,1
+358,25-34,female,single,secondary,employed,1-3,0,0,10,1,1
+359,>65,female,married,tertiary,unemployed,3-5,1-4,0,10,1,0
+360,>65,female,married,tertiary,unemployed,3-5,1-4,0,10,1,0
+361,55-64,female,divorced_widowed,secondary,unemployed,1-3,1-4,0,10,1,1
+362,35-44,male,married,tertiary,employed,3-5,1-4,0,10,1,0
+363,55-64,male,married,secondary,employed,3-5,1-4,1,10,1,1
+364,25-34,female,married,secondary,employed,3-5,0,0,10,1,0
+365,>65,male,married,tertiary,unemployed,3-5,1-4,0,10,1,1
+366,25-34,male,single,tertiary,employed,1-3,1-4,0,10,1,0
+367,35-44,female,married,tertiary,employed,1-3,1-4,0,10,1,0
+368,>65,male,married,secondary,pensioner,1-3,5-10,0,10,1,0
+369,>65,female,married,secondary,pensioner,1-3,more than 10,0,10,1,1
+370,35-44,female,married,tertiary,employed,3-5,1-4,0,10,1,1
+371,25-34,female,married,secondary,employed,3-5,0,0,10,1,0
+372,35-44,male,single,tertiary,unemployed,1-3,1-4,0,10,1,1
+373,35-44,female,married,secondary,employed,1-3,5-10,0,10,1,1
+374,45-54,male,married,tertiary,employed,3-5,0,1,10,1,0
+375,>65,male,married,secondary,pensioner,1-3,1-4,0,10,1,0
+376,55-64,female,married,tertiary,employed,1-3,1-4,0,10,1,0
+377,55-64,female,married,tertiary,employed,3-5,1-4,0,10,1,0
+378,25-34,male,single,secondary,unemployed,1-3,0,0,10,1,0
+379,35-44,male,married,tertiary,employed,3-5,0,0,10,1,0
+380,45-54,female,married,tertiary,unemployed,3-5,1-4,1,10,1,1
+381,35-44,male,single,tertiary,employed,more than 5,1-4,0,10,1,1
+382,35-44,male,single,tertiary,employed,3-5,0,0,10,1,0
+383,45-54,female,divorced_widowed,tertiary,unemployed,1-3,1-4,1,10,1,1
+384,>65,male,married,secondary,pensioner,1-3,more than 10,0,10,1,1
+385,55-64,female,married,secondary,employed,3-5,5-10,0,10,1,0
+386,55-64,female,married,secondary,unemployed,3-5,1-4,0,10,1,0
+387,45-54,female,divorced_widowed,tertiary,employed,1-3,1-4,1,10,1,1
+388,45-54,female,married,tertiary,unemployed,more than 5,0,1,10,1,0
+389,25-34,female,single,tertiary,employed,1-3,0,0,10,1,0
+390,55-64,female,married,tertiary,pensioner,3-5,1-4,0,10,1,1
+391,45-54,female,married,tertiary,employed,3-5,0,0,10,1,1
+392,25-34,female,single,tertiary,employed,1-3,1-4,1,10,1,0
+393,25-34,female,single,tertiary,unemployed,3-5,5-10,0,10,1,0
+394,25-34,male,single,secondary,unemployed,3-5,0,0,10,1,0
+395,55-64,female,married,tertiary,employed,3-5,5-10,0,10,1,1
+396,25-34,female,married,secondary,unemployed,3-5,0,0,10,1,0
+397,25-34,female,single,tertiary,employed,1-3,1-4,1,10,1,0
+398,25-34,female,single,tertiary,employed,1-3,1-4,0,10,1,1
+399,55-64,female,married,tertiary,employed,3-5,0,1,10,1,0
+400,>65,male,married,tertiary,pensioner,3-5,5-10,1,10,1,0
+401,35-44,male,single,primary,unemployed,1-3,1-4,0,10,1,0
+402,25-34,male,single,primary,employed,1-3,1-4,1,11,1,1
+403,18-24,male,single,primary,unemployed,3-5,0,0,11,1,1
+404,25-34,male,married,primary,employed,3-5,0,1,11,1,1
+405,55-64,female,married,tertiary,employed,1-3,0,1,11,1,0
+406,35-44,male,married,secondary,employed,1-3,0,0,11,1,0
+407,55-64,female,married,tertiary,employed,1-3,1-4,0,11,1,1
+408,25-34,female,single,tertiary,unemployed,1-3,0,0,11,1,0
+409,55-64,female,married,tertiary,employed,3-5,1-4,1,11,1,1
+410,45-54,male,married,tertiary,employed,1-3,0,0,11,1,0
+411,35-44,female,divorced_widowed,tertiary,employed,1-3,0,0,11,1,1
+412,18-24,female,single,secondary,unemployed,3-5,1-4,0,11,1,0
+413,35-44,male,married,tertiary,employed,3-5,0,1,11,1,0
+414,>65,male,married,tertiary,employed,1-3,1-4,1,11,1,0
+415,25-34,female,single,tertiary,unemployed,1-3,0,0,11,1,0
+416,25-34,female,married,tertiary,employed,1-3,0,0,11,1,0
+417,55-64,female,married,secondary,pensioner,1-3,0,0,11,1,0
+418,18-24,female,single,secondary,unemployed,3-5,1-4,0,11,1,0
+419,55-64,female,married,tertiary,pensioner,1-3,more than 10,0,11,1,0
+420,25-34,male,single,tertiary,employed,3-5,0,0,11,1,0
+421,55-64,female,married,tertiary,pensioner,1-3,more than 10,0,11,1,0
+422,35-44,female,married,tertiary,unemployed,3-5,1-4,0,11,1,0
+423,25-34,male,married,secondary,unemployed,3-5,1-4,0,11,1,0
+424,35-44,female,divorced_widowed,tertiary,employed,1-3,1-4,0,11,1,0
+425,45-54,female,married,secondary,employed,more than 5,1-4,0,11,1,1
+426,45-54,female,married,tertiary,unemployed,1-3,more than 10,0,11,1,1
+427,>65,male,married,tertiary,pensioner,3-5,more than 10,0,11,1,0
+428,25-34,female,single,tertiary,unemployed,1-3,1-4,0,11,1,1
+429,25-34,female,single,tertiary,employed,1-3,0,1,11,1,0
+430,55-64,female,married,tertiary,employed,1-3,0,0,11,1,0
+431,25-34,female,single,secondary,employed,1-3,0,0,11,1,0
+432,55-64,male,married,tertiary,employed,3-5,5-10,0,11,1,0
+433,25-34,female,single,secondary,unemployed,3-5,1-4,0,11,1,0
+434,45-54,female,married,tertiary,employed,1-3,1-4,0,11,1,0
+435,45-54,female,married,tertiary,employed,3-5,0,1,11,1,0
+436,55-64,female,married,secondary,unemployed,3-5,5-10,0,11,1,1
+437,45-54,male,married,tertiary,employed,more than 5,1-4,1,11,1,0
+438,35-44,female,married,secondary,employed,3-5,1-4,0,11,1,1
+439,55-64,female,married,tertiary,employed,more than 5,1-4,0,11,1,0
+440,25-34,male,married,tertiary,employed,more than 5,0,0,11,1,0
+441,25-34,male,married,tertiary,employed,3-5,0,1,11,1,0
+442,55-64,male,married,tertiary,employed,3-5,1-4,0,11,1,0
+443,25-34,male,single,tertiary,employed,1-3,0,1,11,1,0
+444,45-54,female,married,tertiary,employed,3-5,1-4,0,11,1,0
+445,35-44,female,married,tertiary,employed,3-5,5-10,0,11,1,1
+446,45-54,male,married,tertiary,employed,3-5,1-4,1,11,1,0
+447,35-44,female,married,secondary,employed,1-3,0,0,11,1,0
+448,45-54,female,married,tertiary,employed,3-5,1-4,0,11,1,0
+449,25-34,female,single,tertiary,employed,1-3,0,0,11,1,0
+450,18-24,male,single,tertiary,employed,3-5,0,0,11,1,0
+451,45-54,female,married,tertiary,employed,1-3,1-4,1,11,1,1
+452,25-34,male,single,secondary,employed,1-3,0,0,11,1,1
+453,18-24,female,single,tertiary,unemployed,3-5,0,1,11,1,1
+454,35-44,male,single,tertiary,employed,1-3,1-4,0,11,1,1
+455,25-34,female,married,tertiary,employed,1-3,0,1,11,1,0
+456,55-64,female,married,tertiary,employed,3-5,0,0,11,1,1
+457,>65,female,divorced_widowed,tertiary,unemployed,1-3,5-10,1,11,1,0
+458,45-54,female,married,tertiary,employed,1-3,0,1,11,1,1
+459,55-64,female,married,secondary,employed,3-5,1-4,1,11,1,0
+460,35-44,male,married,tertiary,employed,3-5,1-4,0,11,1,0
+461,25-34,male,single,tertiary,employed,1-3,1-4,0,11,1,1
+462,45-54,female,married,secondary,employed,3-5,1-4,1,11,1,1
+463,45-54,female,married,secondary,employed,3-5,1-4,0,11,1,1
+464,18-24,female,single,tertiary,unemployed,3-5,0,1,11,1,0
+465,45-54,female,married,tertiary,employed,1-3,0,0,11,1,0
+466,35-44,male,married,tertiary,employed,1-3,0,1,11,1,1
+467,55-64,male,married,tertiary,employed,3-5,5-10,1,11,1,1
+468,35-44,male,married,tertiary,employed,1-3,0,1,11,1,1
+469,45-54,female,married,secondary,pensioner,1-3,0,1,11,1,0
+470,55-64,male,married,tertiary,unemployed,3-5,1-4,1,11,1,0
+471,35-44,male,married,tertiary,employed,3-5,1-4,1,11,1,0
+472,>65,female,divorced_widowed,primary,pensioner,1-3,more than 10,0,11,1,1
+473,55-64,male,married,tertiary,unemployed,1-3,5-10,0,11,1,0
+474,35-44,male,married,tertiary,employed,3-5,5-10,0,11,1,0
+475,>65,male,married,tertiary,pensioner,more than 5,1-4,0,11,1,0
+476,25-34,female,single,tertiary,unemployed,1-3,0,1,11,1,1
+477,25-34,female,single,secondary,unemployed,1-3,0,0,11,1,1
+478,35-44,female,married,secondary,employed,more than 5,1-4,1,11,1,0
+479,35-44,female,divorced_widowed,secondary,employed,1-3,more than 10,0,11,1,0
+480,25-34,female,married,tertiary,employed,1-3,0,0,11,1,0
+481,45-54,female,divorced_widowed,secondary,employed,1-3,1-4,0,11,1,0
+482,45-54,female,married,secondary,employed,1-3,1-4,0,11,1,0
+483,45-54,female,married,tertiary,employed,1-3,0,0,11,1,1
+484,25-34,female,married,tertiary,employed,1-3,1-4,0,11,1,0
+485,>65,female,divorced_widowed,secondary,pensioner,1-3,more than 10,0,11,1,1
+486,55-64,male,married,secondary,employed,more than 5,0,1,11,1,0
+487,55-64,female,single,tertiary,pensioner,1-3,5-10,0,11,1,0
+488,35-44,female,married,tertiary,employed,1-3,1-4,1,11,1,1
+489,35-44,female,married,secondary,employed,1-3,1-4,0,11,1,1
+490,35-44,female,married,tertiary,employed,3-5,1-4,0,11,1,1
+491,35-44,female,single,secondary,unemployed,1-3,more than 10,1,11,1,1
+492,>65,male,married,tertiary,pensioner,1-3,5-10,0,12,1,0
+493,55-64,male,married,secondary,employed,3-5,1-4,0,12,1,0
+494,45-54,female,married,secondary,unemployed,1-3,1-4,0,12,1,1
+495,35-44,male,married,tertiary,unemployed,1-3,0,0,12,1,0
+496,35-44,female,married,tertiary,employed,more than 5,1-4,0,12,1,0
+497,>65,female,married,secondary,pensioner,1-3,5-10,1,12,1,0
+498,>65,female,married,tertiary,employed,3-5,5-10,1,12,1,1
+499,>65,male,married,secondary,pensioner,1-3,5-10,1,12,1,1
+500,18-24,female,single,secondary,unemployed,3-5,1-4,0,12,1,0

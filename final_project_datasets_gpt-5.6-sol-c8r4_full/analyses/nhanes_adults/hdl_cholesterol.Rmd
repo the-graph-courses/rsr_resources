@@ -1,0 +1,378 @@
+---
+title: "HDL cholesterol in US adults"
+subtitle: "Dataset 10: NHANES adults (2009-10 and 2011-12 extract)"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "nhanes_adults.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "hdl_cholesterol"
+predictors <- c("age_yrs", "sex", "bmi", "phys_active", "smoked_100_cigs",
+                "alcohol_days_year", "diabetes")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    sex   = lab(factor(sex, levels = c("female", "male"), labels = c("Female", "Male")),
+                "Sex"),
+    smoked_100_cigs = lab(factor(smoked_100_cigs, levels = c(0, 1), labels = c("No", "Yes")),
+                          "Ever smoked 100+ cigarettes"),
+    diabetes = lab(factor(diabetes, levels = c(0, 1), labels = c("No", "Yes")),
+                   "Diagnosed diabetes"),
+    phys_active = lab(factor(phys_active, levels = c(0, 1), labels = c("No", "Yes")),
+                      "Recreationally physically active"),
+    age_yrs = lab(age_yrs, "Age (years)"),
+    bmi = lab(bmi, "BMI (kg/m2)"),
+    alcohol_days_year = lab(alcohol_days_year, "Drinking days in past year"),
+    hdl_cholesterol = lab(hdl_cholesterol, "HDL cholesterol (mmol/L)")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+fmt <- function(x, d = 3) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", formatC(p, format = "f", digits = 3)))
+```
+
+# Introduction
+
+The National Health and Nutrition Examination Survey (NHANES) is a continuous
+cross-sectional survey of the civilian non-institutionalised US population,
+pairing a household interview with a standardised examination and venous blood
+draw. This teaching extract holds `r nrow(dat)` adults aged 21 to 80 from the
+2009-10 and 2011-12 cycles. HDL cholesterol is the "good" lipid fraction: low HDL
+is a component of the metabolic syndrome definition and an independent marker of
+cardiovascular risk, and unlike total cholesterol it is only weakly affected by
+statin therapy, so its determinants can be studied with less treatment
+contamination.
+
+**Aim.** Among these US adults, we examined which of age, sex, BMI, recreational
+physical activity, smoking history, alcohol frequency and diagnosed diabetes are
+independently associated with HDL cholesterol, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** NHANES 2009-10 and 2011-12, a complex multistage probability
+sample of the US civilian non-institutionalised population. This extract contains
+`r nrow(dat)` adults with 31 variables. Lipids were measured on a venous sample
+taken in the mobile examination centre.
+
+**Variables.** The outcome is `hdl_cholesterol`, HDL cholesterol in mmol/L,
+treated as continuous. Predictors are age (years), sex (reference female), BMI
+(kg/m2), recreational moderate or vigorous physical activity (reference no), ever
+having smoked 100 cigarettes (reference no), number of drinking days in the past
+year and doctor-diagnosed diabetes (reference no). These seven were chosen
+because each has an established biological pathway to HDL: adiposity and insulin
+resistance lower it, aerobic activity and moderate alcohol raise it, and smoking
+lowers it.
+
+`total_cholesterol` is deliberately excluded: HDL is by laboratory definition a
+component of total cholesterol, so the two are related partly by construction and
+a coefficient for total cholesterol here has no substantive meaning.
+`weight_kg` and `height_cm` are excluded because `bmi` is exactly
+`weight_kg / (height_cm/100)^2` in this file.
+
+**Statistical analysis.** `lm()`, justified because the outcome is continuous. We
+fitted a univariable model for each predictor first, then a single multivariable
+model containing all of them. Predictors were chosen in advance on subject-matter
+grounds, not by significance. Significance threshold 0.05; estimates are reported
+with 95% confidence intervals. Assumptions were checked with
+`performance::check_model()`, and because non-constant variance was flagged we
+additionally report HC3 heteroscedasticity-consistent standard errors. Models are
+**unweighted**: the NHANES survey weights, strata and primary sampling units are
+not carried in this extract, so no result here is a nationally representative
+estimate. Analysis used `r R.version.string` with tidyverse, gtsummary and
+performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped). Most of the loss comes from
+`alcohol_days_year` (`r sum(is.na(dat$alcohol_days_year))` missing, 18%) plus
+`hdl_cholesterol` itself (`r sum(is.na(dat$hdl_cholesterol))` missing). Only
+`r sum(complete.cases(dat_raw))` of `r nrow(dat)` rows are complete on *every*
+variable in the file, so listwise deletion is a live threat and the complete-case
+N is reported for every model.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(missing = "no") |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics.**")
+```
+
+Median HDL is about 1.3 mmol/L, with a mild right skew. Reported drinking days
+per year are heavily right-skewed - a large group reports very few days and a
+minority reports near-daily drinking - and the median BMI is in the overweight
+range.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. HDL cholesterol against BMI, by sex, with LOESS smoothers."}
+ggplot(dat_model, aes(bmi, hdl_cholesterol, colour = sex)) +
+  geom_point(alpha = 0.45, size = 1.6) +
+  geom_smooth(method = "loess", se = TRUE, linewidth = 0.9) +
+  scale_colour_manual(values = c(Female = "#B25D9C", Male = "#2E6F9E")) +
+  labs(x = "BMI (kg/m2)", y = "HDL cholesterol (mmol/L)", colour = "Sex")
+```
+
+HDL falls steadily as BMI rises in both sexes, and the two sex curves are
+separated by a near-constant vertical gap of roughly 0.3 mmol/L - women sit
+higher at every level of BMI - which is exactly the additive pattern a linear
+model without an interaction assumes.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(lm(reformulate(v, outcome), data = dat_model), conf.int = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 3) {
+  r <- utid[utid$term == term, ]
+  sprintf("%s mmol/L (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+```
+
+Three predictors show strong crude associations. Men average `r ug("sexMale")`
+lower HDL than women (p `r up("sexMale")`), which is the largest single
+difference in the dataset. Each additional kg/m2 of BMI is associated with
+`r ug("bmi")` lower HDL (p `r up("bmi")`), so a 10-unit BMI difference
+corresponds to about `r fmt(abs(10 * utid$estimate[utid$term == "bmi"]), 2)`
+mmol/L. Each additional drinking day per year is associated with
+`r ug("alcohol_days_year", 4)` higher HDL (p `r up("alcohol_days_year")`); scaled
+up, 100 extra drinking days a year corresponds to about
+`r fmt(100 * utid$estimate[utid$term == "alcohol_days_year"], 2)` mmol/L. Age is
+weakly positive (`r ug("age_yrs")`, p `r up("age_yrs")`). Physical activity,
+smoking and diabetes show no clear crude association.
+
+## Why adjustment is needed
+
+**Sex** is the key confounder here. Men have markedly lower HDL than women and
+men also drink on many more days per year and have different BMI distributions,
+so the crude alcohol coefficient is pulled toward the null by sex (higher
+drinking travels with lower-HDL male sex) and the crude BMI and activity
+coefficients are similarly contaminated. **BMI** is the second confounder:
+adiposity lowers HDL directly, and it is also associated with physical inactivity
+and with diagnosed diabetes, so the crude activity and diabetes coefficients
+partly reflect body size rather than the exposure of interest. **Age** confounds
+the alcohol and activity associations, since drinking frequency and exercise both
+change with age while HDL drifts upward. Mutual adjustment lets each coefficient
+be read as a comparison between participants alike on the other measured
+characteristics.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE)
+g <- function(term, d = 3) {
+  r <- tid[tid$term == term, ]
+  sprintf("%s mmol/L (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+```
+
+```{r fit-stats}
+s <- summary(fit)
+tibble(
+  Statistic = c("Complete-case N", "Parameters (excl. intercept)",
+                "R-squared", "Adjusted R-squared", "Residual SE (mmol/L)"),
+  Value = c(as.character(nrow(dat_model)),
+            as.character(length(coef(fit)) - 1L),
+            fmt(s$r.squared, 3), fmt(s$adj.r.squared, 3), fmt(s$sigma, 3))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable linear model for HDL cholesterol**"))
+```
+
+The model explains `r fmt(100 * s$r.squared, 1)`% of the variance in HDL
+(adjusted R-squared `r fmt(s$adj.r.squared, 3)`), by far the best fit of the four
+continuous outcomes in this dataset. Among participants of the same age, BMI,
+activity, smoking, drinking and diabetes status, men average `r g("sexMale")`
+lower HDL than women (p `r gp("sexMale")`). Among participants alike on
+everything else, each additional kg/m2 of BMI is associated with `r g("bmi")`
+lower HDL (p `r gp("bmi")`), each extra drinking day per year with
+`r g("alcohol_days_year", 4)` higher HDL (p `r gp("alcohol_days_year")`), and each
+year of age with `r g("age_yrs")` higher HDL (p `r gp("age_yrs")`). Physical
+activity (`r g("phys_activeYes")`, p `r gp("phys_activeYes")`), smoking
+(`r g("smoked_100_cigsYes")`, p `r gp("smoked_100_cigsYes")`) and diabetes
+(`r g("diabetesYes")`, p `r gp("diabetesYes")`) are not independently associated.
+These are associations among the participants observed, not effects of
+intervening.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+Sex moves *away* from the null, from `r ug("sexMale")` crude to `r g("sexMale")`
+adjusted - an 18% increase in magnitude. This is masking rather than confounding:
+men drink on more days, and drinking raises HDL, so the crude male deficit was
+partly offset by the male drinking advantage; removing it makes the sex gap
+larger. Diabetes moves substantially toward the null, from `r ug("diabetesYes")`
+to `r g("diabetesYes")`, a two-thirds attenuation, because the crude diabetes
+deficit was mostly the high BMI of participants with diabetes. Physical activity
+also attenuates toward the null (`r ug("phys_activeYes")` to
+`r g("phys_activeYes")`) for the same reason - active people are leaner, and once
+BMI is held constant the residual activity association nearly disappears, which
+is arguably over-adjustment since lower BMI is one of the mechanisms by which
+exercise raises HDL. Two predictors barely move: BMI (`r ug("bmi")` to
+`r g("bmi")`) and alcohol (`r ug("alcohol_days_year", 4)` to
+`r g("alcohol_days_year", 4)`), both remaining highly significant. No predictor
+changes significance status in either direction.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r het-check}
+het <- check_heteroscedasticity(fit)
+print(het)
+```
+
+```{r robust-se}
+rob <- lmtest::coeftest(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+robci <- lmtest::coefci(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+tibble(
+  Term = rownames(rob),
+  Estimate = fmt(rob[, 1], 4),
+  `SE (OLS)` = fmt(summary(fit)$coefficients[, 2], 4),
+  `SE (HC3)` = fmt(rob[, 2], 4),
+  `95% CI (HC3)` = paste0(fmt(robci[, 1], 3), " to ", fmt(robci[, 2], 3)),
+  `p (HC3)` = formatC(rob[, 4], format = "f", digits = 3)
+) |>
+  filter(Term != "(Intercept)") |>
+  gt() |>
+  tab_header(title = md("**Table 3. HC3 heteroscedasticity-consistent standard errors.**"))
+```
+
+The residual-versus-fitted panel widens as fitted HDL rises, and
+`check_heteroscedasticity()` rejects constant variance (p = 0.008): participants
+predicted to have high HDL vary far more than those predicted to have low HDL,
+which is the natural consequence of HDL having a floor near 0.5 mmol/L and no
+ceiling. The normal-QQ panel shows a heavy right tail from a handful of
+participants with HDL above 2.5 mmol/L, and `check_normality()` rejects.
+Linearity of the BMI and age terms looks acceptable. Collinearity is a non-issue:
+the highest VIF is 1.14. No observation crosses the Cook's distance contours.
+
+Because variance is non-constant, Table 3 reports HC3 robust standard errors. For
+BMI the HC3 SE is `r fmt(rob["bmi", 2], 4)` against an OLS SE of
+`r fmt(summary(fit)$coefficients["bmi", 2], 4)`, and for alcohol
+`r fmt(rob["alcohol_days_year", 2], 4)` against
+`r fmt(summary(fit)$coefficients["alcohol_days_year", 2], 4)`. The differences are
+small and every predictor keeps its significance status, so the conclusions are
+robust to the variance assumption. A log transformation of HDL would remove both
+the skew and most of the heteroscedasticity if a student wanted a cleaner model.
+
+# Discussion
+
+In this NHANES extract, sex, BMI, alcohol frequency and age are each
+independently associated with HDL cholesterol, and together they explain
+`r fmt(100 * s$r.squared, 1)`% of its variance. The sex difference is large -
+men average about `r fmt(abs(tid$estimate[tid$term == "sexMale"]), 2)` mmol/L
+lower than otherwise-similar women - and adiposity is the main modifiable
+correlate, with roughly `r fmt(abs(10 * tid$estimate[tid$term == "bmi"]), 2)`
+mmol/L lower HDL per 10 kg/m2 of BMI. The positive alcohol association is
+consistent with the well-documented HDL-raising effect of regular moderate
+drinking, but it is not a reason to recommend drinking. Practically, the results
+reinforce that HDL should be interpreted against sex-specific thresholds, as
+clinical guidelines already do.
+
+**Limitations.** The models are unweighted, and the NHANES sampling weights,
+strata and PSUs are not in this extract, so the sample **must not be described as
+nationally representative**. The design is cross-sectional, so no temporal
+ordering is established. `alcohol_days_year` counts *days*, not volume, so it
+cannot separate a daily light drinker from a daily heavy drinker, and heavy
+drinking has a different lipid profile from moderate drinking; it is also
+self-reported and under-reporting is systematic. Physical activity is a bare
+yes/no with no intensity or duration. Adjusting for BMI probably removes part of
+the genuine effect of activity on HDL, since weight is on the causal path.
+Complete-case analysis dropped `r n_dropped` of `r nrow(dat)` rows
+(`r fmt(100 * n_dropped / nrow(dat), 0)`%), most of them for missing alcohol
+data, and drinkers who decline to report are unlikely to be a random subset.
+Residual variance is non-constant and residuals are right-skewed; HC3 SEs address
+inference but the model still cannot predict the high-HDL tail. All estimates are
+associations, not causal effects.
+
+**Future work.** Refit on log(HDL) with the NHANES survey design, and use the
+full public files' quantity-frequency drinking variables in place of drinking
+days.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+- **The best of the four linear outcomes, and probably the best outcome in the
+  dataset.** R-squared `r fmt(s$r.squared, 3)`, four clearly significant
+  predictors with textbook biological interpretations, and a genuinely
+  instructive unadjusted-versus-adjusted table containing both a masking effect
+  (sex moves away from the null) and confounding (diabetes attenuates by two
+  thirds).
+- **Complete-case N `r nrow(dat_model)` of `r nrow(dat)`**
+  (`r fmt(100 * n_dropped / nrow(dat), 0)`% lost), almost entirely because of
+  `alcohol_days_year` (18% missing). Dropping alcohol raises N to about 445 but
+  removes one of the two most interesting findings. This is a good, concrete
+  illustration of the listwise-deletion trade-off.
+- **Heteroscedasticity flagged (p = 0.008)** and non-normality of residuals. HC3
+  changes nothing substantive. Clean case for the "check, then report robust SEs"
+  workflow.
+- **Trap: `total_cholesterol` should not be a predictor** - HDL is a component of
+  it by definition. Nothing will error, but the coefficient is partly an identity.
+  Less obvious to students than the `bmi`/`obese` trap.
+- **Trap: `weight_kg` / `height_cm` / `bmi`** - `bmi` is exactly
+  `weight_kg/(height_cm/100)^2`; do not use all three.
+- **Adjusting for BMI blocks part of the activity pathway.** Worth flagging as an
+  over-adjustment discussion point rather than an error.
+- **Unweighted survey analysis.** Must be stated.
+- No separation, no collinearity (max VIF 1.14), no influential observations.

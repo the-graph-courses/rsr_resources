@@ -1,0 +1,563 @@
+---
+title: "Underweight in Bangladeshi infants aged 6-13 months"
+subtitle: "Dataset 7: Bangladesh growth monitoring and promotion survey"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "bangladesh_growth_monitoring.csv"),
+                    show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "underweight"
+predictors <- c("delivery_model", "child_sex", "child_age_months", "mother_age_yrs",
+                "mother_schooling_yrs", "asset_index_tertile", "ngo_member",
+                "improved_toilet")
+
+dat <- dat_raw |>
+  mutate(
+    # DERIVED OUTCOME: the file ships no underweight indicator, so we cut the
+    # weight-for-age Z-score at the WHO threshold. Nine children sit exactly on
+    # -2.00; the "<=" convention counts them as underweight.
+    underweight = factor(as.integer(weight_for_age_z <= -2),
+                         levels = c(0, 1), labels = c("Not underweight", "Underweight")),
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    delivery_model = factor(delivery_model,
+                            levels = c("facility_based", "home_based"),
+                            labels = c("Facility-based", "Home-based")),
+    child_sex = factor(child_sex, levels = c("male", "female"),
+                       labels = c("Male", "Female")),
+    asset_index_tertile = factor(asset_index_tertile,
+                                 levels = c("lowest", "middle", "highest"),
+                                 labels = c("Lowest", "Middle", "Highest")),
+    ngo_member = factor(ngo_member, levels = c(0, 1), labels = c("No", "Yes")),
+    improved_toilet = factor(improved_toilet, levels = c(0, 1), labels = c("No", "Yes"))
+  ) |>
+  labelled::set_variable_labels(
+    underweight          = "Underweight (weight-for-age Z <= -2)",
+    delivery_model       = "Growth-monitoring delivery model",
+    child_sex            = "Child's sex",
+    child_age_months     = "Child's age (months)",
+    mother_age_yrs       = "Mother's age (years)",
+    mother_schooling_yrs = "Mother's schooling (years)",
+    asset_index_tertile  = "Household asset index tertile",
+    ngo_member           = "Mother is an NGO member",
+    improved_toilet      = "Improved toilet facility"
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+n_event <- sum(dat_model[[outcome]] == "Underweight")
+n_nonevent <- nrow(dat_model) - n_event
+
+# Small helpers so that every number quoted in the prose is pulled from the
+# fitted objects rather than typed in by hand. Estimates are exponentiated to
+# odds ratios.
+fmt_or <- function(tab, term_name, digits = 3) {
+  r <- tab[tab$term == term_name, ]
+  f <- function(x) formatC(exp(x), format = "f", digits = digits)
+  sprintf("OR %s (95%% CI %s to %s)", f(r$estimate), f(r$conf.low), f(r$conf.high))
+}
+fmt_p <- function(tab, term_name) {
+  p <- tab[tab$term == term_name, ]$p.value
+  if (p < 0.001) "p < 0.001" else sprintf("p = %.3f", p)
+}
+```
+
+# Introduction
+
+The data come from a cross-sectional household survey in rural Bangladesh that
+compared two ways of delivering growth monitoring and promotion (GMP): sessions
+held at a community clinic ("facility-based") and sessions held in the
+community/home ("home-based"). Caregivers of `r nrow(dat_raw)` young children
+across six upazilas were interviewed and the children were weighed and measured
+(source paper: PLOS ONE, e0324918). Underweight — weight-for-age more than two
+standard deviations below the WHO reference median — is the indicator plotted on
+the child's growth card and the one that triggers referral, so it is the binary
+outcome most directly connected to what a growth-monitoring programme is
+supposed to detect.
+
+**Aim.** Among rural Bangladeshi infants aged 6-13 months, we examined which of
+GMP delivery model, child sex, child age, mother's age, mother's schooling,
+household asset tertile, NGO membership and toilet quality are independently
+associated with the odds of being underweight, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** Cross-sectional survey of `r nrow(dat_raw)` caregiver-child
+pairs in six rural upazilas of Bangladesh. The study sampled 60 community-clinic
+catchment areas, arranged as matched pairs, one area of each pair receiving
+facility-based and the other home-based GMP. The file supplied for this
+catalogue contains one row per child.
+
+**Variables.** The outcome, `underweight`, is **derived** rather than shipped: a
+child is classified as underweight when `weight_for_age_z <= -2`. Nine children
+have a Z-score of exactly -2.00 and are counted as underweight under this
+convention; the WHO definition strictly uses "below -2", so a student adopting
+`< -2` would obtain `r sum(dat_raw$weight_for_age_z < -2, na.rm = TRUE)` events
+instead of `r n_event`. **The event modelled is being underweight**, and "not
+underweight" is the reference. Predictors are: GMP delivery model
+(facility-based = reference, home-based); child sex (male = reference); child age
+in months (continuous, observed range
+`r sprintf("%.1f", min(dat$child_age_months))` to
+`r sprintf("%.1f", max(dat$child_age_months))`); mother's age in years
+(continuous); mother's completed schooling in years (continuous); household asset
+index tertile (lowest = reference, middle, highest); NGO membership
+(no = reference); and improved toilet facility (no = reference).
+
+*Weight-for-age Z-score is excluded by construction.* The outcome is a
+deterministic cut of `weight_for_age_z`, so including the parent Z-score would
+give complete separation and meaningless coefficients. `weight_for_height_z` is
+also excluded because it is computed from the identical weight measurement, and
+`height_for_age_z` / `stunted` because they are built from the same child's
+length measurement and overlap heavily with the outcome
+(`r sum(dat_raw$weight_for_age_z <= -2 & dat_raw$stunted == 1, na.rm = TRUE)`
+children are both underweight and stunted).
+
+*Delivery model versus sub-district.* `delivery_model` and `sub_district` are
+almost the same variable: only 8 of `r nrow(dat_raw)` records (0.3%) sit in a
+sub-district whose other children received the alternative model. Fitting both
+together yields variance inflation factors of roughly 96 and 103 and inflates the
+delivery-model standard error about nine-fold. We kept `delivery_model`, the
+substantive programme exposure, and excluded `sub_district`; the cost is that
+geographic variation between the six upazilas is absorbed into the
+delivery-model coefficient.
+
+*Near-constant variables dropped.* `mother_occupation` is 97.5% "housewife" and
+`religion_muslim` is 97.8% Muslim; both were left out of the main model and are
+shown in a sensitivity fit in the feasibility notes.
+
+**Statistical analysis.** Logistic regression via `glm(family = binomial)`,
+justified because the outcome is binary. We fitted a univariable model for each
+predictor first, then a single multivariable model containing all of them.
+Predictors were chosen in advance on subject-matter grounds, not by significance.
+Estimates are reported as odds ratios with 95% confidence intervals;
+significance threshold 0.05. Model fit is summarised with AIC and the
+events-per-parameter ratio. Assumptions were checked with
+`performance::check_model()`. Analysis used `r R.version.string` with tidyverse,
+gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped), of whom `r n_event` were underweight.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(
+    by = underweight,
+    missing = "no"
+  ) |>
+  add_n() |>
+  add_overall() |>
+  modify_caption("**Table 1. Sample characteristics, by underweight status.**")
+```
+
+```{r table-one-numbers}
+prev <- 100 * n_event / nrow(dat_model)
+n_severe_waz <- sum(dat$weight_for_age_z < -3, na.rm = TRUE)
+n_severe_haz <- sum(dat$height_for_age_z < -3, na.rm = TRUE)
+```
+
+`r sprintf("%.1f", prev)`% of children (`r n_event` of `r nrow(dat_model)`) were
+underweight. Underweight children come disproportionately from the lowest asset
+tertile and have mothers with fewer years of schooling and, notably, higher
+maternal age — a crude contrast that turns out not to survive adjustment.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Prevalence of underweight by mother's completed schooling (grouped) and household asset tertile. Error bars are 95% Wilson confidence intervals; numbers above the bars are group sizes."}
+prev_dat <- dat_model |>
+  mutate(school_grp = cut(mother_schooling_yrs,
+                          breaks = c(-Inf, 0, 5, 10, Inf),
+                          labels = c("None", "1-5 yrs", "6-10 yrs", "11+ yrs"))) |>
+  count(school_grp, asset_index_tertile, underweight) |>
+  pivot_wider(names_from = underweight, values_from = n, values_fill = 0) |>
+  rename(no = `Not underweight`, yes = Underweight) |>
+  mutate(n = no + yes,
+         p = yes / n,
+         z = 1.96,
+         centre = (p + z^2 / (2 * n)) / (1 + z^2 / n),
+         halfw  = z * sqrt(p * (1 - p) / n + z^2 / (4 * n^2)) / (1 + z^2 / n),
+         lo = pmax(0, centre - halfw),
+         hi = pmin(1, centre + halfw))
+
+ggplot(prev_dat, aes(x = school_grp, y = 100 * p, fill = asset_index_tertile)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.75) +
+  geom_errorbar(aes(ymin = 100 * lo, ymax = 100 * hi),
+                position = position_dodge(width = 0.8), width = 0.2) +
+  geom_text(aes(y = 100 * hi + 2.5, label = n),
+            position = position_dodge(width = 0.8), size = 2.6) +
+  scale_fill_viridis_d(option = "D", end = 0.85, name = "Asset tertile") +
+  labs(x = "Mother's completed schooling",
+       y = "Underweight prevalence (%)",
+       title = "Underweight falls with both maternal schooling and household wealth")
+```
+
+Underweight prevalence falls with maternal schooling within each asset tertile
+and with asset tertile within each schooling band, which is a visual argument
+that the two are partly independent — and also that each will absorb some of the
+other's crude association once both are in the model.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = glm,
+    method.args = list(family = binomial),
+    exponentiate = TRUE
+  )
+uv
+```
+
+```{r uv-tidy}
+uv_tidy <- map_dfr(predictors, function(p) {
+  tidy(glm(reformulate(p, outcome), data = dat_model, family = binomial),
+       conf.int = TRUE) |>
+    filter(term != "(Intercept)")
+})
+```
+
+Unadjusted, household wealth is the strongest predictor: children in the highest
+asset tertile have `r fmt_or(uv_tidy, "asset_index_tertileHighest")` compared
+with the lowest (`r fmt_p(uv_tidy, "asset_index_tertileHighest")`), a reduction
+of well over half in the odds of being underweight, with the middle tertile at
+`r fmt_or(uv_tidy, "asset_index_tertileMiddle")`
+(`r fmt_p(uv_tidy, "asset_index_tertileMiddle")`). Each additional year of
+maternal schooling is associated with
+`r fmt_or(uv_tidy, "mother_schooling_yrs")`
+(`r fmt_p(uv_tidy, "mother_schooling_yrs")`). Each additional year of *mother's
+age* is associated with higher odds,
+`r fmt_or(uv_tidy, "mother_age_yrs")` (`r fmt_p(uv_tidy, "mother_age_yrs")`).
+Older children have higher odds, `r fmt_or(uv_tidy, "child_age_months")` per
+month (`r fmt_p(uv_tidy, "child_age_months")`), and girls lower odds than boys,
+`r fmt_or(uv_tidy, "child_sexFemale")` (`r fmt_p(uv_tidy, "child_sexFemale")`).
+The programme variable is flat: home-based areas show
+`r fmt_or(uv_tidy, "delivery_modelHome-based")`
+(`r fmt_p(uv_tidy, "delivery_modelHome-based")`), an odds ratio essentially equal
+to 1.
+
+## Why adjustment is needed
+
+**Mother's age** is the clearest confounded variable in this analysis, and the
+mechanism is concrete: female schooling has expanded rapidly across birth cohorts
+in Bangladesh, so a 35-year-old mother in this sample has systematically fewer
+years of education than a 20-year-old, and low maternal education is strongly
+associated with underweight. The crude maternal-age odds ratio is therefore
+largely a maternal-education effect wearing a different label. **Household asset
+tertile** confounds the schooling association in the same way and is confounded
+by it in return: wealthier households educate daughters longer and also buy more
+and better food, so neither crude estimate can be read on its own. **Improved
+toilet facility** is a third: latrine ownership is concentrated in the upper
+asset tertiles, and poor sanitation causes the enteric disease that suppresses
+weight gain, so its crude odds ratio cannot be separated from wealth without
+adjustment. **Child age** must be held constant on structural grounds, since
+weight-for-age declines across the observed window.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- glm(reformulate(predictors, outcome), data = dat_model, family = binomial)
+
+mv <- tbl_regression(fit, exponentiate = TRUE)
+mv
+```
+
+```{r fit-stats}
+mv_tidy <- tidy(fit, conf.int = TRUE) |> filter(term != "(Intercept)")
+n_par <- length(coef(fit)) - 1
+epp   <- min(n_event, n_nonevent) / n_par
+
+tibble(
+  Statistic = c("AIC", "Null deviance", "Residual deviance",
+                "Events (underweight)", "Non-events",
+                "Model parameters (excl. intercept)", "Events per parameter"),
+  Value = c(sprintf("%.1f", AIC(fit)),
+            sprintf("%.1f", fit$null.deviance),
+            sprintf("%.1f", fit$deviance),
+            format(n_event, big.mark = ","),
+            format(n_nonevent, big.mark = ","),
+            as.character(n_par),
+            sprintf("%.1f", epp))
+) |>
+  gt() |>
+  tab_header(title = "Model fit")
+```
+
+AIC is `r sprintf("%.1f", AIC(fit))`, with residual deviance
+`r sprintf("%.1f", fit$deviance)` against a null deviance of
+`r sprintf("%.1f", fit$null.deviance)`. With `r n_event` events and
+`r n_par` estimated parameters there are `r sprintf("%.1f", epp)` events per
+parameter, far above the conventional minimum of 10, so no coefficient is
+resting on a sparse cell.
+
+Holding the other predictors constant, children in the highest asset tertile have
+`r fmt_or(mv_tidy, "asset_index_tertileHighest")` of being underweight relative
+to the lowest tertile (`r fmt_p(mv_tidy, "asset_index_tertileHighest")`), and
+those in the middle tertile `r fmt_or(mv_tidy, "asset_index_tertileMiddle")`
+(`r fmt_p(mv_tidy, "asset_index_tertileMiddle")`). Each extra year of maternal
+schooling is associated with `r fmt_or(mv_tidy, "mother_schooling_yrs")`
+(`r fmt_p(mv_tidy, "mother_schooling_yrs")`), each additional month of child age
+with `r fmt_or(mv_tidy, "child_age_months")`
+(`r fmt_p(mv_tidy, "child_age_months")`), and girls with
+`r fmt_or(mv_tidy, "child_sexFemale")` relative to boys
+(`r fmt_p(mv_tidy, "child_sexFemale")`). Mother's age is no longer associated
+with the outcome, `r fmt_or(mv_tidy, "mother_age_yrs")`
+(`r fmt_p(mv_tidy, "mother_age_yrs")`). Adjusted for household circumstances,
+home-based GMP areas show `r fmt_or(mv_tidy, "delivery_modelHome-based")`
+(`r fmt_p(mv_tidy, "delivery_modelHome-based")`).
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted odds ratios.**")
+```
+
+**One predictor changed significance status, and it is the most instructive
+result in the table.** Mother's age went from
+`r fmt_or(uv_tidy, "mother_age_yrs")`
+(`r fmt_p(uv_tidy, "mother_age_yrs")`) to
+`r fmt_or(mv_tidy, "mother_age_yrs")` (`r fmt_p(mv_tidy, "mother_age_yrs")`) — on
+the log-odds scale, 58% of the crude association vanished once maternal schooling
+and household wealth were held constant. Older mothers do not have more
+underweight children; poorer, less-educated mothers do, and they happen to be
+older.
+
+**Two predictors moved substantially toward the null but stayed significant.**
+The highest-versus-lowest asset odds ratio went from
+`r fmt_or(uv_tidy, "asset_index_tertileHighest")` to
+`r fmt_or(mv_tidy, "asset_index_tertileHighest")` (23% attenuation on the
+log-odds scale), and maternal schooling from
+`r fmt_or(uv_tidy, "mother_schooling_yrs")` to
+`r fmt_or(mv_tidy, "mother_schooling_yrs")` (21%). This is the reciprocal
+confounding anticipated above: each was carrying part of the other's association.
+
+**One moved away from the null without reaching significance.** Improved toilet
+reversed direction from `r fmt_or(uv_tidy, "improved_toiletYes")`
+(`r fmt_p(uv_tidy, "improved_toiletYes")`) to
+`r fmt_or(mv_tidy, "improved_toiletYes")`
+(`r fmt_p(mv_tidy, "improved_toiletYes")`). Once wealth is held constant, the
+households that still lack a latrine are not the poorest ones, and whatever
+crude protection sanitation appeared to offer was wealth all along.
+
+**Three predictors barely moved**: delivery model
+(`r fmt_or(uv_tidy, "delivery_modelHome-based")` to
+`r fmt_or(mv_tidy, "delivery_modelHome-based")`), child sex
+(`r fmt_or(uv_tidy, "child_sexFemale")` to
+`r fmt_or(mv_tidy, "child_sexFemale")`) and child age
+(`r fmt_or(uv_tidy, "child_age_months")` to
+`r fmt_or(mv_tidy, "child_age_months")`). Sex and age are not determined by
+household circumstances, so there is no confounding to remove; delivery model was
+allocated to matched-pair areas, which is presumably why the arms are balanced.
+None of this is a collinearity artefact — all variance inflation factors are
+below 1.3.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r diag-extra}
+vifs <- check_collinearity(fit)
+as_tibble(vifs) |>
+  select(Term, VIF) |>
+  mutate(VIF = round(VIF, 2)) |>
+  gt() |>
+  tab_header(title = "Variance inflation factors")
+
+bin <- binned_residuals(fit)
+pct_ok <- 100 * attributes(bin)$resid_ok
+
+fit_quad <- glm(reformulate(c("delivery_model", "child_sex",
+                              "poly(child_age_months, 2)", "poly(mother_age_yrs, 2)",
+                              "poly(mother_schooling_yrs, 2)", "asset_index_tertile",
+                              "ngo_member", "improved_toilet"), outcome),
+                data = dat_model, family = binomial)
+pct_ok_quad <- 100 * attributes(binned_residuals(fit_quad))$resid_ok
+```
+
+For a logistic model only some panels apply; homogeneity of variance and
+normality of residuals do not and should be ignored.
+
+*Binned residuals* is the panel that matters, and the model does not pass it
+cleanly: only `r sprintf("%.0f%%", pct_ok)` of bins fall inside the error bounds
+against a nominal 95%. Refitting with quadratic terms for child age, mother's age
+and schooling gives `r sprintf("%.0f%%", pct_ok_quad)` and a *worse* AIC
+(`r sprintf("%.1f", AIC(fit_quad))` versus `r sprintf("%.1f", AIC(fit))`), so a
+wrong functional form is not the explanation. The likelier cause is the
+unmodelled clustering described under limitations, which produces extra-binomial
+variation of exactly this kind. We retain the linear specification and report the
+caveat rather than chasing a transformation that does not help.
+
+*Collinearity* is unproblematic as specified, all VIFs under 1.3 — but only
+because `sub_district` was deliberately excluded. The *posterior predictive
+check* matches the observed outcome distribution, and no observation lies outside
+the Cook's-distance contours in the *influential observations* panel. With
+`r sprintf("%.1f", epp)` events per parameter the model is well clear of the
+sparse-data regime.
+
+# Discussion
+
+About one child in five in this sample of rural Bangladeshi infants was
+underweight by 6-13 months. Household wealth and maternal schooling are the
+predictors that survive mutual adjustment, together with child age and sex. The
+crude association with mother's age disappears entirely once education and wealth
+are accounted for, which is a useful reminder that maternal age in this setting
+is largely a marker of cohort and schooling. How growth monitoring was delivered
+shows no association with the odds of being underweight, crude or adjusted.
+Practically, this points at household poverty and women's education rather than
+at service reorganisation.
+
+**Limitations.**
+
+*The outcome is truncated by design, so prevalence is understated.* The source
+paper states that children with severe stunting, wasting or underweight were
+excluded on ethical grounds so they could be referred for treatment. The shipped
+file nonetheless contains `r n_severe_waz` children with weight-for-age below -3
+and `r n_severe_haz` with height-for-age below -3, so the exclusion was either
+incomplete or applied on a different criterion. For a binary outcome this bites
+hard: the children who would most clearly be classified as underweight have been
+selectively thinned, so the `r sprintf("%.1f", prev)`% prevalence reported here
+understates the true burden and every odds ratio is attenuated toward 1. This is
+a documented contradiction in the source, not something we could repair.
+
+*The outcome is derived, not measured.* We cut `weight_for_age_z` at -2. Nine
+children sit exactly on the boundary, and reasonable people use `<` rather than
+`<=`; the choice changes the event count by nine and is recorded in the methods
+so that it can be checked. Dichotomising also discards information: a child at
+-2.01 and a child at -5.1 are treated identically.
+
+*Clustering cannot be modelled.* Delivery model is an **area-level** exposure
+assigned to whole upazilas — six of them — and the survey sampled 60
+community-clinic catchment areas as matched pairs. Children in the same catchment
+share fieldworkers, scales, clinics and food markets, so their outcomes are
+correlated. The file contains no clinic or cluster identifier, so neither random
+effects nor cluster-robust standard errors can be fitted, and the confidence
+interval on `delivery_model` is too narrow. `sub_district` cannot substitute as a
+cluster variable because it is collinear with the exposure.
+
+*Age definition is inconsistent in the source.* The paper's abstract says
+children "under one year", its methods say 6-23 months, and the data run
+`r sprintf("%.1f", min(dat$child_age_months))` to
+`r sprintf("%.1f", max(dat$child_age_months))` months. We describe the observed
+range only; underweight prevalence over a full 6-23-month window would be higher.
+
+*Design and residual confounding.* Cross-sectional data give associations, not
+effects. Birth weight, gestational age, maternal height and BMI, breastfeeding
+and complementary feeding practice, and recent illness are all absent and all
+cause low weight-for-age.
+
+*Sparse and dropped variables.* `mother_occupation` and `religion_muslim` were
+excluded as near-constant, so nothing can be said about either.
+
+**Future work.** A longitudinal design with cluster identifiers, birth
+anthropometry and feeding data, and without the severe-malnutrition exclusion,
+would be needed for any causal statement about GMP delivery and underweight.
+
+# Feasibility notes
+
+*Not part of a student report.*
+
+**Verdict: the strongest of the three binary outcomes, and the one to recommend
+if a student wants a logistic model.**
+
+1. **The crude-versus-adjusted section actually has content**, which is not true
+   of `stunted`. Mother's age crosses from significant to null
+   (`r sprintf("%.3f", exp(uv_tidy$estimate[uv_tidy$term == "mother_age_yrs"]))`,
+   `r fmt_p(uv_tidy, "mother_age_yrs")` to
+   `r sprintf("%.3f", exp(mv_tidy$estimate[mv_tidy$term == "mother_age_yrs"]))`,
+   `r fmt_p(mv_tidy, "mother_age_yrs")`); the highest asset tertile attenuates
+   from `r sprintf("%.3f", exp(uv_tidy$estimate[uv_tidy$term == "asset_index_tertileHighest"]))`
+   to `r sprintf("%.3f", exp(mv_tidy$estimate[mv_tidy$term == "asset_index_tertileHighest"]))`;
+   maternal schooling from
+   `r sprintf("%.3f", exp(uv_tidy$estimate[uv_tidy$term == "mother_schooling_yrs"]))`
+   to `r sprintf("%.3f", exp(mv_tidy$estimate[mv_tidy$term == "mother_schooling_yrs"]))`;
+   improved toilet flips from
+   `r sprintf("%.3f", exp(uv_tidy$estimate[uv_tidy$term == "improved_toiletYes"]))`
+   to `r sprintf("%.3f", exp(mv_tidy$estimate[mv_tidy$term == "improved_toiletYes"]))`.
+   There is a real story to write.
+
+2. **The outcome must be derived, so the brief has to say so explicitly**, along
+   with the `<=` versus `<` convention. Students who silently use a different cut
+   will report a different event count (`r n_event` versus
+   `r sum(dat_raw$weight_for_age_z < -2, na.rm = TRUE)`).
+
+3. **`weight_for_age_z` must never appear as a predictor** — it defines the
+   outcome and produces complete separation. `weight_for_height_z` shares the
+   identical weight measurement and is nearly as bad. This is the single most
+   likely student error on this outcome and needs to be stated in the brief.
+
+4. **`delivery_model` versus `sub_district`.** 99.7% overlap (8 discordant
+   records out of `r nrow(dat_raw)`); together, VIFs around 96 and 103.
+
+5. **Fitting is clean apart from binned residuals.**
+   `r sprintf("%.1f", epp)` events per parameter, no separation, no sparse cells,
+   VIFs under 1.3. The binned-residual check fails the nominal 95% standard
+   (`r sprintf("%.0f%%", pct_ok)` inside bounds) and quadratic terms make it
+   worse, so it should be reported as unmodelled clustering rather than treated
+   as a fixable specification problem.
+
+6. **Near-constant predictors.** Sensitivity fit adding them back:
+
+```{r sens-near-constant}
+dat_sens <- dat |>
+  mutate(religion_muslim = factor(religion_muslim, levels = c(0, 1),
+                                  labels = c("Non-Muslim", "Muslim")),
+         mother_occupation = factor(mother_occupation,
+                                    levels = c("housewife", "others"),
+                                    labels = c("Housewife", "Other"))) |>
+  select(all_of(c(outcome, predictors)), mother_occupation, religion_muslim) |>
+  drop_na()
+
+fit_sens <- glm(reformulate(c(predictors, "mother_occupation", "religion_muslim"),
+                            outcome), data = dat_sens, family = binomial)
+
+tidy(fit_sens, conf.int = TRUE, exponentiate = TRUE) |>
+  filter(str_detect(term, "mother_occupation|religion_muslim")) |>
+  mutate(across(where(is.numeric), ~ round(.x, 3))) |>
+  select(term, estimate, conf.low, conf.high, p.value) |>
+  gt() |>
+  tab_header(title = "Near-constant predictors, added back (odds ratios)",
+             subtitle = "n = 77 non-housewives, 66 non-Muslim households")
+```
+
+   Very wide intervals resting on tiny comparison groups; shown only to justify
+   dropping them.
+
+7. **Overlap with `weight_for_age_z`.** Same measurement, dichotomised. If the
+   assignment does not require a logistic model, the continuous version is
+   strictly better powered.

@@ -1,0 +1,383 @@
+---
+title: "Systolic blood pressure in US adults"
+subtitle: "Dataset 10: NHANES adults (2009-10 and 2011-12 extract)"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "nhanes_adults.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "systolic_bp"
+predictors <- c("age_yrs", "sex", "race", "bmi", "poverty_ratio",
+                "smoked_100_cigs", "alcohol_days_year", "diabetes", "phys_active")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    sex   = lab(factor(sex, levels = c("female", "male"), labels = c("Female", "Male")),
+                "Sex"),
+    race  = lab(fct_relevel(factor(race), "White"), "Race/ethnicity"),
+    smoked_100_cigs = lab(factor(smoked_100_cigs, levels = c(0, 1), labels = c("No", "Yes")),
+                          "Ever smoked 100+ cigarettes"),
+    diabetes = lab(factor(diabetes, levels = c(0, 1), labels = c("No", "Yes")),
+                   "Diagnosed diabetes"),
+    phys_active = lab(factor(phys_active, levels = c(0, 1), labels = c("No", "Yes")),
+                      "Recreationally physically active"),
+    age_yrs = lab(age_yrs, "Age (years)"),
+    bmi = lab(bmi, "BMI (kg/m2)"),
+    poverty_ratio = lab(poverty_ratio, "Income-to-poverty ratio"),
+    alcohol_days_year = lab(alcohol_days_year, "Drinking days in past year"),
+    systolic_bp = lab(systolic_bp, "Systolic BP (mmHg)")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", fmt(p, 3)))
+```
+
+# Introduction
+
+The National Health and Nutrition Examination Survey (NHANES) is a continuous
+cross-sectional survey of the civilian non-institutionalised US population,
+combining a household interview with a standardised physical examination in a
+mobile examination centre. This teaching extract holds `r nrow(dat)` adults aged
+21 to 80 from the 2009-10 and 2011-12 cycles. Systolic blood pressure is the
+single strongest modifiable determinant of stroke and ischaemic heart disease, so
+knowing which measured characteristics track with it is directly relevant to
+screening.
+
+**Aim.** Among these US adults, we examined which of age, sex, race/ethnicity,
+BMI, income-to-poverty ratio, smoking history, alcohol frequency, diagnosed
+diabetes and recreational physical activity are independently associated with
+systolic blood pressure, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** NHANES 2009-10 and 2011-12, a complex multistage probability
+sample of the US civilian non-institutionalised population. This extract contains
+`r nrow(dat)` adults (`r sum(dat$survey_cycle == "2009_10")` from 2009-10,
+`r sum(dat$survey_cycle == "2011_12")` from 2011-12) with 31 variables. Blood
+pressure was measured in the mobile examination centre; the file carries the mean
+of the recorded readings, rounded to whole mmHg.
+
+**Variables.** The outcome is `systolic_bp`, systolic blood pressure in mmHg,
+treated as continuous. Predictors are age (years), sex (reference female),
+race/ethnicity (reference White, the largest group), BMI (kg/m2),
+income-to-poverty ratio (household income as a multiple of the federal poverty
+line, higher = better off), ever having smoked 100 cigarettes (reference no),
+number of drinking days in the past year, doctor-diagnosed diabetes (reference
+no) and recreational moderate or vigorous physical activity (reference no).
+
+`diastolic_bp` and `hypertensive` are deliberately excluded. `hypertensive` is
+not an independent variable at all: in this file it reproduces
+`systolic_bp >= 130 | diastolic_bp >= 80` exactly on every row where both
+pressures are observed, so putting it in the model would be regressing systolic
+pressure on a function of itself. `weight_kg` and `height_cm` are also excluded
+because `bmi` is exactly `weight_kg / (height_cm/100)^2` in this file (largest
+discrepancy 0.05 kg/m2, attributable to rounding), and the three cannot sit in
+one model without near-perfect collinearity.
+
+**Statistical analysis.** `lm()`, justified because the outcome is continuous and
+approximately unimodal. We fitted a univariable model for each predictor first,
+then a single multivariable model containing all of them. Predictors were chosen
+in advance on subject-matter grounds, not by significance. Significance threshold
+0.05; estimates are reported with 95% confidence intervals. Assumptions were
+checked with `performance::check_model()`, and because non-constant variance was
+flagged we additionally report HC3 heteroscedasticity-consistent standard errors.
+Models are **unweighted**: the NHANES survey weights, strata and primary sampling
+units are not carried in this extract, so no result here is a nationally
+representative estimate. Analysis used `r R.version.string` with tidyverse,
+gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped). The two costly predictors are
+`alcohol_days_year` (`r sum(is.na(dat$alcohol_days_year))` missing) and
+`poverty_ratio` (`r sum(is.na(dat$poverty_ratio))` missing); systolic pressure
+itself is missing for `r sum(is.na(dat$systolic_bp))` participants. Only
+`r sum(complete.cases(dat_raw))` of `r nrow(dat)` rows are complete on *every*
+variable in the file, so listwise deletion is a live threat here and the
+complete-case N is reported for every model.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(missing = "no") |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics.**")
+```
+
+The analytic sample has a median systolic pressure in the low 120s mmHg with a
+long right tail, a median BMI in the overweight range, and roughly balanced sex.
+Diagnosed diabetes is present in a small minority, and just under half report
+recreational physical activity.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Systolic blood pressure against age, by sex, with LOESS smoothers."}
+ggplot(dat_model, aes(age_yrs, systolic_bp, colour = sex)) +
+  geom_point(alpha = 0.45, size = 1.6) +
+  geom_smooth(method = "loess", se = TRUE, linewidth = 0.9) +
+  scale_colour_manual(values = c(Female = "#B25D9C", Male = "#2E6F9E")) +
+  labs(x = "Age (years)", y = "Systolic blood pressure (mmHg)", colour = "Sex")
+```
+
+Systolic pressure rises steadily and close to linearly across the adult age range
+in both sexes, with substantial scatter at every age and a visibly wider spread
+among older participants.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(lm(reformulate(v, outcome), data = dat_model), conf.int = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 2) {
+  r <- utid[utid$term == term, ]
+  sprintf("%s mmHg (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+```
+
+Age is the dominant crude predictor: each additional year of age is associated
+with `r ug("age_yrs")` higher systolic pressure (p `r up("age_yrs")`), so a
+30-year age difference corresponds to roughly
+`r fmt(30 * utid$estimate[utid$term == "age_yrs"], 0)` mmHg. Diagnosed diabetes
+is associated with `r ug("diabetesYes")` (p `r up("diabetesYes")`) higher
+pressure crudely, and
+participants in the "Other" race category average `r ug("raceOther")`
+(p `r up("raceOther")`) lower pressure than White participants. BMI, sex,
+income-to-poverty ratio, smoking, alcohol frequency and physical activity show no
+clear crude association.
+
+## Why adjustment is needed
+
+The crude estimates are confounded by age above all. **Age** is associated with
+almost every predictor here and with the outcome: older participants are far more
+likely to have diagnosed diabetes (diabetes prevalence rises steeply with age)
+and less likely to be recreationally active, and age independently raises
+systolic pressure through arterial stiffening. The crude diabetes coefficient of
+about 10 mmHg is therefore partly just the age difference between people with and
+without diabetes. **BMI** is the second obvious confounder: it is strongly
+associated with diabetes and with physical inactivity, and adiposity raises blood
+pressure through sodium retention and sympathetic activation, so the crude
+diabetes and activity coefficients also carry adiposity. **Sex** confounds the
+alcohol association, because men drink on more days per year and men and women
+differ in blood pressure at a given age. Mutual adjustment lets each coefficient
+be read as a comparison between participants who are similar on the other
+measured characteristics.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE)
+g <- function(term, d = 2) {
+  r <- tid[tid$term == term, ]
+  sprintf("%s mmHg (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+```
+
+```{r fit-stats}
+s <- summary(fit)
+tibble(
+  Statistic = c("Complete-case N", "Parameters (excl. intercept)",
+                "R-squared", "Adjusted R-squared", "Residual SE (mmHg)"),
+  Value = c(as.character(nrow(dat_model)),
+            as.character(length(coef(fit)) - 1L),
+            fmt(s$r.squared, 3), fmt(s$adj.r.squared, 3), fmt(s$sigma, 2))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable linear model for systolic BP**"))
+```
+
+The model explains `r fmt(100 * s$r.squared, 1)`% of the variance in systolic
+pressure (adjusted R-squared `r fmt(s$adj.r.squared, 3)`), which is modest but
+typical for blood pressure with demographic and behavioural predictors only.
+Among participants of the same sex, race, BMI, income level, smoking, drinking,
+diabetes and activity status, each additional year of age is associated with
+`r g("age_yrs")` higher systolic pressure (p `r gp("age_yrs")`). No other
+predictor reaches significance: diabetes is associated with `r g("diabetesYes")`
+(p `r gp("diabetesYes")`), BMI with `r g("bmi")` per kg/m2 (p `r gp("bmi")`), and
+being physically active with `r g("phys_activeYes")` (p `r gp("phys_activeYes")`).
+These are associations among the participants observed, not effects of
+intervening on any of these variables.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+Two coefficients move a long way toward the null. Diabetes falls from
+`r ug("diabetesYes")` crude to `r g("diabetesYes")` adjusted and loses
+significance, a drop of about two thirds; this is confounding by age and BMI,
+exactly as anticipated, and the residual estimate is too imprecise to interpret.
+Race "Other" moves from `r ug("raceOther")` (significant) to `r g("raceOther")`
+(not significant), a shift explained by the much younger age (mean 40 vs 52
+years) and lower BMI (mean 24 vs 29 kg/m2) of that group, which is very small
+here (n = `r sum(dat_model$race == "Other")`). Physical activity moves in
+the opposite direction, from `r ug("phys_activeYes")` crude to
+`r g("phys_activeYes")` adjusted: once age and BMI are held constant, active
+participants have slightly *higher* rather than slightly lower pressure, a sign
+that the crude estimate was masked by the fact that active people are younger and
+leaner. Age itself barely moves (`r ug("age_yrs")` to `r g("age_yrs")`), which is
+what you expect for a variable that confounds the others but is itself confounded
+by nothing measured here. Nothing crosses into significance on adjustment.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r het-check}
+het <- check_heteroscedasticity(fit)
+print(het)
+```
+
+```{r robust-se}
+rob <- lmtest::coeftest(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+robci <- lmtest::coefci(fit, vcov. = sandwich::vcovHC(fit, type = "HC3"))
+tibble(
+  Term = rownames(rob),
+  Estimate = fmt(rob[, 1], 3),
+  `SE (OLS)` = fmt(summary(fit)$coefficients[, 2], 3),
+  `SE (HC3)` = fmt(rob[, 2], 3),
+  `95% CI (HC3)` = paste0(fmt(robci[, 1], 2), " to ", fmt(robci[, 2], 2)),
+  `p (HC3)` = fmt(rob[, 4], 3)
+) |>
+  filter(Term != "(Intercept)") |>
+  gt() |>
+  tab_header(title = md("**Table 3. HC3 heteroscedasticity-consistent standard errors.**"))
+```
+
+The posterior-predictive and residual panels show the model captures the centre
+of the distribution but under-predicts the upper tail: a handful of participants
+with systolic pressures above 170 mmHg are poorly fitted. The residual-versus-
+fitted panel fans out toward higher fitted values, and `check_heteroscedasticity()`
+confirms non-constant error variance (p < 0.001) - the spread of systolic
+pressure genuinely grows with its mean. The normal-QQ panel shows a heavy right
+tail, consistent with the same few high-pressure participants. Collinearity is a
+non-issue: the highest VIF is 1.31, for race/ethnicity. No point exceeds the Cook's distance contours,
+so no single observation drives the fit.
+
+Because variance is non-constant, Table 3 reports HC3 robust standard errors.
+The HC3 SE for age is `r fmt(rob["age_yrs", 2], 3)` against an OLS SE of
+`r fmt(summary(fit)$coefficients["age_yrs", 2], 3)`, so the age conclusion is
+unchanged; no predictor changes its significance status under robust inference.
+The point estimates are unaffected - only the uncertainty around them is
+re-estimated.
+
+# Discussion
+
+In this NHANES extract, age is the only characteristic independently associated
+with systolic blood pressure once the others are held constant, at roughly
+`r fmt(tid$estimate[tid$term == "age_yrs"], 2)` mmHg per year. The crude diabetes
+association, which looked large and highly significant, is substantially
+explained by the age and BMI differences between participants with and without
+diabetes. Practically, this reinforces that age is the dominant stratifier for
+blood-pressure screening, and that a crude comparison of pressure across
+diabetes status will badly overstate the difference attributable to diabetes
+itself.
+
+**Limitations.** The models are unweighted, and the NHANES sampling weights,
+strata and PSUs are not in this extract, so the sample **must not be described as
+nationally representative**: minority groups are oversampled by design and
+standard errors ignore the clustered multistage design, which typically makes
+them too small. The design is cross-sectional, so nothing here establishes
+temporality - diabetes, activity and blood pressure were measured at the same
+visit. Complete-case analysis dropped `r n_dropped` of `r nrow(dat)` rows
+(`r fmt(100 * n_dropped / nrow(dat), 0)`%), mostly for missing alcohol and
+income data, and if those data are not missing at random the estimates are
+biased. Non-constant residual variance was detected and handled with HC3 SEs, but
+the heavy right tail means predictions for hypertensive participants are poor.
+Antihypertensive medication is not recorded in this extract, which is a serious
+unmeasured confounder: treated participants have lower measured pressure
+*because* of their higher underlying risk, biasing the diabetes and BMI
+coefficients toward the null. Race/ethnicity categories are small outside White
+(n = `r sum(dat_model$race != "White")` in total across four groups) so those
+contrasts are imprecise. All estimates are associations, not causal effects.
+
+**Future work.** Refit with the NHANES survey design using the `survey` package
+and add antihypertensive medication use, which is available in the full public
+NHANES files.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+- **Works well as a student project.** Continuous, well-measured outcome; one
+  large, unambiguous, easily interpreted signal (age); several predictors that
+  attenuate on adjustment, which is exactly the teaching point of Purpose 3.
+- **Complete-case N drops to `r nrow(dat_model)` of `r nrow(dat)`
+  (`r fmt(100 * n_dropped / nrow(dat), 0)`% lost).** Driven by
+  `alcohol_days_year` (18% missing) and `poverty_ratio` (8% missing) plus the 20
+  rows missing blood pressure. Dropping `alcohol_days_year` recovers about 60
+  rows. Students will not notice this unless told to check.
+- **Trap: `hypertensive` and `diastolic_bp` must be excluded.** `hypertensive` is
+  an exact recomputation of `systolic_bp >= 130 | diastolic_bp >= 80` on all 468
+  rows with both pressures observed (100% agreement; the 20 apparent exceptions
+  are simply rows where BP is missing, so `hypertensive` is missing too). A
+  student who includes it will get a huge R-squared and an incoherent model.
+- **Trap: `bmi`, `weight_kg`, `height_cm`.** `bmi` is exactly
+  `weight_kg/(height_cm/100)^2` (max absolute discrepancy 0.05, pure rounding).
+  All three in one model gives severe collinearity.
+- **Heteroscedasticity is real and flagged (p < 0.001)**, plus non-normal
+  residuals with a heavy right tail. This is a feature, not a bug: it gives the
+  student a genuine reason to run `check_heteroscedasticity()` and HC3, and the
+  conclusions survive.
+- **Low R-squared (`r fmt(s$r.squared, 3)`)** may disappoint students expecting a
+  "good" model; worth pre-empting.
+- **Unweighted survey analysis.** Must be stated. The extract carries no weights,
+  strata or PSU, so a design-based analysis is impossible with this file alone.
+- No separation, no collinearity (max VIF 1.31), no influential-point problems.

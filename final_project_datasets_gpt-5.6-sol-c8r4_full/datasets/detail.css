@@ -1,0 +1,18 @@
+@import url("https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;700&display=swap");
+:root{--ink:#373a3c;--muted:#6c757d;--paper:#fff;--white:#fff;--line:#dee2e6;--link:#2780e3;--link-dark:#1c5fa8;--gold-pale:#fff5dc}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Source Sans Pro",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";line-height:1.48}
+a{color:var(--link);text-decoration:none}a:hover{color:var(--link-dark);text-decoration:underline}
+.wrap{width:min(100% - 32px,1060px);margin:0 auto}
+header{padding:28px 0 22px;background:var(--white);border-bottom:1px solid var(--line)}
+.back{display:inline-block;margin-bottom:14px;color:var(--muted);font-size:.8rem;font-weight:600}
+h1{margin:0 0 7px;font-size:clamp(1.8rem,4vw,2.7rem);line-height:1.08;letter-spacing:-.035em}
+.lede{max-width:76ch;margin:0;color:var(--muted)}
+.meta{margin:10px 0 0;color:var(--muted);font-size:.85rem}
+main{padding:24px 0 36px}section+section{margin-top:34px}h2{margin:0 0 5px;font-size:1.25rem}h3{margin:0 0 8px;font-size:1rem}.section-note{margin:0 0 11px;color:var(--muted);font-size:.82rem}.section-note code{font-family:"SFMono-Regular",Consolas,monospace;color:var(--ink)}
+.table-shell{overflow-x:auto;background:var(--white);border:1px solid var(--line);border-radius:11px}
+table{width:100%;border-collapse:collapse;font-size:.82rem}th{padding:9px 11px;background:#f8f9fa;color:#495057;text-align:left;font-size:.8rem;font-weight:700}td{padding:8px 11px;border-top:1px solid #e9ecef;vertical-align:top}.codebook-table td:first-child{font-family:"SFMono-Regular",Consolas,monospace;color:#212529;font-size:.76rem;font-weight:700}.codebook-table td:last-child{white-space:nowrap}
+figure{margin:18px 0 0}.inspect-figure{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:11px}.sample-table{width:max-content;min-width:100%;font-size:.74rem}.sample-table th,.sample-table td{white-space:nowrap}.sample-table th{position:sticky;top:0}.sample-shell{max-height:620px}
+.error{padding:15px;background:var(--gold-pale);border-radius:9px;color:#755300}
+footer{padding:18px 0;border-top:1px solid var(--line);background:var(--white);color:var(--muted);font-size:.76rem}
+@media(max-width:620px){.wrap{width:min(100% - 22px,1060px)}table{min-width:780px}}

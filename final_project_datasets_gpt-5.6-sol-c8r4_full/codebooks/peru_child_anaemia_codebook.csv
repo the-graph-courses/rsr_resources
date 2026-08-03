@@ -1,0 +1,24 @@
+variable,description,type,values,pct_complete
+child_age_months,Child's age in months (6-59),continuous,median 33 | range 6 to 59,100.0
+child_sex,Child's sex,categorical,"male (9,923), female (9,268)",100.0
+birth_weight,"Birth-weight category (""low"" is the mother-reported low-birth-weight category, i.e. below 2.5 kg)",categorical,"normal (15,997), macrosomia (1,478), low (1,165)",97.1
+caesarean_delivery,Delivered by caesarean section (1 = yes),binary 0/1,"1 = 6,283 (32.7%), 0 = 12,908",100.0
+multiple_birth,Multiple birth (1 = yes),binary 0/1,"1 = 181 (0.9%), 0 = 19,010",100.0
+breastfed_immediately,Breastfed within one hour of birth (1 = yes),binary 0/1,"1 = 10,120 (52.9%), 0 = 8,996",99.6
+mother_education,Mother's highest level of education,categorical,"secondary (9,514), higher (6,046), primary_or_none (3,631)",100.0
+father_education,Father's highest level of education,categorical,"secondary (9,702), higher (5,905), primary_or_none (2,697)",95.4
+mother_working,Mother currently working (1 = yes),binary 0/1,"1 = 11,009 (57.4%), 0 = 8,182",100.0
+mother_partnered,Mother married or cohabiting (1 = yes),binary 0/1,"1 = 15,855 (82.6%), 0 = 3,336",100.0
+mother_insured,Mother has health insurance (1 = yes),binary 0/1,"1 = 17,339 (90.3%), 0 = 1,852",100.0
+mother_indigenous,Mother belongs to an indigenous ethnic group (1 = yes),binary 0/1,"1 = 2,012 (10.5%), 0 = 17,179",100.0
+residence,Urban or rural residence,categorical,"urban (13,057), rural (6,134)",100.0
+natural_region,Natural region of Peru,categorical,"highlands (6,383), rest_of_coast (5,504), jungle (4,994), lima_metropolitan (2,310)",100.0
+wealth_index,Household wealth quintile,categorical,"poorest (5,993), poorer (5,175), middle (3,778), richer (2,593), richest (1,652)",100.0
+unimproved_water,Unimproved household water source (1 = yes),binary 0/1,"1 = 1,270 (6.7%), 0 = 17,769",99.2
+unimproved_floor,Unimproved floor material (1 = yes),binary 0/1,"1 = 5,114 (27.1%), 0 = 13,738",98.2
+unimproved_walls,Unimproved wall material (1 = yes),binary 0/1,"1 = 588 (3.1%), 0 = 18,112",97.4
+haemoglobin_g_dl,Altitude-adjusted haemoglobin (g/dL),continuous,median 11.3 | range 4.4 to 16.5,100.0
+height_for_age_z,Height-for-age Z-score,continuous,median -0.81 | range -5.6 to 3.88,100.0
+anaemia,Anaemia: haemoglobin_g_dl below 11 (1 = yes),binary 0/1,"1 = 6,961 (36.3%), 0 = 12,230",100.0
+stunting,Chronic malnutrition: height-for-age Z below -2 (1 = yes),binary 0/1,"1 = 2,485 (12.9%), 0 = 16,706",100.0
+survey_weight,DHS sampling weight - not a variable to model,continuous,median 0.3 | range 0.02 to 1.43,100.0

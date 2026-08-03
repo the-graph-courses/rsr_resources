@@ -1,0 +1,22 @@
+variable,description,type,values,pct_complete
+sex,Sex,categorical,"female (824), male (335)",100.0
+age_group,Age band in years,categorical,"30_39 (383), 40_49 (295), 60_plus (263), 50_59 (218)",100.0
+marital_status,Marital status,categorical,"married (1,025), divorced_or_widowed (97), unmarried (37)",100.0
+education,Highest level of education,categorical,"none_or_informal (626), secondary (239), higher (158), primary (136)",100.0
+occupation,Main occupation,categorical,"household_work (659), job_or_self_employed (305), agriculture_or_labour (142), unemployed (53)",100.0
+below_poverty_line,"Family income per person below Rs 16,355/year (1 = yes)",binary 0/1,"1 = 316 (27.3%), 0 = 843",100.0
+smoking_status,Smoking status,categorical,"never (770), current (209), former (180)",100.0
+cigarettes_per_week,Cigarettes smoked per week (0 for non-smokers),continuous,median 0 | range 0 to 280,100.0
+smokeless_tobacco,Currently uses smokeless tobacco (1 = yes),binary 0/1,"1 = 139 (12.0%), 0 = 1,020",100.0
+alcohol_last_month,Drank alcohol in the last month (1 = yes),binary 0/1,"1 = 177 (15.3%), 0 = 982",100.0
+fruit_veg_servings,Servings of fruit and vegetables per day,continuous,median 2.29 | range 0.14 to 8,100.0
+salt_g_per_day,Estimated total salt intake (g/day),continuous,median 2.85 | range 0 to 22.76,100.0
+mets_min_per_week,Total physical activity (MET-minutes per week),continuous,"median 1,440 | range 0 to 29,260",100.0
+physical_activity,Physical activity level,categorical,"moderate_or_high (744), low (415)",100.0
+family_history_htn,Family history of hypertension (1 = yes),binary 0/1,"1 = 170 (14.7%), 0 = 989",100.0
+bmi,Body mass index (kg/m2),continuous,median 23.61 | range 13.35 to 41.72,100.0
+systolic_bp,Mean systolic blood pressure of two readings (mmHg),continuous,median 120 | range 76 to 200,100.0
+diastolic_bp,Mean diastolic blood pressure of two readings (mmHg),continuous,median 80 | range 40 to 125,100.0
+hypertension,Hypertension: raised BP or on treatment (1 = yes),binary 0/1,"1 = 451 (38.9%), 0 = 708",100.0
+bp_awareness,Has been told they have raised blood pressure (1 = yes),binary 0/1,"1 = 241 (20.8%), 0 = 918",100.0
+antihypertensive_drug,Took antihypertensive medication in the last two weeks (1 = yes),binary 0/1,"1 = 131 (11.3%), 0 = 1,028",100.0

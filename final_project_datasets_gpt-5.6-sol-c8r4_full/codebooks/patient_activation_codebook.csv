@@ -1,0 +1,28 @@
+variable,description,type,values,pct_complete
+id,Participant identifier,identifier,"1,154 distinct values",100.0
+sex,Sex,categorical,"male (694), female (458)",99.8
+age_yrs,Age in years,continuous,median 70 | range 28 to 92,99.7
+bmi,Body mass index (kg/m2),continuous,median 27.07 | range 13.49 to 51.2,97.7
+height_cm,Height (cm),continuous,median 172 | range 137 to 205,98.2
+weight_kg,Weight (kg),continuous,median 80 | range 32 to 155,98.3
+education_level,Highest level of education completed,categorical,"lower (530), middle (429), higher (168)",97.7
+living_alone,Lives alone (1 = yes),binary 0/1,"1 = 323 (28.5%), 0 = 809",98.1
+financial_distress,Self-reported financial distress,categorical,"none (538), low (481), high (97)",96.7
+smoking_status,Smoking status,categorical,"former (667), never (276), current (196)",98.7
+ethnicity_dutch,"Dutch ethnicity (1 = Dutch, 0 = other)",binary 0/1,"1 = 1,086 (95.3%), 0 = 54",98.8
+care_allowance,Receives a care allowance (1 = yes),binary 0/1,"1 = 588 (52.4%), 0 = 535",97.3
+disease,Index chronic condition,categorical,"diabetes_t2 (422), copd (290), heart_failure (223), renal_disease (219)",100.0
+disease_duration,Time since diagnosis,categorical,"over_5_yrs (535), 2_to_5_yrs (299), under_2_yrs (222)",91.5
+n_comorbidities,Number of additional chronic conditions,integer,median 1 | range 0 to 5,99.7
+charlson_index,Charlson comorbidity index (higher = more comorbidity),continuous,median 3 | range 1 to 13,99.7
+pam_score,"Patient Activation Measure (PAM-13) score, 0-100; higher = more able to self-manage",continuous,median 52.9 | range 24.4 to 91.6,100.0
+pam_level,"PAM activation level (1 = lowest, 4 = highest)",integer,median 2 | range 1 to 4,100.0
+sf12_physical,SF-12 physical health component score,continuous,median 50 | range 0 to 100,98.1
+sf12_mental,SF-12 mental health component score,continuous,median 70 | range 2.5 to 100,98.1
+hads_depression,HADS depression subscale (0-21; >= 8 suggests caseness),continuous,median 4 | range 0 to 20,97.5
+hads_anxiety,HADS anxiety subscale (0-21; >= 8 suggests caseness),continuous,median 4 | range 0 to 20,96.6
+ipq_total,Brief Illness Perception Questionnaire total (higher = more threatening view of illness),continuous,median 37.45 | range 0 to 76,98.3
+social_support_total,"Multidimensional Scale of Perceived Social Support, total",continuous,median 66 | range 10 to 84,98.5
+support_family,Perceived support from family,continuous,median 23 | range 4 to 28,98.0
+support_friends,Perceived support from friends,continuous,median 20 | range 4 to 28,97.3
+support_significant_other,Perceived support from a significant other,continuous,median 24 | range 4 to 28,97.9

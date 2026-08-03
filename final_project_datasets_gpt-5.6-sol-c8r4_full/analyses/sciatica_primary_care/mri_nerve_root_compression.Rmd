@@ -1,0 +1,625 @@
+---
+title: "Nerve-root compression on MRI in primary-care patients with sciatica"
+subtitle: "Dataset 3: Sciatica in primary care"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "sciatica_primary_care.csv"),
+                    show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "mri_nerve_root_compression"
+predictors <- c("age_yrs", "sex", "bmi", "leg_pain_worse",
+                "cough_sneeze_positive", "subjective_sensory_changes",
+                "below_knee_pain", "neural_tension_positive",
+                "neurological_deficit")
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    sex = factor(sex, levels = c("female", "male"), labels = c("Female", "Male")),
+    back_pain_duration = factor(back_pain_duration,
+                                levels = c("under_6_weeks", "6_to_12_weeks", "over_12_weeks"),
+                                labels = c("<6 weeks", "6-12 weeks", ">12 weeks")),
+    leg_pain_duration = factor(leg_pain_duration,
+                               levels = c("under_6_weeks", "6_to_12_weeks", "over_12_weeks"),
+                               labels = c("<6 weeks", "6-12 weeks", ">12 weeks")),
+    comorbidities = factor(comorbidities,
+                           levels = c("none", "one", "two_or_more"),
+                           labels = c("None", "One", "Two or more")),
+    general_health = factor(general_health,
+                            levels = c("good", "fair", "poor"),
+                            labels = c("Good", "Fair", "Poor")),
+    across(c(leg_pain_worse, cough_sneeze_positive, subjective_sensory_changes,
+             below_knee_pain, neural_tension_positive, neurological_deficit,
+             mri_nerve_root_compression, clinician_sciatica),
+           ~ factor(.x, levels = c(0, 1), labels = c("No", "Yes")))
+  )
+
+# `clinician_sciatica` is kept in dat_model only so that the collinearity
+# demonstration below runs on identical rows; it is NOT in `predictors`.
+dat_model <- dat |>
+  select(all_of(c(outcome, predictors, "clinician_sciatica"))) |>
+  drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+miss_tbl <- dat |>
+  summarise(across(everything(), ~ sum(is.na(.x)))) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "n_missing") |>
+  filter(n_missing > 0) |>
+  arrange(desc(n_missing))
+
+n_event  <- sum(dat_model[[outcome]] == "Yes")
+n_nonev  <- sum(dat_model[[outcome]] == "No")
+n_rarer  <- min(n_event, n_nonev)
+
+signs <- c("leg_pain_worse", "cough_sneeze_positive", "subjective_sensory_changes",
+           "below_knee_pain", "neural_tension_positive", "neurological_deficit")
+num01 <- function(x) as.numeric(x) - 1
+cor_tab <- tibble(
+  sign = signs,
+  r_mri = map_dbl(signs, ~ cor(num01(dat[[.x]]), num01(dat[[outcome]]))),
+  r_clin = map_dbl(signs, ~ cor(num01(dat[[.x]]), num01(dat$clinician_sciatica)))
+)
+```
+
+# Introduction
+
+The clinical question behind this dataset is a diagnostic one: when a GP sees a
+patient with leg pain and finds the classical signs of sciatica, how well do
+those signs predict what the scan will actually show? These data come from a
+cross-sectional study of `r nrow(dat_raw)` adults presenting to Dutch general
+practices with a new episode of sciatica, all of whom had a standardised history,
+a physical examination and a lumbar MRI regardless of the clinician's suspicion
+(Verwoerd et al.; sciatica in general practice, MRI substudy). Because the MRI
+was done in everyone, the usual verification bias that plagues diagnostic studies
+is absent, and the signs can be assessed against the imaging finding they are
+supposed to detect.
+
+**Aim.** Among primary-care patients presenting with sciatica, we examined which
+of age, sex, body mass index and five history and examination findings
+(leg pain worse than back pain, pain reproduced by coughing or sneezing,
+subjective sensory changes, pain radiating below the knee, a positive
+neural-tension test and a neurological deficit) are independently associated with
+nerve-root compression on MRI, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** Cross-sectional data from a primary-care sciatica cohort:
+`r nrow(dat_raw)` adults consulting Dutch general practitioners with a new
+episode of sciatica, each assessed at a single occasion with a structured
+history, a physical examination and a lumbar MRI. Age ranged from
+`r round(min(dat$age_yrs), 0)` to `r round(max(dat$age_yrs), 0)` years.
+
+**Variables.** The outcome is `mri_nerve_root_compression`, coded 1 when
+nerve-root compression is present on MRI; **the modelled event is presence of
+compression**, which occurs in `r n_event` of `r nrow(dat_model)` analysed
+patients (`r round(100 * n_event / nrow(dat_model), 1)`%). Predictors are
+`age_yrs` (years), `sex` (reference: female, the larger group), `bmi` (kg/m²),
+`leg_pain_worse` (patient reports leg pain worse than back pain; reference: no),
+`cough_sneeze_positive` (coughing or sneezing reproduces the leg pain;
+reference: no), `subjective_sensory_changes` (reference: no), `below_knee_pain`
+(pain radiates below the knee; reference: no), `neural_tension_positive` (at
+least one positive neural-tension test; reference: no) and
+`neurological_deficit` (at least one deficit on examination; reference: no).
+Every binary predictor takes "no / sign absent" as its reference so that odds
+ratios above 1 mean the sign is associated with compression.
+
+**`clinician_sciatica` is deliberately excluded from the main model.** It is the
+GP's own high-confidence diagnosis of sciatica -- not an independent
+observation, but a summary judgement formed from the very signs listed above. In
+this file it correlates
+r = `r round(cor_tab$r_clin[cor_tab$sign == "neural_tension_positive"], 2)` with
+`neural_tension_positive`,
+r = `r round(cor_tab$r_clin[cor_tab$sign == "below_knee_pain"], 2)` with
+`below_knee_pain` and
+r = `r round(cor_tab$r_clin[cor_tab$sign == "neurological_deficit"], 2)` with
+`neurological_deficit`. Entering it alongside those signs would ask each sign to
+explain variation in the outcome that its own summary has already absorbed; the
+coefficients would become answers to a question nobody asked. A sensitivity
+model containing it, with the resulting variance inflation factors, is reported
+in the Diagnostics section rather than being used for inference. `id` is a row
+label and is excluded from every model.
+
+**Statistical analysis.** Logistic regression (`glm(family = binomial)`),
+justified because the outcome is binary. We fitted a univariable model for each
+predictor first, then a single multivariable model containing all of them.
+Predictors were chosen in advance on subject-matter grounds, not by significance.
+Estimates are reported as odds ratios with 95% confidence intervals;
+significance threshold 0.05. Model fit is summarised with AIC, Tjur's R² and the
+number of events per estimated parameter. Assumptions were checked with
+`performance::check_model()`, focusing on binned residuals, collinearity and
+influential observations. Analysis used `r R.version.string` with tidyverse,
+gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped,
+`r round(100 * n_dropped / nrow(dat), 1)`%). Missingness in this file is small
+but real and confined to
+`r paste(sprintf("%s (%d)", miss_tbl$variable, miss_tbl$n_missing), collapse = ", ")`.
+The outcome and all six clinical signs are complete; the only loss here is from
+`bmi`. Had `leg_pain_duration` been included the analysed sample would have
+fallen to `r nrow(drop_na(dat[, c(outcome, predictors, "leg_pain_duration")]))`.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  select(-clinician_sciatica) |>
+  tbl_summary(by = all_of(outcome), missing = "no") |>
+  add_n() |>
+  add_overall() |>
+  modify_caption("**Table 1. Sample characteristics by MRI nerve-root compression status.**")
+```
+
+Compression is present in `r round(100 * n_event / nrow(dat_model), 1)`% of the
+analysed sample, so neither class is rare: the smaller class contains
+`r n_rarer` patients. The most striking contrast in Table 1 is not a clinical
+sign at all but sex --
+`r round(100 * mean(dat_model[[outcome]][dat_model$sex == "Male"] == "Yes"), 0)`%
+of men have compression versus
+`r round(100 * mean(dat_model[[outcome]][dat_model$sex == "Female"] == "Yes"), 0)`%
+of women. The clinical signs differ far less between the two MRI groups than one
+would expect: for example
+`r round(100 * mean(dat_model$below_knee_pain[dat_model[[outcome]] == "Yes"] == "Yes"), 0)`%
+of patients with compression report pain below the knee, compared with
+`r round(100 * mean(dat_model$below_knee_pain[dat_model[[outcome]] == "No"] == "Yes"), 0)`%
+of those without.
+
+## Exploratory figure
+
+```{r explore, fig.height=5.5, fig.cap="Figure 1. Proportion of patients with nerve-root compression on MRI, by each clinical sign and by sex. Bars are proportions with 95% Wilson confidence intervals; the dashed line is the overall prevalence of compression. Numbers above the bars are group sizes."}
+prop_ci <- function(x, n) {
+  z <- 1.96; p <- x / n
+  c(lo = (p + z^2 / (2 * n) - z * sqrt(p * (1 - p) / n + z^2 / (4 * n^2))) / (1 + z^2 / n),
+    hi = (p + z^2 / (2 * n) + z * sqrt(p * (1 - p) / n + z^2 / (4 * n^2))) / (1 + z^2 / n))
+}
+
+plot_dat <- dat_model |>
+  select(all_of(c(outcome, signs, "sex"))) |>
+  mutate(sex = factor(sex, levels = c("Female", "Male"), labels = c("No", "Yes"))) |>
+  pivot_longer(-all_of(outcome), names_to = "predictor", values_to = "level") |>
+  group_by(predictor, level) |>
+  summarise(n = n(), k = sum(.data[[outcome]] == "Yes"), .groups = "drop") |>
+  mutate(p = k / n,
+         lo = map2_dbl(k, n, ~ prop_ci(.x, .y)["lo"]),
+         hi = map2_dbl(k, n, ~ prop_ci(.x, .y)["hi"]),
+         predictor = recode(predictor, sex = "sex (Yes = male)"))
+
+ggplot(plot_dat, aes(x = level, y = p)) +
+  geom_hline(yintercept = mean(dat_model[[outcome]] == "Yes"),
+             linetype = "dashed", colour = "grey50") +
+  geom_col(fill = "#2c7fb8", width = 0.6) +
+  geom_errorbar(aes(ymin = lo, ymax = hi), width = 0.15) +
+  geom_text(aes(y = hi + 0.06, label = n), size = 3) +
+  facet_wrap(~ predictor, nrow = 2) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1)) +
+  labs(x = "Sign present?", y = "Nerve-root compression on MRI (%)")
+```
+
+Only the sex panel shows a wide separation from the dashed overall prevalence,
+with `leg_pain_worse` and `cough_sneeze_positive` a distant second and third,
+while `subjective_sensory_changes` and
+`neural_tension_positive`, the signs a clinician would weight most heavily,
+barely move the proportion at all. This is the central finding of the analysis
+and the reason the model that follows explains so little.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  select(all_of(c(outcome, predictors))) |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = glm,
+    method.args = list(family = binomial),
+    exponentiate = TRUE
+  )
+uv
+```
+
+```{r uv-numbers}
+uv_fit <- function(v) {
+  tidy(glm(reformulate(v, outcome), data = dat_model, family = binomial),
+       conf.int = TRUE, exponentiate = TRUE)
+}
+fmtp <- function(p) ifelse(p < 0.001, "< 0.001", paste("=", round(p, 3)))
+u <- function(term, v) uv_fit(v) |> filter(.data$term == !!term)
+u_sex <- u("sexMale", "sex")
+u_lpw <- u("leg_pain_worseYes", "leg_pain_worse")
+u_cs  <- u("cough_sneeze_positiveYes", "cough_sneeze_positive")
+u_nd  <- u("neurological_deficitYes", "neurological_deficit")
+u_bkp <- u("below_knee_painYes", "below_knee_pain")
+u_nt  <- u("neural_tension_positiveYes", "neural_tension_positive")
+u_ssc <- u("subjective_sensory_changesYes", "subjective_sensory_changes")
+```
+
+Sex is the strongest crude predictor of what the scan shows: men have
+`r round(u_sex$estimate, 2)` times the odds of nerve-root compression compared
+with women (95% CI `r round(u_sex$conf.low, 2)` to `r round(u_sex$conf.high, 2)`,
+p `r fmtp(u_sex$p.value)`), a substantially larger effect than any clinical sign.
+Among the signs, reporting leg pain as worse than back pain carries an odds
+ratio of `r round(u_lpw$estimate, 2)` (95% CI `r round(u_lpw$conf.low, 2)` to
+`r round(u_lpw$conf.high, 2)`, p `r fmtp(u_lpw$p.value)`), pain reproduced by
+coughing or sneezing `r round(u_cs$estimate, 2)`
+(p `r fmtp(u_cs$p.value)`), a neurological deficit `r round(u_nd$estimate, 2)`
+(p `r fmtp(u_nd$p.value)`), pain below the knee `r round(u_bkp$estimate, 2)`
+(p `r fmtp(u_bkp$p.value)`) and a positive neural-tension test
+`r round(u_nt$estimate, 2)` (p `r fmtp(u_nt$p.value)`). Subjective sensory
+changes are not associated at all (OR `r round(u_ssc$estimate, 2)`,
+p `r fmtp(u_ssc$p.value)`).
+
+```{r sign-gap}
+cor_show <- cor_tab |>
+  mutate(across(c(r_mri, r_clin), ~ round(.x, 2))) |>
+  rename(`Clinical sign` = sign,
+         `r with MRI compression` = r_mri,
+         `r with clinician diagnosis` = r_clin)
+cor_show |> gt() |>
+  tab_header(title = "The signs predict the clinician, not the scan",
+             subtitle = "Point-biserial correlations, full file (n = 395)")
+```
+
+```{r tjur-gap}
+mri_signs <- glm(reformulate(signs, outcome), data = dat_model, family = binomial)
+clin_signs <- glm(reformulate(signs, "clinician_sciatica"), data = dat_model,
+                  family = binomial)
+r2_mri  <- as.numeric(r2_tjur(mri_signs))
+r2_clin <- as.numeric(r2_tjur(clin_signs))
+```
+
+The table above is worth pausing on, because it is the most interesting thing in
+this dataset. Each of the six signs correlates only weakly with the MRI finding
+(r between `r round(min(cor_tab$r_mri), 2)` and
+`r round(max(cor_tab$r_mri), 2)`), yet the same signs correlate strongly with the
+clinician's diagnosis of sciatica (up to
+r = `r round(max(cor_tab$r_clin), 2)`). Fitting the same six signs to the two
+different outcomes makes the size of the gap explicit: they explain Tjur's
+R² = `r round(r2_clin, 2)` of the clinician's judgement but only
+R² = `r round(r2_mri, 2)` of the MRI finding. The examination is highly
+reproducible *as a description of what the clinician concludes* and only weakly
+informative *about what the scan shows*. That gap is the finding, and it is a
+better research question than any single coefficient in the model below.
+
+## Why adjustment is needed
+
+The crude odds ratios cannot be read as independent contributions because the
+signs cluster within patients and because both the signs and the outcome vary
+with basic demographics. `sex` is the clearest confounder: men are more likely to
+have compression on MRI
+(`r round(100 * mean(dat_model[[outcome]][dat_model$sex == "Male"] == "Yes"), 0)`%
+versus
+`r round(100 * mean(dat_model[[outcome]][dat_model$sex == "Female"] == "Yes"), 0)`%)
+and they also present differently -- for example
+`r round(100 * mean(dat_model$leg_pain_worse[dat_model$sex == "Male"] == "Yes"), 0)`%
+of men report leg pain worse than back pain versus
+`r round(100 * mean(dat_model$leg_pain_worse[dat_model$sex == "Female"] == "Yes"), 0)`%
+of women -- so an unadjusted sign estimate partly measures the sex mix of the
+patients who have that sign. `below_knee_pain` is a second confounder, this time
+of the examination findings: it correlates
+r = `r round(cor(num01(dat_model$below_knee_pain), num01(dat_model$neural_tension_positive)), 2)`
+with `neural_tension_positive` and
+r = `r round(cor(num01(dat_model$below_knee_pain), num01(dat_model$neurological_deficit)), 2)`
+with `neurological_deficit`, and it is itself associated with compression, so
+patients with a positive neural-tension test are simply more likely to be
+patients whose pain radiates below the knee. `age_yrs` is a third: older patients
+are more likely to show degenerative nerve-root compression
+(r = `r round(cor(dat_model$age_yrs, num01(dat_model[[outcome]])), 2)`) and less
+likely to report cough-provoked pain
+(r = `r round(cor(dat_model$age_yrs, num01(dat_model$cough_sneeze_positive)), 2)`),
+so age pushes the crude cough-sneeze estimate around. Mutual adjustment is what
+lets us ask whether any single sign carries information about the scan that the
+other signs and the patient's demographics do not already provide.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- glm(reformulate(predictors, outcome), data = dat_model, family = binomial)
+
+mv <- tbl_regression(fit, exponentiate = TRUE)
+mv
+```
+
+```{r fit-stats}
+n_params <- length(coef(fit))
+epp <- n_rarer / n_params
+tibble(
+  Statistic = c("AIC", "Null deviance", "Residual deviance", "Tjur's R-squared",
+                "N (complete cases)", "Events (compression present)",
+                "Non-events", "Rarer class", "Estimated parameters",
+                "Events per parameter (rarer class)"),
+  Value = c(round(AIC(fit), 1), round(fit$null.deviance, 1),
+            round(fit$deviance, 1), round(as.numeric(r2_tjur(fit)), 3),
+            nrow(dat_model), n_event, n_nonev, n_rarer, n_params,
+            round(epp, 1))
+) |>
+  gt() |>
+  tab_header(title = "Model fit")
+```
+
+```{r mv-numbers}
+tm <- tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+g <- function(t) tm |> filter(term == t)
+auc_val <- as.numeric(performance_roc(fit))
+```
+
+Adjusting for all nine predictors, four remain independently associated with
+nerve-root compression. Sex is by far the strongest: conditional on age, BMI and
+all six clinical signs, men have `r round(g("sexMale")$estimate, 2)` times the
+odds of compression (95% CI `r round(g("sexMale")$conf.low, 2)` to
+`r round(g("sexMale")$conf.high, 2)`, p `r fmtp(g("sexMale")$p.value)`). Pain
+reproduced by coughing or sneezing carries an odds ratio of
+`r round(g("cough_sneeze_positiveYes")$estimate, 2)` (95% CI
+`r round(g("cough_sneeze_positiveYes")$conf.low, 2)` to
+`r round(g("cough_sneeze_positiveYes")$conf.high, 2)`,
+p `r fmtp(g("cough_sneeze_positiveYes")$p.value)`), leg pain worse than back pain
+`r round(g("leg_pain_worseYes")$estimate, 2)`
+(p `r fmtp(g("leg_pain_worseYes")$p.value)`) and a neurological deficit
+`r round(g("neurological_deficitYes")$estimate, 2)`
+(p `r fmtp(g("neurological_deficitYes")$p.value)`). The two signs that a
+clinician would probably weight most heavily contribute nothing once the others
+are held constant: `neural_tension_positive` has an adjusted odds ratio of
+`r round(g("neural_tension_positiveYes")$estimate, 2)`
+(95% CI `r round(g("neural_tension_positiveYes")$conf.low, 2)` to
+`r round(g("neural_tension_positiveYes")$conf.high, 2)`,
+p `r fmtp(g("neural_tension_positiveYes")$p.value)`) -- an odds ratio of
+essentially exactly 1 -- and `subjective_sensory_changes`
+`r round(g("subjective_sensory_changesYes")$estimate, 2)`
+(p `r fmtp(g("subjective_sensory_changesYes")$p.value)`). `below_knee_pain`,
+`age_yrs` and `bmi` are also not independently associated.
+
+Fit is modest. AIC is `r round(AIC(fit), 1)` against a null deviance of
+`r round(fit$null.deviance, 1)` and residual deviance
+`r round(fit$deviance, 1)`, Tjur's R² is
+`r round(as.numeric(r2_tjur(fit)), 3)`, and the area under the ROC curve is
+`r round(auc_val, 3)` -- better than chance but nowhere near a usable diagnostic
+rule. Sample size is not the constraint: with `r n_rarer` patients in the rarer
+class and `r n_params` estimated parameters there are `r round(epp, 1)` events
+per parameter, comfortably above the conventional minimum of 10, so the wide
+confidence intervals on the null signs reflect genuinely weak associations rather
+than an underpowered model.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted odds ratios.**")
+```
+
+Two estimates move dramatically toward the null and lose significance. The
+**neural-tension test** falls from a crude odds ratio of
+`r round(u_nt$estimate, 2)` (p `r fmtp(u_nt$p.value)`) to
+`r round(g("neural_tension_positiveYes")$estimate, 2)`
+(p `r fmtp(g("neural_tension_positiveYes")$p.value)`) -- essentially the whole
+association disappears. **Pain below the knee** falls from
+`r round(u_bkp$estimate, 2)` (p `r fmtp(u_bkp$p.value)`) to
+`r round(g("below_knee_painYes")$estimate, 2)`
+(p `r fmtp(g("below_knee_painYes")$p.value)`). Both are explained by the same
+thing: these two signs travel with the other signs (`below_knee_pain` correlates
+`r round(cor(num01(dat_model$below_knee_pain), num01(dat_model$neurological_deficit)), 2)`
+with `neurological_deficit` and
+`r round(cor(num01(dat_model$below_knee_pain), num01(dat_model$neural_tension_positive)), 2)`
+with `neural_tension_positive`), so once the more informative signs are in the
+model there is nothing left for them to explain. This is confounding-by-clustering
+of the signs, not collinearity in the technical sense -- as the VIFs below show.
+
+Moving in the other direction, **sex** strengthens slightly away from the null
+(`r round(u_sex$estimate, 2)` to `r round(g("sexMale")$estimate, 2)`) and
+**cough/sneeze provocation** does the same
+(`r round(u_cs$estimate, 2)` to
+`r round(g("cough_sneeze_positiveYes")$estimate, 2)`), because the signs that
+women are more likely to report were masking a little of both. **Neurological
+deficit** barely moves (`r round(u_nd$estimate, 2)` to
+`r round(g("neurological_deficitYes")$estimate, 2)`) and stays significant, and
+**subjective sensory changes** is null before and after
+(`r round(u_ssc$estimate, 2)` to
+`r round(g("subjective_sensory_changesYes")$estimate, 2)`). The overall pattern
+-- three of six signs surviving, none with an odds ratio above 3 -- is a
+quantitative statement of how loosely the clinical examination maps onto the
+imaging finding.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r diag-tests}
+col <- check_collinearity(fit)
+col
+binned_residuals(fit)
+```
+
+```{r diag-numbers}
+vif_tab <- as.data.frame(col) |> arrange(desc(VIF))
+max_vif <- round(max(vif_tab$VIF), 2)
+max_vif_term <- vif_tab$Term[which.max(vif_tab$VIF)]
+n_out <- sum(check_outliers(fit))
+br <- binned_residuals(fit)
+br_ok <- attributes(br)$p_value
+```
+
+**Binned residuals.** Observed and predicted probabilities agree acceptably
+across the range of fitted values; the binned-residual plot shows no systematic
+curvature, so the linear-in-logit assumption for `age_yrs` and `bmi` is not
+obviously violated.
+
+**Collinearity in the main model.** All variance inflation factors are low. The
+largest is `r max_vif_term` at `r max_vif` -- nowhere near the conventional
+threshold of 5. This is worth stating explicitly because the six clinical signs
+correlate with each other at r = 0.10 to 0.39, which sounds alarming but is far
+too weak to destabilise a nine-parameter model. The attenuation of
+`neural_tension_positive` and `below_knee_pain` in the previous section is
+therefore genuine confounding by the other signs, not a variance-inflation
+artefact.
+
+**Influential observations.** `check_outliers()` flags `r n_out` observation(s)
+at the Cook's-distance threshold, and there is no separation: every fitted
+probability lies between
+`r round(min(fitted(fit)), 2)` and `r round(max(fitted(fit)), 2)`, and every
+coefficient has a finite standard error.
+
+**Events per parameter.** `r n_rarer` in the rarer class over `r n_params`
+parameters gives `r round(epp, 1)` events per parameter, above the usual
+minimum of 10.
+
+```{r clinician-trap}
+fit_trap <- glm(reformulate(c(predictors, "clinician_sciatica"), outcome),
+                data = dat_model, family = binomial)
+vif_trap <- as.data.frame(check_collinearity(fit_trap)) |> arrange(desc(VIF))
+
+trap_tab <- as.data.frame(col) |>
+  select(Term, `VIF (main model)` = VIF) |>
+  full_join(vif_trap |> select(Term, `VIF (+ clinician_sciatica)` = VIF),
+            by = "Term") |>
+  mutate(across(where(is.numeric), ~ round(.x, 2))) |>
+  arrange(desc(`VIF (+ clinician_sciatica)`))
+
+trap_or <- tidy(fit_trap, exponentiate = TRUE, conf.int = TRUE)
+trap_tab |> gt() |>
+  tab_header(title = "What happens if `clinician_sciatica` is added",
+             subtitle = "Sensitivity analysis only - not the reported model")
+```
+
+**The `clinician_sciatica` sensitivity model.** Adding the clinician's diagnosis
+alongside the signs it is derived from does exactly what the Methods section
+predicted. The VIF for `neural_tension_positive` rises from
+`r round(vif_tab$VIF[vif_tab$Term == "neural_tension_positive"], 2)` to
+`r round(vif_trap$VIF[vif_trap$Term == "neural_tension_positive"], 2)` and
+`below_knee_pain` from
+`r round(vif_tab$VIF[vif_tab$Term == "below_knee_pain"], 2)` to
+`r round(vif_trap$VIF[vif_trap$Term == "below_knee_pain"], 2)`; the odds ratio
+for `below_knee_pain` moves from
+`r round(g("below_knee_painYes")$estimate, 2)` to
+`r round(trap_or$estimate[trap_or$term == "below_knee_painYes"], 2)` and
+`neural_tension_positive` from
+`r round(g("neural_tension_positiveYes")$estimate, 2)` to
+`r round(trap_or$estimate[trap_or$term == "neural_tension_positiveYes"], 2)` --
+i.e. it flips to the protective side. AIC improves marginally
+(`r round(AIC(fit), 1)` to `r round(AIC(fit_trap), 1)`), which is precisely the
+trap: a model-selection criterion rewards adding a variable that makes the
+scientific question unanswerable. The VIFs alone (max
+`r round(max(vif_trap$VIF), 2)`) would not have raised an alarm. The reason to
+exclude `clinician_sciatica` is that it is a summary of the other predictors, not
+that a diagnostic test says so.
+
+# Discussion
+
+Among primary-care patients presenting with sciatica, the classical clinical
+signs are only weakly informative about whether the MRI will show nerve-root
+compression. Three of the six signs -- pain provoked by coughing or sneezing,
+leg pain reported as worse than back pain, and a neurological deficit -- remain
+independently associated after mutual adjustment, but with odds ratios below 3
+and an overall Tjur's R² of `r round(as.numeric(r2_tjur(fit)), 3)` and AUC of
+`r round(auc_val, 3)`. The single strongest predictor of the scan finding is
+being male, which is not a clinical sign at all. Two signs that clinicians weight
+heavily -- the neural-tension test and subjective sensory changes -- carry no
+independent information about the imaging finding whatsoever.
+
+The result becomes much more interesting when set against the clinician's own
+diagnosis. The same six signs explain Tjur's R² = `r round(r2_clin, 2)` of the
+GP's high-confidence sciatica diagnosis but only `r round(r2_mri, 2)` of the MRI
+finding. The examination is therefore internally coherent -- clinicians use the
+signs consistently and their diagnosis is close to a summary of them -- while
+being only loosely coupled to the anatomy. In practical terms this means a
+confident clinical diagnosis of sciatica should not be read as a confident
+prediction of nerve-root compression, and it explains why MRI changes management
+in a meaningful minority of these patients.
+
+**Limitations.** This is a cross-sectional diagnostic association study; nothing
+here is causal, and odds ratios are not likelihood ratios, so the model does not
+directly give the quantities a clinician would use at the bedside. Nerve-root
+compression on MRI is itself an imperfect reference standard: it is common in
+asymptomatic people and the file records only its presence, not the level, side
+or severity, nor whether it corresponds to the symptomatic dermatome -- a
+patient counted as "compression present" may have it on the wrong side. The six
+signs are recorded as coarse binaries ("at least one neural-tension test
+positive", "at least one deficit"), which discards severity and almost certainly
+attenuates the associations. No inter-observer reliability data are available, so
+some of the weak signal may be measurement error in the signs rather than a true
+absence of association. Complete-case analysis dropped `r n_dropped` rows for
+missing BMI, which is negligible. The sample is Dutch primary care and the
+prevalence of compression here
+(`r round(100 * n_event / nrow(dat_model), 1)`%) will not transfer to secondary
+care, where selection is stronger.
+
+**Future work.** Linking the side and level of compression to the side and
+dermatome of the symptoms would test whether the weak signal reflects a genuinely
+loose sign-anatomy relationship or merely a crude outcome definition.
+
+# Feasibility notes
+
+*Not part of a student report.*
+
+- **Fully workable as a logistic regression, and the most scientifically
+  interesting of the three outcomes -- but the signal is weak.** Tjur's
+  R² = `r round(as.numeric(r2_tjur(fit)), 3)`, AUC = `r round(auc_val, 3)`,
+  three of nine predictors significant. Students expecting a "good model" will be
+  disappointed; students who understand that a null result about a diagnostic
+  test *is* a result will get the most out of this.
+- **Outcome balance is excellent.** `r n_event` with compression,
+  `r n_nonev` without; rarer class `r n_rarer`. With `r n_params` parameters that
+  is `r round(epp, 1)` events per parameter. No separation, no zero cells, all
+  fitted probabilities between `r round(min(fitted(fit)), 2)` and
+  `r round(max(fitted(fit)), 2)`.
+- **Complete-case N = `r nrow(dat_model)`** of `r nrow(dat)` (`r n_dropped`
+  dropped, `r round(100 * n_dropped / nrow(dat), 1)`%), all from `bmi`. Adding
+  `leg_pain_duration` would cost 19 more.
+- **No collinearity problem in the main model**: max VIF `r max_vif`
+  (`r max_vif_term`). The six signs inter-correlate at only r = 0.10 to 0.39,
+  which is not enough to inflate variances. Students who *expect* a collinearity
+  problem among "all those overlapping signs" will not find one -- a useful
+  corrective.
+- **The `clinician_sciatica` trap is the sharpest in this dataset and students
+  will fall into it.** It is a column in the file, it is not an outcome, and it
+  is essentially a summary of the signs (they explain Tjur's
+  R² = `r round(r2_clin, 2)` of it). Added to the model it inflates the VIF for
+  `neural_tension_positive` from
+  `r round(vif_tab$VIF[vif_tab$Term == "neural_tension_positive"], 2)` to
+  `r round(vif_trap$VIF[vif_trap$Term == "neural_tension_positive"], 2)`, flips
+  the `neural_tension_positive` odds ratio to
+  `r round(trap_or$estimate[trap_or$term == "neural_tension_positiveYes"], 2)`,
+  drives `below_knee_pain` to
+  `r round(trap_or$estimate[trap_or$term == "below_knee_painYes"], 2)` -- and
+  *improves* AIC from `r round(AIC(fit), 1)` to `r round(AIC(fit_trap), 1)`.
+  The VIFs never exceed `r round(max(vif_trap$VIF), 2)`, so no automated check
+  catches it. The argument has to be made on subject-matter grounds.
+- **The sign-versus-MRI gap is the teaching gold here.** Signs correlate
+  r = `r round(min(cor_tab$r_mri), 2)` to `r round(max(cor_tab$r_mri), 2)` with
+  the MRI outcome but up to `r round(max(cor_tab$r_clin), 2)` with the
+  clinician's diagnosis. Point students at that contrast rather than at the
+  individual odds ratios.
+- **Sex dominates.** OR `r round(g("sexMale")$estimate, 2)`, larger than any
+  clinical sign, and it is not obvious a priori. Expect students to discover it
+  and struggle to explain it; the honest answer is that this file has no
+  anatomical or occupational variable to mediate it.

@@ -1,0 +1,1036 @@
+{
+  "patient_activation": {
+    "slug": "patient_activation",
+    "title": "Patient activation for self-management in chronic disease",
+    "region": "Netherlands",
+    "design": "Cross-sectional survey study",
+    "blurb": "A cross-sectional survey study was conducted in primary and secondary care ... We included 1154 patients.",
+    "paper_url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0126400",
+    "journal": "PLOS ONE",
+    "year": "2015",
+    "outcomes": [
+      {
+        "var": "pam_score",
+        "type": "linear",
+        "detail": "24.4-91.6, 100% complete",
+        "note": "the paper's own outcome"
+      },
+      {
+        "var": "hads_depression",
+        "type": "either",
+        "detail": "linear; or >= 8 gives 290 / 1125 = 25.8%",
+        "note": "standard HADS caseness cut-off"
+      },
+      {
+        "var": "sf12_physical",
+        "type": "linear",
+        "detail": "97% complete",
+        "note": "physical health component score"
+      },
+      {
+        "var": "sf12_mental",
+        "type": "linear",
+        "detail": "97% complete",
+        "note": "mental health component score"
+      }
+    ],
+    "predictors": [
+      "age_yrs",
+      "sex",
+      "education_level",
+      "disease",
+      "charlson_index",
+      "n_comorbidities",
+      "sf12_physical",
+      "sf12_mental",
+      "hads_anxiety",
+      "ipq_total",
+      "social_support_total",
+      "financial_distress",
+      "smoking_status",
+      "living_alone",
+      "bmi"
+    ],
+    "cautions": [
+      "Four disease groups are pooled. `disease` is an important adjustment variable, and an interaction with it is a good source of a Discussion paragraph.",
+      "The published deposit codes missing questionnaire answers as `99`; these have been converted to `NA` here, so do not re-code them yourself.",
+      "The original file also carries disease-specific severity markers (eGFR, NYHA class, GOLD stage). They are **not** shipped, because each is defined for one disease group only and is therefore 20-30% complete by design.",
+      "`pam_level` is derived from `pam_score`. Pick one; never model one on the other."
+    ]
+  },
+  "medstudent_qol": {
+    "slug": "medstudent_qol",
+    "title": "Resilience, learning environment and quality of life in Brazilian medical students",
+    "region": "Brazil",
+    "design": "Multicentre cross-sectional survey",
+    "blurb": "We evaluated data from a random sample of 1,350 medical students from 22 Brazilian medical schools.",
+    "paper_url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0131535",
+    "journal": "PLOS ONE",
+    "year": "2015",
+    "outcomes": [
+      {
+        "var": "whoqol_psychological",
+        "type": "linear",
+        "detail": "0-100, complete",
+        "note": "the paper's main QoL domain"
+      },
+      {
+        "var": "whoqol_physical",
+        "type": "linear",
+        "detail": "0-100, complete",
+        "note": ""
+      },
+      {
+        "var": "whoqol_environment",
+        "type": "linear",
+        "detail": "0-100, complete",
+        "note": ""
+      },
+      {
+        "var": "bdi_depression",
+        "type": "either",
+        "detail": "linear 0-42; or >= 14 gives 314 / 1350 = 23.3%",
+        "note": "BDI >= 14 = moderate depression or worse"
+      },
+      {
+        "var": "medical_school_qol",
+        "type": "either",
+        "detail": "1-10 scale; <= 5 gives 294 / 1350 = 21.8%",
+        "note": "self-rated; treat as continuous or dichotomise"
+      },
+      {
+        "var": "overall_qol",
+        "type": "linear",
+        "detail": "1-10 scale, complete",
+        "note": ""
+      }
+    ],
+    "predictors": [
+      "sex",
+      "age_yrs",
+      "year_group",
+      "school_legal_status",
+      "school_location",
+      "resilience_score",
+      "dreem_global",
+      "dreem_learning",
+      "dreem_teachers",
+      "dreem_atmosphere",
+      "state_anxiety",
+      "trait_anxiety"
+    ],
+    "cautions": [
+      "`dreem_global` is the sum of the five DREEM subscales. Use the global score **or** the subscales, never both.",
+      "The WHOQOL domains are strongly correlated with each other. Choose one as your outcome; do not use the others as predictors.",
+      "Students are clustered within 22 schools, and standard `lm()` ignores that clustering. You are not expected to fit a multilevel model - but mention it in your Limitations.",
+      "`state_anxiety` and `trait_anxiety` correlate highly with each other and with BDI. Check for collinearity before putting all three in a model."
+    ]
+  },
+  "ggt_arterial_stiffness": {
+    "slug": "ggt_arterial_stiffness",
+    "title": "Liver enzymes and arterial stiffness in a Japanese health-check cohort",
+    "region": "Japan",
+    "design": "Cross-sectional health-screening study",
+    "blurb": "912 Japanese men and women aged 24–84 years ... received a medical health check-up programme with ... an automatic waveform analyser to measure baPWV.",
+    "paper_url": "https://bmjopen.bmj.com/content/4/10/e005413",
+    "journal": "BMJ Open",
+    "year": "2014",
+    "outcomes": [
+      {
+        "var": "pwv_max",
+        "type": "either",
+        "detail": "linear (cm/s); or >= 1400 gives 405 / 912 = 44.4%",
+        "note": "brachial-ankle pulse-wave velocity - arterial stiffness"
+      },
+      {
+        "var": "fatty_liver",
+        "type": "logistic",
+        "detail": "265 / 911 = 29.1%",
+        "note": "ultrasound-diagnosed"
+      },
+      {
+        "var": "log2_ggt",
+        "type": "linear",
+        "detail": "complete; strongly right-skewed",
+        "note": "use `log2_ggt` instead - already log-transformed for you"
+      },
+      {
+        "var": "abi_max",
+        "type": "linear",
+        "detail": "876 / 912 = 96% complete",
+        "note": "ankle-brachial index"
+      }
+    ],
+    "predictors": [
+      "age_yrs",
+      "sex",
+      "bmi",
+      "systolic_bp",
+      "diastolic_bp",
+      "smoking_status",
+      "alcohol_g_per_week",
+      "regular_exercise",
+      "fasting_glucose",
+      "uric_acid",
+      "total_cholesterol",
+      "hdl_cholesterol",
+      "ldl_cholesterol",
+      "triglycerides",
+      "egfr",
+      "log2_ggt",
+      "alt",
+      "ast"
+    ],
+    "cautions": [
+      "`smoking_status` is a three-level factor: never, former and current.",
+      "36 rows (ids 491-526) had a second pulse-wave-velocity reading sitting in the `abi_max` column of the published file. Those values have been set to `NA` here, which is why `abi_max` is 96% rather than 100% complete.",
+      "The original deposit also carries a post-menopausal indicator. It applies to the 320 women only, so it is not shipped.",
+      "Health-check attendees are healthier than the general population. That is a selection-bias point worth a line in your Discussion."
+    ]
+  },
+  "nhanes_adults": {
+    "slug": "nhanes_adults",
+    "title": "NHANES adults - US national health and nutrition survey",
+    "region": "United States",
+    "design": "Random extract of a national examination survey",
+    "blurb": "",
+    "paper_url": "https://www.cdc.gov/nchs/nhanes/",
+    "journal": "US CDC National Center for Health Statistics",
+    "year": "2009-2012",
+    "outcomes": [
+      {
+        "var": "systolic_bp",
+        "type": "linear",
+        "detail": "479 / 500 = 96% complete",
+        "note": "measured, averaged over readings"
+      },
+      {
+        "var": "bmi",
+        "type": "either",
+        "detail": "linear; or obese (>= 30) = 191 / 497 = 38.4%",
+        "note": "measured height and weight"
+      },
+      {
+        "var": "total_cholesterol",
+        "type": "linear",
+        "detail": "473 / 500 = 95% complete",
+        "note": ""
+      },
+      {
+        "var": "hdl_cholesterol",
+        "type": "linear",
+        "detail": "473 / 500 = 95% complete",
+        "note": ""
+      },
+      {
+        "var": "diabetes",
+        "type": "logistic",
+        "detail": "57 / 500 = 11.4%",
+        "note": "self-reported diagnosis; only ~5 predictors are supportable"
+      },
+      {
+        "var": "sleep_trouble",
+        "type": "logistic",
+        "detail": "139 / 500 = 27.8%",
+        "note": "self-reported"
+      },
+      {
+        "var": "phys_active",
+        "type": "logistic",
+        "detail": "250 / 500 = 50.0%",
+        "note": "perfectly balanced - the most statistically comfortable binary outcome here"
+      },
+      {
+        "var": "hypertensive",
+        "type": "logistic",
+        "detail": "181 / 479 = 37.8%",
+        "note": "derived: systolic >= 130 or diastolic >= 80"
+      },
+      {
+        "var": "obese",
+        "type": "logistic",
+        "detail": "",
+        "note": ""
+      }
+    ],
+    "predictors": [
+      "age_yrs",
+      "sex",
+      "race",
+      "education",
+      "poverty_ratio",
+      "household_income_mid",
+      "marital_status",
+      "work_status",
+      "smoked_100_cigs",
+      "alcohol_days_year",
+      "sleep_hours",
+      "phys_active",
+      "bmi",
+      "home_owner"
+    ],
+    "cautions": [
+      "`obese` and `hypertensive` were derived here from `bmi` and blood pressure so that a binary outcome is available. Do not use the parent variable as a predictor of its own derived flag.",
+      "`diabetes` has only 57 cases. At 10 events per variable that supports about five predictors - no more.",
+      "`education` and `general_health` are ordered factors; the level order has been set for you, so the reference category is the lowest level."
+    ]
+  },
+  "hiv_lung_6mwt": {
+    "slug": "hiv_lung_6mwt",
+    "title": "HIV infection and exercise capacity (6-minute walk distance)",
+    "region": "United States",
+    "design": "Cross-sectional analysis of a cohort, people with and without HIV",
+    "blurb": "PLWH and HIV-uninfected individuals were enrolled from 2 clinical centers and completed a 6-MWD, spirometry, diffusing capacity ... and St. George’s Respiratory Questionnaire.",
+    "paper_url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0212975",
+    "journal": "PLOS ONE",
+    "year": "2019",
+    "outcomes": [
+      {
+        "var": "six_min_walk_m",
+        "type": "either",
+        "detail": "linear (61-774 m); or < 400 m gives 124 / 427 = 29.0%",
+        "note": "the paper's own outcome; 400 m is a common impairment threshold"
+      },
+      {
+        "var": "sgrq_total",
+        "type": "linear",
+        "detail": "100% complete",
+        "note": "respiratory quality of life, 0-100, higher = worse"
+      },
+      {
+        "var": "fev1_pct_predicted",
+        "type": "linear",
+        "detail": "99% complete",
+        "note": "airflow obstruction"
+      },
+      {
+        "var": "dlco_pct_predicted",
+        "type": "linear",
+        "detail": "99.5% complete",
+        "note": "gas transfer - the paper's strongest lung-function correlate"
+      }
+    ],
+    "predictors": [
+      "hiv_positive",
+      "age_yrs",
+      "sex",
+      "smoking_status",
+      "pack_years",
+      "systolic_bp",
+      "diastolic_bp",
+      "haemoglobin_g_dl",
+      "fev1_pct_predicted",
+      "fvc_pct_predicted",
+      "dlco_pct_predicted"
+    ],
+    "cautions": [
+      "**The HIV-specific variables are missing by design.** `cd4_count`, `on_antiretroviral` and the viral-load columns exist only for the 297 participants with HIV. Putting any of them in a model silently drops all 130 HIV-negative participants and destroys the comparison the dataset was built for.",
+      "Using only the 18 variables that are >= 95% complete, complete-case analysis retains 410 of 427 rows (96%).",
+      "`smoking_status` is coded never / current / former. This has been verified against Table 1 of the paper - an earlier version of this catalogue had the middle two labels the wrong way round.",
+      "Participants were recruited at two sites (Pittsburgh and UCSF); the site variable is not in the deposit, though the paper shows it matters. Worth a Limitations sentence."
+    ]
+  },
+  "cimt_rheumatoid": {
+    "slug": "cimt_rheumatoid",
+    "title": "Cardiovascular risk and carotid artery thickness in rheumatoid arthritis",
+    "region": "Netherlands",
+    "design": "Cross-sectional case-control comparison",
+    "blurb": "Subjects with RA and healthy controls without RA ... underwent a standard physical examination and laboratory measurements ... cIMT was measured semi-automatically by ultrasound.",
+    "paper_url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0140844",
+    "journal": "PLOS ONE",
+    "year": "2015",
+    "outcomes": [
+      {
+        "var": "cimt_total",
+        "type": "linear",
+        "detail": "462 / 470 = 98% complete",
+        "note": "carotid intima-media thickness in mm - the paper's outcome"
+      },
+      {
+        "var": "carotid_plaque",
+        "type": "logistic",
+        "detail": "65 / 428 = 15.2%",
+        "note": "presence of atherosclerotic plaque; supports about 6 predictors"
+      },
+      {
+        "var": "crp",
+        "type": "linear",
+        "detail": "99% complete, right-skewed",
+        "note": "consider log-transforming"
+      }
+    ],
+    "predictors": [
+      "age_yrs",
+      "sex",
+      "has_ra",
+      "bmi",
+      "waist_cm",
+      "systolic_bp",
+      "diastolic_bp",
+      "current_smoker",
+      "statins",
+      "antihypertensives",
+      "total_cholesterol",
+      "hdl_cholesterol",
+      "ldl_cholesterol",
+      "triglycerides",
+      "glucose",
+      "crp"
+    ],
+    "cautions": [
+      "**Only 65 plaque cases.** At 10 events per variable that is roughly six predictors for the logistic model. Do not put fifteen variables in and expect the estimates to mean anything.",
+      "In the published file, `sex` was stored as 0 = woman / 1 = man, and the height column mixed metres and centimetres (161 rows in metres, 307 in centimetres). Both have been corrected here. If you download the original from Zenodo you will hit these yourself.",
+      "The deposit also contains RA-specific treatment and disease-activity columns (DAS28, methotrexate, anti-TNF and so on). They are not shipped: they are undefined for the 163 controls, so they look 65% complete but are really 'controls do not have this'.",
+      "Cases and controls were not matched on age or sex, so both must be adjusted for."
+    ]
+  },
+  "us_births_2014": {
+    "slug": "us_births_2014",
+    "title": "US births 2014 - birthweight and prematurity",
+    "region": "United States",
+    "design": "Random 1,000-birth sample of a national vital-registration file",
+    "blurb": "",
+    "paper_url": "https://www.cdc.gov/nchs/data_access/vitalstatsonline.htm",
+    "journal": "US CDC National Center for Health Statistics natality file",
+    "year": "2014",
+    "outcomes": [
+      {
+        "var": "birthweight_lb",
+        "type": "linear",
+        "detail": "100% complete",
+        "note": "the natural continuous outcome"
+      },
+      {
+        "var": "low_birthweight",
+        "type": "logistic",
+        "detail": "81 / 1000 = 8.1%",
+        "note": "< 5.5 lb; supports about 8 predictors"
+      },
+      {
+        "var": "premature",
+        "type": "logistic",
+        "detail": "124 / 1000 = 12.4%",
+        "note": "< 37 weeks gestation"
+      },
+      {
+        "var": "gestation_weeks",
+        "type": "linear",
+        "detail": "100% complete",
+        "note": ""
+      }
+    ],
+    "predictors": [
+      "mother_age_yrs",
+      "married",
+      "white_mother",
+      "smoker",
+      "weight_gain_lb",
+      "prenatal_visits",
+      "baby_sex",
+      "gestation_weeks",
+      "mature_mother"
+    ],
+    "cautions": [
+      "**Watch the circular pairs.** `low_birthweight` is a cut-off on `birthweight_lb`, and `premature` is a cut-off on `gestation_weeks`. Each pair must never appear in the same model.",
+      "`gestation_weeks` is a legitimate and very strong predictor of birthweight - but it sits on the causal pathway from most maternal exposures to birthweight. Fit the model with and without it and discuss what changes.",
+      "`father_age_yrs` is missing for 11% of births, and not at random. If you include it, report how many rows you lost and who they were.",
+      "Vital-registration data has limited covariates - there is no income, education or clinical information. Say what you would have wanted."
+    ]
+  },
+  "famuss_strength": {
+    "slug": "famuss_strength",
+    "title": "FAMuSS - genotype and muscle response to resistance training",
+    "region": "United States",
+    "design": "Single-arm training study with genotyping",
+    "blurb": "The muscle phenotypes examined were baseline elbow flexor muscle size and strength and the response ... to 12 wk of progressive resistance exercise training.",
+    "paper_url": "https://journals.physiology.org/doi/full/10.1152/japplphysiol.01139.2004",
+    "journal": "Journal of Applied Physiology",
+    "year": "2005",
+    "outcomes": [
+      {
+        "var": "nondom_arm_change_pct",
+        "type": "either",
+        "detail": "linear (0-250%); or > 50% gives 243 / 595 = 40.8%",
+        "note": "the trained arm - the study's primary outcome"
+      },
+      {
+        "var": "dom_arm_change_pct",
+        "type": "linear",
+        "detail": "100% complete",
+        "note": "the untrained arm - a useful comparison"
+      }
+    ],
+    "predictors": [
+      "actn3_genotype",
+      "sex",
+      "age_yrs",
+      "race",
+      "bmi",
+      "height_in",
+      "weight_lb"
+    ],
+    "cautions": [
+      "**Licence caveat.** This dataset is redistributed through a teaching package that carries no explicit licence. It is fine for your coursework, but do not republish it.",
+      "`nondom_arm_change_pct` is strongly right-skewed (median 46%, maximum 250%). Check your residual plots; a log or square-root transformation may be needed.",
+      "There is no control group - everybody trained. You can describe who gained most, but you cannot estimate the effect of training itself.",
+      "`race` categories other than Caucasian are small (23-55 people each). Consider collapsing them, and say that you did."
+    ]
+  },
+  "tibial_bone_strength": {
+    "slug": "tibial_bone_strength",
+    "title": "Muscle power and tibial bone strength in healthy adults",
+    "region": "United States",
+    "design": "Cross-sectional laboratory study",
+    "blurb": "A convenience sample of 142 participants ... was recruited for this observational, cross-sectional study, from the faculty, staff, and students at a mid-sized regional university.",
+    "paper_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9186462/",
+    "journal": "Journal of Musculoskeletal & Neuronal Interactions",
+    "year": "2022",
+    "outcomes": [
+      {
+        "var": "bone_strength_index",
+        "type": "linear",
+        "detail": "100% complete",
+        "note": "trabecular bone strength at the distal tibia"
+      },
+      {
+        "var": "polar_strength_strain_index",
+        "type": "linear",
+        "detail": "100% complete",
+        "note": "cortical bone strength at the tibial shaft"
+      }
+    ],
+    "predictors": [
+      "sex",
+      "age_decade",
+      "body_mass_kg",
+      "peak_power_w",
+      "relative_peak_power"
+    ],
+    "cautions": [
+      "**Only 142 participants.** Keep to four or five predictors. This is the dataset's main limitation and should be stated plainly.",
+      "There is no binary outcome, so this dataset only supports a **linear** regression project.",
+      "`age_decade` is a 1-6 bin, not exact age. Treat it as a factor, or as continuous while saying why.",
+      "Peak power is estimated from jump height using a published equation, not measured directly. That is measurement error in a predictor."
+    ]
+  },
+  "nepal_hypertension": {
+    "slug": "nepal_hypertension",
+    "title": "Hypertension in mid-western Nepal (WHO STEPS survey)",
+    "region": "Surkhet, Nepal",
+    "design": "Community-based cross-sectional survey using the WHO STEPS instrument",
+    "blurb": "We enrolled 1159 subjects aged 30 years and above ... Trained enumerator collected socio-demographic, anthropometric, and clinical data using standard STEPS questionnaires.",
+    "paper_url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0185806",
+    "journal": "PLOS ONE",
+    "year": "2017",
+    "outcomes": [
+      {
+        "var": "hypertension",
+        "type": "logistic",
+        "detail": "451 / 1159 = 38.9%",
+        "note": "raised measured BP or on treatment"
+      },
+      {
+        "var": "systolic_bp",
+        "type": "linear",
+        "detail": "76-200 mmHg, 100% complete",
+        "note": "the continuous version of the same thing"
+      },
+      {
+        "var": "diastolic_bp",
+        "type": "linear",
+        "detail": "40-125 mmHg, 100% complete",
+        "note": ""
+      },
+      {
+        "var": "bmi",
+        "type": "linear",
+        "detail": "13.4-41.7, 100% complete",
+        "note": ""
+      }
+    ],
+    "predictors": [
+      "age_group",
+      "sex",
+      "education",
+      "occupation",
+      "below_poverty_line",
+      "smoking_status",
+      "smokeless_tobacco",
+      "alcohol_last_month",
+      "fruit_veg_servings",
+      "salt_g_per_day",
+      "mets_min_per_week",
+      "physical_activity",
+      "family_history_htn",
+      "bmi"
+    ],
+    "cautions": [
+      "All modelling variables are complete, so complete-case analysis costs no rows.",
+      "`hypertension` is defined as raised measured blood pressure **or** currently on treatment. That is the standard definition, but it means treated-and-controlled people count as cases. Explain the definition in your Methods.",
+      "`cigarettes_per_week` is 0 for everyone who does not smoke, so it is a mixture of a yes/no and a dose. Either use `smoking_status`, or use the dose within smokers only.",
+      "The survey was nested in an intervention trial in a single district. Prevalence estimates do not generalise to all of Nepal - a Limitations point.",
+      "There were only 335 men to 824 women. Sex-stratified models will be under-powered in men."
+    ]
+  },
+  "kenya_hypertension": {
+    "slug": "kenya_hypertension",
+    "title": "Hypertension among clients at Kenyan health facilities",
+    "region": "Kenya",
+    "design": "Facility-based cross-sectional survey with measured blood pressure",
+    "blurb": "The general adult public visiting the outpatient clinics were recruited from 8 healthcare facilities in Kenya ... A total of 1444 clients were recruited.",
+    "paper_url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0334255",
+    "journal": "PLOS ONE",
+    "year": "2025",
+    "outcomes": [
+      {
+        "var": "hypertension",
+        "type": "logistic",
+        "detail": "425 / 1444 = 29.4%",
+        "note": "based on the measured average blood pressure"
+      },
+      {
+        "var": "systolic_bp",
+        "type": "linear",
+        "detail": "79-225 mmHg, 100% complete",
+        "note": "average of three readings"
+      },
+      {
+        "var": "diastolic_bp",
+        "type": "linear",
+        "detail": "44-135 mmHg, 100% complete",
+        "note": "average of three readings"
+      },
+      {
+        "var": "prior_htn_diagnosis",
+        "type": "logistic",
+        "detail": "412 / 1444 = 28.5%",
+        "note": "self-reported earlier diagnosis - a different question from measured hypertension"
+      }
+    ],
+    "predictors": [
+      "age_group",
+      "sex",
+      "education",
+      "marital_status",
+      "employment",
+      "bmi_category",
+      "current_smoker",
+      "current_alcohol",
+      "adequate_activity",
+      "adequate_fruit_veg",
+      "diabetes",
+      "cardiovascular_disease",
+      "study_site"
+    ],
+    "cautions": [
+      "**Facility-based recruitment, not a population survey.** Everyone here was already seeking healthcare, so the 29.4% prevalence is higher than you would find in the general Kenyan population. This is the key Limitations point.",
+      "`monthly_income` loses 31% of the sample because 'prefer not to answer' is coded as missing here rather than as a category. If you use it, report the loss - or justify treating non-response as its own group.",
+      "`diabetes` and `cardiovascular_disease` each have an 'unknown' level, kept deliberately rather than converted to missing. Decide what to do with it and say what you did.",
+      "There is no exact age, only six age bands. Treat `age_group` as a factor.",
+      "The three individual blood-pressure readings are not shipped; only their averages, which is what the paper analysed."
+    ]
+  },
+  "peru_child_anaemia": {
+    "slug": "peru_child_anaemia",
+    "title": "Childhood anaemia and stunting in Peru (ENDES 2022)",
+    "region": "Peru",
+    "design": "Nationally representative cross-sectional household survey",
+    "blurb": "The source of information was data from the 2022 Demographic and Family Health Survey ... face-to-face interviews conducted in selected households.",
+    "paper_url": "https://journals.plos.org/globalpublichealth/article?id=10.1371/journal.pgph.0002914",
+    "journal": "PLOS Global Public Health",
+    "year": "2024",
+    "outcomes": [
+      {
+        "var": "anaemia",
+        "type": "logistic",
+        "detail": "6,961 / 19,191 = 36.3%",
+        "note": "haemoglobin below 11 g/dL"
+      },
+      {
+        "var": "stunting",
+        "type": "logistic",
+        "detail": "2,485 / 19,191 = 12.9%",
+        "note": "height-for-age Z-score below -2"
+      },
+      {
+        "var": "haemoglobin_g_dl",
+        "type": "linear",
+        "detail": "4.4-16.5 g/dL, 100% complete",
+        "note": "the continuous version of anaemia"
+      },
+      {
+        "var": "height_for_age_z",
+        "type": "linear",
+        "detail": "-5.6 to 3.9, 100% complete",
+        "note": "the continuous version of stunting"
+      }
+    ],
+    "predictors": [
+      "child_age_months",
+      "child_sex",
+      "birth_weight",
+      "caesarean_delivery",
+      "breastfed_immediately",
+      "mother_education",
+      "mother_working",
+      "mother_partnered",
+      "mother_insured",
+      "mother_indigenous",
+      "residence",
+      "natural_region",
+      "wealth_index",
+      "unimproved_water",
+      "unimproved_floor",
+      "unimproved_walls"
+    ],
+    "cautions": [
+      "**Watch the circular pairs.** `anaemia` is a cut-off on `haemoglobin_g_dl`, and `stunting` is a cut-off on `height_for_age_z`. Never put one of a pair in a model for the other.",
+      "This file has already been restricted to the paper's analytic subpopulation (19,191 of 21,611 children). That step also removed all the DHS sentinel codes (9996-9999) from the haemoglobin and height columns, so you will not meet them here.",
+      "Haemoglobin is altitude-adjusted, which matters a lot in Peru - much of the population lives above 2,500 m. Do not adjust again.",
+      "Haemoglobin and height were measured by trained health professionals."
+    ]
+  },
+  "bangladesh_growth_monitoring": {
+    "slug": "bangladesh_growth_monitoring",
+    "title": "Growth-monitoring services and child nutrition in Bangladesh",
+    "region": "Bangladesh",
+    "design": "Comparative cross-sectional household survey",
+    "blurb": "A descriptive mixed-method study was conducted across six sub-districts ... A total of 3038 randomly selected mothers and children under one year old were included.",
+    "paper_url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0324918",
+    "journal": "PLOS ONE",
+    "year": "2025",
+    "outcomes": [
+      {
+        "var": "received_gmp_card",
+        "type": "logistic",
+        "detail": "926 / 3038 = 30.5%",
+        "note": "the paper's main service-uptake outcome"
+      },
+      {
+        "var": "heard_of_gmp",
+        "type": "logistic",
+        "detail": "1,020 / 3038 = 33.6%",
+        "note": "programme awareness"
+      },
+      {
+        "var": "stunted",
+        "type": "logistic",
+        "detail": "806 / 3035 = 26.6%",
+        "note": "derived here as height-for-age Z below -2"
+      },
+      {
+        "var": "height_for_age_z",
+        "type": "linear",
+        "detail": "-6.0 to 4.2, 99.9% complete",
+        "note": "the continuous version of stunting"
+      },
+      {
+        "var": "weight_for_age_z",
+        "type": "linear",
+        "detail": "-5.1 to 2.6, 99.9% complete",
+        "note": ""
+      },
+      {
+        "var": "weight_for_height_z",
+        "type": "linear",
+        "detail": "-4.5 to 4.3, 99.9% complete",
+        "note": "acute malnutrition"
+      }
+    ],
+    "predictors": [
+      "delivery_model",
+      "mother_age_yrs",
+      "mother_schooling_yrs",
+      "mother_occupation",
+      "religion_muslim",
+      "ngo_member",
+      "asset_index_tertile",
+      "improved_toilet",
+      "child_sex",
+      "child_age_months",
+      "sub_district"
+    ],
+    "cautions": [
+      "**This is not a randomised comparison.** The two delivery models were running in different areas, so any difference between them mixes the programme with everything else that differs between those places. Be careful with causal language.",
+      "The three Z-scores are highly correlated with one another. Choose one as your outcome; do not use the others as predictors.",
+      "`child_age_months` only spans 6 to 13 months, so this is a narrow age window - your findings apply to infants, not to under-fives generally.",
+      "Two service-uptake outcomes are nested: only caregivers who had heard of the programme could receive a card. If you model `received_gmp_card`, decide whether to restrict to those who had heard of it, and say which you did.",
+      "The published file also carried the husband's schooling (30% missing, using 99 as a sentinel code), a near-constant drinking-water variable, and duplicated religion and NGO-membership columns. None of these are shipped."
+    ]
+  },
+  "serbia_antibiotics": {
+    "slug": "serbia_antibiotics",
+    "title": "Antibiotic knowledge and self-medication in Serbia",
+    "region": "Serbia",
+    "design": "Cross-sectional primary-care survey",
+    "blurb": "The study sample consisted of adult subjects who consulted general practitioners at four health centers ... 500 respondents completed the entire questionnaire.",
+    "paper_url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0180799",
+    "journal": "PLOS ONE",
+    "year": "2017",
+    "outcomes": [
+      {
+        "var": "self_medication",
+        "type": "logistic",
+        "detail": "",
+        "note": ""
+      },
+      {
+        "var": "adequate_knowledge",
+        "type": "logistic",
+        "detail": "",
+        "note": ""
+      },
+      {
+        "var": "knowledge_score",
+        "type": "linear",
+        "detail": "",
+        "note": ""
+      }
+    ],
+    "predictors": [
+      "age_group",
+      "sex",
+      "marital_status",
+      "education_level",
+      "employment_status",
+      "household_size",
+      "gp_visits_past_year",
+      "health_professional_in_family",
+      "knowledge_score"
+    ],
+    "cautions": [
+      "`adequate_knowledge` is derived from `knowledge_score` at the paper's threshold of 9. Do not use one to model the other.",
+      "The source deposit's own `knowledge_category` conflicts with the score and published counts. This version rebuilds the binary variable from the score."
+    ]
+  },
+  "workplace_protection": {
+    "slug": "workplace_protection",
+    "title": "COVID-19 workplace protection survey",
+    "region": "Multiple countries",
+    "design": "International cross-sectional online survey",
+    "blurb": "Target participants were recruited ... through non-probability convenience sampling techniques ... A total of 890 surveys were completed.",
+    "paper_url": "https://link.springer.com/article/10.1186/s12889-022-12500-w",
+    "journal": "BMC Public Health",
+    "year": "2022",
+    "outcomes": [
+      {
+        "var": "feels_protected",
+        "type": "logistic",
+        "detail": "",
+        "note": ""
+      }
+    ],
+    "predictors": [
+      "vaccination_status",
+      "management_role",
+      "sex",
+      "college_degree",
+      "age_group",
+      "country",
+      "occupational_sector"
+    ],
+    "cautions": [
+      "The paper reports 627 active workers, while its deposited complete demographic analysis sheet contains 557 records. This catalogue reports the rows actually supplied.",
+      "Country and occupational sector have several small groups. Students can use a smaller predictor set or combine categories deliberately."
+    ]
+  },
+  "ageing_qol_europe": {
+    "slug": "ageing_qol_europe",
+    "title": "Quality of life among adults in Finland, Poland and Spain",
+    "region": "Finland, Poland and Spain",
+    "design": "Cross-sectional population survey",
+    "blurb": "COURAGE in Europe is an observational, cross-sectional study of the general community dwelling adult population.",
+    "paper_url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0159293",
+    "journal": "PLOS ONE",
+    "year": "2016",
+    "outcomes": [
+      {
+        "var": "quality_of_life_score",
+        "type": "linear",
+        "detail": "",
+        "note": ""
+      },
+      {
+        "var": "hypertension",
+        "type": "logistic",
+        "detail": "",
+        "note": ""
+      },
+      {
+        "var": "depression_diagnosis",
+        "type": "logistic",
+        "detail": "",
+        "note": ""
+      }
+    ],
+    "predictors": [
+      "age_yrs",
+      "sex",
+      "country",
+      "residence",
+      "marital_status",
+      "education",
+      "bmi_category",
+      "smoking_status",
+      "alcohol_use",
+      "physical_activity",
+      "body_pain",
+      "sleep_difficulty",
+      "sadness",
+      "distance_vision_difficulty",
+      "social_network_index",
+      "neighbourhood_usability",
+      "home_usability",
+      "arthritis",
+      "angina",
+      "diabetes",
+      "depression_diagnosis"
+    ],
+    "cautions": [
+      "The supplied S1 file has 5,341 rows and a mean age of 57.8 years; the paper reports 5,639 participants and a mean age of 46.3 years. This catalogue uses the deposited file as supplied.",
+      "The original study used sampling weights, strata and clusters. Introductory analyses may ignore these, but students can mention that simplification as a limitation."
+    ]
+  },
+  "essens_adolescents": {
+    "slug": "essens_adolescents",
+    "title": "Screen time and physical activity among Norwegian adolescents",
+    "region": "Norway",
+    "design": "School-based cross-sectional online survey",
+    "blurb": "A cross-sectional study including 742 adolescents was conducted in 2016. Data were collected at school through an online questionnaire.",
+    "paper_url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0241887",
+    "journal": "PLOS ONE",
+    "year": "2020",
+    "outcomes": [
+      {
+        "var": "active_5plus_days",
+        "type": "logistic",
+        "detail": "",
+        "note": ""
+      },
+      {
+        "var": "high_weekday_tv",
+        "type": "logistic",
+        "detail": "",
+        "note": ""
+      },
+      {
+        "var": "high_weekday_gaming",
+        "type": "logistic",
+        "detail": "",
+        "note": ""
+      }
+    ],
+    "predictors": [
+      "sex",
+      "bedroom_tv",
+      "owns_pc",
+      "pcs_in_house",
+      "homework_weekday",
+      "hobbies_weekday",
+      "homework_weekend",
+      "hobbies_weekend",
+      "pa_self_efficacy_high",
+      "tv_self_efficacy_high",
+      "gaming_self_efficacy_high",
+      "weekday_tv",
+      "weekday_gaming",
+      "weekday_online",
+      "weekend_tv",
+      "weekend_gaming",
+      "weekend_online"
+    ],
+    "cautions": [
+      "The source uses 100 as a missing-value sentinel. This version converts every 100 to a blank value.",
+      "Screen-time variables are ordered categories, not exact continuous hours."
+    ]
+  },
+  "nigeria_malaria_households": {
+    "slug": "nigeria_malaria_households",
+    "title": "Asymptomatic malaria in households of confirmed cases in Abuja",
+    "region": "Abuja, Nigeria",
+    "design": "Cross-sectional household survey",
+    "blurb": "Overall, we recruited 602 participants from 107 households linked to 107 malaria patients attending the health facilities.",
+    "paper_url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0203686",
+    "journal": "PLOS ONE",
+    "year": "2018",
+    "outcomes": [
+      {
+        "var": "malaria_parasitaemia",
+        "type": "logistic",
+        "detail": "",
+        "note": ""
+      }
+    ],
+    "predictors": [
+      "age_group",
+      "sex",
+      "education",
+      "area_council",
+      "bushes_near_home",
+      "owns_llin",
+      "used_llin_previous_night",
+      "house_floor",
+      "house_roof",
+      "house_type",
+      "house_wall",
+      "house_window",
+      "same_room_as_index_case",
+      "uncovered_water_receptacles"
+    ],
+    "cautions": [
+      "Participants came from households of laboratory-confirmed malaria patients, so the observed prevalence does not represent the general population.",
+      "The 602 participants are clustered within 107 households. A simple logistic model does not account for that clustering."
+    ]
+  },
+  "sciatica_primary_care": {
+    "slug": "sciatica_primary_care",
+    "title": "Clinical signs, MRI findings and sciatica in primary care",
+    "region": "United Kingdom",
+    "design": "Primary-care observational cohort",
+    "blurb": "Patients completed questionnaires, underwent a standardised clinical assessment ... and had a lumbar spine MRI within two weeks of their assessment.",
+    "paper_url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0191852",
+    "journal": "PLOS ONE",
+    "year": "2018",
+    "outcomes": [
+      {
+        "var": "mri_nerve_root_compression",
+        "type": "logistic",
+        "detail": "",
+        "note": ""
+      },
+      {
+        "var": "disability_score",
+        "type": "linear",
+        "detail": "",
+        "note": ""
+      },
+      {
+        "var": "leg_pain_intensity",
+        "type": "linear",
+        "detail": "",
+        "note": ""
+      }
+    ],
+    "predictors": [
+      "age_yrs",
+      "sex",
+      "bmi",
+      "back_pain_intensity",
+      "leg_pain_intensity",
+      "back_pain_duration",
+      "leg_pain_duration",
+      "comorbidities",
+      "general_health",
+      "leg_pain_worse",
+      "cough_sneeze_positive",
+      "subjective_sensory_changes",
+      "below_knee_pain",
+      "neural_tension_positive",
+      "neurological_deficit"
+    ],
+    "cautions": [
+      "The clinician diagnosis was made using the same clinical signs supplied as predictors. Treat that as diagnostic modelling, not as a causal risk-factor analysis.",
+      "The MRI outcome is independent of the clinician's diagnostic decision and is the cleaner option for an association question."
+    ]
+  }
+}

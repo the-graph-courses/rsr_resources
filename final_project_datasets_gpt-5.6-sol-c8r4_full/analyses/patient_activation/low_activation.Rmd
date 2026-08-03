@@ -1,0 +1,377 @@
+---
+title: "Low patient activation (PAM level 1-2) in adults with chronic disease"
+subtitle: "Dataset 9: Patient activation for self-management in chronic disease"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "patient_activation.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "low_activation"
+predictors <- c("age_yrs", "sex", "education_level", "disease",
+                "charlson_index", "ipq_total", "social_support_total")
+
+dat <- dat_raw |>
+  mutate(
+    # Outcome: PAM activation levels 1 and 2 are "low activation" (the event).
+    low_activation = factor(if_else(pam_level %in% c(1, 2), 1L, 0L),
+                            levels = c(0, 1), labels = c("No", "Yes")),
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    sex = factor(sex, levels = c("male", "female"), labels = c("Male", "Female")),
+    education_level = factor(education_level, levels = c("lower", "middle", "higher"),
+                             labels = c("Lower", "Middle", "Higher")),
+    financial_distress = factor(financial_distress, levels = c("none", "low", "high"),
+                                labels = c("None", "Low", "High")),
+    smoking_status = factor(smoking_status, levels = c("never", "former", "current"),
+                            labels = c("Never", "Former", "Current")),
+    disease = factor(disease,
+                     levels = c("diabetes_t2", "copd", "heart_failure", "renal_disease"),
+                     labels = c("Type 2 diabetes", "COPD", "Heart failure", "Renal disease")),
+    disease_duration = factor(disease_duration,
+                              levels = c("under_2_yrs", "2_to_5_yrs", "over_5_yrs"),
+                              labels = c("<2 years", "2-5 years", ">5 years")),
+    living_alone = factor(living_alone, levels = c(0, 1), labels = c("No", "Yes"))
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+n_events    <- sum(dat_model[[outcome]] == "Yes")
+n_nonevents <- sum(dat_model[[outcome]] == "No")
+
+# Missing questionnaire answers were coded 99 in the original deposit; the
+# conversion to NA was already applied upstream, so no re-coding is done here.
+# The only 99 anywhere in the file is a participant identifier (id == 99).
+n99 <- dat_raw |>
+  select(-id) |>
+  select(where(is.numeric)) |>
+  summarise(across(everything(), ~ sum(.x == 99, na.rm = TRUE))) |>
+  rowSums()
+```
+
+# Introduction
+
+The Patient Activation Measure sorts patients into four activation levels, and
+levels 1 and 2 — patients who are disengaged or who lack confidence to act —
+are the group that self-management support programmes are usually designed to
+reach. These data come from a cross-sectional survey of 1,154 Dutch adults
+treated in primary and secondary care for type 2 diabetes, COPD, chronic heart
+failure or chronic renal disease (Bos-Touwen et al., *PLoS ONE*
+2015;10(5):e0126400). Being able to recognise low-activation patients from
+characteristics already known to the clinic would make that targeting practical.
+
+**Aim.** Among Dutch adults with one of four chronic conditions, we examined
+which of age, sex, education, index disease, comorbidity burden, illness
+perceptions and perceived social support are independently associated with the
+odds of low activation (PAM level 1 or 2), mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** Cross-sectional survey of adults with type 2 diabetes, COPD,
+chronic heart failure or chronic renal disease recruited from Dutch general
+practices and hospital outpatient clinics; `r nrow(dat_raw)` participants, all
+measured on a single occasion.
+
+**Variables.** The outcome `low_activation` was derived from `pam_level`:
+activation levels 1 and 2 were coded as the event (`Yes`) and levels 3 and 4 as
+the non-event (`No`). In the full file this gives 631 events out of
+`r nrow(dat_raw)` (54.7%). Predictors are `age_yrs` (years), `sex` (reference:
+male), `education_level` (reference: lower, the largest group), `disease`
+(reference: type 2 diabetes, the largest group), `charlson_index` (points;
+higher = more comorbidity), `ipq_total` (Brief Illness Perception Questionnaire
+total, 0-80; higher = a more threatening view of one's illness) and
+`social_support_total` (MSPSS total, 12-84; higher = more perceived support).
+
+**Circularity avoided.** `pam_level` is a deterministic banding of `pam_score`,
+and `low_activation` is a deterministic collapse of `pam_level`. Neither
+`pam_score` nor `pam_level` can appear as a predictor here: either would
+reproduce the outcome exactly and separate the data completely. `bmi` in this
+file is exactly `weight_kg / (height_cm/100)^2`, so those three could never
+appear together; none is used, since body size has no clear prior link to
+activation. `n_comorbidities` correlates 0.78 with `charlson_index`, so only the
+Charlson index is used.
+
+**Statistical analysis.** Logistic regression (`glm(family = binomial)`),
+justified because the outcome is binary. We fitted a univariable model for each
+predictor first, then a single multivariable model containing all of them.
+Predictors were chosen in advance on subject-matter grounds, not by significance.
+Results are reported as odds ratios with 95% profile-likelihood confidence
+intervals; significance threshold 0.05. Assumptions were checked with
+`performance::check_model()`. Analysis used `r R.version.string` with tidyverse,
+gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped). Missing questionnaire answers were
+coded 99 in the original deposit, but that conversion to `NA` has already been
+applied in this CSV; a check across all numeric columns other than `id` found
+`r n99` remaining values equal to 99, so no further re-coding was needed.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(
+    by = low_activation,
+    missing = "no"
+  ) |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics by activation status (Yes = PAM level 1-2).**")
+```
+
+`r n_events` of `r nrow(dat_model)` analysed participants
+(`r round(100 * n_events / nrow(dat_model), 1)`%) had low activation, so the two
+groups are close to balanced. Low-activation patients report more threatening
+illness perceptions and less social support; the demographic and comorbidity
+differences between the groups are small.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Proportion with low activation (PAM level 1-2) by index disease. Error bars are 95% Wilson confidence intervals; the dashed line is the overall proportion."}
+prop_dat <- dat_model |>
+  count(disease, low_activation) |>
+  group_by(disease) |>
+  mutate(total = sum(n)) |>
+  filter(low_activation == "Yes") |>
+  mutate(p = n / total,
+         se = sqrt(p * (1 - p) / total),
+         lo = pmax(0, p - 1.96 * se),
+         hi = pmin(1, p + 1.96 * se)) |>
+  ungroup()
+
+ggplot(prop_dat, aes(x = disease, y = p)) +
+  geom_hline(yintercept = n_events / nrow(dat_model),
+             linetype = "dashed", colour = "grey50") +
+  geom_col(fill = "#a6bddb", width = 0.6) +
+  geom_errorbar(aes(ymin = lo, ymax = hi), width = 0.15) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 0.8)) +
+  labs(x = "Index chronic condition", y = "Low activation (PAM level 1-2)")
+```
+
+The proportion with low activation rises from 48% in the diabetes group to 65%
+in the renal disease group, with COPD and heart failure in between — a spread of
+roughly 17 percentage points across the four pooled conditions.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = glm,
+    method.args = list(family = binomial),
+    exponentiate = TRUE
+  )
+uv
+```
+
+Illness perception is the strongest crude predictor: each additional IPQ point
+multiplies the odds of low activation by 1.045 (95% CI 1.034 to 1.056,
+p < 0.001), so a 20-point difference in illness perception corresponds to about
+a 2.4-fold difference in odds. Perceived social support runs the other way
+(OR 0.982 per point, 95% CI 0.975 to 0.990, p < 0.001). Comorbidity burden is
+crudely associated (OR 1.14 per Charlson point, 95% CI 1.07 to 1.22, p < 0.001),
+as is higher education, which halves the odds relative to lower education
+(OR 0.65, 95% CI 0.45 to 0.92, p = 0.016). Crudely, renal disease patients have
+about twice the odds of the diabetes group (OR 1.98, 95% CI 1.40 to 2.82,
+p < 0.001) and heart failure patients about 1.6 times (95% CI 1.14 to 2.25,
+p = 0.006). Age (p = 0.09) and sex (p = 0.39) show no crude association.
+
+## Why adjustment is needed
+
+The crude disease contrasts are the clearest case for adjustment.
+`charlson_index` confounds them: the renal and heart-failure groups carry more
+comorbidity than the diabetes group, and comorbidity is itself crudely
+associated with low activation, so part of the doubled odds in renal patients is
+simply that they are sicker overall. `ipq_total` confounds them in the same
+direction: patients with the more visibly threatening conditions hold more
+threatening illness beliefs, and illness beliefs are the strongest single
+correlate of activation, so the disease contrasts partly measure differences in
+illness construal. `education_level` is a third confounder, of the illness
+perception and social support associations: better-educated patients report both
+less threatening illness beliefs and higher activation, so the crude IPQ
+association is partly educational. Because the four disease groups were pooled
+by design, `disease` has to be in the model for anything else to be read as a
+within-disease comparison.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- glm(reformulate(predictors, outcome), data = dat_model, family = binomial)
+
+mv <- tbl_regression(fit, exponentiate = TRUE)
+mv
+```
+
+```{r fit-stats}
+n_params <- length(coef(fit))
+tibble(
+  Statistic = c("AIC", "Null deviance", "Residual deviance", "Tjur's R2",
+                "N", "Events (low activation)", "Non-events",
+                "Model parameters (incl. intercept)",
+                "Events per parameter"),
+  Value = c(round(AIC(fit), 1), round(fit$null.deviance, 1),
+            round(fit$deviance, 1), round(performance::r2_tjur(fit), 3),
+            nrow(dat_model), n_events, n_nonevents, n_params,
+            round(min(n_events, n_nonevents) / (n_params - 1), 1))
+) |>
+  gt() |>
+  tab_header(title = "Model fit")
+```
+
+The model has `r n_params - 1` estimated coefficients besides the intercept and
+the smaller outcome class contains `r min(n_events, n_nonevents)` observations,
+giving about `r round(min(n_events, n_nonevents) / (n_params - 1), 1)` events per
+parameter — far above the conventional minimum of 10, so overfitting and sparse-
+data bias are not concerns here.
+
+Conditional on all other predictors, only two associations survive. Each extra
+IPQ point multiplies the odds of low activation by 1.043 (95% CI 1.032 to 1.055,
+p < 0.001), and each extra point of perceived social support multiplies them by
+0.984 (95% CI 0.976 to 0.992, p < 0.001). Comorbidity burden is no longer
+associated (OR 1.07 per point, 95% CI 0.98 to 1.16, p = 0.13), nor is higher
+education (OR 0.79, 95% CI 0.54 to 1.16, p = 0.24), nor any disease contrast
+(renal disease OR 1.37, 95% CI 0.92 to 2.05, p = 0.12), nor age or sex.
+Discrimination is weak: Tjur's R² is
+`r round(performance::r2_tjur(fit), 3)`, meaning the average predicted
+probability differs between the two outcome groups by only about 10 percentage
+points.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted odds ratios.**")
+```
+
+Three estimates move substantially towards the null and lose significance.
+Renal disease falls from OR 1.98 to 1.37 (p < 0.001 to p = 0.12) and heart
+failure from 1.60 to 1.01 (p = 0.006 to p = 0.96): the apparent activation
+deficit in those groups is explained almost entirely by their higher comorbidity
+and more threatening illness perceptions, not by the diagnosis. The Charlson
+index itself moves from 1.14 to 1.07 (p < 0.001 to p = 0.13) — most of the crude
+comorbidity association was really illness perception. Higher education moves
+from 0.65 to 0.79 (p = 0.016 to p = 0.24), again attenuated by illness
+perception and social support, which lie on the pathway between education and
+activation as much as they confound it. Two estimates barely move: `ipq_total`
+(1.045 to 1.043) and `social_support_total` (0.982 to 0.984), confirming that
+these two are not proxies for the demographic or clinical variables. Age and sex
+were null crudely and remain null. Nothing here is collinearity — all VIFs are
+below 1.5.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r diag-tests}
+check_collinearity(fit)
+check_overdispersion(fit)
+```
+
+For a logistic model the relevant panels are binned residuals, collinearity and
+influential observations; homogeneity of variance and normality of residuals do
+not apply and are not produced. The binned residual plot has most points inside
+the error bounds with no systematic curvature, so the linear-in-the-logit
+assumption for `age_yrs`, `charlson_index`, `ipq_total` and
+`social_support_total` is acceptable. Collinearity is low: the largest VIF is
+`disease` at 1.45, then `charlson_index` at 1.37. No observation exceeds the
+Cook's distance threshold, so no single participant drives the results.
+`check_overdispersion()` gives a dispersion ratio of 1.00 (p = 0.93), as
+expected for a binary outcome. Events per parameter is about
+`r round(min(n_events, n_nonevents) / (n_params - 1), 1)`, comfortably adequate.
+There is no separation: every predictor has a finite coefficient with a finite
+confidence interval.
+
+# Discussion
+
+Among Dutch adults with one of four chronic conditions, only two characteristics
+are independently associated with low patient activation: how threatening the
+patient perceives their illness to be, and how much social support they feel
+they have. Neither the diagnosis, nor comorbidity burden, nor education, nor age
+or sex adds anything once those two are known. Practically, this means a clinic
+cannot identify low-activation patients from routinely recorded demographics and
+diagnoses — it has to ask them about their beliefs and their support. Even then
+discrimination is weak (Tjur's R² = `r round(performance::r2_tjur(fit), 3)`), so
+this is a description of associations rather than a usable screening rule.
+
+**Limitations.** The design is cross-sectional, so nothing here shows that
+changing illness beliefs would change activation; a patient who feels unable to
+manage may simply come to see their illness as more threatening. IPQ, MSPSS and
+PAM are all self-reported at the same sitting, so common-method bias inflates
+the two surviving associations. Dichotomising the PAM at the level 2/3 boundary
+discards the continuous information in `pam_score` and costs statistical power;
+the cut point is conventional, not empirical. The file has no disease-specific
+severity markers — no eGFR or dialysis status, no NYHA class, no GOLD stage — so
+severity is proxied only by the generic Charlson index, and the attenuation of
+the renal-disease and heart-failure contrasts should be read with that in mind.
+Complete-case analysis dropped `r n_dropped` participants
+(`r round(100*n_dropped/nrow(dat), 1)`%). All estimates are associations, not
+effects.
+
+**Future work.** A prospective study measuring illness perceptions before and
+after a self-management intervention would test whether the association with
+activation is modifiable.
+
+# Feasibility notes
+
+*Not part of a student report.*
+
+- **Statistically the safest logistic outcome in this dataset.**
+  `r n_events` events and `r n_nonevents` non-events out of
+  `r nrow(dat_model)` complete cases — almost a 50/50 split, no sparse cells, no
+  separation, `r round(min(n_events, n_nonevents) / (n_params - 1), 1)` events
+  per parameter, max VIF 1.45, dispersion ratio 1.00, no influential points.
+  Nothing breaks.
+- **But it is a dichotomised copy of `pam_score`.** `low_activation` is derived
+  from `pam_level`, which is a deterministic banding of `pam_score`. A student
+  who analyses both outcomes is answering the same research question twice, once
+  with the information thrown away. The logistic model finds *fewer* significant
+  predictors than the linear one on the same predictor set — education and the
+  Charlson index survive in the `pam_score` model and are lost here — which is
+  exactly the power cost of dichotomising. If a student must do a logistic
+  analysis, this is a workable outcome; if they have a free choice, `pam_score`
+  is strictly better.
+- **Circularity trap is severe.** Putting `pam_score` or `pam_level` on the
+  right-hand side gives complete separation and an infinite coefficient. The
+  brief must forbid this explicitly, because both variables sit in the file
+  right next to the outcome and are the obvious things to grab.
+- **Complete-case N = `r nrow(dat_model)`** of `r nrow(dat)` (`r n_dropped`
+  dropped, `r round(100*n_dropped/nrow(dat), 1)`%).
+- **Weak discrimination.** Tjur's R² = `r round(performance::r2_tjur(fit), 3)`.
+  Only two of seven predictors are significant after adjustment, and the whole
+  set of demographic and clinical variables contributes essentially nothing.
+  Students expecting a strong predictive model should be warned.
+- **Good confounding story**, though: three crude associations (renal disease,
+  heart failure, Charlson index) are wiped out by adjustment, which makes the
+  unadjusted-versus-adjusted comparison genuinely instructive.

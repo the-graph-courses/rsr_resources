@@ -1,0 +1,16 @@
+variable,description,type,values,pct_complete
+age_group,Age group in years,categorical,"10_to_19 (136), 5_to_9 (112), 25_to_34 (111), 35_plus (102), under_5 (91), 20_to_24 (50)",100.0
+sex,Sex,categorical,"female (331), male (271)",100.0
+education,Highest education level,categorical,"secondary (182), primary (164), tertiary (129), none (127)",100.0
+area_council,Area council in Abuja,categorical,"abuja_municipal (385), kuje (176), kwali (41)",100.0
+bushes_near_home,Bushes around the home (1 = yes),binary 0/1,"1 = 210 (34.9%), 0 = 392",100.0
+owns_llin,Owns a long-lasting insecticidal net (1 = yes),binary 0/1,"1 = 148 (24.6%), 0 = 454",100.0
+used_llin_previous_night,Used a long-lasting insecticidal net the previous night (1 = yes),binary 0/1,"1 = 107 (17.8%), 0 = 495",100.0
+house_floor,Main household floor material,categorical,"ceramictiles (341), cement (183), carpet (78)",100.0
+house_roof,Main household roof material,categorical,"metal (377), roofshingles (130), woodplanks (95)",100.0
+house_type,Type of dwelling,categorical,"flat (470), hut (77), duplex (30), bungalow (25)",100.0
+house_wall,Main household wall material,categorical,"cement_plastered (476), mud (126)",100.0
+house_window,Type of household windows,categorical,"screenorglasswindows (465), openwindows (82), woodenshutters (44), metal_shutters (11)",100.0
+same_room_as_index_case,Sleeps in the same room as the index malaria patient (1 = yes),binary 0/1,"1 = 283 (47.0%), 0 = 319",100.0
+uncovered_water_receptacles,Uncovered water receptacles near the home (1 = yes),binary 0/1,"1 = 76 (12.6%), 0 = 526",100.0
+malaria_parasitaemia,Asymptomatic malaria parasitaemia detected by microscopy (1 = positive),binary 0/1,"1 = 421 (69.9%), 0 = 181",100.0

@@ -1,0 +1,26 @@
+variable,description,type,values,pct_complete
+id,Participant identifier,identifier,470 distinct values,100.0
+sex,Sex,categorical,"female (307), male (162)",99.8
+age_yrs,Age in years,continuous,median 54 | range 20 to 70,99.6
+has_ra,"Has rheumatoid arthritis (1 = case, 0 = healthy control)",binary 0/1,"1 = 307 (65.3%), 0 = 163",100.0
+hypertension_or_hyperchol,Has hypertension and/or hypercholesterolaemia (1 = yes),binary 0/1,"1 = 116 (24.7%), 0 = 354",100.0
+height_cm,Height (cm),continuous,median 170 | range 145 to 206,99.6
+weight_kg,Weight (kg),continuous,median 75 | range 49.8 to 138,99.6
+bmi,Body mass index (kg/m2),continuous,median 25.52 | range 18.04 to 43.27,99.6
+waist_cm,Waist circumference (cm),continuous,median 92 | range 61 to 186,98.9
+systolic_bp,Systolic blood pressure (mmHg),continuous,median 130 | range 90 to 190,99.4
+diastolic_bp,Diastolic blood pressure (mmHg),continuous,median 80 | range 50 to 118,99.4
+current_smoker,Currently smokes (1 = yes),binary 0/1,"1 = 88 (18.9%), 0 = 378",99.1
+antihypertensives,Taking antihypertensive medication (1 = yes),binary 0/1,"1 = 85 (18.2%), 0 = 381",99.1
+statins,Taking a statin (1 = yes),binary 0/1,"1 = 36 (7.8%), 0 = 428",98.7
+prednisone,Taking prednisone (1 = yes),binary 0/1,"1 = 39 (8.4%), 0 = 425",98.7
+glucose,Fasting glucose,continuous,median 5.3 | range 2.5 to 8.6,99.8
+total_cholesterol,Total cholesterol,continuous,median 5.4 | range 2.4 to 9,99.8
+hdl_cholesterol,HDL cholesterol,continuous,median 1.5 | range 0.5 to 4.2,99.4
+ldl_cholesterol,LDL cholesterol,continuous,median 3.3 | range 0.3 to 6.4,98.9
+triglycerides,Triglycerides,continuous,median 1.08 | range 0.26 to 10.75,99.8
+crp,C-reactive protein (inflammatory marker),continuous,median 2 | range 1 to 71,98.9
+apo_a,Apolipoprotein A,continuous,median 1.63 | range 0.94 to 3.1,99.8
+apo_b,Apolipoprotein B,continuous,median 0.99 | range 0.37 to 1.95,99.8
+cimt_total,"Carotid intima-media thickness, mean of both sides (mm)",continuous,median 0.56 | range 0.15 to 1.06,98.3
+carotid_plaque,Atherosclerotic plaque present on carotid ultrasound (1 = yes),binary 0/1,"1 = 65 (15.2%), 0 = 363",91.1

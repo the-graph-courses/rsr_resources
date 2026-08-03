@@ -1,0 +1,333 @@
+---
+title: "Patient activation (PAM-13) in adults with chronic disease"
+subtitle: "Dataset 9: Patient activation for self-management in chronic disease"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "patient_activation.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "pam_score"
+predictors <- c("age_yrs", "sex", "education_level", "disease",
+                "charlson_index", "ipq_total", "social_support_total")
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    sex = factor(sex, levels = c("male", "female"), labels = c("Male", "Female")),
+    education_level = factor(education_level, levels = c("lower", "middle", "higher"),
+                             labels = c("Lower", "Middle", "Higher")),
+    financial_distress = factor(financial_distress, levels = c("none", "low", "high"),
+                                labels = c("None", "Low", "High")),
+    smoking_status = factor(smoking_status, levels = c("never", "former", "current"),
+                            labels = c("Never", "Former", "Current")),
+    disease = factor(disease,
+                     levels = c("diabetes_t2", "copd", "heart_failure", "renal_disease"),
+                     labels = c("Type 2 diabetes", "COPD", "Heart failure", "Renal disease")),
+    disease_duration = factor(disease_duration,
+                              levels = c("under_2_yrs", "2_to_5_yrs", "over_5_yrs"),
+                              labels = c("<2 years", "2-5 years", ">5 years")),
+    living_alone = factor(living_alone, levels = c(0, 1), labels = c("No", "Yes"))
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+# Missing questionnaire answers were coded 99 in the original deposit; the
+# conversion to NA was already applied upstream, so no re-coding is done here.
+# The only 99 anywhere in the file is a participant identifier (id == 99).
+n99 <- dat_raw |>
+  select(-id) |>
+  select(where(is.numeric)) |>
+  summarise(across(everything(), ~ sum(.x == 99, na.rm = TRUE))) |>
+  rowSums()
+```
+
+# Introduction
+
+The Patient Activation Measure (PAM-13) captures how far a patient has the
+knowledge, skills and confidence to manage their own long-term condition.
+These data come from a cross-sectional survey of 1,154 Dutch adults treated in
+primary and secondary care for type 2 diabetes, COPD, chronic heart failure or
+chronic renal disease (Bos-Touwen et al., *PLoS ONE* 2015;10(5):e0126400).
+Activation matters because self-management support programmes are increasingly
+targeted at patients on the basis of how activated they already are, so it is
+useful to know which patient characteristics mark out the least activated.
+
+**Aim.** Among Dutch adults with one of four chronic conditions, we examined
+which of age, sex, education, index disease, comorbidity burden, illness
+perceptions and perceived social support are independently associated with
+PAM-13 score, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** Cross-sectional postal and online survey of adults with type 2
+diabetes, COPD, chronic heart failure or chronic renal disease recruited from
+Dutch general practices and hospital outpatient clinics; `r nrow(dat_raw)`
+participants with complete PAM-13 data. All measurements were taken at a single
+occasion.
+
+**Variables.** The outcome is `pam_score`, the PAM-13 total score on a 0-100
+scale, where higher scores mean greater ability and confidence to self-manage.
+Predictors are `age_yrs` (years), `sex` (reference: male), `education_level`
+(lower / middle / higher, reference: lower, the largest group),
+`disease` (reference: type 2 diabetes, the largest group), `charlson_index`
+(Charlson comorbidity index, points; higher = more comorbidity), `ipq_total`
+(Brief Illness Perception Questionnaire total, 0-80; higher = a more
+threatening view of one's illness) and `social_support_total` (Multidimensional
+Scale of Perceived Social Support total, 12-84; higher = more perceived
+support).
+
+`pam_level` is a deterministic banding of `pam_score` itself and is therefore
+never used as a predictor here. `bmi` in this file is exactly
+`weight_kg / (height_cm/100)^2`, so at most one of those three would ever enter
+a model; none is used here because body size has no clear prior link to
+activation. `n_comorbidities` correlates 0.78 with `charlson_index`, so only the
+Charlson index is used.
+
+**Statistical analysis.** Linear regression (`lm()`), justified because the
+outcome is continuous and roughly symmetric. We fitted a univariable model for
+each predictor first, then a single multivariable model containing all of them.
+Predictors were chosen in advance on subject-matter grounds, not by significance.
+Significance threshold 0.05; estimates are reported with 95% confidence
+intervals. Assumptions were checked with `performance::check_model()`. Analysis
+used `r R.version.string` with tidyverse, gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped). Missing questionnaire answers were
+coded 99 in the original deposit, but that conversion to `NA` has already been
+applied in this CSV; a check across all numeric columns other than `id`
+found `r n99` remaining values equal to 99, so no further re-coding was needed.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(missing = "no") |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics.**")
+```
+
+The analysed sample is elderly (median age around 70) and predominantly male,
+with a median Charlson index of 3 and mostly lower or middle education. The
+median PAM-13 score sits near 53, which is at the boundary between activation
+levels 2 and 3, so a large share of this sample is in the lower half of the
+activation range.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. PAM-13 score against illness-perception score, by index disease. Lines are linear smooths with 95% confidence bands."}
+ggplot(dat_model, aes(x = ipq_total, y = pam_score)) +
+  geom_point(alpha = 0.25, size = 1) +
+  geom_smooth(method = "lm", formula = y ~ x, colour = "#2c7fb8") +
+  facet_wrap(~ disease) +
+  labs(x = "Illness perception (IPQ total, higher = more threatening)",
+       y = "PAM-13 score (0-100)")
+```
+
+Patients who see their illness as more threatening report lower activation, and
+the slope looks broadly similar in all four disease groups, so a single
+common slope for `ipq_total` is a reasonable simplification.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+```
+
+Illness perception is the strongest crude predictor: each additional point on
+the IPQ total is associated with a 0.24-point lower PAM-13 score
+(95% CI -0.29 to -0.19, p < 0.001), so a 20-point difference in illness
+perception corresponds to roughly 4.8 PAM points. Perceived social support runs
+the other way (+0.13 PAM points per point of support, p < 0.001), higher
+education is associated with a 4.2-point advantage over lower education
+(p < 0.001), and both age (-0.07 per year, p = 0.024) and the Charlson index
+(-0.79 per point, p < 0.001) are associated with lower activation. Crudely,
+renal disease patients score 3.8 points below the diabetes group (p < 0.001).
+
+## Why adjustment is needed
+
+The crude associations mix several patient characteristics that travel
+together in this sample. `charlson_index` is one clear confounder: it rises
+with `age_yrs` (r = 0.34) and is itself associated with lower activation, so
+part of the crude age effect is really comorbidity burden, and part of the
+crude Charlson effect is really age. `disease` is a second: the four groups
+differ substantially in age, sex mix and comorbidity — the renal disease group
+in particular is older and more comorbid — so the crude renal-disease deficit
+in activation partly reflects who ends up in that group rather than the
+condition itself. `education_level` is a third: education is associated with
+both illness perceptions (better-educated patients report less threatening
+views of their illness) and with activation, so the crude IPQ slope is
+partly an education effect. Because the four disease groups were pooled by
+design, adjusting for `disease` is not optional here — it is what makes the
+other coefficients interpretable as within-disease comparisons.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+```
+
+```{r fit-stats}
+gl <- glance(fit)
+tibble(
+  Statistic = c("R-squared", "Adjusted R-squared", "Residual SE", "N", "Model df"),
+  Value = c(round(gl$r.squared, 3), round(gl$adj.r.squared, 3),
+            round(gl$sigma, 2), nrow(dat_model), gl$df)
+) |>
+  gt() |>
+  tab_header(title = "Model fit")
+```
+
+Adjusting for all seven predictors, illness perception remains the dominant
+association: conditional on age, sex, education, disease, comorbidity and social
+support, each extra IPQ point is associated with a 0.22-point lower PAM score
+(95% CI -0.27 to -0.17, p < 0.001). Perceived social support remains
+independently associated in the opposite direction (+0.11 per point,
+95% CI 0.07 to 0.15, p < 0.001), and higher education retains a 2.8-point
+advantage over lower education (95% CI 0.97 to 4.64, p = 0.003). The Charlson
+index is now only weakly associated (-0.41 per point, 95% CI -0.80 to -0.02,
+p = 0.037) and age is no longer associated at all (p = 0.29). The model explains
+R² = `r round(gl$r.squared, 3)` of the variance in PAM score
+(adjusted R² = `r round(gl$adj.r.squared, 3)`), which is modest: most of what
+drives activation in this sample is not captured by these variables.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+Three estimates move meaningfully. Age halves and loses significance (-0.067 to
+-0.032, p = 0.024 to p = 0.29): the crude age association was largely
+comorbidity, which age brings with it. The Charlson index also shrinks towards
+the null by about half (-0.79 to -0.41) but stays just significant, for the
+mirror-image reason plus overlap with disease group. Renal disease moves
+strongly towards the null (-3.77 to -1.33, p < 0.001 to p = 0.17), so the
+apparent activation deficit in renal patients is mostly explained by their
+older age, higher comorbidity and more threatening illness perceptions rather
+than by the diagnosis. COPD moves in the other direction, from a null crude
+estimate (-0.43, p = 0.60) to a positive adjusted one (+1.98, p = 0.017): once
+the heavier illness-perception burden of COPD patients is held constant, they
+look slightly *more* activated than diabetes patients — a suppression effect
+worth flagging rather than over-interpreting. Social support and illness
+perception barely move (0.127 to 0.110; -0.241 to -0.223), which tells us those
+two are not simply standing in for the demographic and clinical variables.
+Education attenuates from +4.2 to +2.8 but keeps its significance.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r diag-tests}
+check_heteroscedasticity(fit)
+check_normality(fit)
+check_collinearity(fit)
+```
+
+Linearity and the posterior-predictive panel look acceptable: the fitted-versus-
+residual smooth is close to flat, and simulated data track the observed PAM
+distribution. Homogeneity of variance passes (`check_heteroscedasticity()`
+p = 0.093), so ordinary standard errors are reported and no robust-SE
+re-estimation was needed. Normality of residuals is formally rejected
+(p < 0.001) — the PAM distribution is slightly lumpy because the PAM-13 has a
+finite set of achievable scores — but the departure is mild in the Q-Q plot and,
+with n over 1,000, it has little practical effect on the confidence intervals.
+Collinearity is not a problem: all VIFs are below 1.5 (largest: `disease` 1.46,
+`charlson_index` 1.39). No observation exceeds the Cook's distance threshold.
+
+# Discussion
+
+Among Dutch adults with one of four chronic conditions, how threatening a
+patient perceives their illness to be and how much social support they feel
+they have are the characteristics most strongly and independently associated
+with patient activation; higher education adds a further modest advantage.
+Age, sex and index disease add very little once these are accounted for.
+Practically, this points self-management support towards illness beliefs and
+the patient's support network rather than towards demographic targeting — but
+the model explains only about 13% of the variance, so activation is far from
+predictable from routinely collected characteristics.
+
+**Limitations.** The design is cross-sectional, so nothing here establishes
+direction: a patient who feels unable to manage their illness may well come to
+see it as more threatening, rather than the reverse, and the same circularity
+applies to social support. The file contains no disease-specific severity
+markers — no eGFR or dialysis status for renal disease, no NYHA class for heart
+failure, no GOLD stage for COPD — so "severity" is represented only by the
+generic Charlson index, and residual confounding by severity is likely,
+especially for the `disease` coefficients. `ipq_total` and `pam_score` are both
+self-reported on the same questionnaire occasion, so common-method bias will
+inflate their association. Residual normality is formally violated. Complete-
+case analysis dropped `r n_dropped` participants (`r round(100*n_dropped/nrow(dat), 1)`%),
+and if those with missing questionnaire items are less activated the estimates
+are mildly optimistic. All estimates are associations, not effects.
+
+**Future work.** A longitudinal follow-up measuring illness perceptions and
+activation at two time points would separate the two directions of the
+IPQ-PAM association.
+
+# Feasibility notes
+
+*Not part of a student report.*
+
+- **Works well.** This is the cleanest outcome in the dataset. `pam_score` has
+  zero missing values, is continuous over a wide range (24.4-91.6), and has
+  several genuinely different predictors with a mix of significant and
+  non-significant results — good teaching material for Purpose 3.
+- **Complete-case N = `r nrow(dat_model)`** of `r nrow(dat)` (`r n_dropped`
+  dropped, `r round(100*n_dropped/nrow(dat), 1)`%). Losses come from the
+  questionnaire scales, not the outcome.
+- **No collinearity problem**: max VIF 1.46. But two traps students will fall
+  into are live in this file: (i) `pam_level` is a deterministic banding of
+  `pam_score` and gives an R² of 0.87 on its own (0.89 as a factor) if used as
+  a predictor;
+  (ii) `charlson_index` and `n_comorbidities` correlate at r = 0.78 and should
+  not both be entered.
+- **Diagnostics**: homoscedasticity OK (p = 0.09), residual normality rejected
+  (p < 0.001) but visually mild; no influential points. No robust SEs needed.
+- **Weak R² (0.137)**: acceptable for a survey outcome, but students expecting a
+  "strong model" will be disappointed. Worth telling them in advance.
+- **Suppression effect on COPD** (crude null to positive adjusted) is a nice
+  discussion point but confuses weaker students.

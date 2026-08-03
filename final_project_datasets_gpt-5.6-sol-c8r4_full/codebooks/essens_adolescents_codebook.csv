@@ -1,0 +1,21 @@
+variable,description,type,values,pct_complete
+bedroom_tv,Television in the bedroom,categorical,"no (404), yes (317)",97.2
+owns_pc,Owns a personal computer,categorical,"yes (565), no (154)",96.9
+sex,Sex,categorical,"girl (395), boy (347)",100.0
+homework_weekday,Time spent on homework on weekdays,categorical,"1_to_2_hours (335), 2_plus_hours (209), up_to_30_min (163)",95.3
+hobbies_weekday,Time spent on hobbies on weekdays,categorical,"up_to_30_min (312), 2_plus_hours (215), 1_to_2_hours (180)",95.3
+homework_weekend,Time spent on homework on weekend days,categorical,"up_to_30_min (446), 1_to_2_hours (176), 2_plus_hours (73)",93.7
+hobbies_weekend,Time spent on hobbies on weekend days,categorical,"up_to_30_min (329), 2_plus_hours (198), 1_to_2_hours (166)",93.4
+pa_self_efficacy_high,High physical-activity self-efficacy (1 = yes),binary 0/1,"1 = 376 (54.6%), 0 = 313",92.9
+tv_self_efficacy_high,High self-efficacy for limiting television time (1 = yes),binary 0/1,"1 = 325 (46.2%), 0 = 378",94.7
+gaming_self_efficacy_high,High self-efficacy for limiting gaming time (1 = yes),binary 0/1,"1 = 411 (58.8%), 0 = 288",94.2
+pcs_in_house,Number of personal computers in the home,categorical,"more_than_two (512), zero_to_two (187)",94.2
+active_5plus_days,Physically active on at least five days in a typical week (1 = yes),binary 0/1,"1 = 336 (47.1%), 0 = 377",96.1
+weekday_tv,Weekday television or movie-streaming time,categorical,"up_to_1_5_hours (379), 3_plus_hours (173), 2_to_2_5_hours (170)",97.3
+weekday_gaming,Weekday electronic-gaming time,categorical,"up_to_1_hour (434), 2_5_plus_hours (163), 1_5_to_2_hours (124)",97.2
+weekday_online,Weekday online surfing or socializing time,categorical,"up_to_1_5_hours (418), 3_plus_hours (171), 2_to_2_5_hours (133)",97.3
+weekend_tv,Weekend television or movie-streaming time,categorical,"up_to_2_5_hours (422), 3_to_3_5_hours (180), 4_plus_hours (120)",97.3
+weekend_gaming,Weekend electronic-gaming time,categorical,"up_to_1_5_hours (414), 3_plus_hours (195), 2_to_2_5_hours (108)",96.6
+weekend_online,Weekend online surfing or socializing time,categorical,"up_to_1_5_hours (392), 3_plus_hours (207), 2_to_2_5_hours (121)",97.0
+high_weekday_tv,At least three hours of weekday television or movie streaming (1 = yes),binary 0/1,"1 = 173 (24.0%), 0 = 549",97.3
+high_weekday_gaming,At least 2.5 hours of weekday electronic gaming (1 = yes),binary 0/1,"1 = 163 (22.6%), 0 = 558",97.2

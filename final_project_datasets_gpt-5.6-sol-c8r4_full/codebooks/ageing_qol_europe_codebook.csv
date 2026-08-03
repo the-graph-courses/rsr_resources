@@ -1,0 +1,39 @@
+variable,description,type,values,pct_complete
+residence,Urban or rural residence,categorical,"urban (4,131), rural (1,210)",100.0
+age_yrs,Age in years,continuous,median 60 | range 18 to 104,100.0
+neighbourhood_usability,Neighbourhood usability score (0 to 100),continuous,median 68.15 | range 0 to 100,100.0
+walkability_hindrance,Walkability hindrance score (0 to 100),continuous,median 27.17 | range 0 to 100,100.0
+public_buildings_usability,Usability of public buildings and facilities score (0 to 100),continuous,median 71.45 | range 0 to 100,100.0
+home_usability,Home usability and safety score (0 to 100),continuous,median 80.1 | range 0 to 100,100.0
+social_network_index,Social network index (0 to 100),continuous,median 68.94 | range 8.66 to 100,100.0
+quality_of_life_score,WHOQOL-AGE quality-of-life score (0 to 100),continuous,median 71.43 | range 5.49 to 100,100.0
+country,Country,categorical,"poland (2,632), spain (2,076), finland (633)",100.0
+sex,Sex,categorical,"female (3,102), male (2,239)",100.0
+marital_status,Marital status,categorical,"married_or_cohabiting (3,085), widowed (940), never_married (839), separated_or_divorced (477)",100.0
+education,Educational attainment,categorical,"primary_or_secondary (2,620), high_school_or_higher (2,596), none_or_informal (125)",100.0
+body_pain,Bodily pain and associated difficulty,categorical,"none (2,137), mild_difficulty (1,030), moderate_difficulty (929), pain_without_difficulty (716), severe_or_extreme_difficulty (529)",100.0
+sleep_difficulty,Difficulty sleeping,categorical,"none (2,937), mild (1,008), moderate (829), severe_or_extreme (567)",100.0
+tiredness,Tiredness severity,categorical,"none (3,041), mild (1,160), moderate (810), severe_or_extreme (330)",100.0
+learning_difficulty,Learning difficulty,categorical,"none (4,047), mild (714), moderate (383), severe_or_extreme (197)",100.0
+concentration_difficulty,Concentration difficulty,categorical,"none (4,471), mild (496), moderate (271), severe_or_extreme (103)",100.0
+sadness,Sadness or depressed mood severity,categorical,"none (3,072), mild (1,186), moderate (760), severe_or_extreme (323)",100.0
+anxiety,Worry or anxiety severity,categorical,"none (3,091), mild (1,175), moderate (753), severe_or_extreme (322)",100.0
+health_worry,Worry about health,categorical,"none (3,304), mild (1,023), moderate (695), severe_or_extreme (319)",100.0
+worry_interference,Extent that worry interferes with life,categorical,"none (3,248), mild (1,089), moderate (707), severe_or_extreme (297)",100.0
+distance_vision_difficulty,Difficulty with distance vision,categorical,"none (4,274), mild (659), moderate (272), severe_or_extreme (136)",100.0
+near_vision_difficulty,Difficulty with near vision,categorical,"none (4,169), mild (759), moderate (286), severe_or_extreme (127)",100.0
+near_hearing_difficulty,Difficulty hearing across a room,categorical,"none (4,280), mild (643), moderate (299), severe_or_extreme (119)",100.0
+conversation_hearing_difficulty,Difficulty hearing group conversations,categorical,"none (4,368), mild (616), moderate (229), severe_or_extreme (128)",100.0
+bmi_category,Body mass index category,categorical,"overweight (2,029), normal_or_underweight (1,827), obese (1,485)",100.0
+high_waist_risk,High-risk waist circumference (1 = yes),binary 0/1,"1 = 2,271 (42.5%), 0 = 3,070",100.0
+smoking_status,Smoking status,categorical,"never (2,530), former (1,424), current (1,387)",100.0
+alcohol_use,Alcohol-consumption category,categorical,"non_heavy (2,577), abstainer_or_occasional (2,479), infrequent_heavy (250), frequent_heavy (35)",100.0
+physical_activity,Physical-activity level,categorical,"high (2,393), moderate (1,511), low (1,437)",100.0
+arthritis,Diagnosed arthritis (1 = yes),binary 0/1,"1 = 1,370 (25.7%), 0 = 3,971",100.0
+stroke,Diagnosed stroke (1 = yes),binary 0/1,"1 = 180 (3.4%), 0 = 5,161",100.0
+angina,Diagnosed angina (1 = yes),binary 0/1,"1 = 411 (7.7%), 0 = 4,930",100.0
+diabetes,Diagnosed diabetes (1 = yes),binary 0/1,"1 = 607 (11.4%), 0 = 4,734",100.0
+lung_disease,Diagnosed lung disease (1 = yes),binary 0/1,"1 = 328 (6.1%), 0 = 5,013",100.0
+asthma,Diagnosed asthma (1 = yes),binary 0/1,"1 = 372 (7.0%), 0 = 4,969",100.0
+depression_diagnosis,Diagnosed depression (1 = yes),binary 0/1,"1 = 765 (14.3%), 0 = 4,576",100.0
+hypertension,Diagnosed hypertension (1 = yes),binary 0/1,"1 = 1,926 (36.1%), 0 = 3,415",100.0

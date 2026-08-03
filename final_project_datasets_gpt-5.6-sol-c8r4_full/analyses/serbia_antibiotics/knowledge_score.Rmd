@@ -1,0 +1,500 @@
+---
+title: "Antibiotic knowledge score in Serbian primary-care attenders"
+subtitle: "Dataset 1: Antibiotic knowledge and self-medication in Serbia"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+
+# Helpers so every number in the prose is pulled from the fitted model rather
+# than typed by hand.
+fmt_p <- function(p) if (p < 0.001) "p < 0.001" else sprintf("p = %.3f", p)
+row_of <- function(tab, trm) tab[tab$term == trm, ]
+say_beta <- function(tab, trm, digits = 2) {
+  r <- row_of(tab, trm)
+  sprintf("%.*f (95%% CI %.*f to %.*f, %s)",
+          digits, r$estimate, digits, r$conf.low, digits, r$conf.high, fmt_p(r$p.value))
+}
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "serbia_antibiotics.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "knowledge_score"
+predictors <- c("age_group", "sex", "education_level", "employment_status",
+                "gp_visits_past_year", "health_professional_in_family")
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    # Age: ">65" is both the largest band (n = 123) and the group of substantive
+    # interest, so every contrast reads as "younger adults versus the over-65s".
+    age_group = factor(age_group,
+                       levels = c(">65", "18-24", "25-34", "35-44", "45-54", "55-64"),
+                       labels = c("Over 65", "18-24", "25-34", "35-44", "45-54", "55-64")),
+    sex = factor(sex, levels = c("female", "male"), labels = c("Female", "Male")),
+    # Education: "secondary" is the largest group (n = 259) and sits between the
+    # other two, so both a lower and a higher contrast are available.
+    education_level = factor(education_level,
+                             levels = c("secondary", "primary", "tertiary"),
+                             labels = c("Secondary", "Primary", "Tertiary")),
+    employment_status = factor(employment_status,
+                               levels = c("employed", "unemployed", "pensioner"),
+                               labels = c("Employed", "Unemployed", "Pensioner")),
+    # GP visits: "0" is the clinically unexposed group (no primary-care contact).
+    gp_visits_past_year = factor(gp_visits_past_year,
+                                 levels = c("0", "1-4", "5-10", "more than 10"),
+                                 labels = c("None", "1-4", "5-10", "More than 10")),
+    health_professional_in_family = factor(health_professional_in_family,
+                                           levels = c(0, 1), labels = c("No", "Yes")),
+    marital_status = factor(marital_status,
+                            levels = c("married", "single", "divorced_widowed"),
+                            labels = c("Married", "Single", "Divorced or widowed")),
+    household_size = factor(household_size,
+                            levels = c("1-3", "3-5", "more than 5"),
+                            labels = c("1-3", "3-5", "More than 5"))
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+# Verification of the deterministic link between the two knowledge variables:
+# `adequate_knowledge` is exactly the indicator `knowledge_score >= 9`.
+adeq_identical <- identical(dat_raw$adequate_knowledge,
+                            as.numeric(dat_raw$knowledge_score >= 9))
+rng_lo <- range(dat_raw$knowledge_score[dat_raw$adequate_knowledge == 0])
+rng_hi <- range(dat_raw$knowledge_score[dat_raw$adequate_knowledge == 1])
+
+# Confounding structure quoted in the text.
+n_primary        <- sum(dat$education_level == "Primary")
+n_primary_old    <- sum(dat$education_level == "Primary" & dat$age_group == "Over 65")
+n_pensioner      <- sum(dat$employment_status == "Pensioner")
+n_pensioner_old  <- sum(dat$employment_status == "Pensioner" & dat$age_group == "Over 65")
+cramers_v <- function(x, y) {
+  tt <- suppressWarnings(table(x, y))
+  sqrt(as.numeric(suppressWarnings(chisq.test(tt))$statistic) /
+         (sum(tt) * (min(dim(tt)) - 1)))
+}
+v_age_emp <- cramers_v(dat$age_group, dat$employment_status)
+v_age_edu <- cramers_v(dat$age_group, dat$education_level)
+```
+
+# Introduction
+
+Antibiotic resistance in south-eastern Europe is driven in part by how the
+general public uses antibiotics, and public knowledge is the usual target of
+national stewardship campaigns. These data come from a cross-sectional
+questionnaire survey of `r nrow(dat_raw)` adults who consulted general
+practitioners at four health centres in Serbia, reported by Horvat and
+colleagues (*PLOS ONE* 2017;12(7):e0180799). Each respondent answered a
+12-item quiz about what antibiotics are for and how they should be taken,
+scored 0 to 12. Knowing which groups score poorly tells campaign designers
+where to aim.
+
+**Aim.** Among Serbian adults attending primary care, we examined which of age
+group, sex, education, employment status, frequency of GP contact and having a
+health professional in the family are independently associated with the
+antibiotic knowledge score, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** Cross-sectional, interviewer-administered questionnaire survey
+of adults consulting general practitioners at four Serbian health centres;
+`r nrow(dat_raw)` respondents completed the entire questionnaire and all
+`r nrow(dat_raw)` are analysed here. All measurements were taken on a single
+occasion, so this is a snapshot rather than a follow-up study.
+
+**Variables.** The outcome is `knowledge_score`, the total antibiotic knowledge
+score in points on a 0-12 scale, where higher means better knowledge; in this
+sample it runs from `r min(dat$knowledge_score)` to
+`r max(dat$knowledge_score)`. Predictors are `age_group` (six bands; reference:
+over 65, the largest band at n = `r sum(dat$age_group == "Over 65")`), `sex`
+(reference: female, the majority at n = `r sum(dat$sex == "Female")`),
+`education_level` (primary / secondary / tertiary; reference: secondary, the
+largest group at n = `r sum(dat$education_level == "Secondary")`),
+`employment_status` (reference: employed, n =
+`r sum(dat$employment_status == "Employed")`), `gp_visits_past_year` (four
+bands of visits in the previous 12 months; reference: none, the group with no
+primary-care contact, n = `r sum(dat$gp_visits_past_year == "None")`) and
+`health_professional_in_family` (reference: no, n =
+`r sum(dat$health_professional_in_family == "No")`). All six are categorical,
+so every estimate is a difference in mean score against the stated reference
+level; there are no continuous predictors and therefore no per-unit slopes.
+
+Two of the eight available background variables were left out deliberately.
+`marital_status` is largely a restatement of age in this sample (Cramér's
+V = `r sprintf("%.2f", cramers_v(dat$age_group, dat$marital_status))` with
+`age_group`: nearly all the divorced or widowed respondents are in the older
+bands), so it would add two parameters and inflate the variance of the age
+contrasts without adding a distinct construct. `household_size` is a
+three-band count with no plausible mechanism linking it to what a person knows
+about antibiotics, and it is unrelated to the outcome here
+(univariable p = `r sprintf("%.2f", anova(lm(knowledge_score ~ household_size, dat))[["Pr(>F)"]][1])`).
+`id` is a row number and is never modelled.
+
+`adequate_knowledge` is **not** used, in either direction. It is the indicator
+`knowledge_score >= 9` and nothing else: in this file the respondents flagged 0
+score `r rng_lo[1]` to `r rng_lo[2]` and those flagged 1 score `r rng_hi[1]` to
+`r rng_hi[2]`, and re-deriving the flag from the score reproduces the deposited
+column exactly (`identical()` returns `r adeq_identical`). Putting it in a model
+for `knowledge_score` would be circular, and the reverse — modelling
+`adequate_knowledge` on `knowledge_score` — is complete separation. The two
+columns are one outcome measured two ways, continuous and dichotomised, and only
+one of them can be the response in any given analysis.
+
+**Statistical analysis.** Linear regression (`lm()`), justified because the
+outcome is a continuous count of correct answers spanning `r min(dat$knowledge_score)`
+to `r max(dat$knowledge_score)` points with a roughly unimodal distribution. We
+fitted a univariable model for each predictor first, then a single
+multivariable model containing all of them. Predictors were chosen in advance
+on subject-matter grounds, not by significance. Significance threshold 0.05;
+estimates are reported with 95% confidence intervals. Assumptions were checked
+with `performance::check_model()`. Analysis used `r R.version.string` with
+tidyverse, gtsummary and performance.
+
+**Missing data.** There is none. Every one of the `r ncol(dat_raw)` columns is
+`r sprintf("%.0f", 100 * mean(complete.cases(dat_raw)))`% complete, so the
+complete-case model uses all `r nrow(dat_model)` of `r nrow(dat)` rows and
+`r n_dropped` were dropped. The survey retained only respondents who completed
+the entire questionnaire, so there is no missing-data story to tell here — but
+note that this is itself a form of selection, since partial responders were
+excluded before the file was created and nothing is known about them.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(missing = "no") |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics.**")
+```
+
+The sample skews older and female: about a quarter are over 65 and
+`r sprintf("%.0f", 100 * mean(dat_model$sex == "Female"))`% are women. Education
+is concentrated in the secondary and tertiary bands, with only
+`r n_primary` respondents educated to primary level. The median knowledge score
+is `r median(dat_model$knowledge_score)` of 12 (IQR
+`r quantile(dat_model$knowledge_score, 0.25)` to
+`r quantile(dat_model$knowledge_score, 0.75)`), so the typical respondent
+answers about three-quarters of the items correctly and the scale is used
+mainly in its upper half.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Antibiotic knowledge score by education level, with respondents split by whether a family member works in health care. Boxes show medians and interquartile ranges; points are individual respondents."}
+ggplot(dat_model, aes(x = education_level, y = knowledge_score)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, fill = "grey93", colour = "grey40") +
+  geom_jitter(aes(colour = health_professional_in_family),
+              width = 0.18, height = 0.18, alpha = 0.6, size = 1.4) +
+  scale_colour_manual(values = c("No" = "#7f8c9b", "Yes" = "#2c7fb8")) +
+  scale_y_continuous(breaks = seq(2, 12, 2), limits = c(1, 12.6)) +
+  labs(x = "Highest education level", y = "Antibiotic knowledge score (0-12)",
+       colour = "Health professional\nin the family")
+```
+
+Knowledge rises steadily across the three education bands, and within every
+band the respondents with a health professional in the family sit slightly
+higher; the primary-education group is both the lowest-scoring and much the
+smallest, so its box is based on only `r n_primary` people.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = lm,
+    exponentiate = FALSE
+  )
+uv
+```
+
+```{r univariable-global}
+# Global (Wald F) tests for each multi-level predictor, so that factors are not
+# judged on a single dummy contrast.
+uni_global <- map_dfr(predictors, function(p) {
+  m <- lm(reformulate(p, outcome), data = dat_model)
+  tibble(term = p, p.value = anova(m)[["Pr(>F)"]][1],
+         r2 = summary(m)$r.squared)
+})
+gp <- function(v) fmt_p(uni_global$p.value[uni_global$term == v])
+gr2 <- function(v) sprintf("%.3f", uni_global$r2[uni_global$term == v])
+uv_tab <- map_dfr(predictors, ~ tidy(lm(reformulate(.x, outcome), data = dat_model),
+                                     conf.int = TRUE))
+```
+
+Education is by far the strongest crude predictor. Relative to secondary
+education, tertiary education is associated with a
+`r say_beta(uv_tab, "education_levelTertiary")` point higher score, while
+primary education is associated with a
+`r say_beta(uv_tab, "education_levelPrimary")` point difference — a spread of
+close to two points on a 12-point scale, and on its own education accounts for
+R² = `r gr2("education_level")` of the variance (`r gp("education_level")`).
+Age is the next strongest (`r gp("age_group")`, R² = `r gr2("age_group")`):
+every younger band scores above the over-65s, for example the 18-24 group by
+`r say_beta(uv_tab, "age_group18-24")` points. Having a health professional in
+the family is associated with a `r say_beta(uv_tab, "health_professional_in_familyYes")`
+point advantage (`r gp("health_professional_in_family")`), and employment
+status is also associated crudely (`r gp("employment_status")`, driven by
+pensioners scoring low). GP visits show a weak crude gradient in the
+unexpected direction (`r gp("gp_visits_past_year")` overall; respondents
+attending more than ten times score `r say_beta(uv_tab, "gp_visits_past_yearMore than 10")`
+points *below* those who never attended), and sex is not associated at all
+(`r gp("sex")`).
+
+## Why adjustment is needed
+
+The crude estimates above are not independent of each other, because the
+background variables in this survey travel together in a very specific way.
+`age_group` is the clearest confounder of the education association:
+`r n_primary_old` of the `r n_primary` primary-educated respondents
+(`r sprintf("%.0f", 100 * n_primary_old / n_primary)`%) are over 65, a legacy of
+when compulsory schooling expanded in the region, and age is itself associated
+with lower knowledge scores. Without adjustment, part of what looks like an
+education effect is simply the age composition of the education groups.
+`employment_status` confounds in the same direction and is almost a
+restatement of age at the top end: `r n_pensioner_old` of the
+`r n_pensioner` pensioners (`r sprintf("%.0f", 100 * n_pensioner_old / n_pensioner)`%)
+are over 65, and Cramér's V between age and employment is
+`r sprintf("%.2f", v_age_emp)`, so the crude pensioner deficit in knowledge may
+be nothing more than the age effect wearing a different label. A third,
+weaker route runs through `gp_visits_past_year`: older respondents attend far
+more often (`r sprintf("%.0f", 100 * mean(dat$gp_visits_past_year[dat$age_group == "Over 65"] %in% c("5-10", "More than 10")))`%
+of the over-65s report five or more visits, against
+`r sprintf("%.0f", 100 * mean(dat$gp_visits_past_year[dat$age_group != "Over 65"] %in% c("5-10", "More than 10")))`%
+of everyone else), so any crude association between GP contact and knowledge is
+partly an age association. Adjusting for all six simultaneously is what turns
+these into within-stratum comparisons — the education contrast becomes
+"comparable respondents of the same age and employment status", which is the
+question stewardship campaigns actually need answered.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- lm(reformulate(predictors, outcome), data = dat_model)
+
+mv <- tbl_regression(fit, exponentiate = FALSE)
+mv
+```
+
+```{r fit-stats}
+gl <- glance(fit)
+mv_tab <- tidy(fit, conf.int = TRUE)
+tibble(
+  Statistic = c("R-squared", "Adjusted R-squared", "Residual SE", "N",
+                "Model df", "Observations per parameter"),
+  Value = c(round(gl$r.squared, 3), round(gl$adj.r.squared, 3),
+            round(gl$sigma, 2), nrow(dat_model), gl$df,
+            round(nrow(dat_model) / gl$df, 1))
+) |>
+  gt() |>
+  tab_header(title = "Model fit")
+```
+
+Adjusting for all six predictors, education remains the dominant association:
+conditional on age, sex, employment, GP contact and family health-care
+exposure, tertiary education is associated with a
+`r say_beta(mv_tab, "education_levelTertiary")` point higher score than
+secondary education, and primary education with a
+`r say_beta(mv_tab, "education_levelPrimary")` point difference. Having a health
+professional in the family retains an independent
+`r say_beta(mv_tab, "health_professional_in_familyYes")` point advantage. The
+age contrasts survive adjustment in attenuated form — the 18-24 band scores
+`r say_beta(mv_tab, "age_group18-24")` points above the over-65s and the 35-44
+band `r say_beta(mv_tab, "age_group35-44")` — but employment status no longer
+carries any information once age is in the model (pensioner versus employed:
+`r say_beta(mv_tab, "employment_statusPensioner")`). Neither sex
+(`r say_beta(mv_tab, "sexMale")`) nor any GP-visit contrast is associated. The
+model explains R² = `r round(gl$r.squared, 3)` of the variance in knowledge
+score (adjusted R² = `r round(gl$adj.r.squared, 3)`), with a residual SD of
+`r round(gl$sigma, 2)` points against a raw SD of
+`r round(sd(dat_model$knowledge_score), 2)`: real, but most of what makes one
+respondent better informed than another is not captured by demography.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+The employment-status estimates move the most and are the clearest case of
+confounding by age. Crudely, pensioners score
+`r say_beta(uv_tab, "employment_statusPensioner")` points below the employed;
+adjusted, that collapses to `r say_beta(mv_tab, "employment_statusPensioner")`
+— essentially all the way to the null and no longer significant. Pensioners
+score badly because they are old, not because they are pensioners. The age
+contrasts move in the opposite way but for the same reason: the crude 18-24
+advantage of `r say_beta(uv_tab, "age_group18-24")` points *shrinks* to
+`r say_beta(mv_tab, "age_group18-24")` once education is held constant,
+because young respondents in this sample are also much better educated, so part
+of the crude youth advantage was education. Education itself barely moves
+(tertiary `r say_beta(uv_tab, "education_levelTertiary")` crude versus
+`r say_beta(mv_tab, "education_levelTertiary")` adjusted; primary
+`r say_beta(uv_tab, "education_levelPrimary")` versus
+`r say_beta(mv_tab, "education_levelPrimary")`), which is the key result: the
+education gradient is not a disguised age gradient, whereas the pensioner
+gradient is. Having a health professional in the family also barely moves
+(`r say_beta(uv_tab, "health_professional_in_familyYes")` to
+`r say_beta(mv_tab, "health_professional_in_familyYes")`), so it is not standing
+in for education or age. The GP-visit gradient is the third estimate to move materially and it moves
+all the way through the null: the most frequent attenders score
+`r say_beta(uv_tab, "gp_visits_past_yearMore than 10")` points below
+non-attenders crudely, but `r say_beta(mv_tab, "gp_visits_past_yearMore than 10")`
+after adjustment — the crude deficit was age and education, since the people
+attending most often are the oldest and least educated, and once those are held
+constant frequent attendance carries no information about knowledge at all. Sex
+is null in both columns and moves hardly at all
+(`r say_beta(uv_tab, "sexMale")` to `r say_beta(mv_tab, "sexMale")`). No
+predictor crosses from non-significant to significant; the two significance
+changes are employment status and frequent GP attendance both losing it, which
+is the expected direction when the crude estimates were confounded by age.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r diag-tests}
+check_heteroscedasticity(fit)
+check_normality(fit)
+check_collinearity(fit)
+```
+
+```{r diag-numbers}
+het_p  <- as.numeric(check_heteroscedasticity(fit))
+norm_p <- as.numeric(check_normality(fit))
+vif_tab <- check_collinearity(fit)
+max_vif <- max(vif_tab$VIF)
+max_vif_term <- vif_tab$Term[which.max(vif_tab$VIF)]
+max_cook <- max(cooks.distance(fit))
+```
+
+Two assumptions fail formally and both trace back to the same feature of the
+outcome. Homogeneity of variance is rejected
+(`check_heteroscedasticity()`, `r fmt_p(het_p)`): because the score is capped at
+12 and most respondents sit near the top, groups with high fitted means have
+less room to vary than groups with low fitted means, which shows up as a funnel
+in the fitted-versus-residual panel. Normality of residuals is also rejected
+(`r fmt_p(norm_p)`); the Q-Q plot bends at the lower tail, driven by the handful
+of respondents scoring 2 to 5. Neither is fatal at n = `r nrow(dat_model)` — the
+central limit theorem protects the coefficient estimates and the intervals are
+only mildly affected — but a robust (sandwich) standard error would be the
+honest fix, and this is the single most important caveat on the model. The
+linearity panel is uninformative here because every predictor is categorical,
+so the fitted values take only a few dozen distinct levels. Collinearity is
+acceptable: the largest VIF is `r sprintf("%.2f", max_vif)`
+(`r max_vif_term`), which is elevated by the age-employment overlap described
+above but stays well below the conventional threshold of 5. No observation is
+influential (largest Cook's distance `r sprintf("%.3f", max_cook)`, far below
+0.5). The posterior-predictive panel shows the model's simulated data are
+smoother than the observed score distribution, which is expected: the outcome
+is an integer count of correct answers and the model treats it as continuous.
+
+# Discussion
+
+Among Serbian adults attending primary care, formal education is the
+characteristic most strongly and independently associated with antibiotic
+knowledge: tertiary-educated respondents score about a point higher than
+secondary-educated ones and primary-educated respondents nearly a point lower,
+and this gradient is not explained away by age, employment or health-service
+contact. Having a family member who works in health care is worth roughly half
+a point independently, which is a plausible informal-information effect. Age
+matters somewhat, sex and frequency of GP visits do not, and the apparent
+knowledge deficit among pensioners disappears entirely once age is accounted
+for. Practically, this argues for stewardship messaging pitched at low-literacy
+audiences and delivered outside the consultation, since attending the GP more
+often does not appear to make people better informed.
+
+**Limitations.** The design is cross-sectional and every predictor is a fixed
+background characteristic, so nothing here is a causal effect; "education
+raises knowledge" and "the sort of person who completes tertiary education also
+absorbs health information" are indistinguishable in these data. Formal
+diagnostics fail: residual variance is not constant (`r fmt_p(het_p)`) and
+residuals are not normal (`r fmt_p(norm_p)`), both because the 0-12 score is
+bounded and ceiling-heavy, so the reported confidence intervals are slightly
+optimistic and robust standard errors would be preferable. All predictors are
+coarse categories — age in six bands rather than years, GP visits in four bands
+rather than a count — which loses information and prevents any test of a linear
+trend. The `r n_primary`-person primary-education group is small, so that
+contrast is the least precise in the model. There are no measures of health
+literacy, income, rural or urban residence, or prior antibiotic use in this
+file, and each is a plausible common cause of both education and knowledge, so
+residual confounding is likely. The survey enrolled only people
+who were already consulting a GP and who completed the whole questionnaire, so
+it does not represent Serbian adults who avoid primary care. Finally, the
+outcome is a self-completed quiz administered in a clinic, where social
+desirability may inflate scores.
+
+**Future work.** A campaign-evaluation design measuring the same 12-item score
+before and after a stewardship intervention, in the same respondents, would
+separate stable educational differences from modifiable knowledge gaps.
+
+# Feasibility notes
+
+*Not part of a student report.*
+
+- **Works well, and is the best of the three outcomes in this file.**
+  `knowledge_score` is complete for all `r nrow(dat_raw)` rows, spans
+  `r min(dat$knowledge_score)`-`r max(dat$knowledge_score)` of a possible 0-12,
+  and produces a clean mix of strongly significant (education, family health
+  professional), partly significant (age), fully confounded-away (employment
+  status, frequent GP attendance) and flatly null (sex) predictors — exactly
+  the spread a Purpose 3 exercise needs, including two textbook confounding
+  demonstrations.
+- **Complete-case N = `r nrow(dat_model)`** of `r nrow(dat)`; `r n_dropped`
+  dropped. The file is 100% complete, so there is genuinely no missing-data
+  narrative available. Students who are expected to write a missing-data
+  paragraph should be told to say so plainly rather than invent one.
+- **The trap in this file is `adequate_knowledge`.** It is exactly
+  `knowledge_score >= 9` (verified: `identical()` = `r adeq_identical`; the
+  0-group spans `r rng_lo[1]`-`r rng_lo[2]` and the 1-group
+  `r rng_hi[1]`-`r rng_hi[2]`). Used as a predictor here it gives R² =
+  `r sprintf("%.2f", summary(lm(knowledge_score ~ adequate_knowledge, dat_raw))$r.squared)`
+  on its own; used as the outcome with `knowledge_score` as predictor it is
+  perfect separation. Every student working on this dataset will need warning.
+- **All predictors are categorical.** There is not one continuous predictor in
+  the file, so no analysis of this dataset can demonstrate a per-unit slope,
+  and the `check_model()` linearity panel is meaningless. That is a real
+  teaching limitation, not a defect of this particular model.
+- **Diagnostics fail formally**: heteroscedasticity `r fmt_p(het_p)`, normality
+  `r fmt_p(norm_p)`, both driven by the ceiling at 12. Visually mild and
+  harmless at this n, but a student running `check_model()` will get two red
+  warnings and needs to know what to do with them.
+- **Collinearity is present but tolerable**: `age_group` and
+  `employment_status` overlap heavily (Cramér's V `r sprintf("%.2f", v_age_emp)`;
+  `r sprintf("%.0f", 100 * n_pensioner_old / n_pensioner)`% of pensioners are
+  over 65), max VIF `r sprintf("%.2f", max_vif)`. Adding `marital_status` as
+  well (V = `r sprintf("%.2f", cramers_v(dat$age_group, dat$marital_status))`
+  with age) pushes this further and is best avoided.
+- **Modest R² (`r round(gl$r.squared, 3)`)**, which is normal for a
+  demographics-only survey model but will disappoint students expecting a
+  "strong" model.

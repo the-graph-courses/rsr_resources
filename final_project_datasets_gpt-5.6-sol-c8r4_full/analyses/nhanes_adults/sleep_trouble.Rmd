@@ -1,0 +1,407 @@
+---
+title: "Reported trouble sleeping in US adults"
+subtitle: "Dataset 10: NHANES adults (2009-10 and 2011-12 extract)"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "nhanes_adults.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "sleep_trouble"
+predictors <- c("age_yrs", "sex", "bmi", "days_ment_health_bad", "general_health",
+                "phys_active", "smoked_100_cigs", "sleep_hours")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    sex   = lab(factor(sex, levels = c("female", "male"), labels = c("Female", "Male")),
+                "Sex"),
+    # Excellent (n = 47) and Poor (n = 11) are collapsed with their neighbours so no
+    # cell is too thin to estimate; the reference is the healthiest group.
+    general_health = lab(factor(case_when(
+      general_health %in% c("Excellent", "Vgood") ~ "Excellent/Very good",
+      general_health == "Good"                    ~ "Good",
+      general_health %in% c("Fair", "Poor")       ~ "Fair/Poor"),
+      levels = c("Excellent/Very good", "Good", "Fair/Poor")),
+      "Self-rated general health"),
+    smoked_100_cigs = lab(factor(smoked_100_cigs, levels = c(0, 1), labels = c("No", "Yes")),
+                          "Ever smoked 100+ cigarettes"),
+    phys_active = lab(factor(phys_active, levels = c(0, 1), labels = c("No", "Yes")),
+                      "Recreationally physically active"),
+    age_yrs = lab(age_yrs, "Age (years)"),
+    bmi = lab(bmi, "BMI (kg/m2)"),
+    days_ment_health_bad = lab(days_ment_health_bad, "Poor mental health days (of 30)"),
+    sleep_hours = lab(sleep_hours, "Sleep (hours/night)"),
+    sleep_trouble = lab(sleep_trouble, "Told a doctor about trouble sleeping")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+n_events  <- sum(dat_model[[outcome]])
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", fmt(p, 3)))
+```
+
+# Introduction
+
+The National Health and Nutrition Examination Survey (NHANES) is a continuous
+cross-sectional survey of the civilian non-institutionalised US population,
+pairing a household interview with a standardised examination. This teaching
+extract holds `r nrow(dat)` adults aged 21 to 80 from the 2009-10 and 2011-12
+cycles, of whom `r sum(dat_raw$sleep_trouble)`
+(`r fmt(100 * mean(dat_raw$sleep_trouble), 1)`%) report having told a doctor
+about trouble sleeping. Sleep problems are common, under-treated, and tightly
+bound up with mental health and chronic disease, so knowing which characteristics
+mark higher prevalence is useful for primary-care case-finding.
+
+**Aim.** Among these US adults, we examined which of age, sex, BMI, days of poor
+mental health, self-rated general health, recreational physical activity, smoking
+history and usual sleep duration are independently associated with having
+reported trouble sleeping to a doctor, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** NHANES 2009-10 and 2011-12, a complex multistage probability
+sample of the US civilian non-institutionalised population. This extract contains
+`r nrow(dat)` adults with 31 variables. Sleep questions were asked in the
+household interview.
+
+**Variables.** The outcome is `sleep_trouble`, a binary indicator where the
+**event is having told a doctor about trouble sleeping**
+(`r sum(dat_raw$sleep_trouble)` events in the full file). Predictors are age
+(years), sex (reference female), BMI (kg/m2), number of days of poor mental
+health in the past 30, self-rated general health collapsed to three levels
+(reference Excellent/Very good), recreational moderate or vigorous physical
+activity (reference no), ever having smoked 100 cigarettes (reference no) and
+usual sleep hours per night.
+
+**Parameter budget.** There are `r sum(dat_raw$sleep_trouble)` events in the
+file, which at ten events per parameter supports about 13 parameters. This model
+uses `r length(predictors) + 1L` (general health costs two, everything else one),
+comfortably inside the budget.
+
+`weight_kg` and `height_cm` are excluded because `bmi` is exactly
+`weight_kg / (height_cm/100)^2` in this file; `obese` is excluded because it is
+exactly `bmi >= 30` and would duplicate BMI.
+
+**Statistical analysis.** `glm(family = binomial)`, justified because the outcome
+is binary. We fitted a univariable model for each predictor first, then a single
+multivariable model containing all of them. Predictors were chosen in advance on
+subject-matter grounds, not by significance. Coefficients are exponentiated and
+reported as odds ratios with 95% confidence intervals; significance threshold
+0.05. Model adequacy was assessed with `performance::check_model()`, focusing on
+binned residuals, collinearity, influential observations and events per
+parameter. Models are **unweighted**: the NHANES survey weights, strata and
+primary sampling units are not carried in this extract, so no result here is a
+nationally representative estimate. Analysis used `r R.version.string` with
+tidyverse, gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped), leaving `r n_events` events. The loss
+comes almost entirely from `general_health` and `days_ment_health_bad`, which are
+missing for the same `r sum(is.na(dat$general_health))` participants. Only
+`r sum(complete.cases(dat_raw))` of `r nrow(dat)` rows are complete on *every*
+variable in the file, so listwise deletion is a live threat and the complete-case
+N is reported for every model.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  mutate(sleep_trouble = factor(sleep_trouble, levels = c(0, 1),
+                                labels = c("No sleep trouble", "Sleep trouble"))) |>
+  tbl_summary(
+    by = sleep_trouble,
+    missing = "no"
+  ) |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics by reported sleep trouble.**")
+```
+
+Participants reporting sleep trouble are more often female, report many more days
+of poor mental health, rate their general health worse, sleep fewer hours per
+night and are more likely to have smoked. Age and BMI differ much less between
+the two groups.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Proportion reporting sleep trouble by self-rated general health and sex."}
+dat_model |>
+  group_by(general_health, sex) |>
+  summarise(p = mean(sleep_trouble), n = n(), .groups = "drop") |>
+  ggplot(aes(general_health, p, fill = sex)) +
+  geom_col(position = position_dodge(0.8), width = 0.72) +
+  geom_text(aes(label = paste0("n=", n)), position = position_dodge(0.8),
+            vjust = -0.4, size = 2.9, colour = "grey30") +
+  scale_y_continuous(labels = scales::percent, expand = expansion(c(0, 0.12))) +
+  scale_fill_manual(values = c(Female = "#B25D9C", Male = "#2E6F9E")) +
+  labs(x = "Self-rated general health", y = "Proportion reporting sleep trouble",
+       fill = "Sex")
+```
+
+Reported sleep trouble becomes more common as self-rated health worsens, and
+within every health category women report it more often than men - the two
+gradients appear roughly additive, which is what the model without an interaction
+assumes.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = glm,
+    method.args = list(family = binomial),
+    exponentiate = TRUE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(glm(reformulate(v, outcome), data = dat_model, family = binomial),
+       conf.int = TRUE, exponentiate = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 2) {
+  r <- utid[utid$term == term, ]
+  sprintf("OR %s (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+```
+
+Most predictors are associated with the outcome crudely. Each additional day of
+poor mental health in the past 30 multiplies the odds of reported sleep trouble
+by `r ug("days_ment_health_bad")` (p `r up("days_ment_health_bad")`), which over
+a 10-day difference compounds to about
+`r fmt(utid$estimate[utid$term == "days_ment_health_bad"]^10, 1)`-fold. Each
+additional hour of usual sleep is associated with `r ug("sleep_hours")`
+(p `r up("sleep_hours")`), a 30% lower odds per hour. Men have
+`r ug("sexMale")` (p `r up("sexMale")`) the odds of women. Worse self-rated
+health is associated with higher odds (Good `r ug("general_healthGood")`,
+p `r up("general_healthGood")`; Fair/Poor `r ug("general_healthFair/Poor")`,
+p `r up("general_healthFair/Poor")`), and ever-smokers have
+`r ug("smoked_100_cigsYes")` (p `r up("smoked_100_cigsYes")`). Age
+(`r ug("age_yrs")`) and BMI (`r ug("bmi")`) show weak but significant crude
+associations; physical activity shows none.
+
+## Why adjustment is needed
+
+**Days of poor mental health** is the dominant confounder of the general-health
+and smoking associations. Psychological distress is strongly associated with
+rating one's overall health as Fair or Poor, is commoner among smokers, and is
+one of the principal causes of insomnia; a crude comparison across self-rated
+health categories therefore largely reflects the mental-health difference between
+them rather than anything about physical health. **Sex** is the second
+confounder: women in this sample report both more poor mental-health days and
+more sleep trouble, so the crude mental-health coefficient carries a sex
+component, and women's higher BMI also contaminates the crude BMI association.
+**Sleep hours** confounds the general-health association in the same direction,
+because short sleepers rate their health worse. Mutual adjustment lets each odds
+ratio be read as a comparison between participants alike on the other measured
+characteristics - with the caveat that mental health and sleep trouble are so
+entangled that adjusting for one when studying the other is close to adjusting
+for a different manifestation of the same syndrome.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- glm(reformulate(predictors, outcome), data = dat_model, family = binomial)
+
+mv <- tbl_regression(fit, exponentiate = TRUE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+g <- function(term, d = 2) {
+  r <- tid[tid$term == term, ]
+  sprintf("OR %s (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+```
+
+```{r fit-stats}
+n_par  <- length(coef(fit)) - 1L
+epp    <- n_events / n_par
+null_fit <- glm(reformulate("1", outcome), data = dat_model, family = binomial)
+tibble(
+  Statistic = c("Complete-case N", "Events (sleep trouble = 1)", "Parameters (excl. intercept)",
+                "Events per parameter", "AIC (null model)", "AIC (full model)",
+                "Tjur's R-squared"),
+  Value = c(as.character(nrow(dat_model)), as.character(n_events), as.character(n_par),
+            fmt(epp, 1), fmt(AIC(null_fit), 1), fmt(AIC(fit), 1),
+            fmt(as.numeric(r2_tjur(fit)), 3))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable logistic model for sleep trouble**"))
+```
+
+The model has `r n_events` events for `r n_par` estimated parameters, i.e.
+**`r fmt(epp, 1)` events per parameter**, comfortably above the conventional
+minimum of ten. AIC falls from `r fmt(AIC(null_fit), 1)` for the intercept-only
+model to `r fmt(AIC(fit), 1)`, a drop of `r fmt(AIC(null_fit) - AIC(fit), 1)`;
+Tjur's R-squared is `r fmt(as.numeric(r2_tjur(fit)), 3)`.
+
+Among participants alike on everything else, each additional day of poor mental
+health multiplies the odds of reported sleep trouble by
+`r g("days_ment_health_bad")` (p `r gp("days_ment_health_bad")`). Men have
+`r g("sexMale")` the odds of otherwise-similar women (p `r gp("sexMale")`). Each
+additional hour of usual sleep is associated with `r g("sleep_hours")`
+(p `r gp("sleep_hours")`), ever-smoking with `r g("smoked_100_cigsYes")`
+(p `r gp("smoked_100_cigsYes")`), each year of age with `r g("age_yrs")`
+(p `r gp("age_yrs")`), and rating one's health Good rather than Excellent/Very
+good with `r g("general_healthGood")` (p `r gp("general_healthGood")`). BMI
+(`r g("bmi")`) and physical activity (`r g("phys_activeYes")`) are not
+independently associated. These are associations among the participants observed,
+not effects of intervening.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted odds ratios.**")
+```
+
+The two general-health contrasts move furthest toward the null. Fair/Poor falls
+from `r ug("general_healthFair/Poor")` crude to `r g("general_healthFair/Poor")`
+adjusted and loses significance entirely (p `r up("general_healthFair/Poor")` to
+p `r gp("general_healthFair/Poor")`), and Good falls from
+`r ug("general_healthGood")` to `r g("general_healthGood")`. This is exactly the
+anticipated confounding by poor mental-health days: once distress is held
+constant, self-rated physical health adds little. BMI also attenuates to the null
+and loses significance, from `r ug("bmi")` to `r g("bmi")` - the crude BMI
+association was carrying sex and general health. Two predictors barely move: sex
+is identical in both columns (`r ug("sexMale")` to `r g("sexMale")`) and smoking
+moves only slightly (`r ug("smoked_100_cigsYes")` to
+`r g("smoked_100_cigsYes")`), so neither is explained by the other measured
+characteristics. Age moves *away* from the null (`r ug("age_yrs")` to
+`r g("age_yrs")`), a masking effect: older participants report fewer poor
+mental-health days, which was hiding a genuine age gradient. Physical activity
+moves from `r ug("phys_activeYes")` to `r g("phys_activeYes")` but is null in
+both columns.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r binned-resid}
+br <- binned_residuals(fit)
+print(br)
+```
+
+```{r collin}
+check_collinearity(fit)
+```
+
+The binned-residual check is borderline: about 81% of binned residuals fall
+inside the error bounds, against the 95% target. The misses are concentrated in
+the highest predicted-probability bins, where the model somewhat under-predicts
+observed sleep trouble - the linear-in-log-odds assumption for
+`days_ment_health_bad` is the likely culprit, since that variable is heavily
+zero-inflated (a large majority report zero bad days) and its effect probably
+saturates rather than compounding indefinitely. Collinearity is not a problem:
+all VIFs are below 1.2 despite mental-health days and general health being
+conceptually related. No observation crosses the influence contours (maximum
+Cook's distance `r fmt(max(cooks.distance(fit)), 3)`, maximum leverage
+`r fmt(max(hatvalues(fit)), 3)`). There is no separation: all coefficients are
+finite with standard errors below
+`r fmt(max(summary(fit)$coefficients[-1, 2]), 2)`, and every category of general
+health contains both events and non-events. Homogeneity of variance and normality
+of residuals do not apply to a logistic model and are not interpreted.
+
+# Discussion
+
+In this NHANES extract, poor mental health, female sex, short sleep, smoking and
+older age are each independently associated with having reported trouble sleeping
+to a doctor. Poor mental-health days is the strongest signal: ten extra bad days
+in a month corresponds to roughly
+`r fmt(tid$estimate[tid$term == "days_ment_health_bad"]^10, 1)`-fold higher odds
+among otherwise-similar participants. The crude association with worse self-rated
+general health is almost entirely explained by mental health. Practically, this
+supports asking about mood whenever a patient raises sleep, and vice versa,
+rather than treating sleep complaints as a marker of general physical ill health.
+
+**Limitations.** The models are unweighted, and the NHANES sampling weights,
+strata and PSUs are not in this extract, so the sample **must not be described as
+nationally representative**. The outcome is not "has a sleep disorder" but "has
+*told a doctor* about trouble sleeping", which mixes the underlying condition
+with help-seeking behaviour and access to care; women and people with regular
+healthcare contact are more likely to have had that conversation, so the sex
+coefficient in particular is partly a care-seeking effect rather than a
+prevalence difference. The design is cross-sectional, and the mental-health
+association is almost certainly bidirectional - insomnia causes distress as
+readily as distress causes insomnia - so it cannot be given a direction here.
+`days_ment_health_bad` is heavily zero-inflated and is modelled as linear on the
+log-odds scale, which the binned-residual check suggests is imperfect.
+Complete-case analysis dropped `r n_dropped` of `r nrow(dat)` rows
+(`r fmt(100 * n_dropped / nrow(dat), 0)`%), almost all because self-rated health
+and mental-health days are missing together for the same participants, and people
+who skip health-perception questions are unlikely to be a random subset. All
+estimates are associations, not causal effects.
+
+**Future work.** Refit with the NHANES survey design, and use a validated
+insomnia instrument rather than a help-seeking question as the outcome.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+- **One of the better logistic outcomes here.** `r n_events` events in the
+  analytic sample, `r n_par` parameters, EPP `r fmt(epp, 1)`, no separation, max
+  VIF < 1.2, and several coefficients that move interestingly on adjustment
+  (general health collapses, age is unmasked). Good material for a Purpose 3
+  write-up.
+- **Binned residuals borderline (~81% inside bounds vs 95%).** Traceable to the
+  zero-inflated `days_ment_health_bad`. Worth flagging; a student can address it
+  by categorising bad-days into 0 / 1-13 / 14+, which is a legitimate extension.
+- **MAJOR conceptual caveat: the outcome measures help-seeking, not the
+  condition.** "Told a doctor about trouble sleeping" conflates prevalence with
+  access. The strong female excess is partly a care-seeking artefact. Students who
+  do not notice this will over-claim.
+- **Mental health and sleep trouble are near-tautologically related.** Adjusting
+  for `days_ment_health_bad` when the outcome is sleep trouble is close to
+  adjusting for a co-manifestation, not a confounder. It dominates the model and
+  it hollows out the general-health coefficients. Defensible, but the discussion
+  has to acknowledge it.
+- **Complete-case N `r nrow(dat_model)` of `r nrow(dat)`**
+  (`r fmt(100 * n_dropped / nrow(dat), 0)`% lost), entirely because
+  `general_health` and `days_ment_health_bad` are missing for the same 48 people.
+  Dropping either alone saves nothing; dropping both recovers all 48.
+- **`general_health` was collapsed from 5 levels to 3.** As shipped, Poor has
+  n = 11 and Excellent n = 47; with 5 levels the Poor contrast would be estimated
+  off a handful of events. Students should be told to collapse it.
+- **Trap: `obese` / `bmi` / `weight_kg` / `height_cm`** are deterministically
+  related; use only `bmi`.
+- **Unweighted survey analysis.** Must be stated.

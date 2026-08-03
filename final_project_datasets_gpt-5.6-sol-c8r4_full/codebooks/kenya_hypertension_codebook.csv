@@ -1,0 +1,19 @@
+variable,description,type,values,pct_complete
+sex,Sex,categorical,"female (783), male (659)",99.9
+age_group,Age band in years,categorical,"26-35 (301), 36-45 (285), 46-55 (270), 56-65 (248), >65 (222), 18-25 (101)",98.8
+education,Highest level of education,categorical,"Tertiary (627), Secondary (377), Primary (239), No School (180)",98.5
+marital_status,Marital status,categorical,"Married (1,081), Single (267), Others (92)",99.7
+employment,Employment status,categorical,"Employed / Self Employed (941), Unemployed (322), Retired (175)",99.6
+monthly_income,Monthly household income band (Kenyan shillings),categorical,"0  - 15,000 (395), 16,000 - 50,000 (235), 51,000 - 100,000 (202), 100,000 - 200,000 (115), Above 200,000 (44)",68.6
+bmi_category,WHO body-mass-index category,categorical,"Healthy (555), Overweight (457), Obese (318), Underweight (83)",97.9
+current_smoker,Currently smokes (1 = yes),binary 0/1,"1 = 93 (6.4%), 0 = 1,351",100.0
+current_alcohol,Currently drinks alcohol (1 = yes),binary 0/1,"1 = 117 (8.1%), 0 = 1,327",100.0
+adequate_activity,Meets physical-activity recommendations (1 = yes),binary 0/1,"1 = 641 (44.4%), 0 = 803",100.0
+adequate_fruit_veg,Meets fruit and vegetable intake recommendations (1 = yes),binary 0/1,"1 = 703 (48.7%), 0 = 741",100.0
+diabetes,Self-reported diabetes,categorical,"no (988), unknown (261), yes (195)",100.0
+cardiovascular_disease,Self-reported cardiovascular disease,categorical,"no (936), unknown (323), yes (185)",100.0
+study_site,Type of facility attended,categorical,"private (557), public (450), faith (437)",100.0
+prior_htn_diagnosis,Previously diagnosed with hypertension (1 = yes),binary 0/1,"1 = 412 (28.5%), 0 = 1,032",100.0
+systolic_bp,Average systolic blood pressure over three readings (mmHg),continuous,median 126.33 | range 79 to 225,100.0
+diastolic_bp,Average diastolic blood pressure over three readings (mmHg),continuous,median 77.67 | range 44 to 134.67,100.0
+hypertension,Hypertension on measured blood pressure (1 = yes),binary 0/1,"1 = 425 (29.4%), 0 = 1,019",100.0

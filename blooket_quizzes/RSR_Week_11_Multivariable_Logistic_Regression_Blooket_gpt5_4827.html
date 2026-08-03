@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<!-- RSR Week 11 candidate Blooket questions · build: gpt5-4827 -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RSR Week 11 · Multivariable Logistic Regression · Candidate Blooket Questions</title>
+  <style>
+    :root {
+      --ink: #182126;
+      --muted: #5c696e;
+      --paper: #fffdf7;
+      --canvas: #e6eeef;
+      --teal: #087f7b;
+      --teal-soft: #dff3f0;
+      --purple: #5146a4;
+      --purple-soft: #eeecfb;
+      --gold: #f0c94b;
+      --gold-soft: #fff7d4;
+      --coral: #cf5b4c;
+      --coral-soft: #fbe9e5;
+      --line: #182126;
+      --shadow: rgba(24, 33, 38, 0.26);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 10pt;
+      line-height: 1.35;
+    }
+
+    code, .mono {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    code {
+      background: #eef1f1;
+      border-radius: 3px;
+      padding: 0.1em 0.28em;
+      font-size: 0.94em;
+    }
+
+    .toolbar {
+      width: 210mm;
+      max-width: calc(100vw - 24px);
+      margin: 18px auto 9px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 14px;
+    }
+
+    .toolbar-title {
+      color: var(--purple);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 9.5pt;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .toolbar-note {
+      max-width: 135mm;
+      margin-top: 3px;
+      color: #405158;
+      font-size: 8.7pt;
+    }
+
+    button {
+      flex: 0 0 auto;
+      border: 2px solid var(--ink);
+      border-radius: 7px;
+      background: var(--purple);
+      color: white;
+      padding: 7px 12px;
+      box-shadow: 3px 3px 0 var(--shadow);
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .page-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto 16px;
+      padding: 8mm 9mm 7mm;
+      display: flex;
+      flex-direction: column;
+      gap: 3.2mm;
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: 10px;
+      box-shadow: 8px 8px 0 rgba(24, 33, 38, 0.12);
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 5mm;
+      align-items: end;
+      padding-bottom: 2.3mm;
+      border-bottom: 1.1mm solid var(--gold);
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--teal);
+      font-size: 18pt;
+      line-height: 1.04;
+      letter-spacing: -0.025em;
+    }
+
+    .subtitle {
+      margin-top: 1.3mm;
+      color: var(--muted);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 7.3pt;
+      font-weight: 700;
+    }
+
+    .meta {
+      min-width: 42mm;
+      padding: 1.8mm 2.5mm;
+      background: white;
+      border: 2px solid var(--ink);
+      border-radius: 7px;
+      box-shadow: 3px 3px 0 var(--shadow);
+      font-size: 7.6pt;
+      font-weight: 700;
+    }
+
+    .meta div + div {
+      margin-top: 1mm;
+      padding-top: 1mm;
+      border-top: 1px solid #cfd4d4;
+    }
+
+    .meta span { color: var(--muted); }
+
+    .banner {
+      padding: 2mm 3mm;
+      background: var(--purple-soft);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      box-shadow: 3px 3px 0 var(--shadow);
+      font-size: 8.4pt;
+    }
+
+    .question {
+      overflow: hidden;
+      background: white;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      box-shadow: 4px 4px 0 var(--shadow);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .question-head {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 2.4mm;
+      align-items: start;
+      padding: 2mm 2.8mm 1.7mm;
+      background: var(--teal-soft);
+      border-bottom: 1.5px solid var(--ink);
+    }
+
+    .question.bridge .question-head { background: var(--coral-soft); }
+
+    .number {
+      width: 7.5mm;
+      height: 7.5mm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      background: var(--teal);
+      color: white;
+      border: 1.5px solid var(--ink);
+      border-radius: 999px;
+      font-size: 9.3pt;
+      font-weight: 900;
+    }
+
+    .bridge .number { background: var(--coral); }
+
+    .question-text {
+      margin: 0;
+      padding-top: 0.3mm;
+      font-size: 9.5pt;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .topic {
+      margin-top: 0.2mm;
+      padding: 0.6mm 1.6mm;
+      background: white;
+      border: 1.2px solid var(--ink);
+      border-radius: 999px;
+      color: var(--purple);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 6.5pt;
+      font-weight: 800;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .question-body {
+      padding: 2.2mm 2.8mm 2.4mm;
+    }
+
+    .stem-box {
+      margin-bottom: 2mm;
+      padding: 1.8mm 2.3mm;
+      background: var(--gold-soft);
+      border: 1.5px solid var(--ink);
+      border-radius: 6px;
+      text-align: center;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 8.5pt;
+      font-weight: 700;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5mm;
+    }
+
+    .option {
+      min-height: 11mm;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 1.6mm;
+      align-items: start;
+      padding: 1.5mm 2mm;
+      background: #fbfaf5;
+      border: 1.4px solid #c7c4b9;
+      border-radius: 6px;
+      font-size: 8.2pt;
+      line-height: 1.25;
+    }
+
+    .letter {
+      color: var(--purple);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-weight: 900;
+    }
+
+    .answer-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.4mm;
+    }
+
+    .answer {
+      padding: 1.7mm 2.2mm;
+      background: white;
+      border: 1.5px solid var(--ink);
+      border-radius: 7px;
+      box-shadow: 2px 2px 0 var(--shadow);
+      font-size: 8pt;
+      line-height: 1.27;
+    }
+
+    .answer-id {
+      display: inline-block;
+      margin-right: 1.5mm;
+      padding: 0.25mm 1.7mm;
+      background: var(--gold);
+      border: 1.2px solid var(--ink);
+      border-radius: 999px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-weight: 900;
+    }
+
+    .why {
+      margin-top: 0.8mm;
+      color: var(--muted);
+      font-size: 7.5pt;
+    }
+
+    .editor-note {
+      padding: 2.5mm 3mm;
+      background: var(--gold-soft);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      font-size: 8.3pt;
+    }
+
+    .editor-note strong { color: var(--purple); }
+
+    footer {
+      margin-top: auto;
+      padding: 1.4mm 2mm;
+      background: var(--teal);
+      color: white;
+      border-radius: 7px;
+      text-align: center;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 7pt;
+      font-weight: 800;
+    }
+
+    @page { size: A4; margin: 0; }
+
+    @media print {
+      body { background: white; }
+      .toolbar { display: none; }
+      .page {
+        width: 210mm;
+        min-height: 297mm;
+        height: 297mm;
+        margin: 0;
+        padding: 8mm 9mm 7mm;
+        overflow: hidden;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        break-after: page;
+        page-break-after: always;
+      }
+      .page:last-child {
+        break-after: auto;
+        page-break-after: auto;
+      }
+      .question, .banner, .meta, .answer, button { box-shadow: none; }
+      .question, .banner, .meta, .answer, .editor-note, footer {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+    }
+
+    @media screen and (max-width: 820px) {
+      .page, .toolbar { width: calc(100vw - 16px); }
+      .page { min-height: auto; padding: 16px; }
+      header, .options, .answer-grid { grid-template-columns: 1fr; }
+      .question-head { grid-template-columns: auto 1fr; }
+      .topic { grid-column: 2; justify-self: start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div>
+      <div class="toolbar-title">GRAPH Courses · candidate Blooket set</div>
+      <div class="toolbar-note">Fifteen candidates for Week 11. Questions 1–12 review the pre-work; questions 13–15 bridge into the workshop.</div>
+    </div>
+    <button type="button" onclick="window.print()">Print / Save PDF</button>
+  </div>
+
+  <main class="page-wrap">
+    <section class="page">
+      <header>
+        <div>
+          <h1>RSR Week 11 · Logistic Models</h1>
+          <div class="subtitle">15 candidate Blooket questions · pre-work review + workshop bridge</div>
+        </div>
+        <div class="meta">
+          <div><span>Status:</span> draft for selection</div>
+          <div><span>Suggested time:</span> 20–30 sec each</div>
+        </div>
+      </header>
+
+      <div class="banner"><strong>Pre-work review · coefficients and odds ratios.</strong> Correct answers are kept off the question pages so this can be used as a learner handout.</div>
+
+      <article class="question">
+        <div class="question-head">
+          <div class="number">1</div>
+          <p class="question-text">In a logistic regression, what does the coefficient for a continuous predictor describe?</p>
+          <span class="topic">coefficient</span>
+        </div>
+        <div class="question-body">
+          <div class="options">
+            <div class="option"><span class="letter">A</span><span>The change in probability for a one-unit increase</span></div>
+            <div class="option"><span class="letter">B</span><span>The change in the outcome mean for a one-unit increase</span></div>
+            <div class="option"><span class="letter">C</span><span>The change in log odds for a one-unit increase</span></div>
+            <div class="option"><span class="letter">D</span><span>The percent of variation explained by the predictor</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="question">
+        <div class="question-head">
+          <div class="number">2</div>
+          <p class="question-text">A logistic model gives an age coefficient of 0.1168. What is the odds ratio for a one-year increase in age?</p>
+          <span class="topic">exponentiate</span>
+        </div>
+        <div class="question-body">
+          <div class="stem-box">OR = exp(0.1168)</div>
+          <div class="options">
+            <div class="option"><span class="letter">A</span><span>0.12</span></div>
+            <div class="option"><span class="letter">B</span><span>About 1.12</span></div>
+            <div class="option"><span class="letter">C</span><span>About 0.89</span></div>
+            <div class="option"><span class="letter">D</span><span>About 11.68</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="question">
+        <div class="question-head">
+          <div class="number">3</div>
+          <p class="question-text">An odds ratio is 0.75 for exposed versus unexposed participants. Which interpretation is best?</p>
+          <span class="topic">interpretation</span>
+        </div>
+        <div class="question-body">
+          <div class="options">
+            <div class="option"><span class="letter">A</span><span>The exposed group has 75% lower odds of the outcome</span></div>
+            <div class="option"><span class="letter">B</span><span>The exposed group has 75 percentage points lower probability</span></div>
+            <div class="option"><span class="letter">C</span><span>The exposed group has 25% higher odds of the outcome</span></div>
+            <div class="option"><span class="letter">D</span><span>The exposed group has 25% lower odds of the outcome</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="question">
+        <div class="question-head">
+          <div class="number">4</div>
+          <p class="question-text">A categorical predictor has three age groups. With one group as the reference, how many group coefficients does R estimate?</p>
+          <span class="topic">reference</span>
+        </div>
+        <div class="question-body">
+          <div class="options">
+            <div class="option"><span class="letter">A</span><span>2</span></div>
+            <div class="option"><span class="letter">B</span><span>3</span></div>
+            <div class="option"><span class="letter">C</span><span>1</span></div>
+            <div class="option"><span class="letter">D</span><span>It depends on the sample size</span></div>
+          </div>
+        </div>
+      </article>
+
+      <footer>RSR Week 11 · candidate set · gpt5-4827 · page 1 of 6</footer>
+    </section>
+
+    <section class="page">
+      <header>
+        <div>
+          <h1>Likelihood and Deviance</h1>
+          <div class="subtitle">Pre-work review · how logistic models are fitted and summarized</div>
+        </div>
+        <div class="meta">
+          <div><span>Questions:</span> 5–8</div>
+          <div><span>Source:</span> Week 11 pre-work</div>
+        </div>
+      </header>
+
+      <div class="banner"><strong>Core idea:</strong> likelihood rewards predictions that agree with what was observed; deviance puts model fit on a lower-is-better scale.</div>
+
+      <article class="question">
+        <div class="question-head">
+          <div class="number">5</div>
+          <p class="question-text">A model gives Bob a 0.20 probability of passing. Bob actually fails. What is Bob’s likelihood contribution?</p>
+          <span class="topic">likelihood</span>
+        </div>
+        <div class="question-body">
+          <div class="stem-box">P(pass) = 0.20 &nbsp; · &nbsp; observed outcome = fail</div>
+          <div class="options">
+            <div class="option"><span class="letter">A</span><span>0.00</span></div>
+            <div class="option"><span class="letter">B</span><span>0.20</span></div>
+            <div class="option"><span class="letter">C</span><span>0.80</span></div>
+            <div class="option"><span class="letter">D</span><span>1.20</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="question">
+        <div class="question-head">
+          <div class="number">6</div>
+          <p class="question-text">What does maximum likelihood estimation ask <code>glm()</code> to do?</p>
+          <span class="topic">MLE</span>
+        </div>
+        <div class="question-body">
+          <div class="options">
+            <div class="option"><span class="letter">A</span><span>Choose coefficients that make every predicted probability 0.50</span></div>
+            <div class="option"><span class="letter">B</span><span>Choose coefficients that maximize the likelihood of the observed outcomes</span></div>
+            <div class="option"><span class="letter">C</span><span>Choose coefficients that maximize the residual deviance</span></div>
+            <div class="option"><span class="letter">D</span><span>Choose the model with the most predictors</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="question">
+        <div class="question-head">
+          <div class="number">7</div>
+          <p class="question-text">A logistic model has a log-likelihood of −120. What is its deviance?</p>
+          <span class="topic">deviance</span>
+        </div>
+        <div class="question-body">
+          <div class="stem-box">Deviance = −2 × log-likelihood</div>
+          <div class="options">
+            <div class="option"><span class="letter">A</span><span>−240</span></div>
+            <div class="option"><span class="letter">B</span><span>−60</span></div>
+            <div class="option"><span class="letter">C</span><span>60</span></div>
+            <div class="option"><span class="letter">D</span><span>240</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="question">
+        <div class="question-head">
+          <div class="number">8</div>
+          <p class="question-text">In logistic regression output, what is the null deviance?</p>
+          <span class="topic">null model</span>
+        </div>
+        <div class="question-body">
+          <div class="options">
+            <div class="option"><span class="letter">A</span><span>The deviance of the intercept-only model</span></div>
+            <div class="option"><span class="letter">B</span><span>The deviance after adding every possible predictor</span></div>
+            <div class="option"><span class="letter">C</span><span>The deviance when the outcome has no missing values</span></div>
+            <div class="option"><span class="letter">D</span><span>The deviance of a model whose coefficients are all significant</span></div>
+          </div>
+        </div>
+      </article>
+
+      <footer>RSR Week 11 · candidate set · gpt5-4827 · page 2 of 6</footer>
+    </section>
+
+    <section class="page">
+      <header>
+        <div>
+          <h1>Model Comparison and AIC</h1>
+          <div class="subtitle">Pre-work review · fit, complexity, and fair comparisons</div>
+        </div>
+        <div class="meta">
+          <div><span>Questions:</span> 9–12</div>
+          <div><span>Source:</span> Week 11 pre-work</div>
+        </div>
+      </header>
+
+      <div class="banner"><strong>Core idea:</strong> residual deviance rewards fit; AIC adds a penalty for model complexity.</div>
+
+      <article class="question">
+        <div class="question-head">
+          <div class="number">9</div>
+          <p class="question-text">Two models use the same outcome and observations. Model A has residual deviance 510; Model B has 498. Which statement is correct?</p>
+          <span class="topic">fit</span>
+        </div>
+        <div class="question-body">
+          <div class="options">
+            <div class="option"><span class="letter">A</span><span>Model A fits better because its deviance is higher</span></div>
+            <div class="option"><span class="letter">B</span><span>The models fit equally well because both deviances are positive</span></div>
+            <div class="option"><span class="letter">C</span><span>Model B fits better, but deviance alone does not account for complexity</span></div>
+            <div class="option"><span class="letter">D</span><span>Residual deviance cannot be used with logistic regression</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="question">
+        <div class="question-head">
+          <div class="number">10</div>
+          <p class="question-text">For a logistic regression, which formula correctly describes AIC?</p>
+          <span class="topic">AIC</span>
+        </div>
+        <div class="question-body">
+          <div class="options">
+            <div class="option"><span class="letter">A</span><span>AIC = null deviance − residual deviance</span></div>
+            <div class="option"><span class="letter">B</span><span>AIC = residual deviance + 2k, where k includes the intercept</span></div>
+            <div class="option"><span class="letter">C</span><span>AIC = residual deviance ÷ sample size</span></div>
+            <div class="option"><span class="letter">D</span><span>AIC = likelihood + number of predictors</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="question">
+        <div class="question-head">
+          <div class="number">11</div>
+          <p class="question-text">Which AIC comparison is appropriate?</p>
+          <span class="topic">fair comparison</span>
+        </div>
+        <div class="question-body">
+          <div class="options">
+            <div class="option"><span class="letter">A</span><span>Mortality models fitted to different patient subsets</span></div>
+            <div class="option"><span class="letter">B</span><span>A binary mortality model versus a continuous length-of-stay model</span></div>
+            <div class="option"><span class="letter">C</span><span>Models fitted to different outcomes but with the same predictors</span></div>
+            <div class="option"><span class="letter">D</span><span>Linear-age and quadratic-age models fitted to the same outcome and patient rows</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="question">
+        <div class="question-head">
+          <div class="number">12</div>
+          <p class="question-text">Two plausible candidate models differ in AIC by only 1.2 points. What is the best conclusion?</p>
+          <span class="topic">ΔAIC</span>
+        </div>
+        <div class="question-body">
+          <div class="options">
+            <div class="option"><span class="letter">A</span><span>The evidence for preferring the lower-AIC model is weak</span></div>
+            <div class="option"><span class="letter">B</span><span>The higher-AIC model is statistically significant</span></div>
+            <div class="option"><span class="letter">C</span><span>The lower-AIC model is proven to be the true model</span></div>
+            <div class="option"><span class="letter">D</span><span>Both models must have identical predictions</span></div>
+          </div>
+        </div>
+      </article>
+
+      <footer>RSR Week 11 · candidate set · gpt5-4827 · page 3 of 6</footer>
+    </section>
+
+    <section class="page">
+      <header>
+        <div>
+          <h1>Bridge into the Workshop</h1>
+          <div class="subtitle">Multivariable models, adjusted odds ratios, and logistic checks</div>
+        </div>
+        <div class="meta">
+          <div><span>Questions:</span> 13–15</div>
+          <div><span>Role:</span> workshop preview</div>
+        </div>
+      </header>
+
+      <div class="banner"><strong>Workshop bridge.</strong> These three questions connect the pre-work to the burns analysis learners will carry out in the session.</div>
+
+      <article class="question bridge">
+        <div class="question-head">
+          <div class="number">13</div>
+          <p class="question-text">Which R code fits a multivariable logistic regression for mortality using age, TBSA, and inhalation injury?</p>
+          <span class="topic">R code</span>
+        </div>
+        <div class="question-body">
+          <div class="options">
+            <div class="option"><span class="letter">A</span><span><code>lm(mortality ~ age + tbsa + inhalation, data = burns)</code></span></div>
+            <div class="option"><span class="letter">B</span><span><code>glm(age + tbsa + inhalation ~ mortality, data = burns)</code></span></div>
+            <div class="option"><span class="letter">C</span><span><code>glm(mortality ~ age + tbsa + inhalation, family = binomial, data = burns)</code></span></div>
+            <div class="option"><span class="letter">D</span><span><code>glm(mortality ~ age * tbsa * inhalation, family = gaussian, data = burns)</code></span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="question bridge">
+        <div class="question-head">
+          <div class="number">14</div>
+          <p class="question-text">In a multivariable mortality model, the adjusted odds ratio for age is 1.04 per year. Which interpretation is best?</p>
+          <span class="topic">adjusted OR</span>
+        </div>
+        <div class="question-body">
+          <div class="options">
+            <div class="option"><span class="letter">A</span><span>Each extra year causes mortality probability to rise by 4 percentage points</span></div>
+            <div class="option"><span class="letter">B</span><span>Holding the other model variables constant, each extra year is associated with 4% higher odds of mortality</span></div>
+            <div class="option"><span class="letter">C</span><span>Age explains 4% of all mortality in the study</span></div>
+            <div class="option"><span class="letter">D</span><span>People who died were exactly 1.04 years older on average</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="question bridge">
+        <div class="question-head">
+          <div class="number">15</div>
+          <p class="question-text">Which statement about the assumptions of binary logistic regression is correct?</p>
+          <span class="topic">model checks</span>
+        </div>
+        <div class="question-body">
+          <div class="options">
+            <div class="option"><span class="letter">A</span><span>The outcome itself must follow a normal distribution</span></div>
+            <div class="option"><span class="letter">B</span><span>Residuals must have constant variance at every fitted probability</span></div>
+            <div class="option"><span class="letter">C</span><span>Every continuous predictor must have a straight-line relationship with probability</span></div>
+            <div class="option"><span class="letter">D</span><span>Continuous predictors are assumed linear in the log odds; normally distributed residuals are not required</span></div>
+          </div>
+        </div>
+      </article>
+
+      <div class="editor-note">
+        <strong>Facilitator selection note:</strong> For a shorter live set, a balanced eight-question version could use 1, 2, 5, 7, 10, 11, 14, and 15. This keeps the sequence moving from interpretation to fit, comparison, adjustment, and checks.
+      </div>
+
+      <footer>RSR Week 11 · candidate set · gpt5-4827 · page 4 of 6</footer>
+    </section>
+
+    <section class="page">
+      <header>
+        <div>
+          <h1>Answer Key · 1–8</h1>
+          <div class="subtitle">Short explanations for facilitator review</div>
+        </div>
+        <div class="meta">
+          <div><span>Section:</span> pre-work review</div>
+          <div><span>Answers:</span> 1–8</div>
+        </div>
+      </header>
+
+      <div class="answer-grid">
+        <div class="answer">
+          <span class="answer-id">1C</span><strong>Change in log odds.</strong>
+          <div class="why">A logistic coefficient is additive on the log-odds scale, not the probability scale.</div>
+        </div>
+        <div class="answer">
+          <span class="answer-id">2B</span><strong>OR ≈ 1.12.</strong>
+          <div class="why">Exponentiating 0.1168 gives 1.124, or about 12% higher odds per year.</div>
+        </div>
+        <div class="answer">
+          <span class="answer-id">3D</span><strong>25% lower odds.</strong>
+          <div class="why">For an OR below 1, the percent lower is (1 − OR) × 100%.</div>
+        </div>
+        <div class="answer">
+          <span class="answer-id">4A</span><strong>Two coefficients.</strong>
+          <div class="why">A three-level factor uses one reference level and two comparisons.</div>
+        </div>
+        <div class="answer">
+          <span class="answer-id">5C</span><strong>0.80.</strong>
+          <div class="why">If P(pass) is 0.20, then P(fail) is 1 − 0.20 = 0.80.</div>
+        </div>
+        <div class="answer">
+          <span class="answer-id">6B</span><strong>Maximize the likelihood.</strong>
+          <div class="why">MLE chooses coefficients that make the outcomes actually observed as likely as possible.</div>
+        </div>
+        <div class="answer">
+          <span class="answer-id">7D</span><strong>240.</strong>
+          <div class="why">Deviance = −2 × (−120) = 240.</div>
+        </div>
+        <div class="answer">
+          <span class="answer-id">8A</span><strong>Intercept-only model.</strong>
+          <div class="why">The null model predicts from the overall outcome rate without predictors.</div>
+        </div>
+      </div>
+
+      <div class="editor-note">
+        <strong>Content check:</strong> Questions 1–4 align with the coefficient-interpretation lesson. Questions 5–8 align with the likelihood-and-deviance lesson.
+      </div>
+
+      <footer>RSR Week 11 · candidate set · gpt5-4827 · page 5 of 6</footer>
+    </section>
+
+    <section class="page">
+      <header>
+        <div>
+          <h1>Answer Key · 9–15</h1>
+          <div class="subtitle">Short explanations for facilitator review</div>
+        </div>
+        <div class="meta">
+          <div><span>Sections:</span> AIC + workshop bridge</div>
+          <div><span>Answers:</span> 9–15</div>
+        </div>
+      </header>
+
+      <div class="answer-grid">
+        <div class="answer">
+          <span class="answer-id">9C</span><strong>Model B fits better.</strong>
+          <div class="why">Lower deviance indicates better fit, but adding parameters can lower deviance even when they add little value.</div>
+        </div>
+        <div class="answer">
+          <span class="answer-id">10B</span><strong>AIC = deviance + 2k.</strong>
+          <div class="why">For this logistic model formula, k counts all estimated coefficients, including the intercept.</div>
+        </div>
+        <div class="answer">
+          <span class="answer-id">11D</span><strong>Same outcome and rows.</strong>
+          <div class="why">The linear-age and quadratic-age candidates use the same data and likelihood family.</div>
+        </div>
+        <div class="answer">
+          <span class="answer-id">12A</span><strong>Weak evidence.</strong>
+          <div class="why">An AIC difference below about 2 usually gives little reason to strongly prefer one candidate.</div>
+        </div>
+        <div class="answer">
+          <span class="answer-id">13C</span><strong><code>glm(..., family = binomial)</code>.</strong>
+          <div class="why">The outcome goes on the left; all predictors enter on the right with plus signs.</div>
+        </div>
+        <div class="answer">
+          <span class="answer-id">14B</span><strong>4% higher adjusted odds.</strong>
+          <div class="why">“Adjusted” means the comparison holds the other variables in the model constant. Association is not automatically causation.</div>
+        </div>
+        <div class="answer">
+          <span class="answer-id">15D</span><strong>Linearity is on the log-odds scale.</strong>
+          <div class="why">Normal residuals and constant residual variance are linear-regression assumptions, not binary logistic-regression requirements.</div>
+        </div>
+      </div>
+
+      <div class="editor-note">
+        <strong>Scope:</strong> The set deliberately avoids requiring learners to know burns-study results before the workshop. It checks pre-work concepts, then previews the code, interpretation, and diagnostics they will use in class.
+      </div>
+
+      <footer>RSR Week 11 · candidate set · gpt5-4827 · page 6 of 6</footer>
+    </section>
+  </main>
+</body>
+</html>

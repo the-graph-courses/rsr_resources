@@ -1,0 +1,20 @@
+variable,description,type,values,pct_complete
+delivery_model,How growth-monitoring services were delivered in this area,categorical,"facility_based (1,519), home_based (1,519)",100.0
+sub_district,Sub-district (upazila),categorical,"upazila_3 (656), upazila_2 (568), upazila_1 (558), upazila_5 (488), upazila_4 (477), upazila_6 (291)",100.0
+mother_age_yrs,Mother's age in years,continuous,median 25 | range 14 to 49,99.9
+mother_schooling_yrs,Years of schooling completed by the mother,continuous,median 6 | range 0 to 17,100.0
+mother_occupation,Mother's occupation,categorical,"housewife (2,961), others (77)",100.0
+religion_muslim,Muslim household (1 = yes),binary 0/1,"1 = 2,972 (97.8%), 0 = 66",100.0
+ngo_member,Mother belongs to an NGO or association (1 = yes),binary 0/1,"1 = 1,570 (51.7%), 0 = 1,468",100.0
+asset_index_tertile,"Household asset index, in tertiles",categorical,"lowest (1,025), middle (1,020), highest (993)",100.0
+improved_toilet,Improved toilet facility (1 = yes),binary 0/1,"1 = 2,837 (93.4%), 0 = 201",100.0
+child_sex,Child's sex,categorical,"male (1,549), female (1,489)",100.0
+child_age_months,Child's age in months,continuous,median 9.7 | range 6 to 13,100.0
+height_for_age_z,Height-for-age Z-score,continuous,median -1.35 | range -5.98 to 4.22,99.9
+weight_for_age_z,Weight-for-age Z-score,continuous,median -1.11 | range -5.1 to 2.6,99.9
+weight_for_height_z,Weight-for-height Z-score,continuous,median -0.5 | range -4.54 to 4.34,99.9
+stunted,Stunted: height-for-age Z below -2 (1 = yes),binary 0/1,"1 = 806 (26.6%), 0 = 2,229",99.9
+heard_of_gmp,Caregiver has heard of growth monitoring and promotion (1 = yes),binary 0/1,"1 = 1,020 (33.6%), 0 = 2,018",100.0
+received_gmp_card,Child received a growth-monitoring card (1 = yes),binary 0/1,"1 = 926 (30.5%), 0 = 2,112",100.0
+can_explain_chart,Caregiver can explain the purpose of the growth chart (1 = yes),binary 0/1,"1 = 257 (8.5%), 0 = 2,781",100.0
+explains_chart_colours,Caregiver correctly explained the growth-chart colour code (1 = yes),binary 0/1,"1 = 247 (8.1%), 0 = 2,791",100.0

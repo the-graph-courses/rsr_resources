@@ -1,0 +1,20 @@
+variable,description,type,values,pct_complete
+id,Participant identifier,identifier,395 distinct values,100.0
+age_yrs,Age in years,continuous,median 49.9 | range 18.77 to 81.97,100.0
+sex,Sex,categorical,"female (237), male (158)",100.0
+bmi,Body mass index (kg/m2),continuous,median 28.43 | range 18.74 to 66.69,99.5
+disability_score,Roland-Morris Disability Questionnaire score (0 to 23),continuous,median 13 | range 0 to 23,100.0
+back_pain_intensity,Back-pain intensity (0 to 10),continuous,median 5.67 | range 0 to 10,100.0
+leg_pain_intensity,Leg-pain intensity (0 to 10),continuous,median 5.33 | range 0 to 10,100.0
+back_pain_duration,Duration of the current episode of back pain,categorical,"over_12_weeks (167), under_6_weeks (132), 6_to_12_weeks (94)",99.5
+leg_pain_duration,Duration of the current episode of leg pain,categorical,"under_6_weeks (165), over_12_weeks (126), 6_to_12_weeks (85)",95.2
+comorbidities,Number of comorbid health problems,categorical,"none (250), one (102), two_or_more (43)",100.0
+general_health,Self-rated general health,categorical,"good (322), fair (66), poor (7)",100.0
+leg_pain_worse,Leg pain is worse than back pain (1 = yes),binary 0/1,"1 = 198 (50.1%), 0 = 197",100.0
+cough_sneeze_positive,Coughing or sneezing reproduces leg pain (1 = yes),binary 0/1,"1 = 102 (25.8%), 0 = 293",100.0
+subjective_sensory_changes,Patient reports sensory changes (1 = yes),binary 0/1,"1 = 243 (61.5%), 0 = 152",100.0
+below_knee_pain,Pain extends below the knee (1 = yes),binary 0/1,"1 = 278 (70.4%), 0 = 117",100.0
+neural_tension_positive,At least one neural-tension test is positive (1 = yes),binary 0/1,"1 = 240 (60.8%), 0 = 155",100.0
+neurological_deficit,At least one neurological deficit is present (1 = yes),binary 0/1,"1 = 228 (57.7%), 0 = 167",100.0
+mri_nerve_root_compression,Nerve-root compression is present on MRI (1 = yes),binary 0/1,"1 = 231 (58.5%), 0 = 164",100.0
+clinician_sciatica,High-confidence clinician diagnosis of sciatica (1 = yes),binary 0/1,"1 = 295 (74.7%), 0 = 100",100.0

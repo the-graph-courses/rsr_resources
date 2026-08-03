@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<!-- RSR Week 11 Blooket-style quiz · build: cursor-grok-4.5-m8n4 -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RSR Week 11 · Multivariable Logistic Regression · Blooket</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #dfe8ea;
+      --paper: #f7f4ed;
+      --white: #fffef9;
+      --ink: #101418;
+      --muted: #665f51;
+      --teal: #0d7377;
+      --teal-soft: #e3f3f3;
+      --chapter: #4338a6;
+      --chapter-soft: #edebfa;
+      --gold: #f0c808;
+      --rose: #b83b5e;
+      --rose-soft: #fdeef1;
+      --navy: #2f5f98;
+      --navy-soft: #e7eef7;
+      --shadow: rgba(16, 20, 24, 0.42);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Space Grotesk', Arial, Helvetica, sans-serif;
+      font-size: 10pt;
+      line-height: 1.35;
+    }
+    .toolbar {
+      width: 210mm;
+      max-width: calc(100vw - 24px);
+      margin: 18px auto 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+    }
+    .toolbar .title {
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 10pt;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--chapter);
+    }
+    .toolbar .descr { color: #3a4a4f; font-size: 9pt; max-width: 140mm; }
+    button {
+      border: 2px solid var(--ink);
+      background: var(--chapter);
+      color: #fff;
+      border-radius: 7px;
+      padding: 7px 12px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 var(--shadow);
+    }
+    .page-wrap { display: flex; flex-direction: column; align-items: center; }
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto 16px;
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: 10px;
+      padding: 7mm 8.5mm 6mm;
+      box-shadow: 8px 8px 0 rgba(16,20,24,0.12);
+      display: flex;
+      flex-direction: column;
+      gap: 2.8mm;
+    }
+    header {
+      border-bottom: 1.1mm solid var(--gold);
+      padding-bottom: 2mm;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 4mm;
+      align-items: end;
+    }
+    h1 {
+      margin: 0;
+      color: var(--teal);
+      font-size: 16.5pt;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+    }
+    .subtitle {
+      margin-top: 1.2mm;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 7.2pt;
+      font-weight: 700;
+    }
+    .meta-box {
+      border: 2px solid var(--ink);
+      border-radius: 7px;
+      background: var(--white);
+      padding: 1.5mm 2.5mm;
+      font-size: 8pt;
+      font-weight: 700;
+      box-shadow: 3px 3px 0 var(--shadow);
+      min-width: 42mm;
+    }
+    .meta-box div { margin: 0.6mm 0; border-bottom: 1px solid #ccc; min-height: 4.2mm; }
+    .meta-box span { color: var(--muted); font-weight: 600; }
+    .banner {
+      background: var(--chapter-soft);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      padding: 1.8mm 2.6mm;
+      font-size: 8.2pt;
+      box-shadow: 3px 3px 0 var(--shadow);
+    }
+    .q {
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: 4px 4px 0 var(--shadow);
+      overflow: hidden;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .q-head {
+      display: flex;
+      gap: 2.5mm;
+      align-items: flex-start;
+      padding: 1.8mm 2.5mm 1.4mm;
+      background: var(--teal-soft);
+      border-bottom: 1.5px solid var(--ink);
+    }
+    .q-num {
+      flex-shrink: 0;
+      width: 7mm;
+      height: 7mm;
+      border-radius: 999px;
+      background: var(--teal);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 9pt;
+      border: 1.5px solid var(--ink);
+    }
+    .q-text { font-size: 9.2pt; font-weight: 650; line-height: 1.3; margin: 0; padding-top: 0.3mm; }
+    .q-body { padding: 1.8mm 2.5mm 2mm; display: flex; flex-direction: column; gap: 1.6mm; }
+    .fig {
+      border: 1.6px solid var(--ink);
+      border-radius: 7px;
+      background: #fff;
+      padding: 1mm 1.4mm 0.8mm;
+    }
+    .fig svg { display: block; width: 100%; height: auto; }
+    .options { display: grid; gap: 1.1mm; }
+    .opt {
+      border: 1.5px solid #c9c2b2;
+      border-radius: 6px;
+      padding: 1.2mm 1.8mm;
+      background: #fbfaf6;
+      font-size: 8.4pt;
+      line-height: 1.26;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 1.6mm;
+      align-items: start;
+    }
+    .opt .letter {
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-weight: 800;
+      color: var(--chapter);
+      min-width: 4mm;
+    }
+    .r-code {
+      border: 1.6px solid var(--ink);
+      border-radius: 7px;
+      background: #1d2229;
+      color: #f0ecdf;
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 6.9pt;
+      line-height: 1.38;
+      padding: 1.8mm 2.2mm;
+      white-space: pre;
+      overflow: hidden;
+    }
+    .r-code .cm { color: #a8b3b4; font-style: italic; }
+    .r-code .fn { color: #8fd5d2; }
+    .r-code .hl { background: rgba(240, 200, 8, 0.28); border-radius: 2px; padding: 0 2px; }
+    .eq-box {
+      border: 1.6px solid var(--ink);
+      border-radius: 7px;
+      background: var(--navy-soft);
+      padding: 2mm 2.6mm;
+      text-align: center;
+      font-size: 11pt;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+    .eq-box .note {
+      margin-top: 1mm;
+      font-size: 7.8pt;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .tag {
+      display: inline-block;
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 6.5pt;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border: 1.3px solid var(--ink);
+      border-radius: 999px;
+      padding: 0.2mm 1.6mm;
+      margin-left: 1.5mm;
+      vertical-align: middle;
+    }
+    .tag.pre { background: #fff3cc; }
+    .tag.ws { background: var(--rose-soft); color: var(--rose); }
+    .key-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2mm;
+    }
+    .key-item {
+      border: 1.5px solid var(--ink);
+      border-radius: 7px;
+      background: var(--white);
+      padding: 1.4mm 1.8mm;
+      font-size: 7.6pt;
+      line-height: 1.26;
+      box-shadow: 2px 2px 0 var(--shadow);
+    }
+    .key-item .ans {
+      display: inline-block;
+      background: var(--gold);
+      border: 1.3px solid var(--ink);
+      border-radius: 999px;
+      padding: 0.2mm 1.6mm;
+      font-weight: 900;
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      margin-right: 1.3mm;
+    }
+    .key-item .why { color: var(--muted); margin-top: 0.6mm; }
+    footer {
+      margin-top: auto;
+      background: var(--teal);
+      color: #fff;
+      border-radius: 7px;
+      text-align: center;
+      padding: 1.3mm 2mm;
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 7pt;
+      font-weight: 800;
+      box-shadow: 3px 3px 0 var(--shadow);
+    }
+    footer a { color: #fff; text-decoration: none; }
+    @page { size: A4; margin: 0; }
+    @media print {
+      body { background: white; }
+      .toolbar { display: none; }
+      .page {
+        width: 210mm;
+        min-height: 297mm;
+        height: 297mm;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 7mm 9mm 6mm;
+        page-break-after: always;
+        break-after: page;
+        overflow: hidden;
+      }
+      .page:last-child { page-break-after: auto; break-after: auto; }
+      .q, .banner, .meta-box, .key-item, footer { box-shadow: none; }
+      .q, .key-item, .banner, .fig, .r-code, .eq-box, footer {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+    }
+    @media screen and (max-width: 820px) {
+      .page, .toolbar { width: calc(100vw - 16px); }
+      .page { min-height: auto; padding: 16px; }
+      .key-grid, header { grid-template-columns: 1fr; }
+      .r-code { white-space: pre-wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div>
+      <div class="title">GRAPH Courses · Blooket set</div>
+      <div class="descr">Week 11 candidate set (15 questions). Mix of pre-work review (logistic + AIC) and workshop warm-up (adjustment, complete cases, diagnostics). Correct answers on the last page.</div>
+    </div>
+    <button type="button" onclick="window.print()">Print / Save PDF</button>
+  </div>
+
+  <div class="page-wrap">
+
+    <!-- ===================== PAGE 1 ===================== -->
+    <section class="page">
+      <header>
+        <div>
+          <h1>RSR Week 11 · Multivariable Logistic</h1>
+          <div class="subtitle">Blooket candidate set · 15 questions · thegraphcourses.org</div>
+        </div>
+        <div class="meta-box">
+          <div><span>Name</span></div>
+          <div><span>Date</span></div>
+          <div><span>Class</span></div>
+        </div>
+      </header>
+
+      <div class="banner">
+        Warm-up before the burns multivariable workshop. Tags mark <strong>pre-work</strong> review vs <strong>workshop</strong> ideas. Keep questions short for Blooket.
+      </div>
+
+      <!-- Q1 -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">1</div>
+          <p class="q-text">Which outcome belongs in a logistic regression model? <span class="tag pre">pre-work</span></p>
+        </div>
+        <div class="q-body">
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>Systolic blood pressure in mmHg</span></div>
+            <div class="opt"><span class="letter">B</span><span>Whether a burns patient died in hospital (yes / no)</span></div>
+            <div class="opt"><span class="letter">C</span><span>Number of days spent in intensive care</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q2 -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">2</div>
+          <p class="q-text">You model a binary outcome <code>died</code> from continuous <code>age</code>. Which R call is correct? <span class="tag pre">pre-work</span></p>
+        </div>
+        <div class="q-body">
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span><code>lm(died ~ age, data = burns)</code></span></div>
+            <div class="opt"><span class="letter">B</span><span><code>glm(died ~ age, family = binomial, data = burns)</code></span></div>
+            <div class="opt"><span class="letter">C</span><span><code>glm(died ~ age, family = gaussian, data = burns)</code></span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q3 -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">3</div>
+          <p class="q-text">If predicted probability p = 0.25, what are the odds? <span class="tag pre">pre-work</span></p>
+        </div>
+        <div class="q-body">
+          <div class="fig">
+            <svg viewBox="0 0 480 78" role="img" aria-label="Probability to odds">
+              <rect width="480" height="78" rx="8" fill="#fffef9"/>
+              <rect x="18" y="14" width="130" height="50" rx="7" fill="#edebfa" stroke="#101418" stroke-width="1.4"/>
+              <text x="83" y="35" text-anchor="middle" font-size="11" font-weight="800" fill="#4338a6">probability</text>
+              <text x="83" y="52" text-anchor="middle" font-size="13" font-weight="800" fill="#101418">p = 0.25</text>
+              <text x="162" y="44" font-size="16" font-weight="800" fill="#665f51">→</text>
+              <rect x="184" y="14" width="140" height="50" rx="7" fill="#fff3cc" stroke="#101418" stroke-width="1.4"/>
+              <text x="254" y="35" text-anchor="middle" font-size="11" font-weight="800" fill="#6f5200">odds</text>
+              <text x="254" y="52" text-anchor="middle" font-size="12" font-weight="800" fill="#101418">p / (1 − p)</text>
+              <text x="338" y="44" font-size="16" font-weight="800" fill="#665f51">→</text>
+              <rect x="358" y="14" width="104" height="50" rx="7" fill="#e3f3f3" stroke="#101418" stroke-width="1.4"/>
+              <text x="410" y="35" text-anchor="middle" font-size="11" font-weight="800" fill="#0d7377">log odds</text>
+              <text x="410" y="52" text-anchor="middle" font-size="12" font-weight="800" fill="#101418">ln(odds)</text>
+            </svg>
+          </div>
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>0.25</span></div>
+            <div class="opt"><span class="letter">B</span><span>0.75</span></div>
+            <div class="opt"><span class="letter">C</span><span>1/3 ≈ 0.33</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q4 -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">4</div>
+          <p class="q-text">A logistic age coefficient is β = 0.034. What is the odds ratio for a 1-year increase, and how do you get it? <span class="tag pre">pre-work</span></p>
+        </div>
+        <div class="q-body">
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>OR ≈ 0.034; report β as-is</span></div>
+            <div class="opt"><span class="letter">B</span><span>OR ≈ 1.035; exponentiate β (e<sup>0.034</sup>)</span></div>
+            <div class="opt"><span class="letter">C</span><span>OR ≈ 3.4%; take 100 × β</span></div>
+          </div>
+        </div>
+      </article>
+
+      <footer><a href="https://thegraphcourses.org">thegraphcourses.org</a> · Week 11 · page 1 of 5 · cursor-grok-4.5-m8n4</footer>
+    </section>
+
+    <!-- ===================== PAGE 2 ===================== -->
+    <section class="page">
+      <header>
+        <div>
+          <h1>RSR Week 11 · Multivariable Logistic</h1>
+          <div class="subtitle">Questions 5–8 · AIC pre-work and adjustment ideas</div>
+        </div>
+      </header>
+
+      <!-- Q5 -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">5</div>
+          <p class="q-text">Which formula for AIC matches the pre-work? <span class="tag pre">pre-work</span></p>
+        </div>
+        <div class="q-body">
+          <div class="eq-box">
+            AIC = ?
+            <div class="note">k = number of coefficients, including the intercept</div>
+          </div>
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>residual deviance − 2k</span></div>
+            <div class="opt"><span class="letter">B</span><span>residual deviance + 2k</span></div>
+            <div class="opt"><span class="letter">C</span><span>null deviance ÷ residual deviance</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q6 -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">6</div>
+          <p class="q-text">You compare three logistic models with AIC. Which rule is correct? <span class="tag pre">pre-work</span></p>
+        </div>
+        <div class="q-body">
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>Prefer the model with the highest AIC</span></div>
+            <div class="opt"><span class="letter">B</span><span>Prefer the model with the lowest AIC</span></div>
+            <div class="opt"><span class="letter">C</span><span>AIC below 0.05 means the model is significant</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q7 -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">7</div>
+          <p class="q-text">When is an AIC comparison meaningful? <span class="tag pre">pre-work</span></p>
+        </div>
+        <div class="q-body">
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>Whenever both models are logistic, even if they use different patients</span></div>
+            <div class="opt"><span class="letter">B</span><span>Only when the models share the same outcome and the same rows</span></div>
+            <div class="opt"><span class="letter">C</span><span>Only when the models are nested (one is a special case of the other)</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q8 -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">8</div>
+          <p class="q-text">In a univariable model <code>mortality ~ age</code>, what does the age odds ratio adjust for? <span class="tag ws">workshop</span></p>
+        </div>
+        <div class="q-body">
+          <div class="fig">
+            <svg viewBox="0 0 500 88" role="img" aria-label="Univariable vs multivariable">
+              <rect width="500" height="88" rx="8" fill="#fffef9"/>
+              <rect x="14" y="12" width="220" height="64" rx="8" fill="#e3f3f3" stroke="#101418" stroke-width="1.5"/>
+              <text x="124" y="34" text-anchor="middle" font-size="11" font-weight="800" fill="#0d7377">Univariable</text>
+              <text x="124" y="54" text-anchor="middle" font-size="12" font-weight="800" fill="#101418">mortality ~ age</text>
+              <text x="124" y="68" text-anchor="middle" font-size="9" font-weight="700" fill="#665f51">one predictor alone</text>
+              <rect x="266" y="12" width="220" height="64" rx="8" fill="#edebfa" stroke="#101418" stroke-width="1.5"/>
+              <text x="376" y="34" text-anchor="middle" font-size="11" font-weight="800" fill="#4338a6">Multivariable</text>
+              <text x="376" y="54" text-anchor="middle" font-size="11" font-weight="800" fill="#101418">mortality ~ age + …</text>
+              <text x="376" y="68" text-anchor="middle" font-size="9" font-weight="700" fill="#665f51">several predictors together</text>
+            </svg>
+          </div>
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>All other clinical predictors in the dataset</span></div>
+            <div class="opt"><span class="letter">B</span><span>Nothing else; it is the crude / total association with age</span></div>
+            <div class="opt"><span class="letter">C</span><span>Only predictors that are statistically significant</span></div>
+          </div>
+        </div>
+      </article>
+
+      <footer><a href="https://thegraphcourses.org">thegraphcourses.org</a> · Week 11 · page 2 of 5 · cursor-grok-4.5-m8n4</footer>
+    </section>
+
+    <!-- ===================== PAGE 3 ===================== -->
+    <section class="page">
+      <header>
+        <div>
+          <h1>RSR Week 11 · Multivariable Logistic</h1>
+          <div class="subtitle">Questions 9–12 · adjustment, complete cases, sample size</div>
+        </div>
+      </header>
+
+      <!-- Q9 -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">9</div>
+          <p class="q-text">In a multivariable logistic model, an adjusted age OR of 1.04 means: <span class="tag ws">workshop</span></p>
+        </div>
+        <div class="q-body">
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>Among patients identical on the other predictors, each extra year multiplies the odds of death by about 1.04</span></div>
+            <div class="opt"><span class="letter">B</span><span>Age raises the probability of death by exactly 4 percentage points each year</span></div>
+            <div class="opt"><span class="letter">C</span><span>Age is no longer associated with death once other predictors are in the model</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q10 -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">10</div>
+          <p class="q-text">By default, <code>glm()</code> drops any row with a missing value in any variable in the formula. What is this called? <span class="tag ws">workshop</span></p>
+        </div>
+        <div class="q-body">
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>Multiple imputation</span></div>
+            <div class="opt"><span class="letter">B</span><span>Complete case analysis</span></div>
+            <div class="opt"><span class="letter">C</span><span>Intention-to-treat analysis</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q11 -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">11</div>
+          <p class="q-text">Why can missing values hurt a multivariable model more than a univariable one? <span class="tag ws">workshop</span></p>
+        </div>
+        <div class="q-body">
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>Because multivariable models cannot run if any variable has missing values</span></div>
+            <div class="opt"><span class="letter">B</span><span>Because a missing value in any included predictor drops the whole row from the model</span></div>
+            <div class="opt"><span class="letter">C</span><span>Because univariable models ignore missing data completely and invent values</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q12 -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">12</div>
+          <p class="q-text">For logistic regression sample size, the usual rule of thumb counts: <span class="tag ws">workshop</span></p>
+        </div>
+        <div class="q-body">
+          <div class="fig">
+            <svg viewBox="0 0 500 78" role="img" aria-label="Events vs rows">
+              <rect width="500" height="78" rx="8" fill="#fffef9"/>
+              <rect x="16" y="12" width="220" height="54" rx="8" fill="#fdeef1" stroke="#101418" stroke-width="1.5"/>
+              <text x="126" y="34" text-anchor="middle" font-size="12" font-weight="800" fill="#b83b5e">Events</text>
+              <text x="126" y="52" text-anchor="middle" font-size="10" font-weight="700" fill="#665f51">e.g. number of deaths</text>
+              <rect x="264" y="12" width="220" height="54" rx="8" fill="#e7eef7" stroke="#101418" stroke-width="1.4"/>
+              <text x="374" y="34" text-anchor="middle" font-size="12" font-weight="800" fill="#2f5f98">Rows</text>
+              <text x="374" y="52" text-anchor="middle" font-size="10" font-weight="700" fill="#665f51">total sample size n</text>
+            </svg>
+          </div>
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>Total rows only (about 10 observations per parameter)</span></div>
+            <div class="opt"><span class="letter">B</span><span>Events (about 10 events per predictor parameter)</span></div>
+            <div class="opt"><span class="letter">C</span><span>Only the number of non-significant predictors</span></div>
+          </div>
+        </div>
+      </article>
+
+      <footer><a href="https://thegraphcourses.org">thegraphcourses.org</a> · Week 11 · page 3 of 5 · cursor-grok-4.5-m8n4</footer>
+    </section>
+
+    <!-- ===================== PAGE 4 ===================== -->
+    <section class="page">
+      <header>
+        <div>
+          <h1>RSR Week 11 · Multivariable Logistic</h1>
+          <div class="subtitle">Questions 13–15 · diagnostics, functional form, reporting traps</div>
+        </div>
+      </header>
+
+      <!-- Q13 -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">13</div>
+          <p class="q-text">Which SUNSHINE-style check does <em>not</em> apply to logistic regression? <span class="tag ws">workshop</span></p>
+        </div>
+        <div class="q-body">
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>Looking for influential points / outliers</span></div>
+            <div class="opt"><span class="letter">B</span><span>Checking multicollinearity among predictors</span></div>
+            <div class="opt"><span class="letter">C</span><span>Assuming residuals are normally distributed</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q14 -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">14</div>
+          <p class="q-text">Entering age as a single continuous term assumes which shape on the log-odds scale? <span class="tag ws">workshop</span></p>
+        </div>
+        <div class="q-body">
+          <div class="fig">
+            <svg viewBox="0 0 500 100" role="img" aria-label="Three age forms">
+              <rect width="500" height="100" rx="8" fill="#fffef9"/>
+              <!-- linear -->
+              <rect x="12" y="10" width="150" height="80" rx="7" fill="#e3f3f3" stroke="#101418" stroke-width="1.4"/>
+              <text x="87" y="28" text-anchor="middle" font-size="10" font-weight="800" fill="#0d7377">Linear</text>
+              <line x1="28" y1="72" x2="146" y2="38" stroke="#00565e" stroke-width="2.2"/>
+              <text x="87" y="86" text-anchor="middle" font-size="8" font-weight="700" fill="#665f51">straight line</text>
+              <!-- quadratic -->
+              <rect x="175" y="10" width="150" height="80" rx="7" fill="#fdeef1" stroke="#101418" stroke-width="1.4"/>
+              <text x="250" y="28" text-anchor="middle" font-size="10" font-weight="800" fill="#b83b5e">Quadratic</text>
+              <path d="M190 70 Q250 78 310 34" fill="none" stroke="#b83b5e" stroke-width="2.2"/>
+              <text x="250" y="86" text-anchor="middle" font-size="8" font-weight="700" fill="#665f51">one bend</text>
+              <!-- decades -->
+              <rect x="338" y="10" width="150" height="80" rx="7" fill="#fff3cc" stroke="#101418" stroke-width="1.4"/>
+              <text x="413" y="28" text-anchor="middle" font-size="10" font-weight="800" fill="#6f5200">Decades</text>
+              <polyline points="352,68 372,68 372,58 392,58 392,50 412,50 412,42 432,42 432,36 468,36" fill="none" stroke="#d69f00" stroke-width="2.2"/>
+              <text x="413" y="86" text-anchor="middle" font-size="8" font-weight="700" fill="#665f51">step / staircase</text>
+            </svg>
+          </div>
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span>A staircase that jumps only at decade boundaries</span></div>
+            <div class="opt"><span class="letter">B</span><span>A straight line: the same change in log odds for every extra year</span></div>
+            <div class="opt"><span class="letter">C</span><span>A curve that must bend once, then flatten</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q15 -->
+      <article class="q">
+        <div class="q-head">
+          <div class="q-num">15</div>
+          <p class="q-text">You want adjusted odds ratios with 95% CIs from a fitted multivariable <code>glm</code>. Which call is best? <span class="tag ws">workshop</span></p>
+        </div>
+        <div class="q-body">
+          <div class="r-code"><span class="cm"># multivar_model already fitted with family = binomial</span>
+<span class="fn">tidy</span>(multivar_model, conf.int = ???, exponentiate = ???)</div>
+          <div class="options">
+            <div class="opt"><span class="letter">A</span><span><code>tidy(multivar_model, conf.int = TRUE, exponentiate = TRUE)</code></span></div>
+            <div class="opt"><span class="letter">B</span><span><code>tidy(multivar_model, conf.int = FALSE, exponentiate = FALSE)</code></span></div>
+            <div class="opt"><span class="letter">C</span><span><code>summary(multivar_model)</code> already prints odds ratios</div>
+          </div>
+        </div>
+      </article>
+
+      <div class="banner">
+        Optional extras if you want more than 15 later: omitted confounders, Hosmer–Lemeshow vs binned residuals, and why AIC has no absolute “good” cutoff.
+      </div>
+
+      <footer><a href="https://thegraphcourses.org">thegraphcourses.org</a> · Week 11 · page 4 of 5 · cursor-grok-4.5-m8n4</footer>
+    </section>
+
+    <!-- ===================== PAGE 5: ANSWER KEY ===================== -->
+    <section class="page">
+      <header>
+        <div>
+          <h1>Answer Key · Week 11</h1>
+          <div class="subtitle">Blooket / classroom key · cursor-grok-4.5-m8n4 · 15 candidates</div>
+        </div>
+      </header>
+
+      <div class="banner">
+        Correct option is marked first. Keep this page out of the student Blooket set.
+      </div>
+
+      <div class="key-grid">
+        <div class="key-item">
+          <span class="ans">1B</span> Binary yes/no outcome (died or survived).
+          <div class="why">Continuous and count outcomes need other models.</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">2B</span> <code>glm(..., family = binomial)</code>
+          <div class="why"><code>lm</code> / gaussian is for continuous outcomes.</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">3C</span> Odds = 0.25 / 0.75 = 1/3 ≈ 0.33
+          <div class="why">Odds = p / (1 − p)</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">4B</span> OR = e<sup>0.034</sup> ≈ 1.035
+          <div class="why">Positive β → OR &gt; 1</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">5B</span> AIC = residual deviance + 2k
+          <div class="why">The 2k term penalizes extra parameters.</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">6B</span> Prefer the lowest AIC.
+          <div class="why">AIC is not a p-value and has no 0.05 cutoff.</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">7B</span> Same outcome and same rows.
+          <div class="why">AIC has no absolute scale; only differences matter.</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">8B</span> Univariable OR adjusts for nothing else.
+          <div class="why">It is the crude / total association.</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">9A</span> Adjusted OR: association holding other predictors fixed.
+          <div class="why">OR changes odds, not probability points.</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">10B</span> Complete case analysis.
+          <div class="why">Rows with any NA in the formula are dropped.</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">11B</span> Missingness in any included predictor drops the row.
+          <div class="why">One sparse variable can shrink the whole multivariable n.</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">12B</span> Count events (≈ 10 events per parameter).
+          <div class="why">Deaths carry the outcome information, not total rows.</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">13C</span> Normal residuals do not apply to 0/1 outcomes.
+          <div class="why">Homogeneity of variance is also out; collinearity / influence still matter.</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">14B</span> Linear age → constant change in log odds per year.
+          <div class="why">Quadratic bends; decades make a staircase.</div>
+        </div>
+        <div class="key-item">
+          <span class="ans">15A</span> <code>tidy(..., conf.int = TRUE, exponentiate = TRUE)</code>
+          <div class="why"><code>summary()</code> shows log-odds coefficients, not ORs.</div>
+        </div>
+      </div>
+
+      <footer><a href="https://thegraphcourses.org">thegraphcourses.org</a> · Week 11 · page 5 of 5 · answer key · cursor-grok-4.5-m8n4</footer>
+    </section>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,177 @@
+---
+title: "<Outcome name> in <population>"
+subtitle: "Dataset <N>: <dataset title>"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "<slug>.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "<outcome_var>"
+predictors <- c(<predictor vector>)
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    # <recode categorical predictors into labelled factors here>
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+```
+
+# Introduction
+
+<2-3 sentences: what the study was, who was enrolled, when and where, and why
+this outcome matters. Name the source paper.>
+
+**Aim.** Among <population>, we examined which of <predictor set> are
+independently associated with <outcome>, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** <Dataset, sampling, N, dates, place.>
+
+**Variables.** The outcome is `<outcome_var>` (<units / definition and, for a
+binary outcome, which level is the event>). Predictors are <list with units for
+continuous variables and reference levels for categorical ones>.
+
+**Statistical analysis.** <lm() / glm(family = binomial)>, justified because the
+outcome is <continuous / binary>. We fitted a univariable model for each
+predictor first, then a single multivariable model containing all of them.
+Predictors were chosen in advance on subject-matter grounds, not by significance.
+Significance threshold 0.05; estimates are reported with 95% confidence
+intervals. Assumptions were checked with `performance::check_model()`. Analysis
+used `r R.version.string` with tidyverse, gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped).
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  tbl_summary(
+    by = <grouping var or delete `by =` for a continuous outcome>,
+    missing = "no"
+  ) |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics.**")
+```
+
+<One or two sentences interpreting Table 1.>
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. <caption>"}
+# Continuous outcome: scatter + geom_smooth. Binary outcome: grouped bar of proportions.
+```
+
+<One sentence interpreting the figure.>
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = <lm / glm>,
+    method.args = list(<family = binomial>),
+    exponentiate = <TRUE for logistic, FALSE for linear>
+  )
+uv
+```
+
+<Interpret the main predictor in full: estimate, direction, unit of change,
+95% CI, significance.>
+
+## Why adjustment is needed
+
+<A paragraph naming at least two specific variables in THIS dataset that could
+confound the crude associations, and saying how each relates to both the
+predictor and the outcome.>
+
+## Multivariable model
+
+```{r multivariable}
+fit <- <lm / glm>(reformulate(predictors, outcome), data = dat_model
+                  <, family = binomial>)
+
+mv <- tbl_regression(fit, exponentiate = <TRUE/FALSE>)
+mv
+```
+
+```{r fit-stats}
+# Linear: R-squared and adjusted R-squared. Logistic: AIC and events per parameter.
+```
+
+<Interpret key coefficients with conditional language.>
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+<Cover: at least two predictors whose estimates moved meaningfully and whether
+they moved toward or away from the null; at least one that barely moved; any
+that changed significance; and the likely explanation (confounding, mediation,
+collinearity, or precision).>
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+<Interpret each relevant panel. For logistic models, focus on binned residuals,
+collinearity, influential observations and events per parameter; homogeneity of
+variance and normality of residuals do not apply.>
+
+# Discussion
+
+<Main finding in plain language. What it means practically.>
+
+**Limitations.** <Specific to this analysis: failed assumption checks,
+unmeasured confounders, cross-sectional design, missing data, sparse subgroups,
+clustering not accounted for, associations rather than causal effects.>
+
+**Future work.** <One sentence.>
+
+# Feasibility notes
+
+<NOT part of a student report. Record here anything that made this outcome
+awkward or unworkable: separation, sparse cells, deterministic relationships
+between variables, failed diagnostics, collinearity, tiny effective sample size
+after listwise deletion, or an outcome that is not really a research question.>

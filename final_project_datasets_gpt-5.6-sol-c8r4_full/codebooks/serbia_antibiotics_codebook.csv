@@ -1,0 +1,13 @@
+variable,description,type,values,pct_complete
+id,Participant identifier,identifier,500 distinct values,100.0
+age_group,Age group in years,categorical,">65 (123), 45-54 (104), 55-64 (100), 25-34 (78), 35-44 (70), 18-24 (25)",100.0
+sex,Sex,categorical,"female (304), male (196)",100.0
+marital_status,Marital status,categorical,"married (298), divorced_widowed (103), single (99)",100.0
+education_level,Highest education level,categorical,"secondary (259), tertiary (203), primary (38)",100.0
+employment_status,Employment status,categorical,"employed (251), pensioner (135), unemployed (114)",100.0
+household_size,Number of people in the household,categorical,"1-3 (274), 3-5 (177), more than 5 (49)",100.0
+gp_visits_past_year,Visits to a general practitioner in the previous year,categorical,"1-4 (223), 0 (135), 5-10 (72), more than 10 (70)",100.0
+health_professional_in_family,Family member works in health care (1 = yes),binary 0/1,"1 = 126 (25.2%), 0 = 374",100.0
+knowledge_score,Antibiotic knowledge score (0 to 12),continuous,median 9 | range 2 to 12,100.0
+adequate_knowledge,Knowledge score of 9 or above (1 = yes),binary 0/1,"1 = 308 (61.6%), 0 = 192",100.0
+self_medication,Self-medication with antibiotics under the paper's definition (1 = yes),binary 0/1,"1 = 252 (50.4%), 0 = 248",100.0

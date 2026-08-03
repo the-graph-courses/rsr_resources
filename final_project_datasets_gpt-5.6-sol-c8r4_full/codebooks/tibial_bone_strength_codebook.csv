@@ -1,0 +1,9 @@
+variable,description,type,values,pct_complete
+id,Participant identifier,identifier,142 distinct values,100.0
+sex,Sex,categorical,"female (79), male (63)",100.0
+age_decade,Age decade bin (1-6),integer,median 2 | range 1 to 6,100.0
+body_mass_kg,Body mass (kg),continuous,median 67.8 | range 45 to 100,100.0
+peak_power_w,Estimated peak leg power from a vertical jump (watts),continuous,"median 3,772.06 | range 1,402.45 to 6,575.25",100.0
+relative_peak_power,Peak power divided by body mass (W/kg),continuous,median 54.7 | range 26.87 to 82.35,100.0
+bone_strength_index,Bone strength index at the distal tibia (trabecular bone),continuous,median 112.62 | range 43.84 to 248.32,100.0
+polar_strength_strain_index,Polar strength-strain index at the tibial shaft (cortical bone),continuous,"median 2,018.34 | range 1,148.71 to 4,518.18",100.0

@@ -1,0 +1,402 @@
+---
+title: "Diagnosed diabetes in US adults"
+subtitle: "Dataset 10: NHANES adults (2009-10 and 2011-12 extract)"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "nhanes_adults.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names. The predictor set is
+# capped at five parameters because there are only 57 events in the file.
+outcome    <- "diabetes"
+predictors <- c("age_yrs", "sex", "bmi", "phys_active", "smoked_100_cigs")
+
+lab <- function(x, l) { attr(x, "label") <- l; x }
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    sex   = lab(factor(sex, levels = c("female", "male"), labels = c("Female", "Male")),
+                "Sex"),
+    smoked_100_cigs = lab(factor(smoked_100_cigs, levels = c(0, 1), labels = c("No", "Yes")),
+                          "Ever smoked 100+ cigarettes"),
+    phys_active = lab(factor(phys_active, levels = c(0, 1), labels = c("No", "Yes")),
+                      "Recreationally physically active"),
+    age_yrs = lab(age_yrs, "Age (years)"),
+    bmi = lab(bmi, "BMI (kg/m2)"),
+    diabetes = lab(diabetes, "Diagnosed diabetes")
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+n_events  <- sum(dat_model[[outcome]])
+
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+pv  <- function(p) ifelse(p < 0.001, "<0.001", paste0("= ", fmt(p, 3)))
+```
+
+# Introduction
+
+The National Health and Nutrition Examination Survey (NHANES) is a continuous
+cross-sectional survey of the civilian non-institutionalised US population,
+pairing a household interview with a standardised examination. This teaching
+extract holds `r nrow(dat)` adults aged 21 to 80 from the 2009-10 and 2011-12
+cycles, of whom `r sum(dat_raw$diabetes)` (`r fmt(100 * mean(dat_raw$diabetes), 1)`%)
+report a doctor's diagnosis of diabetes. Type 2 diabetes is one of the most
+consequential chronic conditions in adult populations, and identifying which
+routinely collected characteristics mark higher prevalence supports targeted
+screening.
+
+**Aim.** Among these US adults, we examined which of age, sex, BMI, recreational
+physical activity and smoking history are independently associated with having a
+diagnosis of diabetes, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** NHANES 2009-10 and 2011-12, a complex multistage probability
+sample of the US civilian non-institutionalised population. This extract contains
+`r nrow(dat)` adults with 31 variables. Height and weight were measured in the
+mobile examination centre; diabetes status is self-reported diagnosis by a
+doctor, collected in the household interview.
+
+**Variables.** The outcome is `diabetes`, a binary indicator where the **event is
+a reported doctor's diagnosis of diabetes** (`r sum(dat_raw$diabetes)` events in
+the full file). Predictors are age (years), sex (reference female), BMI (kg/m2),
+recreational moderate or vigorous physical activity (reference no) and ever
+having smoked 100 cigarettes (reference no).
+
+**The predictor set is deliberately small.** With `r sum(dat_raw$diabetes)`
+events in the file, the conventional rule of ten events per estimated parameter
+supports about **five parameters**. The five predictors above cost exactly five
+parameters (all are continuous or binary, so none consumes more than one degree
+of freedom). Adding race/ethnicity, education or marital status - each of which
+would cost four or five further parameters - would take the model well past what
+the data can support and produce unstable, over-optimistic estimates. In the case
+of race/ethnicity it would do worse than that: the "Other" category contains
+`r sum(dat_raw$race == "Other")` participants and **none** of them reports
+diabetes, so adding race produces complete separation and a coefficient that
+diverges. This budget was fixed before any model was fitted.
+
+`weight_kg` and `height_cm` are excluded because `bmi` is exactly
+`weight_kg / (height_cm/100)^2` in this file. `obese` is excluded because it is
+exactly `bmi >= 30` and would be collinear with BMI while discarding information.
+
+**Statistical analysis.** `glm(family = binomial)`, justified because the outcome
+is binary. We fitted a univariable model for each predictor first, then a single
+multivariable model containing all of them. Predictors were chosen in advance on
+subject-matter grounds, not by significance. Coefficients are exponentiated and
+reported as odds ratios with 95% confidence intervals; significance threshold
+0.05. Model adequacy was assessed with `performance::check_model()`, focusing on
+binned residuals, collinearity, influential observations and events per
+parameter. Models are **unweighted**: the NHANES survey weights, strata and
+primary sampling units are not carried in this extract, so no result here is a
+nationally representative estimate. Analysis used `r R.version.string` with
+tidyverse, gtsummary and performance.
+
+**Missing data.** Complete-case analysis: `r nrow(dat_model)` of `r nrow(dat)`
+rows were analysed (`r n_dropped` dropped, all for missing BMI), leaving
+`r n_events` events. This is the least attrition of any model in this dataset
+because none of the five predictors has meaningful missingness. Only
+`r sum(complete.cases(dat_raw))` of `r nrow(dat)` rows are complete on *every*
+variable in the file, so a larger predictor set would have cost far more than
+`r n_dropped` rows - another reason to keep the model small.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  mutate(diabetes = factor(diabetes, levels = c(0, 1), labels = c("No diabetes", "Diabetes"))) |>
+  tbl_summary(
+    by = diabetes,
+    missing = "no"
+  ) |>
+  add_n() |>
+  modify_caption("**Table 1. Sample characteristics by diabetes status.**")
+```
+
+Participants with diagnosed diabetes are markedly older (median 63 versus 47
+years) and heavier (median BMI 32 versus 28 kg/m2) than those without, and only
+about a quarter report recreational physical activity compared with about half of
+those without diabetes. Sex and smoking history look similar in the two groups.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Proportion with diagnosed diabetes by age group and BMI category."}
+dat_model |>
+  mutate(
+    age_grp = cut(age_yrs, breaks = c(20, 40, 55, 70, 81), right = FALSE,
+                  labels = c("21-39", "40-54", "55-69", "70-80")),
+    bmi_grp = cut(bmi, breaks = c(0, 25, 30, Inf), right = FALSE,
+                  labels = c("<25", "25-29.9", "30+"))
+  ) |>
+  group_by(age_grp, bmi_grp) |>
+  summarise(p = mean(diabetes), n = n(), .groups = "drop") |>
+  ggplot(aes(age_grp, p, fill = bmi_grp)) +
+  geom_col(position = position_dodge(0.85), width = 0.78) +
+  geom_text(aes(label = paste0("n=", n)), position = position_dodge(0.85),
+            vjust = -0.4, size = 2.9, colour = "grey30") +
+  scale_y_continuous(labels = scales::percent, expand = expansion(c(0, 0.12))) +
+  scale_fill_manual(values = c("<25" = "#7FA9C9", "25-29.9" = "#E0A458", "30+" = "#B5495B")) +
+  labs(x = "Age group (years)", y = "Proportion with diagnosed diabetes",
+       fill = "BMI (kg/m2)")
+```
+
+Diabetes prevalence rises steeply with both age and BMI and the two effects
+compound: it is near zero in normal-weight adults under 40 and approaches a third
+in obese adults aged 55 and over. (BMI category is used here for display only;
+BMI enters the models as a continuous variable.)
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = glm,
+    method.args = list(family = binomial),
+    exponentiate = TRUE
+  )
+uv
+
+utid <- map_dfr(predictors, function(v) {
+  tidy(glm(reformulate(v, outcome), data = dat_model, family = binomial),
+       conf.int = TRUE, exponentiate = TRUE) |>
+    filter(term != "(Intercept)")
+})
+ug <- function(term, d = 2) {
+  r <- utid[utid$term == term, ]
+  sprintf("OR %s (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+up <- function(term) pv(utid$p.value[utid$term == term])
+```
+
+Three predictors show strong crude associations. Each additional year of age
+multiplies the odds of diagnosed diabetes by `r ug("age_yrs")`
+(p `r up("age_yrs")`), which compounds to roughly
+`r fmt(utid$estimate[utid$term == "age_yrs"]^10, 1)`-fold per decade. Each
+additional kg/m2 of BMI multiplies the odds by `r ug("bmi")`
+(p `r up("bmi")`), i.e. about
+`r fmt(utid$estimate[utid$term == "bmi"]^5, 1)`-fold per 5 kg/m2. Recreational
+physical activity is associated with `r ug("phys_activeYes")`
+(p `r up("phys_activeYes")`), a two-thirds lower odds. Sex
+(`r ug("sexMale")`, p `r up("sexMale")`) and smoking (`r ug("smoked_100_cigsYes")`,
+p `r up("smoked_100_cigsYes")`) show no crude association.
+
+## Why adjustment is needed
+
+**Age** is the primary confounder of the physical-activity association. Older
+adults exercise less and, independently, have far higher diabetes prevalence
+because incidence accumulates over the life course; the crude two-thirds lower
+odds among active participants is therefore partly just the youth of the active
+group. **BMI** is the second confounder, and it works on the activity association
+in the same direction: physically active people are leaner, and adiposity is the
+strongest modifiable driver of type 2 diabetes, so the crude activity odds ratio
+also carries a body-composition difference. BMI additionally confounds the sex
+comparison, since BMI distributions differ between men and women in this sample.
+Mutual adjustment lets each odds ratio be read as a comparison between
+participants of the same age, sex, body mass, activity level and smoking history.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- glm(reformulate(predictors, outcome), data = dat_model, family = binomial)
+
+mv <- tbl_regression(fit, exponentiate = TRUE)
+mv
+
+tid <- tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+g <- function(term, d = 2) {
+  r <- tid[tid$term == term, ]
+  sprintf("OR %s (95%% CI %s to %s)", fmt(r$estimate, d), fmt(r$conf.low, d), fmt(r$conf.high, d))
+}
+gp <- function(term) pv(tid$p.value[tid$term == term])
+```
+
+```{r fit-stats}
+n_par  <- length(coef(fit)) - 1L
+epp    <- n_events / n_par
+null_fit <- glm(reformulate("1", outcome), data = dat_model, family = binomial)
+tibble(
+  Statistic = c("Complete-case N", "Events (diabetes = 1)", "Parameters (excl. intercept)",
+                "Events per parameter", "AIC (null model)", "AIC (full model)",
+                "Tjur's R-squared"),
+  Value = c(as.character(nrow(dat_model)), as.character(n_events), as.character(n_par),
+            fmt(epp, 1), fmt(AIC(null_fit), 1), fmt(AIC(fit), 1),
+            fmt(as.numeric(r2_tjur(fit)), 3))
+) |>
+  gt() |>
+  tab_header(title = md("**Model fit: multivariable logistic model for diabetes**"))
+```
+
+The model has `r n_events` events for `r n_par` estimated parameters, i.e.
+**`r fmt(epp, 1)` events per parameter**, which clears the conventional minimum
+of ten - but only just, and only because the predictor set was capped at five in
+advance. AIC falls from `r fmt(AIC(null_fit), 1)` for the intercept-only model to
+`r fmt(AIC(fit), 1)`, a drop of `r fmt(AIC(null_fit) - AIC(fit), 1)`, so the
+predictors collectively carry real information; Tjur's R-squared is
+`r fmt(as.numeric(r2_tjur(fit)), 3)`.
+
+Among participants of the same sex, BMI, activity level and smoking history, each
+additional year of age multiplies the odds of diagnosed diabetes by
+`r g("age_yrs")` (p `r gp("age_yrs")`). Among participants alike on everything
+else, each additional kg/m2 of BMI multiplies the odds by `r g("bmi")`
+(p `r gp("bmi")`) - about `r fmt(tid$estimate[tid$term == "bmi"]^5, 1)`-fold per
+5 kg/m2. Physical activity is associated with `r g("phys_activeYes")`
+(p `r gp("phys_activeYes")`), no longer significant at the 0.05 level. Sex
+(`r g("sexMale")`) and smoking (`r g("smoked_100_cigsYes")`) remain null. These
+are associations among the participants observed, not effects of intervening.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted odds ratios.**")
+```
+
+Physical activity is the coefficient that moves most: from `r ug("phys_activeYes")`
+crude to `r g("phys_activeYes")` adjusted, a shift of about 60% of the way toward
+the null on the log-odds scale, and it crosses from clearly significant
+(p `r up("phys_activeYes")`) to non-significant (p `r gp("phys_activeYes")`). This
+is confounding by age and BMI exactly as anticipated: active participants are
+younger and leaner, and once those are held constant most of the apparent
+protection disappears. Sex moves in the other direction, from
+`r ug("sexMale")` to `r g("sexMale")`, i.e. from a slight apparent male advantage
+to a slight male excess - masking by BMI, since women in this sample have higher
+BMI than men, though the estimate is null in both columns. The two dominant
+predictors barely move: age from `r ug("age_yrs")` to `r g("age_yrs")` and BMI
+from `r ug("bmi")` to `r g("bmi")`, both if anything slightly *stronger* after
+adjustment, because age and BMI partially masked each other (older participants
+in this sample are not the heaviest). Smoking is unchanged and null throughout.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r binned-resid}
+br <- binned_residuals(fit)
+print(br)
+```
+
+```{r collin}
+check_collinearity(fit)
+```
+
+The binned-residual check is the one that matters here, and it is **not
+reassuring**: only about 64% of binned residuals fall inside the error bounds,
+against a target of 95% or more. With `r n_events` events spread across
+`r nrow(dat_model)` observations, each bin holds very few events, so the check is
+itself noisy - but the pattern is consistent with the linear-in-log-odds
+assumption for age and BMI being imperfect at the extremes, where predicted
+probabilities are very small. Collinearity is not a problem: all VIFs are below
+1.2, so the age, BMI and activity coefficients are not competing for the same
+variance. No observation exceeds the influence contours (maximum Cook's distance
+`r fmt(max(cooks.distance(fit)), 3)`), and the largest leverage is
+`r fmt(max(hatvalues(fit)), 3)`, so no single participant drives the fit. There is
+no separation: every predictor has finite coefficients and standard errors below
+`r fmt(max(summary(fit)$coefficients[, 2]), 2)`, and both levels of each binary
+predictor contain events. Homogeneity of variance and normality of residuals do
+not apply to a logistic model and are not interpreted.
+
+# Discussion
+
+In this NHANES extract, age and BMI are independently associated with having a
+diabetes diagnosis, and their associations are strong: roughly
+`r fmt(tid$estimate[tid$term == "age_yrs"]^10, 1)`-fold higher odds per decade of
+age and `r fmt(tid$estimate[tid$term == "bmi"]^5, 1)`-fold per 5 kg/m2 of BMI,
+each holding the other constant. The crude protective association with
+recreational physical activity is largely explained by activity being commoner in
+younger and leaner participants and does not survive adjustment. Practically,
+this supports age and BMI as the primary screening axes and cautions against
+reading a crude activity-diabetes contrast as evidence that exercise prevents
+diabetes.
+
+**Limitations.** The models are unweighted, and the NHANES sampling weights,
+strata and PSUs are not in this extract, so the sample **must not be described as
+nationally representative**. The outcome is *self-reported diagnosis*, not
+measured glycaemia: undiagnosed diabetes is misclassified as non-diabetic, and
+because undiagnosed diabetes is commoner in younger people and those with less
+contact with health services, this misclassification is differential with respect
+to age and income - a serious bias in the direction of exaggerating the age
+association. The design is cross-sectional, so reverse causation is entirely
+plausible for BMI and activity: people diagnosed with diabetes are advised to
+lose weight and exercise, which would attenuate both associations. With only
+`r n_events` events the model could carry no more than five parameters, so
+race/ethnicity, education and family history - all relevant - are omitted and
+residual confounding is certain. The binned-residual check flags poor calibration.
+Complete-case analysis dropped only `r n_dropped` rows here, but that is a
+consequence of the deliberately small predictor set, not of the file being
+complete. All estimates are associations, not causal effects.
+
+**Future work.** Refit with the NHANES survey design and with measured HbA1c or
+fasting glucose to capture undiagnosed diabetes, which would remove the dominant
+misclassification problem.
+
+# Feasibility notes
+
+*NOT part of a student report.*
+
+- **Viable, but tightly constrained by the event count.** `r sum(dat_raw$diabetes)`
+  events in the file, `r n_events` in the analytic sample, supporting about
+  **five parameters at ten events per parameter**. The model here uses exactly
+  five (EPP = `r fmt(epp, 1)`). A student who throws in `race` (4 df) and
+  `education` (4 df) will be at 13 parameters and EPP ~4.3, which is over-fitting
+  regardless of what the p-values say. This must be stated explicitly in the
+  brief.
+- **No separation at this predictor set** - all coefficients finite, max SE
+  `r fmt(max(summary(fit)$coefficients[, 2]), 2)`, max VIF 1.13.
+- **FATAL if `race` is added: complete separation.** The "Other" stratum has
+  **0 diabetes events in `r sum(dat_raw$race == "Other")` participants** (Hispanic
+  has 3, Mexican 4). Adding `race` to this model produces a `raceOther`
+  coefficient of about -14 with a standard error of about 729 - textbook
+  separation - alongside a "fitted probabilities numerically 0 or 1" warning. This
+  is the single most likely way a student wrecks this outcome, and it is also a
+  second, independent reason for the five-parameter cap.
+- **MAJOR: binned residuals fail** (~64% inside bounds vs 95% target). Partly an
+  artefact of few events per bin, partly genuine miscalibration. A student
+  following the diagnostics honestly will have to report a failed check.
+- **MAJOR conceptual problem: the outcome is self-reported *diagnosis*, not
+  diabetes.** Undiagnosed cases are counted as non-cases, and this is
+  differential by age and healthcare access. Strong students will spot it; weak
+  ones will write "age causes diabetes".
+- **Reverse causation is severe.** BMI and physical activity are both plausibly
+  *consequences* of a diabetes diagnosis in a cross-sectional file. The activity
+  finding is uninterpretable causally.
+- **Complete-case N `r nrow(dat_model)` of `r nrow(dat)`** - the mildest
+  attrition of any outcome here, but only because the predictor set had to be
+  small. Any predictor with real missingness (`poverty_ratio`, `general_health`,
+  `alcohol_days_year`) costs both rows *and* events.
+- **Trap: `obese` and `bmi` are the same variable.** `obese` is exactly
+  `bmi >= 30`; never put both in this model.
+- **Unweighted survey analysis.** Must be stated.

@@ -1,0 +1,572 @@
+---
+title: "Self-medication with antibiotics in Serbian primary-care attenders"
+subtitle: "Dataset 1: Antibiotic knowledge and self-medication in Serbia"
+author: "RSR feasibility analysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5, dpi = 110)
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(performance)
+library(see)
+library(broom)
+
+theme_set(theme_minimal(base_size = 12))
+theme_gtsummary_compact()
+
+# Helpers so every number in the prose is pulled from the fitted model rather
+# than typed by hand.
+fmt_p <- function(p) if (p < 0.001) "p < 0.001" else sprintf("p = %.3f", p)
+row_of <- function(tab, trm) tab[tab$term == trm, ]
+say_or <- function(tab, trm) {
+  r <- row_of(tab, trm)
+  sprintf("OR %.2f (95%% CI %.2f to %.2f, %s)",
+          r$estimate, r$conf.low, r$conf.high, fmt_p(r$p.value))
+}
+```
+
+```{r data}
+# knitr sets the working directory to this file's folder, so the data sits two
+# levels up. here() is not used because the repo root is above this catalogue.
+dat_raw <- read_csv(file.path("..", "..", "data", "serbia_antibiotics.csv"), show_col_types = FALSE)
+
+# Outcome and predictors are fixed here so every downstream chunk refers back to
+# these two objects rather than repeating variable names.
+outcome    <- "self_medication"
+predictors <- c("age_group", "sex", "education_level", "employment_status",
+                "gp_visits_past_year", "health_professional_in_family")
+
+dat <- dat_raw |>
+  mutate(
+    # Deliberate reference levels: the largest or the clinically "unexposed" group.
+    # Age: ">65" is both the largest band (n = 123) and the group with the
+    # highest self-medication prevalence, so every contrast reads as "younger
+    # adults versus the over-65s".
+    age_group = factor(age_group,
+                       levels = c(">65", "18-24", "25-34", "35-44", "45-54", "55-64"),
+                       labels = c("Over 65", "18-24", "25-34", "35-44", "45-54", "55-64")),
+    sex = factor(sex, levels = c("female", "male"), labels = c("Female", "Male")),
+    # Education: "secondary" is the largest group (n = 259) and sits between the
+    # other two, so both a lower and a higher contrast are available.
+    education_level = factor(education_level,
+                             levels = c("secondary", "primary", "tertiary"),
+                             labels = c("Secondary", "Primary", "Tertiary")),
+    employment_status = factor(employment_status,
+                               levels = c("employed", "unemployed", "pensioner"),
+                               labels = c("Employed", "Unemployed", "Pensioner")),
+    # GP visits: "0" is the clinically unexposed group (no primary-care contact).
+    gp_visits_past_year = factor(gp_visits_past_year,
+                                 levels = c("0", "1-4", "5-10", "more than 10"),
+                                 labels = c("None", "1-4", "5-10", "More than 10")),
+    health_professional_in_family = factor(health_professional_in_family,
+                                           levels = c(0, 1), labels = c("No", "Yes")),
+    marital_status = factor(marital_status,
+                            levels = c("married", "single", "divorced_widowed"),
+                            labels = c("Married", "Single", "Divorced or widowed")),
+    household_size = factor(household_size,
+                            levels = c("1-3", "3-5", "more than 5"),
+                            labels = c("1-3", "3-5", "More than 5"))
+  )
+
+dat_model <- dat |> select(all_of(c(outcome, predictors))) |> drop_na()
+n_dropped <- nrow(dat) - nrow(dat_model)
+
+n_event    <- sum(dat_model[[outcome]] == 1)
+n_nonevent <- sum(dat_model[[outcome]] == 0)
+n_rarer    <- min(n_event, n_nonevent)
+
+# Confounding structure quoted in the text.
+n_primary       <- sum(dat$education_level == "Primary")
+n_primary_old   <- sum(dat$education_level == "Primary" & dat$age_group == "Over 65")
+n_pensioner     <- sum(dat$employment_status == "Pensioner")
+n_pensioner_old <- sum(dat$employment_status == "Pensioner" & dat$age_group == "Over 65")
+cramers_v <- function(x, y) {
+  tt <- suppressWarnings(table(x, y))
+  sqrt(as.numeric(suppressWarnings(chisq.test(tt))$statistic) /
+         (sum(tt) * (min(dim(tt)) - 1)))
+}
+v_age_emp <- cramers_v(dat$age_group, dat$employment_status)
+```
+
+# Introduction
+
+Self-medication with antibiotics — taking them without a prescription, keeping
+leftovers for the next illness, or asking a pharmacist directly — is one of the
+main routes by which antibiotics reach people who do not need them, and it is
+common across south-eastern Europe. These data come from a cross-sectional
+questionnaire survey of `r nrow(dat_raw)` adults who consulted general
+practitioners at four health centres in Serbia, reported by Horvat and
+colleagues (*PLOS ONE* 2017;12(7):e0180799). Just over half the sample
+(`r n_event`/`r nrow(dat_model)`,
+`r sprintf("%.0f", 100 * n_event / nrow(dat_model))`%) met the study's
+definition of self-medication. Identifying who does it is the first step in
+deciding whom stewardship programmes should target.
+
+**Aim.** Among Serbian adults attending primary care, we examined which of age
+group, sex, education, employment status, frequency of GP contact and having a
+health professional in the family are independently associated with
+self-medication with antibiotics, mutually adjusting for the others.
+
+This is a *Purpose 3* analysis: several predictors are of interest and the
+question is which remain associated with the outcome after mutual adjustment.
+
+# Methods
+
+**Data source.** Cross-sectional, interviewer-administered questionnaire survey
+of adults consulting general practitioners at four Serbian health centres;
+`r nrow(dat_raw)` respondents completed the entire questionnaire and all
+`r nrow(dat_raw)` are analysed here. All measurements were taken on a single
+occasion, so exposure and outcome were recorded at the same moment.
+
+**Variables.** The outcome is `self_medication`, a binary indicator; the modelled
+event is **self-medication = yes** under the source paper's definition
+(`r n_event` events, `r n_nonevent` non-events, so the rarer class has
+`r n_rarer`). Predictors are `age_group` (six bands; reference: over 65, the
+largest band at n = `r sum(dat$age_group == "Over 65")`), `sex` (reference:
+female, n = `r sum(dat$sex == "Female")`), `education_level` (primary /
+secondary / tertiary; reference: secondary, the largest group at n =
+`r sum(dat$education_level == "Secondary")`), `employment_status` (reference:
+employed, n = `r sum(dat$employment_status == "Employed")`),
+`gp_visits_past_year` (four bands of visits in the previous 12 months;
+reference: none, the group with no primary-care contact, n =
+`r sum(dat$gp_visits_past_year == "None")`) and
+`health_professional_in_family` (reference: no, n =
+`r sum(dat$health_professional_in_family == "No")`). All six are categorical, so
+every estimate is an odds ratio against the stated reference level; the file
+contains no continuous predictors at all.
+
+Two of the eight available background variables were left out deliberately.
+`marital_status` is largely a restatement of age here (Cramér's V =
+`r sprintf("%.2f", cramers_v(dat$age_group, dat$marital_status))` with
+`age_group`), so it would consume two parameters and inflate the variance of the
+age contrasts without adding a distinct construct. `household_size` is
+unrelated to the outcome
+(univariable `r fmt_p(anova(glm(self_medication ~ household_size, dat, family = binomial), test = "LRT")[["Pr(>Chi)"]][2])`)
+and has no plausible mechanism. `id` is a row number and is never modelled.
+
+The two knowledge variables in this file are also excluded, on different
+grounds. `knowledge_score` and `adequate_knowledge` are the same quantity
+measured twice — the latter is exactly the indicator `knowledge_score >= 9`,
+which re-deriving from the score reproduces exactly
+(`identical()` returns
+`r identical(dat_raw$adequate_knowledge, as.numeric(dat_raw$knowledge_score >= 9))`)
+— so at most one of them could ever enter a model, and never both. More
+importantly, neither is a *background characteristic*: knowledge is on the
+causal pathway between education and behaviour, and its association with
+self-medication is exactly what the source paper set out to test. Including it
+here would change the question from "who self-medicates?" to "does knowledge
+explain self-medication over and above demography?", which is a different
+analysis with a mediation structure. This document keeps to the demographic
+question.
+
+**Statistical analysis.** Logistic regression (`glm(family = binomial)`),
+justified because the outcome is binary. We fitted a univariable model for each
+predictor first, then a single multivariable model containing all of them.
+Predictors were chosen in advance on subject-matter grounds, not by
+significance. Estimates are odds ratios with 95% confidence intervals;
+significance threshold 0.05. Assumptions were checked with
+`performance::check_model()`, with attention to binned residuals, collinearity
+and influential observations rather than to normality or constant variance,
+which do not apply to a logistic model. Analysis used `r R.version.string` with
+tidyverse, gtsummary and performance.
+
+**Missing data.** There is none. Every one of the `r ncol(dat_raw)` columns is
+`r sprintf("%.0f", 100 * mean(complete.cases(dat_raw)))`% complete, so the model
+uses all `r nrow(dat_model)` of `r nrow(dat)` rows and `r n_dropped` were
+dropped. There is no missing-data story to tell for this file — though the
+survey kept only respondents who completed the whole questionnaire, so partial
+responders were excluded before the data reached us and nothing is known about
+them.
+
+# Results
+
+## Sample characteristics
+
+```{r table-one}
+dat_model |>
+  mutate(self_medication = factor(self_medication, levels = c(0, 1),
+                                  labels = c("No self-medication", "Self-medicated"))) |>
+  tbl_summary(
+    by = self_medication,
+    missing = "no"
+  ) |>
+  add_n() |>
+  add_overall() |>
+  modify_caption("**Table 1. Sample characteristics, by self-medication status.**")
+```
+
+The two groups are close to equal in size and differ mainly on age and
+education. Self-medicators are older
+(`r sprintf("%.0f", 100 * mean(dat_model$age_group[dat_model$self_medication == 1] == "Over 65"))`%
+are over 65, against
+`r sprintf("%.0f", 100 * mean(dat_model$age_group[dat_model$self_medication == 0] == "Over 65"))`%
+of non-self-medicators) and less likely to hold a tertiary degree
+(`r sprintf("%.0f", 100 * mean(dat_model$education_level[dat_model$self_medication == 1] == "Tertiary"))`%
+versus
+`r sprintf("%.0f", 100 * mean(dat_model$education_level[dat_model$self_medication == 0] == "Tertiary"))`%).
+Sex, employment, GP attendance and having a health professional in the family
+look almost identical in the two groups.
+
+## Exploratory figure
+
+```{r explore, fig.cap="Figure 1. Proportion of respondents reporting self-medication with antibiotics, by age group and education level. Error bars are 95% Wilson intervals for the proportion; the number above each bar is the group size. The dashed line is the overall prevalence."}
+prop_dat <- dat_model |>
+  count(age_group, education_level, wt = NULL, name = "n_tot") |>
+  left_join(dat_model |> group_by(age_group, education_level) |>
+              summarise(k = sum(self_medication), .groups = "drop"),
+            by = c("age_group", "education_level")) |>
+  mutate(p = k / n_tot,
+         # Wilson score interval, stable for the small cells in this table.
+         z = 1.96,
+         centre = (p + z^2 / (2 * n_tot)) / (1 + z^2 / n_tot),
+         halfw  = z * sqrt(p * (1 - p) / n_tot + z^2 / (4 * n_tot^2)) / (1 + z^2 / n_tot),
+         lo = pmax(0, centre - halfw), hi = pmin(1, centre + halfw))
+
+ggplot(prop_dat, aes(x = age_group, y = p, fill = education_level)) +
+  geom_hline(yintercept = mean(dat_model$self_medication),
+             linetype = "dashed", colour = "grey40") +
+  geom_col(position = position_dodge(width = 0.8), width = 0.75) +
+  geom_errorbar(aes(ymin = lo, ymax = hi), position = position_dodge(width = 0.8),
+                width = 0.2, colour = "grey30") +
+  geom_text(aes(y = hi + 0.04, label = n_tot),
+            position = position_dodge(width = 0.8), size = 2.6, colour = "grey30") +
+  scale_fill_manual(values = c("Secondary" = "#7f8c9b", "Primary" = "#c4694a",
+                               "Tertiary" = "#2c7fb8")) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1.15),
+                     breaks = seq(0, 1, 0.25)) +
+  labs(x = "Age group", y = "Self-medicating (%)", fill = "Education")
+```
+
+Self-medication rises with age and falls with education, but the two work
+against each other and several age-by-education cells contain only a handful of
+people (the primary-education bars below age 65 rest on one to four
+respondents each), so the crude picture is unstable and the confidence
+intervals in those cells are uninformative.
+
+## Univariable models
+
+```{r univariable}
+uv <- dat_model |>
+  tbl_uvregression(
+    y = all_of(outcome),
+    method = glm,
+    method.args = list(family = binomial),
+    exponentiate = TRUE
+  )
+uv
+```
+
+```{r univariable-global}
+# Global likelihood-ratio tests, so multi-level factors are not judged on a
+# single dummy contrast.
+uni_global <- map_dfr(predictors, function(p) {
+  m <- glm(reformulate(p, outcome), data = dat_model, family = binomial)
+  tibble(term = p, p.value = anova(m, test = "LRT")[["Pr(>Chi)"]][2])
+})
+gp <- function(v) fmt_p(uni_global$p.value[uni_global$term == v])
+uv_tab <- map_dfr(predictors, ~ tidy(glm(reformulate(.x, outcome), data = dat_model,
+                                         family = binomial),
+                                     conf.int = TRUE, exponentiate = TRUE))
+```
+
+Only two predictors are associated with self-medication at all. Education is the
+strongest (`r gp("education_level")`): compared with secondary education,
+tertiary education halves the odds of self-medicating
+(`r say_or(uv_tab, "education_levelTertiary")`), while the small
+primary-education group runs the other way
+(`r say_or(uv_tab, "education_levelPrimary")`). Age is the other
+(`r gp("age_group")`): every younger band self-medicates less than the over-65s,
+most clearly the 18-24 group (`r say_or(uv_tab, "age_group18-24")`) and the
+25-34 group (`r say_or(uv_tab, "age_group25-34")`), though the youngest band
+contains only `r sum(dat_model$age_group == "18-24")` people. The remaining four
+are null as whole variables: sex (`r gp("sex")`), employment status
+(`r gp("employment_status")`), GP visits (`r gp("gp_visits_past_year")`) and
+having a health professional in the family
+(`r gp("health_professional_in_family")`), the last of these almost perfectly
+flat (`r say_or(uv_tab, "health_professional_in_familyYes")`). One caveat on GP
+visits: although the variable as a whole is not associated, the single contrast
+of 1-4 visits against none is nominally significant
+(`r say_or(uv_tab, "gp_visits_past_year1-4")`) with no gradient across the
+higher bands, which is the pattern one expects from multiple testing across four
+levels rather than a real dose-response.
+
+## Why adjustment is needed
+
+The two predictors that do show a crude association are entangled with each
+other and with a third variable, so neither crude estimate can be read at face
+value. `age_group` confounds the education association: `r n_primary_old` of the
+`r n_primary` primary-educated respondents
+(`r sprintf("%.0f", 100 * n_primary_old / n_primary)`%) are over 65, because
+schooling expanded in the region within these respondents' lifetimes, and age is
+independently associated with self-medicating; so part of what looks like an
+education effect is the age composition of the education groups, and part of the
+crude age effect is really the lower education of the older bands.
+`employment_status` is the second: `r n_pensioner_old` of the `r n_pensioner`
+pensioners (`r sprintf("%.0f", 100 * n_pensioner_old / n_pensioner)`%) are over
+65 (Cramér's V with age = `r sprintf("%.2f", v_age_emp)`), and pensioner status
+is also tied to income and to what people can afford to do about an infection,
+so leaving it out risks attributing an income effect to age. `gp_visits_past_year`
+is a third and more awkward case: older and less educated respondents attend
+far more often
+(`r sprintf("%.0f", 100 * mean(dat$gp_visits_past_year[dat$age_group == "Over 65"] %in% c("5-10", "More than 10")))`%
+of the over-65s report five or more visits, against
+`r sprintf("%.0f", 100 * mean(dat$gp_visits_past_year[dat$age_group != "Over 65"] %in% c("5-10", "More than 10")))`%
+of everyone else), so any crude association between attendance and
+self-medication would be partly an age association. Fitting all six together
+turns each estimate into a within-stratum comparison — the education contrast
+becomes "respondents of the same age, employment status and attendance
+frequency", which is the comparison a targeting decision actually requires.
+
+## Multivariable model
+
+```{r multivariable}
+fit <- glm(reformulate(predictors, outcome), data = dat_model, family = binomial)
+
+mv <- tbl_regression(fit, exponentiate = TRUE)
+mv
+```
+
+```{r fit-stats}
+mv_tab  <- tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+n_param <- length(coef(fit)) - 1          # non-intercept parameters
+epp     <- n_rarer / n_param
+fit_null <- glm(reformulate("1", outcome), data = dat_model, family = binomial)
+tjur     <- as.numeric(r2_tjur(fit))
+lrt      <- anova(fit_null, fit, test = "LRT")
+
+tibble(
+  Statistic = c("AIC (fitted model)", "AIC (intercept-only model)",
+                "Tjur's R-squared", "Likelihood-ratio test vs null (p)",
+                "Events (self-medication = yes)", "Non-events",
+                "Rarer class", "Non-intercept parameters",
+                "Events per parameter"),
+  Value = c(sprintf("%.1f", AIC(fit)), sprintf("%.1f", AIC(fit_null)),
+            sprintf("%.3f", tjur), format.pval(lrt[["Pr(>Chi)"]][2], digits = 3, eps = 0.001),
+            as.character(c(n_event, n_nonevent, n_rarer, n_param)),
+            sprintf("%.1f", epp))
+) |>
+  gt() |>
+  tab_header(title = "Model fit and events per parameter")
+```
+
+With `r n_rarer` in the rarer outcome class and `r n_param` non-intercept
+parameters, there are `r round(epp, 1)` events per parameter, comfortably above
+the conventional minimum of ten, so the model is not overfitted despite the
+number of factor levels. Adjusting for all six predictors, tertiary education
+remains independently associated with lower odds of self-medicating
+(`r say_or(mv_tab, "education_levelTertiary")`), and the age gradient persists at
+the young end: conditional on education, employment, attendance and sex, the
+18-24 band has `r say_or(mv_tab, "age_group18-24")` and the 25-34 band
+`r say_or(mv_tab, "age_group25-34")` relative to the over-65s, while the middle
+bands are no longer distinguishable from the oldest
+(45-54: `r say_or(mv_tab, "age_group45-54")`). Primary education is not
+independently associated (`r say_or(mv_tab, "education_levelPrimary")`), nor is
+sex (`r say_or(mv_tab, "sexMale")`), employment (pensioner:
+`r say_or(mv_tab, "employment_statusPensioner")`), attendance (more than ten
+visits: `r say_or(mv_tab, "gp_visits_past_yearMore than 10")`) or family
+health-care exposure (`r say_or(mv_tab, "health_professional_in_familyYes")`).
+The whole model is only marginally better than an intercept alone
+(AIC `r round(AIC(fit), 1)` versus `r round(AIC(fit_null), 1)`; likelihood-ratio
+`r fmt_p(lrt[["Pr(>Chi)"]][2])`) and Tjur's R² is
+`r sprintf("%.3f", tjur)` — that is, these six background characteristics
+discriminate self-medicators from non-self-medicators barely at all.
+
+## Unadjusted versus adjusted
+
+```{r side-by-side}
+tbl_merge(list(uv, mv),
+          tab_spanner = c("**Unadjusted**", "**Adjusted**")) |>
+  modify_caption("**Table 2. Unadjusted and adjusted estimates.**")
+```
+
+Three sets of estimates move meaningfully, and they move in different
+directions. The age contrasts move *away* from the null and strengthen: the
+18-24 band goes from `r say_or(uv_tab, "age_group18-24")` crude to
+`r say_or(mv_tab, "age_group18-24")` adjusted, and 25-34 from
+`r say_or(uv_tab, "age_group25-34")` to `r say_or(mv_tab, "age_group25-34")`.
+This is negative confounding by education: young respondents are much better
+educated than the over-65s and education protects, so the crude age comparison
+*understated* how much lower self-medication is in the young. Employment status
+moves the same way and further: the crude pensioner estimate is essentially null
+(`r say_or(uv_tab, "employment_statusPensioner")`) but adjusted it becomes
+`r say_or(mv_tab, "employment_statusPensioner")` — pensioners look like everyone
+else until age is held constant, at which point they self-medicate *less* than
+employed people of the same age, a borderline suppression effect that should not
+be over-read given its width and that it never crosses 0.05. The GP-visit
+estimates move the opposite way, *towards* the null, and produce the only loss
+of significance in the table: 1-4 visits versus none falls from
+`r say_or(uv_tab, "gp_visits_past_year1-4")` to
+`r say_or(mv_tab, "gp_visits_past_year1-4")`. That crude excess was age and
+education — frequent attenders are older and less educated — and once those are
+held constant, attendance carries nothing.
+
+Three estimates barely move at all, and they are the informative ones. Tertiary
+education is almost unchanged (`r say_or(uv_tab, "education_levelTertiary")` to
+`r say_or(mv_tab, "education_levelTertiary")`), which says the education effect
+is not an age effect in disguise; primary education is likewise essentially
+static (`r say_or(uv_tab, "education_levelPrimary")` to
+`r say_or(mv_tab, "education_levelPrimary")`) and non-significant in both
+columns, despite three-quarters of that group being over 65 — the two
+confounding routes evidently cancel. Sex (`r say_or(uv_tab, "sexMale")` to
+`r say_or(mv_tab, "sexMale")`) and family health-care exposure
+(`r say_or(uv_tab, "health_professional_in_familyYes")` to
+`r say_or(mv_tab, "health_professional_in_familyYes")`) are flat and null
+throughout. In summary: two age contrasts gain strength, one GP-visit contrast
+loses significance, and the education result is robust to adjustment.
+
+## Diagnostics
+
+```{r diagnostics, fig.height=9}
+check_model(fit)
+```
+
+```{r diag-tests}
+binned_residuals(fit)
+check_collinearity(fit)
+```
+
+```{r diag-numbers}
+br      <- binned_residuals(fit)
+br_pct  <- 100 * attributes(br)$resid_ok
+vif_tab <- check_collinearity(fit)
+max_vif <- max(vif_tab$VIF)
+max_vif_term <- vif_tab$Term[which.max(vif_tab$VIF)]
+max_cook <- max(cooks.distance(fit))
+pr <- range(fitted(fit))
+```
+
+The binned-residuals check **fails**: only
+`r sprintf("%.0f", br_pct)`% of the binned residuals fall inside their error
+bounds, against the 95% that would indicate an adequately specified model. In
+practice this means the model's fitted probabilities do not track the observed
+proportions well across the range — unsurprising given that the predicted
+probabilities span only `r sprintf("%.2f", pr[1])` to `r sprintf("%.2f", pr[2])`
+around a base rate of `r sprintf("%.2f", mean(dat_model$self_medication))`, so
+there is almost no spread to track. This is the numerical expression of the very
+weak signal reported above, not a coding error, and it is the single most
+important diagnostic finding for this outcome. Collinearity is acceptable: the
+largest VIF is `r sprintf("%.2f", max_vif)` (`r max_vif_term`), inflated by the
+age-employment overlap but well below the threshold of 5, and it is not what is
+limiting the model. No observation is influential (largest Cook's distance
+`r sprintf("%.4f", max_cook)`, far below 0.5), and there is no separation: every
+coefficient is finite with a finite standard error, which is guaranteed here
+because the sparsest predictor cell still contains
+`r min(table(dat_model$age_group, dat_model$self_medication))` respondents.
+Homogeneity of variance and normality of residuals are not assumptions of a
+logistic model and the corresponding panels are not interpreted. The
+posterior-predictive panel is uninformative for a binary outcome that the model
+predicts near 0.5 throughout.
+
+# Discussion
+
+Among Serbian adults attending primary care, the only characteristics
+independently associated with self-medicating with antibiotics are education and
+age: tertiary-educated respondents have roughly `r sprintf("%.0f", 100 * (1 - row_of(mv_tab, "education_levelTertiary")$estimate))`%
+lower odds than secondary-educated ones, and adults under 35 have markedly lower
+odds than the over-65s, once the other five characteristics are held constant.
+Sex, how often a person sees their GP and whether a relative works in health
+care carry no information at all; employment status is borderline at best
+(pensioner versus employed `r say_or(mv_tab, "employment_statusPensioner")`) and
+only after age is adjusted for. The honest headline, though,
+is how little any of this explains: Tjur's R² is `r sprintf("%.3f", tjur)` and
+the fitted probabilities never move far from the sample prevalence of
+`r sprintf("%.0f", 100 * mean(dat_model$self_medication))`%, so demography does
+not identify who self-medicates in any useful way. Practically, that argues
+against targeting stewardship campaigns by demographic group and in favour of
+universal measures — pharmacy dispensing controls, prescription enforcement —
+which do not require knowing in advance who the self-medicators are.
+
+**Limitations.** The single most serious limitation is that
+`gp_visits_past_year` is bidirectional and cannot be treated as a predictor in
+the ordinary sense. Someone who obtains antibiotics without a prescription has
+less reason to consult a doctor, which would push attendance down among
+self-medicators; equally, someone who consults often may accumulate leftover
+prescriptions and become more able to self-medicate later, which would push it
+up. Both stories are consistent with the flat association observed here, and
+because attendance was measured over the same recall window as the behaviour,
+the data cannot distinguish them; the two mechanisms may even be cancelling
+each other out and hiding a real effect in each direction. Any causal reading of
+that coefficient is unwarranted, and the same caution applies more weakly to
+employment status. The design is cross-sectional throughout, so nothing here is
+an effect. The outcome is self-reported in a clinical setting, where admitting
+to a behaviour that doctors disapprove of is under-reported, and if
+under-reporting is worse among the better educated then the education effect is
+overstated. The binned-residual check fails, indicating the model does not fit
+the data well anywhere along its very narrow predicted range. Every predictor is
+a coarse category, so no dose-response or per-year trend can be tested. The
+primary-education group (n = `r n_primary`) and the 18-24 band
+(n = `r sum(dat_model$age_group == "18-24")`, of whom
+`r sum(dat_model$age_group == "18-24" & dat_model$self_medication == 1)` self-medicated)
+are small, so those two contrasts are much less precise than the table's odds
+ratios suggest. The file contains no measure of income, insurance status,
+distance to a pharmacy, or whether antibiotics can be bought over the counter
+locally — all plausible drivers of self-medication and all unmeasured. Finally,
+the sample is drawn from people who were consulting a GP, which is precisely the
+population least likely to bypass one.
+
+**Future work.** A study that records the *source* of the antibiotic (leftover
+stock, pharmacy without prescription, family member) alongside attendance would
+separate the two competing explanations for the null GP-visit association.
+
+# Feasibility notes
+
+*Not part of a student report.*
+
+- **Usable but weak, and the weakest of the three outcomes in this file.**
+  The outcome is beautifully balanced (`r n_event` versus `r n_nonevent`,
+  `r sprintf("%.0f", 100 * mean(dat_model$self_medication))`% prevalence) and
+  100% complete, so there is no separation, no sparse-outcome problem and
+  `r round(epp, 1)` events per parameter. What it lacks is signal: Tjur's R² =
+  `r sprintf("%.3f", tjur)`, AIC `r round(AIC(fit), 1)` against
+  `r round(AIC(fit_null), 1)` for the null model, and only two of six predictors
+  reach significance.
+- **MAJOR: the binned-residuals check fails** (`r sprintf("%.0f", br_pct)`%
+  within bounds, want 95%+). Students who run `check_model()` will get a red
+  flag and there is no fix available to them — the model genuinely does not fit,
+  because the predictors do not discriminate. Worth deciding in advance whether
+  that is a teachable moment or an unfair trap.
+- **Complete-case N = `r nrow(dat_model)`** of `r nrow(dat)`; `r n_dropped`
+  dropped. The file is 100% complete, so there is no missing-data narrative to
+  write and students should be told to say so plainly rather than invent one.
+- **`gp_visits_past_year` is bidirectional** with respect to this outcome
+  (self-medicating may reduce GP contact, or frequent GP contact may supply the
+  leftover antibiotics). It is null here, so nothing turns on it statistically,
+  but any student who writes a causal sentence about it is wrong. This makes
+  `self_medication` the better of the three outcomes for teaching reverse
+  causation and the worse one for teaching effect estimation.
+- **The knowledge trap applies here too, in a subtler form.** Neither
+  `knowledge_score` nor `adequate_knowledge` can be used as a predictor without
+  turning this into a mediation analysis (knowledge sits between education and
+  behaviour), and they can never both be used because
+  `adequate_knowledge` is exactly `knowledge_score >= 9`. Students will be
+  tempted, because the crude difference is real: self-medicators average
+  `r sprintf("%.2f", mean(dat$knowledge_score[dat$self_medication == 1]))`
+  points against
+  `r sprintf("%.2f", mean(dat$knowledge_score[dat$self_medication == 0]))` for
+  the rest.
+- **Sparse cells in two contrasts.** The 18-24 band has only
+  `r sum(dat_model$age_group == "18-24")` respondents
+  (`r sum(dat_model$age_group == "18-24" & dat_model$self_medication == 1)`
+  events) and the primary-education group only `r n_primary`
+  (`r sum(dat_model$education_level == "Primary" & dat_model$self_medication == 1)`
+  events). Not sparse enough to break the fit, but enough that a student using
+  18-24 as the age reference level — the obvious choice — gets confidence
+  intervals up to twenty-fold wide. Setting the reference to the largest band
+  (over 65) fixes this and is worth flagging explicitly.
+- **All predictors are categorical**, so no analysis of this file can
+  demonstrate a per-unit odds ratio, and the `check_model()` linearity panel is
+  meaningless.
+- **Collinearity is present but tolerable**: max VIF `r sprintf("%.2f", max_vif)`
+  (`r max_vif_term`), from the age-employment overlap
+  (`r sprintf("%.0f", 100 * n_pensioner_old / n_pensioner)`% of pensioners are
+  over 65; Cramér's V `r sprintf("%.2f", v_age_emp)`). Adding `marital_status`
+  makes it worse for no gain.

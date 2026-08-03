@@ -1,0 +1,22 @@
+variable,description,type,values,pct_complete
+hiv_positive,Living with HIV (1 = yes),binary 0/1,"1 = 297 (69.6%), 0 = 130",100.0
+age_yrs,Age in years,continuous,median 51 | range 21 to 79,100.0
+sex,Sex,categorical,"male (262), female (165)",100.0
+smoking_status,Smoking status,categorical,"current (189), never (132), former (106)",100.0
+pack_years,Cumulative smoking exposure (pack-years),continuous,median 7 | range 0 to 80.75,100.0
+systolic_bp,Systolic blood pressure (mmHg),continuous,median 125 | range 86 to 174,99.3
+diastolic_bp,Diastolic blood pressure (mmHg),continuous,median 79 | range 43 to 115,99.3
+haemoglobin_g_dl,Haemoglobin (g/dL),continuous,median 13.8 | range 8.2 to 19.8,97.9
+six_min_walk_m,Distance walked in six minutes (metres),continuous,median 446.53 | range 60.96 to 774.19,100.0
+mmrc_dyspnoea,mMRC breathlessness score (0-4; higher = more breathless),integer,median 1 | range 0 to 4,74.0
+sgrq_symptoms,St George's Respiratory Questionnaire: symptoms,continuous,median 11.1 | range 0 to 92.8,100.0
+sgrq_activity,St George's Respiratory Questionnaire: activity,continuous,median 12.2 | range 0 to 100,100.0
+sgrq_impacts,St George's Respiratory Questionnaire: impacts,continuous,median 1.9 | range 0 to 85.4,100.0
+sgrq_total,St George's Respiratory Questionnaire total (0-100; higher = worse),continuous,median 7.1 | range 0 to 85.4,100.0
+fvc_pct_predicted,"Forced vital capacity, % of predicted",continuous,median 91.05 | range 36.23 to 140.76,98.8
+fev1_pct_predicted,"FEV1, % of predicted",continuous,median 91.94 | range 28.28 to 140.87,98.8
+fev1_fvc_ratio,"FEV1/FVC ratio, % of predicted (airflow obstruction)",continuous,median 80.2 | range 31.3 to 93.7,98.8
+dlco_pct_predicted,"Diffusing capacity for carbon monoxide, % of predicted (gas transfer)",continuous,median 81.22 | range 14.41 to 130.95,99.5
+cd4_count,CD4 T-cell count - HIV-positive participants only,continuous,"median 631 | range 3 to 5,180",71.2
+on_antiretroviral,Currently on antiretroviral therapy - HIV-positive participants only,binary 0/1,"1 = 275 (92.6%), 0 = 22",69.6
+viral_load_detectable,Detectable HIV viral load - HIV-positive participants only,binary 0/1,"1 = 100 (35.5%), 0 = 182",66.0

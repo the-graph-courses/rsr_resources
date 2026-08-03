@@ -1,0 +1,23 @@
+variable,description,type,values,pct_complete
+id,Participant identifier,identifier,"1,350 distinct values",100.0
+sex,Sex,categorical,"female (714), male (636)",100.0
+year_group,Stage of the medical course,categorical,"clinical_sciences (491), basic_sciences (459), clerkship (400)",100.0
+age_yrs,Age in years,continuous,median 22 | range 17 to 40,100.0
+school_legal_status,Public or private medical school,categorical,"public (882), private (468)",100.0
+school_location,School in a state capital or another city,categorical,"state_capital (782), other_city (568)",100.0
+overall_qol,Self-rated overall quality of life (1-10),continuous,median 8 | range 2 to 10,100.0
+medical_school_qol,Self-rated medical-school quality of life (1-10),continuous,median 7 | range 0 to 10,100.0
+whoqol_physical,WHOQOL-BREF physical health domain (0-100),continuous,median 67.86 | range 14.29 to 100,100.0
+whoqol_psychological,WHOQOL-BREF psychological domain (0-100),continuous,median 62.5 | range 0 to 100,100.0
+whoqol_social,WHOQOL-BREF social relationships domain (0-100),continuous,median 66.67 | range 0 to 100,100.0
+whoqol_environment,WHOQOL-BREF environment domain (0-100),continuous,median 65.62 | range 9.38 to 100,100.0
+dreem_learning,DREEM: perception of learning,continuous,median 28 | range 2 to 46,100.0
+dreem_teachers,DREEM: perception of teachers,continuous,median 28 | range 4 to 44,100.0
+dreem_academic_self,DREEM: academic self-perception,continuous,median 19 | range 1 to 32,100.0
+dreem_atmosphere,DREEM: perception of atmosphere,continuous,median 30 | range 0 to 48,100.0
+dreem_social_self,DREEM: social self-perception,continuous,median 16 | range 0 to 28,100.0
+dreem_global,DREEM global score (sum of the five subscales),continuous,median 120 | range 18 to 191,100.0
+resilience_score,Resilience scale score (higher = more resilient),continuous,median 81 | range 16 to 98,100.0
+bdi_depression,Beck Depression Inventory (0-63; >= 14 = moderate or worse),continuous,median 8 | range 0 to 42,100.0
+state_anxiety,State anxiety (how anxious right now),continuous,median 43 | range 20 to 78,100.0
+trait_anxiety,Trait anxiety (how anxious in general),continuous,median 45 | range 20 to 80,100.0

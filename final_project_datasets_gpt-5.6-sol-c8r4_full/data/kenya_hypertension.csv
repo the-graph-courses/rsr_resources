@@ -1,0 +1,1445 @@
+sex,age_group,education,marital_status,employment,monthly_income,bmi_category,current_smoker,current_alcohol,adequate_activity,adequate_fruit_veg,diabetes,cardiovascular_disease,study_site,prior_htn_diagnosis,systolic_bp,diastolic_bp,hypertension
+male,56-65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,yes,unknown,faith,1,142.66666666666666,79.66666666666667,1
+female,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,0,no,no,faith,1,155.33333333333334,84.33333333333333,1
+female,36-45,Tertiary,Married,Unemployed,,Healthy,0,0,0,1,no,no,private,0,123,77.33333333333333,0
+female,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,0,unknown,unknown,private,0,151.33333333333334,93,1
+female,26-35,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,1,no,no,private,0,111.66666666666667,70,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,1,no,yes,private,1,134.66666666666666,83.33333333333333,0
+female,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,1,yes,unknown,private,0,151,95.33333333333333,1
+female,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,0,yes,yes,faith,1,166,96.66666666666667,1
+female,>65,No School,Others,Retired,"0  - 15,000",Obese,0,0,0,1,no,no,faith,0,129,80,0
+male,46-55,Secondary,Married,Employed / Self Employed,"Above 200,000",Obese,0,1,0,0,no,no,private,0,153.33333333333334,97.33333333333333,1
+male,26-35,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,1,1,no,no,private,0,113.33333333333333,64.66666666666667,0
+female,56-65,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,0,yes,yes,private,1,134.33333333333334,61.333333333333336,0
+male,>65,Secondary,Married,Retired,,Underweight,0,0,0,0,yes,unknown,private,1,139,80.66666666666667,0
+female,46-55,Tertiary,Married,Employed / Self Employed,"Above 200,000",Healthy,0,0,1,0,no,no,private,0,122,73,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,1,0,0,1,no,no,faith,0,126.33333333333333,75.66666666666667,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,1,1,no,no,private,0,111.33333333333333,60.333333333333336,0
+female,46-55,Primary,Others,Unemployed,,Obese,0,0,0,1,no,no,private,1,126,80,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,1,0,0,yes,unknown,private,0,148.66666666666666,84.66666666666667,1
+female,26-35,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,1,no,no,faith,0,127.33333333333333,91,1
+male,56-65,Secondary,Single,,"16,000 - 50,000",Healthy,1,0,1,0,no,no,private,1,122.66666666666667,75.66666666666667,0
+female,56-65,Primary,,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,1,no,no,faith,0,173,106,1
+female,46-55,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,0,yes,no,private,0,128.66666666666666,63,0
+male,56-65,Secondary,Married,Retired,"51,000 - 100,000",Healthy,0,0,0,0,no,no,private,1,144.33333333333334,89.66666666666667,1
+male,46-55,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,0,unknown,unknown,faith,0,146.33333333333334,86,1
+male,36-45,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,1,0,0,unknown,unknown,faith,0,139,108,1
+male,56-65,Secondary,Married,Retired,"51,000 - 100,000",Obese,0,0,1,0,no,no,private,0,174.66666666666666,107,1
+male,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,0,no,no,private,1,175,118.66666666666667,1
+male,46-55,Tertiary,Married,Employed / Self Employed,,Overweight,1,0,1,1,no,no,private,0,131.33333333333334,79.66666666666667,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Underweight,0,0,1,0,no,no,private,0,103.66666666666667,65.33333333333333,0
+female,56-65,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,0,1,no,no,private,1,138,72,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,0,yes,no,private,0,144.66666666666666,86.33333333333333,1
+female,46-55,Secondary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,1,1,no,no,faith,0,143.33333333333334,84.33333333333333,1
+male,36-45,Tertiary,Married,Employed / Self Employed,"Above 200,000",Overweight,0,0,0,0,no,no,private,1,133.66666666666666,75,0
+female,18-25,Secondary,Single,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,1,0,no,no,private,0,128,69,0
+female,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,1,yes,unknown,private,1,129.33333333333334,91.33333333333333,1
+male,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,1,0,no,no,private,0,127.66666666666667,79.33333333333333,0
+male,18-25,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,0,no,no,private,0,121,62.333333333333336,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,0,no,no,private,1,138.66666666666666,99.66666666666667,1
+male,>65,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,0,no,no,private,0,119.66666666666667,61.333333333333336,0
+female,>65,No School,Married,Unemployed,"0  - 15,000",Obese,0,0,0,0,no,no,private,1,130.66666666666666,61.333333333333336,0
+female,46-55,Tertiary,Married,Employed / Self Employed,"Above 200,000",Overweight,0,0,0,0,no,no,private,1,118.33333333333333,77.66666666666667,0
+male,56-65,Secondary,Married,Retired,"0  - 15,000",Obese,0,0,0,0,yes,no,private,1,120.33333333333333,76.33333333333333,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,1,no,no,private,0,138,83,0
+male,56-65,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,0,no,unknown,faith,0,162.66666666666666,92,1
+female,56-65,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,1,unknown,unknown,faith,1,138.66666666666666,88.33333333333333,0
+male,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,no,unknown,faith,0,102.33333333333333,70,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"Above 200,000",Healthy,0,0,1,0,no,no,private,0,113,76,0
+female,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,1,no,unknown,faith,0,191.33333333333334,113.33333333333333,1
+male,46-55,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,0,unknown,unknown,faith,0,167.66666666666666,105.33333333333333,1
+male,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,1,no,no,private,0,119.66666666666667,78.33333333333333,0
+female,18-25,Tertiary,Single,Unemployed,"0  - 15,000",Healthy,0,0,1,0,no,no,private,0,111.66666666666667,68,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,no,no,private,0,149.66666666666666,99.66666666666667,1
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,1,no,no,private,0,110.33333333333333,69.33333333333333,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,0,no,no,private,0,116.33333333333333,69.33333333333333,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,1,no,no,private,0,128,76.66666666666667,0
+male,26-35,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",,0,1,1,0,unknown,unknown,faith,0,126.66666666666667,88,0
+male,18-25,Tertiary,Single,Unemployed,,Healthy,0,0,0,1,unknown,unknown,faith,0,125.66666666666667,69.66666666666667,0
+male,18-25,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,no,unknown,faith,0,124.66666666666667,82,0
+female,18-25,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,1,0,0,unknown,unknown,faith,0,119.33333333333333,75.33333333333333,0
+male,56-65,Secondary,Married,Employed / Self Employed,,Overweight,0,0,0,0,yes,no,private,0,158.66666666666666,97.33333333333333,1
+male,56-65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Underweight,0,0,1,0,no,no,private,1,120,89.66666666666667,0
+female,56-65,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,1,1,unknown,unknown,private,1,158.33333333333334,83.66666666666667,1
+male,,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,no,no,faith,0,123.66666666666667,72.33333333333333,0
+male,56-65,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,0,unknown,unknown,faith,0,170,99,1
+female,26-35,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,no,no,faith,0,122,80,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,1,no,no,private,0,79,54.333333333333336,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,0,no,no,private,0,125.33333333333333,78.66666666666667,0
+male,26-35,Tertiary,Single,Unemployed,,Obese,0,1,0,0,no,no,private,0,157,106.33333333333333,1
+male,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,1,1,yes,no,private,0,131,80.66666666666667,0
+female,36-45,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,no,unknown,faith,0,151,92.33333333333333,1
+female,36-45,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,1,no,no,private,0,117.33333333333333,77.33333333333333,0
+male,56-65,Tertiary,Married,Retired,,Healthy,1,0,1,0,yes,no,private,0,128.66666666666666,76,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,1,1,0,1,yes,yes,private,1,130.66666666666666,83.33333333333333,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,1,yes,no,private,0,105.66666666666667,62.666666666666664,0
+female,26-35,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,0,no,no,private,0,130.66666666666666,73.33333333333333,0
+female,46-55,Tertiary,Single,Employed / Self Employed,"Above 200,000",Obese,0,0,0,1,yes,no,private,1,139.33333333333334,83.33333333333333,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,faith,0,110,69.66666666666667,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,1,0,1,1,no,no,faith,0,134.66666666666666,75.66666666666667,0
+female,18-25,Tertiary,Single,Employed / Self Employed,,Overweight,0,0,1,1,no,no,faith,0,105.33333333333333,54.666666666666664,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,0,no,no,private,0,137.33333333333334,87.66666666666667,0
+male,56-65,Tertiary,Married,Employed / Self Employed,"Above 200,000",Overweight,0,0,0,0,no,no,private,0,156,93,1
+female,26-35,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,0,unknown,unknown,faith,0,116,74.33333333333333,0
+male,46-55,No School,Married,Unemployed,"16,000 - 50,000",Overweight,0,0,0,0,no,no,private,0,141.66666666666666,89,1
+female,26-35,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,0,no,no,private,1,104.33333333333333,81,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,1,1,unknown,no,private,1,142.33333333333334,93,1
+female,46-55,Secondary,Single,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,1,unknown,unknown,faith,0,185,113.66666666666667,1
+male,,Secondary,Married,Retired,"51,000 - 100,000",Overweight,0,0,1,1,no,yes,private,1,141,94.33333333333333,1
+male,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,1,1,no,no,private,0,123.66666666666667,88.33333333333333,0
+female,18-25,Tertiary,Single,Unemployed,"0  - 15,000",Overweight,0,0,0,0,no,no,private,0,106.33333333333333,68.66666666666667,0
+female,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,1,0,no,yes,private,1,133,85.66666666666667,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,no,no,private,0,122.33333333333333,66.33333333333333,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,0,no,no,private,0,144.33333333333334,92,1
+female,>65,Secondary,Others,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,0,yes,no,private,0,139,63.666666666666664,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"Above 200,000",Obese,0,0,1,1,no,no,private,0,134.66666666666666,74,0
+female,18-25,Tertiary,Single,Unemployed,,Overweight,0,1,0,1,no,no,faith,0,106.33333333333333,64.33333333333333,0
+female,18-25,Tertiary,Single,Unemployed,,Healthy,0,0,0,0,unknown,unknown,faith,0,101.66666666666667,65,0
+male,36-45,Tertiary,Married,Unemployed,,Underweight,0,0,0,0,unknown,unknown,faith,0,114,76.66666666666667,0
+female,18-25,Tertiary,Single,Unemployed,,Healthy,0,0,0,0,unknown,unknown,faith,0,118,74.33333333333333,0
+male,36-45,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,1,0,1,yes,no,private,0,123.33333333333333,84,0
+male,46-55,Tertiary,Married,Retired,,Overweight,1,0,0,1,yes,no,private,0,121.33333333333333,76.66666666666667,0
+male,>65,Tertiary,Married,Retired,"100,000 - 200,000",Healthy,1,0,0,1,no,yes,private,1,142,86.66666666666667,1
+female,18-25,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,1,yes,no,private,0,100,58.666666666666664,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,0,yes,no,private,0,125.33333333333333,68,0
+male,>65,Secondary,Married,Retired,,Obese,1,0,0,1,no,yes,private,1,148,90.66666666666667,1
+female,26-35,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,0,no,no,private,0,122,68.66666666666667,0
+male,56-65,Secondary,Married,Retired,"100,000 - 200,000",Overweight,1,0,0,1,yes,yes,private,1,140.66666666666666,86,1
+male,36-45,Tertiary,Married,,"16,000 - 50,000",Healthy,1,0,0,1,no,no,private,0,100.33333333333333,60,0
+male,46-55,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,1,no,unknown,faith,1,214.33333333333334,120,1
+male,26-35,Secondary,Single,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,0,no,no,private,0,124.66666666666667,74.66666666666667,0
+male,>65,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,1,0,0,0,unknown,unknown,faith,0,177.66666666666666,106.66666666666667,1
+female,,Primary,Single,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,faith,0,155,89.66666666666667,1
+female,18-25,Secondary,Single,Unemployed,,Healthy,0,0,1,1,no,no,private,0,116,63.666666666666664,0
+female,>65,Primary,Others,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,0,unknown,unknown,faith,0,221,131.33333333333334,1
+female,46-55,Secondary,Married,Retired,,Healthy,0,0,1,0,unknown,unknown,private,0,143.33333333333334,83.66666666666667,1
+female,56-65,Primary,Married,Retired,,Healthy,0,0,1,1,no,no,private,0,96.66666666666667,59.333333333333336,0
+female,46-55,Primary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,0,no,no,private,1,129.33333333333334,85,0
+female,56-65,Tertiary,Married,Retired,"51,000 - 100,000",Obese,0,0,1,0,no,no,private,1,137,81.33333333333333,0
+male,56-65,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,1,0,no,no,private,0,122.33333333333333,78.33333333333333,0
+female,36-45,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,1,no,no,private,0,110.66666666666667,67.33333333333333,0
+male,56-65,Secondary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,1,0,0,1,yes,no,private,0,128.66666666666666,80.66666666666667,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,1,no,no,private,0,121,65.33333333333333,0
+female,>65,Tertiary,Married,Employed / Self Employed,"Above 200,000",Overweight,0,0,1,0,yes,no,faith,1,141,89,1
+female,,Primary,Others,Retired,"16,000 - 50,000",Overweight,0,0,1,1,no,no,faith,0,121.66666666666667,60,0
+male,>65,Primary,Married,Retired,"51,000 - 100,000",Healthy,1,0,1,1,no,no,faith,0,149.33333333333334,82.33333333333333,1
+female,56-65,Primary,Married,Unemployed,,Overweight,0,1,1,0,no,yes,faith,1,129.66666666666666,60,0
+male,56-65,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,1,0,no,no,faith,0,116,70,0
+female,26-35,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,1,no,no,private,0,112.33333333333333,72.66666666666667,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,1,0,0,1,no,no,private,0,124,76.66666666666667,0
+male,56-65,Tertiary,Married,Retired,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,118.66666666666667,69.33333333333333,0
+female,56-65,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,1,no,no,private,0,127.33333333333333,77.33333333333333,0
+male,26-35,Tertiary,Single,Employed / Self Employed,"Above 200,000",Obese,0,0,1,0,no,no,faith,0,129.66666666666666,80,0
+female,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,1,no,no,private,0,146,88.66666666666667,1
+male,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,0,yes,no,private,1,163.33333333333334,93.66666666666667,1
+male,56-65,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,0,yes,yes,private,1,135.33333333333334,87,0
+female,>65,Secondary,Married,Retired,,Obese,0,0,0,1,no,yes,private,1,149.66666666666666,74,1
+female,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,1,no,no,private,0,103,69,0
+male,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,105.66666666666667,67.33333333333333,0
+female,46-55,Secondary,Married,Employed / Self Employed,,Overweight,0,0,1,0,no,no,private,0,116,73,0
+male,>65,Tertiary,Married,Retired,"16,000 - 50,000",Healthy,0,0,0,1,no,yes,private,1,117.33333333333333,60,0
+male,56-65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,no,no,private,1,123.66666666666667,74.66666666666667,0
+female,46-55,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,0,yes,no,private,0,105,66.33333333333333,0
+female,18-25,Secondary,Single,Unemployed,"0  - 15,000",Healthy,0,0,1,0,no,no,faith,0,103.66666666666667,55.333333333333336,0
+male,56-65,Tertiary,Married,Retired,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,98,62.666666666666664,0
+female,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,0,1,no,no,private,0,119.33333333333333,68,0
+female,>65,Primary,Married,Retired,,Overweight,0,0,0,1,no,no,private,0,92,62,0
+male,56-65,Primary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,1,0,0,yes,yes,private,1,119.66666666666667,78,0
+female,46-55,Secondary,Married,Unemployed,,Overweight,0,0,0,0,no,no,private,1,141.66666666666666,87.33333333333333,1
+female,46-55,Secondary,Married,Employed / Self Employed,,Overweight,0,0,0,0,no,no,private,0,146.66666666666666,100,1
+male,56-65,Secondary,Married,Retired,,Overweight,0,0,0,0,no,no,private,1,124.66666666666667,70.66666666666667,0
+male,46-55,Primary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,1,0,no,no,private,0,109,69.33333333333333,0
+female,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,0,no,no,private,1,131.66666666666666,78,0
+female,46-55,Secondary,Married,Unemployed,,Healthy,0,0,0,1,no,no,faith,0,186.66666666666666,109.33333333333333,1
+male,36-45,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,0,no,no,private,0,124,71,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,0,no,no,private,0,103.33333333333333,75.33333333333333,0
+female,26-35,Primary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,0,no,no,private,0,132,80.33333333333333,0
+female,46-55,Secondary,Others,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,faith,0,197.33333333333334,110,1
+female,26-35,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,no,no,faith,0,126.66666666666667,60,0
+male,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,no,no,faith,0,122,67.33333333333333,0
+female,46-55,Secondary,Married,Unemployed,"0  - 15,000",Obese,0,0,1,0,yes,yes,faith,1,129,65.66666666666667,0
+male,56-65,Secondary,Single,Employed / Self Employed,"0  - 15,000",Obese,1,0,1,0,no,no,faith,0,156,80.33333333333333,1
+female,18-25,Secondary,Single,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,0,no,no,faith,0,105,55.666666666666664,0
+male,>65,No School,Others,Retired,,Healthy,0,0,0,1,no,yes,faith,1,128,55,0
+female,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,0,no,no,faith,0,132.33333333333334,77.66666666666667,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,1,no,yes,private,0,112,63.333333333333336,0
+male,56-65,Secondary,Married,Retired,"51,000 - 100,000",Overweight,1,0,0,1,yes,no,private,0,128,78,0
+female,46-55,Tertiary,Married,Retired,"51,000 - 100,000",Obese,0,0,0,1,no,yes,private,1,127.33333333333333,86.66666666666667,0
+male,>65,Tertiary,Married,Retired,,Healthy,0,0,0,1,yes,no,private,0,130.66666666666666,81.33333333333333,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,1,no,no,private,0,122.66666666666667,68,0
+male,56-65,Tertiary,Married,Retired,"16,000 - 50,000",Healthy,0,0,0,1,yes,no,private,0,122,66,0
+male,26-35,Secondary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,0,1,no,no,private,0,119.33333333333333,69.33333333333333,0
+male,18-25,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,1,0,1,no,no,private,0,126,77.33333333333333,0
+female,18-25,Secondary,Single,Unemployed,,Healthy,0,0,0,0,no,no,private,0,126,62,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,130,76,0
+female,46-55,Tertiary,Married,Retired,,Healthy,0,0,0,1,no,no,private,0,120,62.666666666666664,0
+male,26-35,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Healthy,0,1,0,0,no,no,private,0,126,67.33333333333333,0
+male,56-65,Tertiary,Married,Retired,,,0,0,0,1,no,yes,private,1,146.66666666666666,89.33333333333333,1
+female,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,0,1,no,no,private,0,128,74,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,130.66666666666666,76,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,no,no,private,0,109.33333333333333,63,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,0,no,no,private,0,106.66666666666667,62.666666666666664,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,0,no,no,private,1,135.66666666666666,88,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"Above 200,000",Obese,0,0,0,0,no,no,faith,0,121.66666666666667,94.66666666666667,1
+male,46-55,Secondary,Married,Retired,,Overweight,0,0,1,0,no,unknown,faith,0,178.66666666666666,106.66666666666667,1
+male,>65,Secondary,Married,Employed / Self Employed,"Above 200,000",Obese,0,1,0,1,yes,yes,private,1,154.66666666666666,84.66666666666667,1
+female,56-65,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,no,unknown,faith,0,162,89.33333333333333,1
+female,36-45,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,0,no,yes,private,1,122.66666666666667,81.33333333333333,0
+male,36-45,Tertiary,Married,Employed / Self Employed,,Healthy,1,0,0,1,no,no,private,0,127.33333333333333,64.66666666666667,0
+female,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,120,66,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,0,no,no,private,0,129.33333333333334,92.33333333333333,1
+male,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,109.33333333333333,77.33333333333333,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"Above 200,000",Overweight,0,1,0,1,yes,no,private,0,123.33333333333333,68,0
+male,56-65,Tertiary,Married,Retired,,Overweight,1,0,0,1,yes,yes,private,1,136.66666666666666,86.66666666666667,0
+female,46-55,Tertiary,Others,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,0,yes,yes,private,1,154.33333333333334,90.66666666666667,1
+female,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,0,no,unknown,private,0,119.33333333333333,68.33333333333333,0
+male,56-65,Secondary,Married,Retired,"16,000 - 50,000",,0,0,0,0,no,unknown,private,1,145.33333333333334,90.66666666666667,1
+female,18-25,Secondary,Single,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,no,no,faith,0,99.33333333333333,55,0
+female,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,1,no,yes,private,0,169,81,1
+male,36-45,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,1,yes,no,private,0,123.33333333333333,69.66666666666667,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,0,yes,yes,private,1,179,104.66666666666667,1
+female,46-55,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,0,no,no,private,1,188,74,1
+male,26-35,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,1,0,no,no,private,0,137.66666666666666,71.66666666666667,0
+female,46-55,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,0,no,no,private,1,171.33333333333334,98,1
+female,26-35,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,no,no,private,0,119,72.33333333333333,0
+female,>65,Secondary,Married,Retired,"0  - 15,000",Overweight,0,0,0,0,yes,unknown,private,1,150.66666666666666,75.66666666666667,1
+female,36-45,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,no,no,private,0,152.33333333333334,93.66666666666667,1
+male,56-65,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,0,yes,unknown,private,1,134,76.66666666666667,0
+male,56-65,Tertiary,Married,Retired,"51,000 - 100,000",Overweight,0,0,0,1,no,no,private,0,130,73.33333333333333,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,0,no,no,private,1,130.66666666666666,78.33333333333333,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,105.33333333333333,64.66666666666667,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,1,0,0,no,no,private,0,110,64.66666666666667,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,0,yes,no,private,0,132.33333333333334,77.33333333333333,0
+male,36-45,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,0,1,yes,no,private,0,98.66666666666667,69.33333333333333,0
+male,>65,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,0,yes,unknown,private,0,159.66666666666666,87.33333333333333,1
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,0,no,no,faith,0,127.66666666666667,81,0
+female,46-55,Primary,Married,Unemployed,"0  - 15,000",Obese,0,0,0,0,yes,yes,faith,1,160.33333333333334,78.33333333333333,1
+male,36-45,Secondary,Single,Employed / Self Employed,"16,000 - 50,000",Overweight,0,1,1,0,no,no,faith,0,114.33333333333333,60,0
+female,56-65,Secondary,Married,Retired,,Obese,0,0,0,1,yes,no,faith,1,141,75.33333333333333,1
+male,>65,Primary,Others,Retired,"16,000 - 50,000",Overweight,1,0,0,1,no,no,faith,1,139.66666666666666,89.33333333333333,0
+female,46-55,Secondary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,1,0,unknown,unknown,faith,0,148,89,1
+male,>65,Tertiary,Married,Retired,"51,000 - 100,000",Overweight,0,0,1,1,no,unknown,faith,0,125.66666666666667,65,0
+female,18-25,Secondary,Single,Unemployed,"0  - 15,000",Healthy,1,0,1,1,no,no,faith,0,104.66666666666667,53.666666666666664,0
+male,46-55,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,1,0,1,0,no,no,faith,0,129.66666666666666,60,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,1,no,no,private,0,116,68,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,1,1,no,no,private,1,139,71.66666666666667,0
+male,56-65,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,1,0,0,unknown,unknown,faith,1,149.66666666666666,102.33333333333333,1
+female,26-35,Tertiary,Single,Employed / Self Employed,"Above 200,000",Overweight,0,1,0,0,no,no,faith,0,123,84,0
+female,26-35,Tertiary,Others,Employed / Self Employed,"Above 200,000",Healthy,0,1,0,0,no,no,faith,0,123.66666666666667,81.66666666666667,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,1,no,no,faith,0,127,81.66666666666667,0
+male,46-55,Secondary,Married,Employed / Self Employed,"0  - 15,000",Underweight,0,1,0,0,no,unknown,faith,0,144.33333333333334,98.66666666666667,1
+male,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Obese,1,1,0,0,yes,unknown,faith,0,132.66666666666666,90.66666666666667,1
+male,>65,Tertiary,Married,Retired,"16,000 - 50,000",Overweight,0,0,1,0,no,no,private,1,124.33333333333333,68.66666666666667,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,0,no,no,private,0,100.66666666666667,68,0
+male,46-55,Secondary,Married,Employed / Self Employed,,Healthy,0,0,1,1,yes,no,faith,0,148.33333333333334,90.33333333333333,1
+female,46-55,Secondary,Married,Retired,,Overweight,0,0,1,0,no,no,private,0,112,58.333333333333336,0
+male,18-25,Secondary,Single,Unemployed,,Healthy,0,0,0,0,no,no,faith,0,104,49.333333333333336,0
+female,18-25,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,1,unknown,unknown,faith,0,125,75.33333333333333,0
+female,46-55,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,0,yes,yes,faith,1,144,90,1
+female,26-35,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,1,1,no,unknown,faith,0,124,85,0
+female,46-55,Secondary,Married,Employed / Self Employed,,Overweight,0,0,0,0,unknown,unknown,faith,0,154.66666666666666,104.66666666666667,1
+female,26-35,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Healthy,0,1,0,0,no,unknown,faith,0,121.66666666666667,79.66666666666667,0
+male,36-45,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Obese,1,0,0,1,no,no,faith,0,130.66666666666666,70,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,1,1,no,yes,private,0,104,62.666666666666664,0
+male,,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,1,0,0,1,yes,no,private,0,126.66666666666667,66.66666666666667,0
+female,36-45,Secondary,Married,Employed / Self Employed,,Obese,0,0,1,1,no,unknown,faith,0,134,55,0
+female,56-65,Tertiary,Married,Retired,,Healthy,0,0,0,1,yes,no,private,0,98.33333333333333,63.333333333333336,0
+male,56-65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,1,1,1,1,yes,yes,faith,1,135,85.33333333333333,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,122.33333333333333,67.33333333333333,0
+male,36-45,Secondary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,1,no,no,faith,0,110.33333333333333,50,0
+female,56-65,Tertiary,Married,Retired,,Obese,0,0,0,1,yes,yes,private,1,160,88.66666666666667,1
+male,46-55,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,0,no,no,faith,0,122,94.33333333333333,1
+male,26-35,Tertiary,Single,Employed / Self Employed,,Healthy,1,0,1,1,yes,no,private,0,124.66666666666667,62,0
+male,>65,Tertiary,Married,Retired,"51,000 - 100,000",Healthy,0,0,0,0,no,no,private,0,129.33333333333334,78,0
+female,26-35,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,1,1,no,no,private,0,106.66666666666667,61.333333333333336,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"Above 200,000",Overweight,0,0,0,1,no,no,private,0,136.66666666666666,74.66666666666667,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,1,no,no,private,0,106,67.33333333333333,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,no,no,private,1,139.66666666666666,87,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,1,no,no,private,0,110.33333333333333,66.33333333333333,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,1,1,no,no,private,0,124,82.66666666666667,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,0,no,no,private,1,112.66666666666667,61.333333333333336,0
+female,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,1,no,no,private,0,126,71,0
+female,46-55,Secondary,Single,Employed / Self Employed,,Obese,0,0,0,0,no,unknown,faith,0,181.66666666666666,97.33333333333333,1
+male,>65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,0,no,no,private,0,146,74.33333333333333,1
+female,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,no,no,faith,0,127.33333333333333,67.66666666666667,0
+male,56-65,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,1,no,no,faith,0,140.33333333333334,80,1
+male,56-65,Tertiary,Married,Retired,"100,000 - 200,000",Obese,0,0,1,0,yes,unknown,faith,1,129.66666666666666,64.33333333333333,0
+female,46-55,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,1,no,no,private,0,138.66666666666666,73.33333333333333,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,0,no,no,private,0,111,58,0
+male,18-25,Secondary,Single,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,no,no,private,0,111.66666666666667,62.333333333333336,0
+male,26-35,Tertiary,Single,Employed / Self Employed,,Overweight,0,0,1,0,no,no,private,0,114.66666666666667,77.33333333333333,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,0,no,no,private,0,133,92.33333333333333,1
+male,26-35,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,1,no,no,private,0,137.66666666666666,86,0
+male,56-65,Tertiary,Married,Retired,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,114.66666666666667,70,0
+male,56-65,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,0,yes,yes,private,1,145.33333333333334,98.33333333333333,1
+female,26-35,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,no,unknown,faith,0,121,78,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Healthy,0,1,0,0,no,no,faith,0,116.66666666666667,75.33333333333333,0
+male,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,1,unknown,unknown,faith,0,110.66666666666667,70,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"Above 200,000",Overweight,0,0,1,1,no,unknown,faith,0,113.33333333333333,71.66666666666667,0
+male,46-55,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,0,1,no,yes,private,1,117.33333333333333,78.66666666666667,0
+male,18-25,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,104,64.66666666666667,0
+male,56-65,Tertiary,Married,Retired,,Overweight,0,0,0,1,no,no,private,0,100.33333333333333,57.333333333333336,0
+male,>65,Tertiary,Married,Retired,,Overweight,0,0,0,1,yes,no,private,0,132.33333333333334,82.66666666666667,0
+male,56-65,Tertiary,Married,Retired,,Healthy,0,0,0,1,no,no,private,0,100.66666666666667,66,0
+male,46-55,Tertiary,Married,Employed / Self Employed,,Healthy,1,0,0,1,no,no,private,0,124.66666666666667,72,0
+male,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,1,0,0,0,unknown,unknown,faith,1,157.66666666666666,104.66666666666667,1
+male,56-65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,1,0,0,no,unknown,faith,1,169.66666666666666,118.66666666666667,1
+female,36-45,Tertiary,Married,Employed / Self Employed,,Underweight,0,0,0,1,unknown,unknown,faith,0,140.33333333333334,89.66666666666667,1
+female,36-45,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,0,unknown,unknown,faith,0,132.66666666666666,95.66666666666667,1
+female,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,0,unknown,unknown,faith,0,132.66666666666666,88.33333333333333,0
+male,56-65,No School,Married,Unemployed,"0  - 15,000",Underweight,0,0,1,0,unknown,unknown,public,0,113.33333333333333,74,0
+male,46-55,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,1,0,1,0,unknown,unknown,faith,0,110.66666666666667,74.66666666666667,0
+female,18-25,Secondary,Single,Unemployed,,Overweight,0,0,0,0,unknown,unknown,faith,0,125,75,0
+male,46-55,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,unknown,unknown,faith,1,112,69,0
+female,>65,Primary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,1,yes,unknown,faith,1,136,79,0
+female,>65,Primary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,0,0,no,unknown,faith,1,105.66666666666667,72.33333333333333,0
+male,>65,No School,Married,Unemployed,,Healthy,0,0,0,0,unknown,no,public,1,157.33333333333334,90.66666666666667,1
+female,18-25,Tertiary,Single,Employed / Self Employed,,Overweight,0,0,0,0,unknown,unknown,faith,0,127.33333333333333,103,1
+male,>65,Secondary,Single,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,0,unknown,unknown,faith,1,152.66666666666666,93.33333333333333,1
+male,>65,No School,Married,Unemployed,,Healthy,0,0,1,0,no,no,public,0,136,67.33333333333333,0
+female,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,0,unknown,unknown,faith,1,136,81.33333333333333,0
+female,>65,No School,,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,0,no,unknown,public,0,115.66666666666667,70.66666666666667,0
+female,56-65,Tertiary,Married,Retired,,Overweight,0,0,1,0,yes,yes,faith,1,104,76,0
+male,36-45,No School,Married,,,Overweight,0,0,1,1,unknown,unknown,public,0,129,80.66666666666667,0
+female,>65,Primary,Married,Retired,,Obese,0,0,0,0,yes,unknown,faith,1,143.33333333333334,93.66666666666667,1
+male,>65,Secondary,Married,Retired,,Healthy,0,0,0,0,unknown,unknown,faith,1,129,73.33333333333333,0
+male,26-35,No School,Married,Employed / Self Employed,"0  - 15,000",Underweight,0,0,1,0,unknown,unknown,public,0,125,72.66666666666667,0
+female,46-55,No School,Married,Unemployed,"0  - 15,000",Underweight,0,0,1,0,unknown,unknown,public,0,102.66666666666667,76.66666666666667,0
+male,36-45,No School,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,0,unknown,unknown,public,0,123.66666666666667,91,1
+male,36-45,Primary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,0,unknown,unknown,faith,0,121.66666666666667,88.33333333333333,0
+female,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,0,unknown,unknown,faith,0,138.66666666666666,80.66666666666667,0
+female,26-35,Secondary,Single,Unemployed,,Healthy,0,0,0,0,unknown,unknown,faith,0,115.66666666666667,73,0
+female,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,yes,unknown,faith,0,120.66666666666667,83.66666666666667,0
+female,26-35,No School,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,1,unknown,unknown,public,0,121.66666666666667,79.66666666666667,0
+female,56-65,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,0,no,unknown,faith,1,120.66666666666667,81,0
+male,46-55,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Underweight,1,0,0,0,unknown,unknown,faith,0,104,87,0
+female,26-35,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,94.33333333333333,51.333333333333336,0
+female,,Secondary,Single,Unemployed,,Underweight,0,0,1,0,unknown,unknown,faith,0,113,69.66666666666667,0
+male,26-35,Tertiary,Married,Unemployed,"16,000 - 50,000",Healthy,0,0,1,1,unknown,unknown,public,0,115,73.33333333333333,0
+female,56-65,Tertiary,Married,Retired,,Overweight,0,0,0,1,yes,yes,faith,1,135.66666666666666,74.66666666666667,0
+male,>65,Primary,Married,Retired,,Overweight,1,1,0,0,no,unknown,faith,1,105.33333333333333,76,0
+male,>65,Primary,Married,Retired,,Healthy,0,0,0,1,yes,unknown,faith,0,116,72.66666666666667,0
+female,18-25,Tertiary,Single,Unemployed,,Healthy,1,1,0,0,unknown,unknown,faith,0,112,72,0
+male,18-25,Tertiary,Single,Unemployed,,Underweight,0,0,1,1,no,no,private,0,115.66666666666667,76,0
+male,56-65,Tertiary,Married,Retired,,Healthy,0,0,1,1,no,unknown,faith,0,132,87.66666666666667,0
+female,36-45,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,unknown,unknown,faith,0,102.33333333333333,71.33333333333333,0
+female,26-35,Secondary,Married,Unemployed,,Healthy,0,0,0,1,no,no,private,0,90.66666666666667,64.66666666666667,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"Above 200,000",Overweight,0,0,1,0,no,no,private,1,140,91.66666666666667,1
+male,56-65,Tertiary,Married,Retired,,Overweight,1,0,0,1,no,yes,private,1,150.33333333333334,90,1
+male,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,0,no,no,private,0,139,83.66666666666667,0
+female,36-45,Primary,Married,Unemployed,,Obese,0,0,0,0,yes,yes,private,0,149,90.33333333333333,1
+female,36-45,Tertiary,Married,Employed / Self Employed,,Overweight,0,1,0,0,no,no,private,0,126,64.66666666666667,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,0,119.33333333333333,68.66666666666667,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,132,79.33333333333333,0
+female,18-25,Secondary,Married,Employed / Self Employed,,Healthy,0,1,0,0,no,no,private,0,126.66666666666667,72,0
+male,>65,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,93.33333333333333,76,0
+female,26-35,Primary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,1,0,1,no,no,private,0,123.33333333333333,66.66666666666667,0
+male,26-35,Tertiary,Married,Employed / Self Employed,,Healthy,0,1,0,1,yes,no,private,1,126,79.33333333333333,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,0,100,64,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,122,62,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,0,no,no,private,0,154.66666666666666,92,1
+female,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,0,no,no,private,0,131.33333333333334,89.66666666666667,0
+male,46-55,Secondary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,0,no,no,private,0,162.66666666666666,85.66666666666667,1
+female,26-35,Primary,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,0,no,no,public,0,145.66666666666666,93,1
+female,18-25,Primary,Single,Unemployed,"0  - 15,000",Healthy,0,0,0,0,no,no,public,0,138.66666666666666,84,0
+female,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,0,1,no,no,public,0,139,98.33333333333333,1
+female,36-45,Primary,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,0,no,no,public,0,117.66666666666667,79,0
+female,>65,No School,Married,Retired,"0  - 15,000",Healthy,0,0,0,0,no,no,public,0,119,72,0
+male,18-25,Primary,Single,Unemployed,"0  - 15,000",Underweight,0,0,0,0,no,unknown,public,0,121.33333333333333,66,0
+female,46-55,No School,Married,Employed / Self Employed,"0  - 15,000",Underweight,0,0,0,0,no,no,public,0,126,73.33333333333333,0
+female,36-45,No School,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,0,1,yes,unknown,public,0,151,93.66666666666667,1
+male,18-25,Secondary,Single,Employed / Self Employed,"16,000 - 50,000",Underweight,0,0,0,0,no,no,public,0,97.66666666666667,50.666666666666664,0
+female,46-55,No School,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,0,unknown,unknown,public,0,122.33333333333333,80,0
+female,>65,No School,Married,Retired,"0  - 15,000",Obese,0,0,0,0,unknown,unknown,public,0,138.66666666666666,96.33333333333333,1
+female,18-25,No School,Single,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,unknown,public,0,121.33333333333333,73.33333333333333,0
+male,36-45,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Underweight,0,0,0,0,unknown,unknown,public,0,109.66666666666667,63,0
+male,36-45,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,0,no,unknown,public,0,122,78,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,0,no,no,private,1,150.33333333333334,91.33333333333333,1
+male,26-35,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,1,1,no,no,public,0,126.66666666666667,85,0
+female,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,0,0,yes,yes,private,1,128.33333333333334,73.33333333333333,0
+female,26-35,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,0,103.33333333333333,64,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,0,1,no,no,private,0,133.33333333333334,82,0
+male,56-65,Secondary,Married,Employed / Self Employed,"Above 200,000",Obese,0,0,0,0,no,no,private,1,144.66666666666666,86,1
+female,56-65,Tertiary,Married,Retired,,Healthy,0,0,0,1,yes,no,private,0,100.33333333333333,61.333333333333336,0
+female,18-25,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,98.66666666666667,58.666666666666664,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,124.66666666666667,64.66666666666667,0
+female,>65,Tertiary,Married,Retired,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,123.33333333333333,66,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"Above 200,000",Healthy,0,0,0,1,no,no,private,0,116,67.33333333333333,0
+female,26-35,Secondary,Single,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,101,62,0
+male,36-45,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,1,0,0,1,unknown,unknown,faith,0,146,64.66666666666667,1
+female,>65,Primary,Others,Retired,"16,000 - 50,000",Overweight,0,0,0,1,no,unknown,faith,0,134,80,0
+male,>65,Secondary,Married,Retired,"16,000 - 50,000",Overweight,0,1,1,1,yes,no,faith,1,137,90,0
+female,>65,No School,Others,Retired,"0  - 15,000",Healthy,0,0,0,0,yes,no,faith,0,115.33333333333333,80,0
+female,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,unknown,unknown,faith,0,121.66666666666667,60,0
+male,46-55,Secondary,Married,Employed / Self Employed,"0  - 15,000",Underweight,1,1,1,0,unknown,unknown,faith,0,128.33333333333334,97,1
+male,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,yes,unknown,faith,1,131.33333333333334,74.66666666666667,0
+male,>65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,no,unknown,faith,1,118.66666666666667,68,0
+female,>65,Primary,Others,Retired,,,0,0,0,0,unknown,unknown,faith,1,98.33333333333333,61.333333333333336,0
+female,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,1,no,unknown,faith,1,132.66666666666666,92.66666666666667,1
+female,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,0,unknown,unknown,faith,1,145.66666666666666,83,1
+female,36-45,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,0,unknown,unknown,faith,0,117.33333333333333,73,0
+male,56-65,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,0,no,unknown,faith,1,152,81,1
+female,56-65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,1,no,unknown,faith,0,123.33333333333333,85,0
+male,46-55,Secondary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,1,0,no,no,private,0,114.33333333333333,71,0
+male,46-55,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,1,0,0,unknown,unknown,faith,1,189,117.33333333333333,1
+male,18-25,Secondary,Single,Unemployed,,Healthy,0,0,0,0,unknown,unknown,faith,0,116,74,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,unknown,unknown,faith,0,101,72,0
+female,46-55,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,0,unknown,unknown,faith,1,121.66666666666667,82.33333333333333,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,0,unknown,unknown,faith,0,103.66666666666667,69.33333333333333,0
+male,56-65,Primary,Married,Employed / Self Employed,,Underweight,1,1,1,0,unknown,unknown,faith,0,96,70.66666666666667,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,0,yes,unknown,private,0,161.33333333333334,93,1
+female,26-35,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,1,unknown,unknown,public,0,171.33333333333334,108.66666666666667,1
+male,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,yes,unknown,faith,0,114,79.66666666666667,0
+female,56-65,Tertiary,Married,Unemployed,,Overweight,0,0,1,1,unknown,unknown,faith,0,115.66666666666667,82.33333333333333,0
+male,46-55,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,yes,public,1,161,99,1
+female,46-55,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,1,unknown,unknown,faith,1,136.33333333333334,92.66666666666667,1
+female,46-55,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,0,yes,unknown,faith,0,111.66666666666667,74.33333333333333,0
+male,56-65,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,yes,public,1,150.66666666666666,84,1
+female,56-65,Primary,Married,Retired,,Overweight,0,0,0,0,yes,unknown,faith,1,142.66666666666666,85.66666666666667,1
+male,>65,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Underweight,0,0,1,0,unknown,unknown,public,0,121.33333333333333,78.33333333333333,0
+male,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,1,0,0,0,unknown,unknown,faith,0,135.66666666666666,83.33333333333333,0
+female,56-65,Primary,Married,Unemployed,,Obese,0,0,0,0,no,unknown,faith,1,138,100,1
+female,36-45,Secondary,Married,Unemployed,,Healthy,0,0,0,0,no,unknown,faith,1,148.66666666666666,102.66666666666667,1
+female,>65,No School,Others,Retired,,Overweight,0,0,0,0,unknown,unknown,faith,1,124.33333333333333,76.33333333333333,0
+male,18-25,Secondary,Single,Unemployed,,Healthy,0,1,1,1,unknown,unknown,faith,0,110.66666666666667,73.33333333333333,0
+male,>65,Primary,Others,Retired,"16,000 - 50,000",Overweight,0,1,0,1,yes,yes,faith,1,150.66666666666666,89.33333333333333,1
+male,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,no,no,faith,0,145,80.66666666666667,1
+male,>65,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,1,0,1,0,no,yes,faith,0,141.66666666666666,61.333333333333336,1
+male,>65,No School,Others,Retired,,Healthy,0,0,0,0,no,no,faith,0,142.66666666666666,74.66666666666667,1
+female,46-55,Secondary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,1,1,no,no,faith,1,147.33333333333334,79.33333333333333,1
+male,>65,Primary,Others,Retired,"0  - 15,000",Healthy,1,0,1,1,yes,unknown,faith,1,126.66666666666667,62.666666666666664,0
+male,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Overweight,0,1,1,1,unknown,unknown,faith,0,125.33333333333333,69.66666666666667,0
+female,36-45,Secondary,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,1,unknown,unknown,faith,0,121.33333333333333,60,0
+female,>65,Primary,Others,Retired,"0  - 15,000",Healthy,0,0,0,0,no,unknown,faith,1,163.33333333333334,98.66666666666667,1
+male,36-45,Tertiary,Married,Employed / Self Employed,"Above 200,000",Obese,0,0,1,1,no,no,private,1,134,71.33333333333333,0
+female,46-55,No School,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,no,no,private,1,134.66666666666666,81.33333333333333,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,1,1,unknown,unknown,faith,0,111,55.666666666666664,0
+male,>65,No School,Others,Retired,"0  - 15,000",Healthy,0,0,0,0,no,yes,faith,0,108.33333333333333,51.666666666666664,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,1,1,1,1,no,no,faith,0,149,73.33333333333333,1
+female,18-25,Secondary,Single,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,1,unknown,unknown,faith,0,107.66666666666667,65.66666666666667,0
+female,26-35,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,1,unknown,unknown,faith,0,129.33333333333334,64.33333333333333,0
+male,>65,Primary,Married,Retired,"0  - 15,000",Healthy,0,0,0,1,no,yes,faith,1,147.66666666666666,66.66666666666667,1
+male,26-35,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,1,1,0,unknown,unknown,faith,0,100,50,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,1,1,1,unknown,unknown,faith,0,131,68,0
+male,56-65,Secondary,Married,Retired,"16,000 - 50,000",Overweight,1,0,0,1,yes,yes,faith,1,154,82.66666666666667,1
+male,56-65,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,1,0,0,unknown,unknown,faith,0,169,90.33333333333333,1
+male,56-65,Primary,Married,Unemployed,,Healthy,0,0,1,0,no,unknown,faith,0,136,59.666666666666664,0
+male,46-55,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,0,no,no,private,0,170,91.33333333333333,1
+female,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,1,no,no,faith,0,130.33333333333334,75,0
+male,56-65,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,unknown,unknown,faith,0,126.66666666666667,60.333333333333336,0
+male,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,1,1,1,1,no,no,faith,0,148.33333333333334,81.66666666666667,1
+male,18-25,Secondary,Single,Unemployed,,Healthy,0,0,1,1,yes,no,faith,0,105,59.666666666666664,0
+female,36-45,Secondary,Married,Unemployed,,Obese,0,0,0,0,no,no,faith,0,141,59,1
+male,26-35,Tertiary,Others,Employed / Self Employed,"51,000 - 100,000",Healthy,0,1,1,1,no,no,faith,0,121.33333333333333,75.33333333333333,0
+male,46-55,No School,Married,Unemployed,"16,000 - 50,000",Underweight,0,0,0,0,unknown,unknown,public,0,143.66666666666666,98.66666666666667,1
+male,>65,No School,Married,Unemployed,,Healthy,0,0,0,0,unknown,yes,public,1,132.33333333333334,72,0
+female,46-55,No School,Married,Unemployed,"0  - 15,000",Obese,0,0,0,0,unknown,yes,public,1,150.66666666666666,88.66666666666667,1
+female,46-55,No School,Married,Unemployed,"0  - 15,000",Obese,0,0,0,0,unknown,unknown,public,0,132,83.66666666666667,0
+female,36-45,No School,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,0,unknown,unknown,public,0,111.66666666666667,69.33333333333333,0
+male,,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,1,1,0,1,yes,yes,faith,0,151.33333333333334,98.33333333333333,1
+female,36-45,No School,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,0,unknown,unknown,public,0,123.33333333333333,73,0
+female,26-35,No School,Married,Unemployed,"0  - 15,000",Underweight,0,0,1,1,unknown,unknown,public,0,103.33333333333333,65.33333333333333,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,no,no,faith,0,147,89.33333333333333,1
+male,36-45,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,113.33333333333333,70,0
+female,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,no,no,faith,0,115,75.33333333333333,0
+female,46-55,No School,Married,Employed / Self Employed,"0  - 15,000",Underweight,0,0,1,0,unknown,unknown,public,0,101.33333333333333,63.333333333333336,0
+male,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,no,no,faith,0,93.66666666666667,62.333333333333336,0
+female,26-35,No School,Married,Employed / Self Employed,"0  - 15,000",Underweight,0,0,0,0,unknown,unknown,public,0,99,54.666666666666664,0
+male,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,1,1,0,no,no,faith,0,155.66666666666666,103.66666666666667,1
+male,56-65,No School,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,0,yes,yes,public,1,124,78.66666666666667,0
+male,46-55,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,1,1,1,yes,yes,faith,1,153,96,1
+male,>65,No School,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,0,unknown,unknown,public,0,175.33333333333334,102,1
+male,26-35,Secondary,Single,Employed / Self Employed,"0  - 15,000",Healthy,1,0,1,1,no,no,faith,0,134.33333333333334,78.33333333333333,0
+male,>65,Primary,Married,Employed / Self Employed,"0  - 15,000",Overweight,1,1,1,1,no,yes,faith,1,127,84.66666666666667,0
+female,26-35,No School,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,0,1,unknown,unknown,public,0,119.66666666666667,68,0
+female,>65,No School,Others,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,153.66666666666666,72.66666666666667,1
+female,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,1,yes,no,faith,0,123.66666666666667,75.66666666666667,0
+male,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,1,0,1,1,no,no,faith,1,160,107.66666666666667,1
+female,56-65,No School,Others,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,0,unknown,unknown,public,1,140.33333333333334,86.66666666666667,1
+female,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,1,1,no,no,faith,0,142,89,1
+female,26-35,Tertiary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,yes,no,private,0,116.66666666666667,76.66666666666667,0
+female,46-55,Primary,Single,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,1,no,no,faith,0,131,72.66666666666667,0
+female,26-35,No School,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,0,0,unknown,unknown,public,0,127.66666666666667,80.33333333333333,0
+female,18-25,Secondary,Married,Employed / Self Employed,"0  - 15,000",Underweight,0,0,0,1,no,no,faith,0,106.66666666666667,70.33333333333333,0
+male,>65,Primary,Married,Employed / Self Employed,"0  - 15,000",Obese,1,1,0,0,no,no,faith,0,151.33333333333334,77.66666666666667,1
+female,46-55,No School,Others,Unemployed,"0  - 15,000",Underweight,0,0,0,0,unknown,unknown,public,0,118.66666666666667,77,0
+female,>65,Primary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,1,no,no,faith,1,151,95.33333333333333,1
+female,56-65,Tertiary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,1,no,yes,faith,1,151.66666666666666,97.33333333333333,1
+male,56-65,Tertiary,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,1,no,no,faith,0,126,87,0
+male,46-55,Tertiary,Others,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,0,no,yes,private,1,121.33333333333333,81,0
+male,>65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,1,1,1,1,no,no,faith,0,157,85,1
+female,18-25,Tertiary,Single,Unemployed,"0  - 15,000",Healthy,0,0,1,1,no,no,faith,0,102.66666666666667,69.66666666666667,0
+female,46-55,Secondary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,1,no,no,faith,0,138.33333333333334,82.33333333333333,0
+male,56-65,Tertiary,Married,Retired,"16,000 - 50,000",Overweight,0,1,1,1,yes,no,faith,1,137.66666666666666,87.66666666666667,0
+female,26-35,No School,Married,Unemployed,"0  - 15,000",Overweight,0,0,0,0,unknown,unknown,public,0,111,74.33333333333333,0
+female,>65,Primary,Married,Unemployed,"0  - 15,000",Healthy,1,1,1,1,yes,no,faith,0,145.33333333333334,101.33333333333333,1
+male,36-45,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,unknown,unknown,public,0,119.66666666666667,74.66666666666667,0
+female,46-55,No School,Others,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,121.66666666666667,79,0
+female,>65,Primary,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,1,no,yes,faith,1,148,88,1
+female,36-45,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,130.33333333333334,87,0
+male,26-35,No School,Married,Unemployed,"0  - 15,000",Underweight,0,0,1,0,unknown,unknown,public,0,108,75.66666666666667,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,1,unknown,unknown,public,0,108.33333333333333,74.33333333333333,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,1,unknown,unknown,public,0,107.66666666666667,70.33333333333333,0
+female,46-55,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,0,no,no,private,0,144.66666666666666,97,1
+female,46-55,Primary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,1,unknown,unknown,public,0,134,86,0
+male,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,1,0,0,unknown,unknown,public,1,150.66666666666666,103.66666666666667,1
+female,46-55,Primary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,1,no,no,faith,0,127.33333333333333,90,0
+female,56-65,No School,Married,Unemployed,"0  - 15,000",Overweight,0,0,0,0,unknown,unknown,public,0,134.66666666666666,79.66666666666667,0
+female,>65,Tertiary,Married,Retired,"0  - 15,000",Underweight,0,0,1,1,no,no,faith,1,125,82,0
+female,36-45,Primary,Married,Unemployed,"0  - 15,000",Overweight,0,0,1,1,no,no,faith,0,116.66666666666667,78.33333333333333,0
+female,46-55,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,112,70.66666666666667,0
+male,56-65,Secondary,Married,Retired,"16,000 - 50,000",Overweight,0,0,1,1,no,no,faith,0,125.66666666666667,86,0
+female,46-55,Primary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,1,1,no,no,faith,0,118.66666666666667,82.66666666666667,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,1,0,1,no,no,faith,0,165,92,1
+male,36-45,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,1,1,1,no,no,faith,0,137.66666666666666,81.33333333333333,0
+female,18-25,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,no,no,faith,0,127.66666666666667,61.333333333333336,0
+female,18-25,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,no,no,faith,0,115,89.66666666666667,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"Above 200,000",Obese,0,0,0,1,yes,unknown,private,1,116.33333333333333,71,0
+female,26-35,Primary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,129.66666666666666,86.66666666666667,0
+male,26-35,Tertiary,Single,Employed / Self Employed,,Overweight,0,0,1,0,no,no,faith,0,115,80,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,0,no,unknown,private,0,144,92.33333333333333,1
+male,56-65,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,0,no,no,private,1,143.33333333333334,99.66666666666667,1
+female,36-45,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,0,no,no,private,0,144,94,1
+male,36-45,Tertiary,Married,Employed / Self Employed,,Overweight,1,0,0,1,no,no,private,0,108.66666666666667,78.33333333333333,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,121.66666666666667,64.66666666666667,0
+female,18-25,Secondary,Single,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,0,122.66666666666667,63.333333333333336,0
+male,26-35,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,0,129.66666666666666,79.33333333333333,0
+female,,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,0,106.66666666666667,58,0
+male,26-35,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Overweight,0,1,1,1,yes,no,private,0,126,78,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,1,no,no,private,0,98.66666666666667,58.666666666666664,0
+male,56-65,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,0,1,no,yes,private,1,134,80.66666666666667,0
+male,36-45,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,0,0,no,no,private,0,107,64.66666666666667,0
+male,46-55,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,1,0,1,1,no,no,faith,0,129.66666666666666,73.66666666666667,0
+male,>65,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,1,0,1,no,yes,faith,1,132.66666666666666,74.66666666666667,0
+male,>65,Primary,Married,Retired,"0  - 15,000",Overweight,0,0,0,1,yes,no,faith,0,144.66666666666666,93,1
+male,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,1,no,no,faith,0,117,69.66666666666667,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,1,no,no,faith,0,110.66666666666667,60.666666666666664,0
+male,,Secondary,Married,Retired,"0  - 15,000",Obese,1,1,1,1,no,no,faith,1,181.66666666666666,97.33333333333333,1
+male,46-55,Secondary,Married,Unemployed,"0  - 15,000",Overweight,1,0,1,1,no,no,faith,0,114,79,0
+male,>65,Primary,Married,Unemployed,"0  - 15,000",Healthy,1,1,1,1,no,no,faith,0,123,73.33333333333333,0
+male,,Secondary,Single,Unemployed,"0  - 15,000",Overweight,0,0,1,1,no,no,faith,0,129.66666666666666,80,0
+male,>65,Secondary,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,1,no,no,faith,0,104,67,0
+male,>65,Secondary,Married,Retired,"16,000 - 50,000",Healthy,0,0,1,1,no,no,faith,1,171.33333333333334,92,1
+male,>65,Primary,Married,Unemployed,"0  - 15,000",Overweight,0,0,1,1,no,no,faith,0,154,95.33333333333333,1
+male,26-35,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Overweight,1,1,1,1,no,no,faith,0,107.33333333333333,71.66666666666667,0
+male,36-45,Primary,Married,Employed / Self Employed,"0  - 15,000",Overweight,1,1,1,1,no,no,faith,0,124,82.33333333333333,0
+male,>65,Primary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,0,1,no,no,faith,0,165,100.33333333333333,1
+male,26-35,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,no,no,faith,0,118,73.66666666666667,0
+male,56-65,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,1,yes,no,faith,0,125.66666666666667,85,0
+male,56-65,Primary,Married,Retired,"0  - 15,000",Overweight,0,0,1,1,no,no,faith,0,132.66666666666666,94.66666666666667,1
+male,26-35,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Overweight,0,1,1,1,no,no,faith,0,115.66666666666667,70.66666666666667,0
+male,>65,Primary,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,0,no,no,faith,0,136,62.666666666666664,0
+male,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,1,1,no,no,faith,0,142,91,1
+female,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,1,no,no,faith,0,120.33333333333333,76.33333333333333,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,no,no,faith,0,111,65.66666666666667,0
+female,36-45,Tertiary,Single,Employed / Self Employed,"0  - 15,000",Obese,0,1,0,0,no,no,faith,0,136.66666666666666,101,1
+female,>65,Primary,Married,Unemployed,"0  - 15,000",Obese,0,0,0,1,no,no,faith,1,150,92.33333333333333,1
+female,26-35,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,1,1,1,no,no,faith,0,114,77,0
+female,>65,Primary,Married,Retired,"0  - 15,000",Obese,0,0,0,1,no,no,faith,0,132.33333333333334,70,0
+female,56-65,Primary,Married,Unemployed,"0  - 15,000",Obese,0,0,0,1,no,no,faith,0,152.66666666666666,90.33333333333333,1
+female,26-35,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Overweight,0,1,1,1,no,no,faith,0,134.66666666666666,92.33333333333333,1
+female,>65,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,1,no,no,faith,0,121.33333333333333,71.66666666666667,0
+female,>65,No School,Married,Unemployed,"0  - 15,000",Obese,0,0,0,1,no,no,faith,0,107,63.666666666666664,0
+female,>65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,1,yes,no,faith,0,113.66666666666667,73.66666666666667,0
+female,56-65,No School,Married,Unemployed,"0  - 15,000",Obese,0,0,0,1,no,no,faith,0,126.33333333333333,91.66666666666667,1
+female,26-35,Tertiary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,1,1,1,no,no,faith,0,111.33333333333333,72,0
+female,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,1,no,no,faith,0,114.33333333333333,73,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,1,no,no,faith,0,123,85.66666666666667,0
+male,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,no,no,faith,0,114.33333333333333,78.33333333333333,0
+female,>65,Primary,Married,Unemployed,"0  - 15,000",Obese,0,0,0,1,no,no,faith,0,113.33333333333333,70,0
+female,>65,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,1,no,no,faith,0,113.66666666666667,70,0
+female,46-55,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,1,no,no,faith,0,144,93,1
+female,56-65,Primary,Married,Unemployed,"0  - 15,000",Healthy,0,1,1,1,no,no,faith,0,125.33333333333333,77.66666666666667,0
+male,,Secondary,Married,Unemployed,"51,000 - 100,000",Healthy,0,0,0,0,yes,yes,faith,1,168.33333333333334,96,1
+male,>65,Secondary,Others,Retired,"16,000 - 50,000",Healthy,0,0,0,0,yes,yes,faith,1,127.33333333333333,67.33333333333333,0
+male,56-65,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,0,yes,yes,faith,1,131,82,0
+female,46-55,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,0,yes,yes,faith,1,160.66666666666666,90.66666666666667,1
+male,18-25,Tertiary,Single,Unemployed,"0  - 15,000",Overweight,0,0,0,1,no,yes,faith,1,141,86.66666666666667,1
+female,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,0,no,yes,faith,1,135.66666666666666,67.66666666666667,0
+male,26-35,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,1,0,no,no,faith,0,135,68.66666666666667,0
+male,>65,Tertiary,Married,Retired,"100,000 - 200,000",Healthy,0,0,0,1,yes,no,faith,1,157.66666666666666,77.33333333333333,1
+male,56-65,Primary,Married,Unemployed,"16,000 - 50,000",Healthy,0,0,0,1,no,yes,faith,1,182,81.33333333333333,1
+female,36-45,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,0,no,yes,faith,0,138.33333333333334,75.66666666666667,0
+female,36-45,Secondary,Married,Employed / Self Employed,,Obese,0,0,0,0,unknown,unknown,faith,0,119,77.33333333333333,0
+male,46-55,Primary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,0,0,no,unknown,faith,0,120.33333333333333,72.66666666666667,0
+female,46-55,Primary,Married,Unemployed,,Overweight,0,0,0,0,no,unknown,faith,1,153.33333333333334,102.33333333333333,1
+female,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,faith,0,136.66666666666666,87.66666666666667,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,1,0,0,unknown,unknown,faith,1,121.66666666666667,88,0
+female,46-55,Primary,Married,Unemployed,,Underweight,0,0,0,0,no,no,faith,0,120.33333333333333,80,0
+female,56-65,Tertiary,Married,Retired,,Overweight,0,0,0,0,unknown,unknown,faith,0,125.66666666666667,84,0
+male,>65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,0,no,unknown,faith,0,108,74,0
+female,46-55,Primary,Married,Retired,,Underweight,0,0,0,0,no,no,faith,0,101,77.66666666666667,0
+male,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,0,yes,yes,faith,1,141.33333333333334,70,1
+female,26-35,Tertiary,Single,Unemployed,,Healthy,0,1,0,0,yes,no,faith,0,114,76.66666666666667,0
+male,>65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,0,no,unknown,faith,0,114.66666666666667,80.33333333333333,0
+male,>65,Primary,Married,Retired,,Healthy,0,0,0,0,unknown,unknown,faith,0,147.33333333333334,87.33333333333333,1
+female,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,0,0,unknown,unknown,faith,0,111.66666666666667,79.66666666666667,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,0,unknown,unknown,faith,0,101.33333333333333,76.33333333333333,0
+female,56-65,Secondary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,0,unknown,unknown,faith,1,151.66666666666666,87.33333333333333,1
+female,46-55,Primary,Others,Employed / Self Employed,"0  - 15,000",Underweight,0,0,0,1,unknown,unknown,faith,1,107.33333333333333,80,0
+female,56-65,Primary,Married,Retired,,Overweight,0,0,0,0,yes,yes,faith,1,146.33333333333334,77,1
+male,56-65,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,0,yes,unknown,faith,1,129.66666666666666,87.33333333333333,0
+female,>65,No School,Married,Unemployed,,Healthy,0,0,0,0,no,unknown,faith,0,111,76.33333333333333,0
+female,>65,Tertiary,Married,Retired,,Overweight,0,0,0,0,no,no,faith,0,131.66666666666666,71,0
+male,>65,Primary,Married,Unemployed,,Obese,1,0,0,0,yes,unknown,faith,1,145,72.66666666666667,1
+male,56-65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,0,yes,unknown,faith,0,145.66666666666666,94.66666666666667,1
+male,36-45,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Overweight,0,1,0,0,yes,unknown,faith,0,107.33333333333333,78.66666666666667,0
+female,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,0,0,yes,yes,faith,1,163.66666666666666,84.33333333333333,1
+female,>65,Secondary,Others,Employed / Self Employed,"0  - 15,000",Overweight,0,0,0,0,no,yes,faith,1,113.66666666666667,77.33333333333333,0
+female,26-35,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,127.33333333333333,78,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,1,no,no,private,0,108,75.33333333333333,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,1,no,no,private,0,100.33333333333333,58.666666666666664,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,130,80,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,no,no,private,0,125.33333333333333,66,0
+male,18-25,Secondary,Single,Unemployed,"51,000 - 100,000",Healthy,0,0,0,1,unknown,no,private,0,100.33333333333333,60,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,1,yes,no,private,0,130.66666666666666,78,0
+male,26-35,Tertiary,Single,Employed / Self Employed,"Above 200,000",Overweight,1,1,0,1,no,no,private,0,104,62.666666666666664,0
+male,56-65,Secondary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,1,yes,no,faith,0,137.66666666666666,67,0
+male,>65,Tertiary,Married,Retired,"51,000 - 100,000",Overweight,0,0,1,1,yes,yes,faith,1,172,82,1
+male,56-65,No School,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,162,85.33333333333333,1
+female,>65,No School,Others,Unemployed,,Obese,0,0,0,0,unknown,unknown,public,1,126.33333333333333,76,0
+male,>65,No School,Married,Unemployed,,Healthy,0,0,1,0,unknown,unknown,public,0,154.33333333333334,97.33333333333333,1
+female,56-65,No School,Married,Unemployed,,Overweight,0,0,1,0,no,no,public,0,144,87,1
+male,56-65,No School,Others,Unemployed,,Obese,0,0,0,0,yes,yes,public,1,146.33333333333334,95.33333333333333,1
+,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",,0,0,0,0,unknown,unknown,public,0,118.66666666666667,85,0
+female,56-65,No School,Others,Unemployed,,Obese,0,0,0,0,no,no,public,0,146.33333333333334,82.66666666666667,1
+male,>65,No School,Married,Unemployed,,Overweight,0,0,0,0,no,yes,public,1,144.66666666666666,84.66666666666667,1
+female,26-35,No School,Married,Unemployed,,Obese,0,0,1,0,no,no,public,0,124.33333333333333,82.66666666666667,0
+male,56-65,Primary,Married,Unemployed,"16,000 - 50,000",Healthy,0,0,1,1,no,yes,faith,0,107,72.66666666666667,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,1,1,no,no,faith,0,148,102.66666666666667,1
+male,46-55,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Underweight,0,0,1,1,no,no,faith,0,123.33333333333333,52.333333333333336,0
+male,56-65,Secondary,Married,Unemployed,"16,000 - 50,000",Overweight,0,0,0,1,no,yes,faith,1,131.33333333333334,92,1
+female,56-65,Primary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,1,1,no,yes,faith,1,121.66666666666667,78.66666666666667,0
+female,>65,Secondary,Others,Retired,"0  - 15,000",Healthy,0,0,0,0,no,yes,faith,1,162.66666666666666,69.33333333333333,1
+male,>65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,1,no,yes,faith,1,153.66666666666666,80.33333333333333,1
+male,56-65,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,1,0,1,no,yes,faith,1,143,89.33333333333333,1
+male,26-35,Secondary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,1,1,no,no,faith,0,126.33333333333333,73.33333333333333,0
+male,56-65,Secondary,Single,Employed / Self Employed,"0  - 15,000",Underweight,1,0,0,1,yes,unknown,public,0,137.66666666666666,82.66666666666667,0
+female,26-35,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,118.66666666666667,75.33333333333333,0
+female,56-65,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,no,yes,faith,0,126,69,0
+female,36-45,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,1,no,yes,faith,1,141.66666666666666,48.666666666666664,1
+female,56-65,No School,Others,Retired,"0  - 15,000",Overweight,0,0,0,1,no,yes,faith,1,191.33333333333334,88,1
+female,18-25,Secondary,Single,Unemployed,"0  - 15,000",Healthy,0,0,1,1,no,no,faith,0,127.33333333333333,56.666666666666664,0
+male,>65,No School,Others,Retired,"16,000 - 50,000",Overweight,0,0,0,1,no,no,faith,0,142.33333333333334,81.33333333333333,1
+female,>65,Secondary,Others,Retired,"16,000 - 50,000",Healthy,0,0,0,1,no,no,faith,0,127,63.333333333333336,0
+female,56-65,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,1,1,no,no,faith,0,137.33333333333334,72,0
+female,18-25,Tertiary,Single,Unemployed,"16,000 - 50,000",Healthy,0,0,1,1,no,no,faith,0,133.33333333333334,71,0
+female,36-45,No School,Others,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,0,unknown,unknown,public,0,130,84,0
+male,46-55,Primary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,1,1,no,no,faith,0,158.33333333333334,99.66666666666667,1
+male,26-35,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,0,no,no,faith,0,142.66666666666666,77.33333333333333,1
+female,36-45,No School,Married,Unemployed,"0  - 15,000",Overweight,0,0,0,0,unknown,unknown,public,0,130.66666666666666,83.33333333333333,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,0,unknown,unknown,public,0,109,59.333333333333336,0
+female,>65,No School,Married,Unemployed,"0  - 15,000",Underweight,0,0,0,0,unknown,unknown,public,0,133,79.33333333333333,0
+female,56-65,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,133,79.33333333333333,0
+female,36-45,No School,Married,Unemployed,"0  - 15,000",Overweight,0,0,0,0,unknown,unknown,public,0,108.33333333333333,73,0
+male,36-45,No School,Married,Unemployed,"0  - 15,000",Underweight,0,0,1,0,unknown,unknown,public,0,111.66666666666667,75.33333333333333,0
+male,56-65,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,yes,public,1,137.66666666666666,93,1
+female,26-35,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,107.33333333333333,72,0
+male,,Secondary,Married,Employed / Self Employed,"Above 200,000",Overweight,0,0,1,0,unknown,unknown,public,0,125,80.33333333333333,0
+female,26-35,No School,Married,Unemployed,"0  - 15,000",Underweight,0,0,0,0,unknown,unknown,public,0,110.33333333333333,70.66666666666667,0
+female,26-35,Primary,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,unknown,public,0,112,72.33333333333333,0
+male,36-45,No School,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,0,unknown,unknown,public,0,136.66666666666666,94.66666666666667,1
+female,46-55,No School,Married,Unemployed,"0  - 15,000",Overweight,0,0,0,0,unknown,unknown,public,0,129,80.33333333333333,0
+male,26-35,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,unknown,public,0,133,93,1
+female,36-45,No School,Married,Unemployed,"0  - 15,000",Overweight,0,0,1,0,unknown,unknown,public,0,148.33333333333334,96,1
+female,56-65,No School,Single,Unemployed,"0  - 15,000",Overweight,0,0,1,1,unknown,unknown,public,1,175,95.66666666666667,1
+male,36-45,Tertiary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,1,unknown,unknown,public,0,135.66666666666666,74.33333333333333,0
+female,46-55,Primary,Married,Unemployed,"0  - 15,000",Obese,0,0,1,1,unknown,unknown,public,0,133,73.66666666666667,0
+male,46-55,Secondary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,1,unknown,unknown,public,0,130,84,0
+male,>65,No School,Married,Unemployed,"0  - 15,000",Underweight,0,0,0,0,unknown,unknown,public,0,95,56.333333333333336,0
+male,>65,No School,Others,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,unknown,public,0,108,69,0
+male,46-55,No School,Others,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,1,unknown,unknown,public,0,125.33333333333333,78.33333333333333,0
+female,46-55,No School,Others,Unemployed,"0  - 15,000",Overweight,0,0,1,1,unknown,yes,public,1,166.33333333333334,103,1
+female,>65,No School,Others,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,0,unknown,unknown,public,0,135.33333333333334,73,0
+female,>65,No School,Others,Unemployed,"0  - 15,000",Overweight,0,0,1,0,unknown,unknown,public,0,147.33333333333334,77.33333333333333,1
+female,>65,No School,Others,Unemployed,"0  - 15,000",Overweight,0,0,1,1,no,no,public,0,113.33333333333333,77.33333333333333,0
+female,56-65,No School,Others,Unemployed,"0  - 15,000",Overweight,0,0,0,0,no,no,public,0,119.33333333333333,85.33333333333333,0
+female,26-35,Primary,Married,Unemployed,"0  - 15,000",Overweight,0,0,0,1,no,no,public,0,113.66666666666667,69.33333333333333,0
+male,26-35,No School,Married,Employed / Self Employed,"0  - 15,000",Underweight,0,0,1,0,no,no,public,0,115.33333333333333,67,0
+male,>65,No School,Married,Unemployed,"16,000 - 50,000",Healthy,0,0,1,0,no,no,public,0,152,98,1
+female,26-35,No School,Married,Unemployed,"0  - 15,000",Obese,0,0,0,1,no,no,public,0,118,75.66666666666667,0
+male,46-55,No School,Married,Unemployed,"0  - 15,000",Overweight,0,0,0,1,yes,no,public,0,122,81.33333333333333,0
+male,36-45,Tertiary,Married,Unemployed,"100,000 - 200,000",Healthy,0,0,1,0,no,no,private,0,126,82,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"Above 200,000",Healthy,0,0,0,1,no,no,private,0,101,68,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,1,no,no,private,0,126,74.66666666666667,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,107.33333333333333,66.66666666666667,0
+female,26-35,No School,Married,Unemployed,"0  - 15,000",Overweight,0,0,0,1,unknown,unknown,public,0,140,90,0
+male,26-35,Secondary,Single,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,unknown,public,0,127,85,0
+female,>65,No School,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,0,unknown,yes,public,1,146.33333333333334,75,1
+male,46-55,Tertiary,Married,Employed / Self Employed,,Overweight,0,1,0,1,no,no,private,0,123.33333333333333,77.33333333333333,0
+male,46-55,No School,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,1,unknown,unknown,public,0,139,87.66666666666667,0
+female,46-55,Secondary,Single,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,1,unknown,yes,public,1,133.33333333333334,83.33333333333333,0
+male,>65,No School,Married,Unemployed,"0  - 15,000",Underweight,0,0,1,0,unknown,unknown,public,0,114,75.66666666666667,0
+male,>65,No School,Others,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,yes,public,1,207.33333333333334,101.66666666666667,1
+male,>65,Tertiary,Married,Retired,,Healthy,0,0,0,1,no,no,private,0,104,64.66666666666667,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,101,59.333333333333336,0
+female,46-55,Tertiary,Married,Retired,,Overweight,0,0,0,1,no,no,private,0,132.66666666666666,73.33333333333333,0
+male,56-65,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,1,0,no,no,private,0,115,80.33333333333333,0
+male,>65,Secondary,Married,Employed / Self Employed,,Overweight,0,0,1,1,yes,no,private,0,114.33333333333333,54.666666666666664,0
+female,46-55,Secondary,Married,Unemployed,,Healthy,0,0,1,1,yes,no,private,1,134,82.66666666666667,0
+female,46-55,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,0,132.66666666666666,89.33333333333333,0
+male,56-65,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,0,no,no,private,1,157,99.66666666666667,1
+male,46-55,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,1,1,no,no,private,0,122.66666666666667,87,0
+female,18-25,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,0,0,no,no,private,0,115.66666666666667,65.33333333333333,0
+male,18-25,Tertiary,Single,Employed / Self Employed,,Overweight,0,0,0,0,no,no,private,0,135.66666666666666,87,0
+male,26-35,Tertiary,Single,Retired,,Healthy,0,0,0,1,no,no,private,0,122.33333333333333,77.66666666666667,0
+male,36-45,Tertiary,Others,Employed / Self Employed,,Healthy,0,0,1,1,no,no,private,0,108.33333333333333,72,0
+male,18-25,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,no,no,private,0,124.66666666666667,83.66666666666667,0
+male,>65,Tertiary,Married,Retired,"0  - 15,000",Healthy,0,0,1,1,no,no,private,0,144.66666666666666,98,1
+female,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,0,1,no,no,private,0,119.66666666666667,82,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Underweight,0,0,1,1,no,no,private,0,111.33333333333333,83.33333333333333,0
+male,56-65,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,1,0,0,0,no,no,private,1,144,105.66666666666667,1
+female,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,1,no,no,private,0,93.66666666666667,65,0
+female,46-55,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,0,no,no,private,0,122.33333333333333,76.66666666666667,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,1,1,no,no,private,1,119.66666666666667,84.33333333333333,0
+male,46-55,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,1,1,no,no,private,1,115.33333333333333,81,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,1,1,no,no,private,0,115,67.66666666666667,0
+female,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",,0,0,1,1,no,no,private,0,117.33333333333333,83.66666666666667,0
+male,56-65,Secondary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,0,0,no,no,private,0,145,87.66666666666667,1
+male,56-65,Tertiary,Married,Employed / Self Employed,"Above 200,000",,0,0,0,1,yes,no,private,1,124.33333333333333,80.66666666666667,0
+male,26-35,Tertiary,Single,Employed / Self Employed,,Underweight,1,0,0,1,no,no,private,0,124.33333333333333,81.33333333333333,0
+female,46-55,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,1,1,yes,no,private,0,124.33333333333333,81,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"Above 200,000",Obese,0,0,0,1,no,no,private,0,100.33333333333333,73.66666666666667,0
+female,18-25,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Obese,1,0,0,0,no,yes,private,0,154.33333333333334,105,1
+male,26-35,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,0,no,no,private,0,104.33333333333333,69.66666666666667,0
+male,>65,Tertiary,Married,Retired,"51,000 - 100,000",Healthy,0,0,1,1,yes,no,private,0,129,66.66666666666667,0
+male,18-25,Tertiary,Single,Unemployed,"0  - 15,000",Healthy,0,0,1,1,no,no,private,0,117,63,0
+female,46-55,Tertiary,Others,Employed / Self Employed,,,0,0,0,1,yes,no,private,0,121.33333333333333,79,0
+female,46-55,Secondary,Married,Employed / Self Employed,,Obese,0,0,1,0,no,no,private,0,156,91.66666666666667,1
+male,56-65,Tertiary,Married,Retired,,Healthy,0,0,1,1,no,no,private,1,126.33333333333333,91,1
+male,46-55,Tertiary,Married,Employed / Self Employed,,,0,0,0,1,no,no,private,1,146.33333333333334,95.66666666666667,1
+female,18-25,Tertiary,Single,Unemployed,,,0,0,0,1,no,no,private,0,102.66666666666667,64.33333333333333,0
+female,36-45,Tertiary,Single,Employed / Self Employed,,,0,0,0,0,no,no,private,0,109.33333333333333,75,0
+male,46-55,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,1,0,no,no,private,0,115.66666666666667,74.66666666666667,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,1,1,no,no,private,0,125.66666666666667,75,0
+female,26-35,Tertiary,Single,Unemployed,,Overweight,0,0,0,1,no,no,private,1,115.33333333333333,74.33333333333333,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,1,1,yes,no,private,1,124.66666666666667,79,0
+female,>65,Tertiary,Single,Retired,,Healthy,0,0,1,1,no,no,private,1,96.66666666666667,66,0
+female,56-65,Tertiary,Single,Retired,,Healthy,0,0,1,0,no,no,private,1,123,68,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,110.66666666666667,70,0
+male,26-35,Tertiary,Single,Employed / Self Employed,,Obese,0,0,0,1,no,no,private,1,145,82.66666666666667,1
+female,18-25,Tertiary,Single,Employed / Self Employed,,Underweight,0,0,1,1,no,no,private,1,132.66666666666666,81.33333333333333,0
+female,36-45,Secondary,Married,Employed / Self Employed,,,0,0,1,1,no,no,private,0,95.33333333333333,64,0
+female,46-55,Secondary,Married,Employed / Self Employed,,,0,0,0,0,no,no,private,0,113,75,0
+female,26-35,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,109.33333333333333,71,0
+female,26-35,Tertiary,Married,Employed / Self Employed,,Obese,0,0,1,0,no,no,private,0,138,83.66666666666667,0
+male,46-55,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,1,1,no,no,private,0,133.66666666666666,84.66666666666667,0
+male,>65,Secondary,Married,Retired,,Overweight,0,0,1,1,no,no,private,0,102,63.666666666666664,0
+female,36-45,Tertiary,Married,Unemployed,,Overweight,0,0,1,1,no,no,private,0,103.33333333333333,60.333333333333336,0
+male,46-55,Tertiary,Married,Employed / Self Employed,,Overweight,0,1,0,1,no,no,private,1,138.66666666666666,100.66666666666667,1
+female,56-65,Tertiary,Married,Employed / Self Employed,,Obese,0,0,1,1,no,no,private,0,123,83,0
+male,56-65,Secondary,Married,Unemployed,,,0,0,1,1,yes,yes,private,1,152.33333333333334,82.66666666666667,1
+female,46-55,Tertiary,Married,Retired,,Overweight,0,0,0,1,no,no,private,0,119,78.66666666666667,0
+female,36-45,No School,Married,Employed / Self Employed,,Obese,0,0,0,0,no,no,private,0,131.33333333333334,81.66666666666667,0
+female,26-35,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,0,0,no,no,private,0,113.66666666666667,44,0
+female,26-35,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,1,1,no,no,private,0,118,81,0
+female,>65,Secondary,Others,Retired,,Obese,0,0,0,1,no,no,private,0,144.66666666666666,84.66666666666667,1
+female,26-35,Tertiary,Married,Unemployed,,Healthy,0,0,0,1,no,no,private,0,118.33333333333333,84.33333333333333,0
+female,26-35,Tertiary,Single,Employed / Self Employed,,,0,0,1,0,no,no,private,0,105.33333333333333,65,0
+female,18-25,Tertiary,Married,Unemployed,,Healthy,0,0,0,0,no,no,private,0,114.66666666666667,69,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,0,no,no,private,0,138,78.66666666666667,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,1,no,no,private,0,113.66666666666667,83,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,1,0,1,no,no,private,1,132.66666666666666,94,1
+female,26-35,Tertiary,Single,Employed / Self Employed,,Underweight,0,0,0,1,no,no,private,0,102.33333333333333,69.33333333333333,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,1,1,no,no,private,0,118,73.66666666666667,0
+male,46-55,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,1,1,no,no,private,0,121.33333333333333,80.66666666666667,0
+female,46-55,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,1,no,no,private,0,157.33333333333334,85,1
+female,26-35,Secondary,Married,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,125,71.33333333333333,0
+female,18-25,Tertiary,Single,Employed / Self Employed,,Obese,0,0,0,1,no,no,private,0,115.66666666666667,74.66666666666667,0
+male,56-65,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,1,124,80.66666666666667,0
+female,46-55,Secondary,Married,Unemployed,,,0,0,0,0,no,no,private,1,138,85.66666666666667,0
+male,46-55,Tertiary,Married,Employed / Self Employed,,,0,0,0,1,no,no,private,0,120.33333333333333,78.33333333333333,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,150,89.33333333333333,1
+male,36-45,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,0,0,no,no,private,1,128.33333333333334,76.66666666666667,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,0,125.66666666666667,85.33333333333333,0
+male,46-55,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,1,0,no,no,private,0,123,76.33333333333333,0
+female,26-35,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,1,1,no,no,private,0,110.66666666666667,75.33333333333333,0
+female,46-55,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,131,66.66666666666667,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,0,no,no,private,0,131,89,0
+male,46-55,Secondary,Married,Employed / Self Employed,,Healthy,0,0,1,1,no,no,private,0,151,96.66666666666667,1
+female,46-55,Secondary,Single,Retired,,Overweight,0,0,1,1,yes,no,private,0,125,82.66666666666667,0
+female,>65,Tertiary,Others,Retired,,,0,0,0,0,no,no,private,1,113,67.33333333333333,0
+male,26-35,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,0,0,no,no,private,0,131,95.33333333333333,1
+male,>65,Tertiary,Married,Retired,,Overweight,0,1,0,1,no,no,private,1,138.33333333333334,67.66666666666667,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,Obese,0,0,1,0,no,no,private,1,123.33333333333333,94.66666666666667,1
+female,46-55,Secondary,Married,Employed / Self Employed,,Overweight,0,0,0,1,yes,no,private,1,128.66666666666666,74.33333333333333,0
+male,26-35,Tertiary,Married,Employed / Self Employed,,,0,0,0,1,no,no,private,0,99,65.33333333333333,0
+female,26-35,Tertiary,Single,Employed / Self Employed,,Obese,0,0,0,0,unknown,yes,private,1,134.66666666666666,97.33333333333333,1
+female,36-45,Tertiary,Married,Employed / Self Employed,,Obese,0,0,1,1,no,no,private,0,120.66666666666667,77.66666666666667,0
+female,56-65,Secondary,Single,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,0,129.33333333333334,76.66666666666667,0
+female,26-35,Tertiary,Married,Employed / Self Employed,,Obese,0,0,1,0,no,no,private,0,142.66666666666666,84.66666666666667,1
+female,46-55,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,1,1,no,no,private,0,117,73.33333333333333,0
+female,>65,Tertiary,Others,Retired,,,0,0,1,1,no,yes,private,1,132.33333333333334,67.33333333333333,0
+male,>65,Tertiary,Married,Employed / Self Employed,"Above 200,000",Overweight,0,0,1,1,no,no,private,1,151.33333333333334,82.66666666666667,1
+female,36-45,Tertiary,Married,Employed / Self Employed,,,0,0,0,1,no,no,private,0,122.66666666666667,82.66666666666667,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,1,0,no,no,private,0,115.66666666666667,64.66666666666667,0
+female,36-45,No School,Married,Employed / Self Employed,"0  - 15,000",,0,0,1,0,unknown,unknown,public,1,127.66666666666667,88,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,0,1,no,no,private,0,106,62,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,1,1,0,1,no,no,private,0,116.66666666666667,62,0
+female,36-45,Secondary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,1,no,no,faith,0,151.33333333333334,83.66666666666667,1
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,1,0,0,1,yes,no,private,0,130.66666666666666,95.33333333333333,1
+female,56-65,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,no,yes,faith,1,180.66666666666666,87,1
+female,26-35,Tertiary,Single,Unemployed,"16,000 - 50,000",Healthy,0,1,1,1,no,no,faith,0,113.33333333333333,71.33333333333333,0
+female,>65,No School,Others,Unemployed,"0  - 15,000",Healthy,0,0,0,0,yes,yes,faith,1,181.66666666666666,48.333333333333336,1
+male,56-65,Secondary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,1,0,no,yes,faith,1,133.33333333333334,78.33333333333333,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,1,no,no,private,0,122,70.66666666666667,0
+male,>65,No School,Others,Retired,"16,000 - 50,000",Healthy,0,0,0,1,no,yes,faith,1,104.33333333333333,64.66666666666667,0
+female,18-25,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Healthy,0,1,0,1,no,no,private,0,100.33333333333333,59,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Underweight,0,0,1,1,no,no,faith,0,117,61,0
+female,46-55,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,0,no,no,faith,0,122.66666666666667,74.66666666666667,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,1,yes,no,private,0,126,80.66666666666667,0
+female,26-35,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,106.66666666666667,70,0
+female,46-55,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,1,0,no,no,faith,0,123.66666666666667,72,0
+female,>65,No School,Others,Retired,"16,000 - 50,000",Healthy,0,0,1,0,no,no,faith,0,133,79,0
+male,18-25,Tertiary,Single,Employed / Self Employed,,Healthy,1,1,0,1,no,no,private,0,116.66666666666667,65.33333333333333,0
+male,>65,No School,Married,Unemployed,,Healthy,0,0,0,0,unknown,unknown,public,0,123,81,0
+female,36-45,No School,Married,Unemployed,"0  - 15,000",Overweight,0,0,1,0,unknown,unknown,public,0,91.33333333333333,64.66666666666667,0
+female,26-35,Primary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,1,unknown,unknown,public,0,115.66666666666667,79.33333333333333,0
+female,26-35,No School,Married,Unemployed,"0  - 15,000",Obese,0,0,1,0,unknown,unknown,public,0,108,74.33333333333333,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,unknown,unknown,public,0,121.66666666666667,76.66666666666667,0
+male,>65,No School,Married,Unemployed,"0  - 15,000",Underweight,0,0,1,0,unknown,unknown,public,0,141,85.33333333333333,1
+male,26-35,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Underweight,0,0,1,1,unknown,unknown,public,0,100.66666666666667,80,0
+male,46-55,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,1,unknown,unknown,public,0,114.33333333333333,78,0
+male,56-65,No School,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,1,0,1,1,unknown,yes,public,1,147.66666666666666,85.66666666666667,1
+male,56-65,No School,Married,Unemployed,"0  - 15,000",Underweight,0,0,1,0,unknown,unknown,public,0,131.33333333333334,78.33333333333333,0
+male,>65,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,yes,public,1,127.33333333333333,76,0
+male,>65,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,yes,public,1,117.66666666666667,80,0
+male,>65,No School,Married,Retired,"16,000 - 50,000",Overweight,0,0,0,1,no,no,faith,0,160,81,1
+male,>65,Primary,Others,Unemployed,"16,000 - 50,000",Healthy,0,0,0,0,no,no,faith,0,165.66666666666666,79.66666666666667,1
+male,56-65,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,1,1,no,yes,faith,1,166,83.33333333333333,1
+female,>65,Primary,Others,Retired,"16,000 - 50,000",Overweight,0,0,0,0,yes,yes,faith,1,185,86.66666666666667,1
+male,56-65,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,0,1,yes,yes,faith,1,122.33333333333333,86.33333333333333,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,1,1,yes,no,faith,0,116.66666666666667,72.33333333333333,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,0,no,yes,faith,1,138.33333333333334,80.66666666666667,0
+male,26-35,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,1,1,no,no,faith,0,130.66666666666666,70.66666666666667,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,0,1,no,no,private,0,122,64,0
+female,26-35,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,0,126,72,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"Above 200,000",Overweight,0,1,0,1,no,no,private,0,113.33333333333333,72,0
+female,26-35,Secondary,Married,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,104,62.666666666666664,0
+female,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,1,no,no,private,0,104,70,0
+female,46-55,Tertiary,Married,Employed / Self Employed,"Above 200,000",Overweight,0,0,0,1,no,no,private,0,113.33333333333333,70,0
+male,46-55,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,125.33333333333333,66,0
+male,>65,Tertiary,Married,Retired,,Overweight,0,0,0,1,no,yes,private,1,152.33333333333334,99.66666666666667,1
+female,26-35,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,1,no,no,public,0,129,76,0
+female,>65,Primary,Married,Unemployed,,Healthy,0,0,0,1,no,no,public,0,123.33333333333333,89.33333333333333,0
+female,46-55,Primary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,0,1,no,no,public,1,225,112.33333333333333,1
+male,36-45,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,1,unknown,no,public,0,111.66666666666667,69.33333333333333,0
+female,46-55,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,1,yes,no,public,0,136.66666666666666,81.33333333333333,0
+male,56-65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Underweight,0,0,1,0,no,no,public,0,140.33333333333334,89.66666666666667,1
+male,46-55,Primary,Married,Employed / Self Employed,"0  - 15,000",Underweight,0,0,1,1,no,no,public,0,113.66666666666667,61,0
+female,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,1,no,no,public,0,126.33333333333333,83,0
+female,36-45,Primary,Single,Employed / Self Employed,"0  - 15,000",Obese,0,0,1,1,no,no,public,0,138.66666666666666,90.66666666666667,1
+female,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,unknown,no,public,0,113.33333333333333,71.66666666666667,0
+female,18-25,Primary,Married,Unemployed,,Healthy,0,0,1,1,no,unknown,public,0,121,79.33333333333333,0
+female,26-35,Primary,Married,Employed / Self Employed,,Healthy,0,0,1,1,no,no,public,0,115.33333333333333,70.66666666666667,0
+female,18-25,Secondary,Married,Unemployed,,Obese,0,0,1,1,no,no,public,0,105.66666666666667,63,0
+female,56-65,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,yes,no,public,0,96.33333333333333,60.666666666666664,0
+female,46-55,Primary,Single,Employed / Self Employed,,Healthy,0,0,1,1,no,no,public,0,145,86.66666666666667,1
+female,18-25,Primary,Married,Unemployed,"Above 200,000",Healthy,0,0,1,1,no,no,public,0,114,74.66666666666667,0
+male,26-35,Primary,Single,Employed / Self Employed,,Underweight,0,0,1,1,no,unknown,public,0,117.33333333333333,69.66666666666667,0
+female,26-35,Secondary,Single,Employed / Self Employed,,Healthy,0,0,1,1,no,no,public,0,120.66666666666667,75.33333333333333,0
+female,>65,No School,Married,Unemployed,,Obese,0,0,0,1,unknown,no,public,0,151.33333333333334,75.66666666666667,1
+female,36-45,Primary,Single,Employed / Self Employed,,Overweight,0,0,1,1,no,no,public,0,120,75.33333333333333,0
+female,56-65,No School,Married,Unemployed,,Overweight,0,0,1,1,no,unknown,public,1,210,101.33333333333333,1
+male,26-35,Secondary,Married,Employed / Self Employed,,Overweight,0,0,1,1,unknown,unknown,public,0,183.66666666666666,105.66666666666667,1
+female,>65,No School,Married,Unemployed,,Healthy,0,0,0,0,no,unknown,public,0,84,52,0
+female,36-45,Secondary,Married,Employed / Self Employed,,Overweight,0,0,1,1,no,no,public,0,119,71.33333333333333,0
+female,56-65,Primary,Married,Employed / Self Employed,,Healthy,0,0,1,1,no,unknown,public,1,194.66666666666666,128,1
+female,36-45,Secondary,Married,Employed / Self Employed,,Obese,0,0,0,1,no,unknown,public,0,160,98,1
+female,56-65,Primary,Married,Unemployed,,Obese,0,0,1,0,no,unknown,public,0,165.33333333333334,111,1
+female,26-35,Secondary,Single,Employed / Self Employed,,Healthy,0,0,1,0,no,no,public,0,119,66,0
+female,36-45,Primary,Married,Unemployed,,Healthy,0,0,1,1,no,no,public,0,128,78.66666666666667,0
+female,26-35,Secondary,Married,Unemployed,,Healthy,0,0,1,1,no,no,public,0,122.33333333333333,72,0
+female,46-55,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,yes,public,1,173.33333333333334,102,1
+female,>65,No School,Others,Unemployed,"0  - 15,000",Underweight,0,0,0,0,unknown,unknown,public,0,115.66666666666667,70,0
+male,>65,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,yes,public,1,131,72,0
+male,26-35,Tertiary,Married,,"51,000 - 100,000",Obese,0,1,0,0,unknown,unknown,public,0,145,92.66666666666667,1
+female,36-45,No School,Married,Unemployed,"0  - 15,000",Overweight,0,0,0,0,unknown,unknown,public,0,127.33333333333333,76,0
+male,26-35,No School,Married,Employed / Self Employed,"0  - 15,000",Underweight,0,0,1,0,unknown,unknown,public,0,87.33333333333333,60.333333333333336,0
+female,26-35,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,unknown,unknown,public,0,101.66666666666667,77.33333333333333,0
+female,46-55,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,unknown,unknown,public,0,99.33333333333333,60.333333333333336,0
+male,36-45,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,0,unknown,unknown,public,0,99.66666666666667,74.66666666666667,0
+female,46-55,No School,Married,Unemployed,"0  - 15,000",Obese,0,0,0,0,unknown,unknown,public,0,103.66666666666667,72.66666666666667,0
+female,46-55,No School,Others,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,yes,public,1,144.33333333333334,82.66666666666667,1
+female,46-55,No School,Married,Unemployed,"0  - 15,000",Obese,0,0,0,0,unknown,unknown,public,0,124.66666666666667,84.33333333333333,0
+male,36-45,No School,Married,Unemployed,"0  - 15,000",Underweight,0,0,0,0,unknown,unknown,public,0,99,79.66666666666667,0
+male,56-65,Secondary,Married,Unemployed,"0  - 15,000",Overweight,0,0,1,1,unknown,unknown,public,0,118,77.33333333333333,0
+male,46-55,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,yes,public,1,146.33333333333334,87.66666666666667,1
+male,26-35,Tertiary,Single,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,unknown,public,0,107,82.66666666666667,0
+female,26-35,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,1,unknown,unknown,public,0,80.33333333333333,60.666666666666664,0
+male,26-35,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,unknown,unknown,public,0,90.33333333333333,70.33333333333333,0
+male,56-65,No School,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,0,unknown,yes,public,1,143.66666666666666,80.33333333333333,1
+female,56-65,No School,Married,Unemployed,"0  - 15,000",Obese,0,0,0,0,unknown,unknown,public,0,121,77.66666666666667,0
+female,26-35,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,100.66666666666667,62.333333333333336,0
+female,46-55,No School,Single,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,yes,public,1,128,76.66666666666667,0
+female,26-35,No School,Married,Unemployed,"0  - 15,000",Underweight,0,0,1,0,unknown,unknown,public,0,93,71.33333333333333,0
+male,36-45,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,1,1,1,1,unknown,unknown,public,0,111,68.33333333333333,0
+female,26-35,No School,Married,Unemployed,"0  - 15,000",,0,0,0,0,unknown,unknown,public,0,124.66666666666667,82.33333333333333,0
+female,26-35,Secondary,Single,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,1,no,no,public,0,116.66666666666667,69.33333333333333,0
+female,36-45,Secondary,Married,Employed / Self Employed,,Obese,0,0,1,0,no,no,public,1,123.66666666666667,76.33333333333333,0
+male,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,1,no,no,public,0,141,75.33333333333333,1
+male,56-65,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,no,no,public,1,124.66666666666667,67.33333333333333,0
+female,56-65,No School,Married,Employed / Self Employed,,Obese,0,0,1,0,no,no,public,0,149.66666666666666,86,1
+female,46-55,Secondary,Single,Unemployed,,Obese,0,0,1,1,no,no,public,0,123,81.66666666666667,0
+female,>65,Secondary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,1,130.66666666666666,60.666666666666664,0
+male,56-65,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,no,no,public,0,114.33333333333333,70.66666666666667,0
+female,56-65,No School,Married,Unemployed,"0  - 15,000",Overweight,0,0,1,0,no,no,public,1,126.66666666666667,83,0
+female,26-35,Primary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,0,115,73.33333333333333,0
+female,>65,No School,Married,Unemployed,,Overweight,0,0,1,0,no,no,public,1,170.33333333333334,97.66666666666667,1
+female,36-45,Secondary,Married,Employed / Self Employed,,Overweight,0,0,1,1,no,unknown,public,1,159,102,1
+female,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,1,1,no,no,public,0,133.33333333333334,82,0
+male,56-65,Secondary,Married,Employed / Self Employed,"Above 200,000",Overweight,1,0,1,1,no,no,public,0,137.33333333333334,82.33333333333333,0
+female,46-55,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,1,no,yes,public,1,162,91.33333333333333,1
+male,56-65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,1,no,no,public,0,137.66666666666666,92.33333333333333,1
+female,26-35,Primary,Single,Unemployed,"0  - 15,000",Underweight,0,0,0,1,no,unknown,public,0,113.66666666666667,77,0
+female,46-55,Primary,Married,Employed / Self Employed,,Overweight,0,0,0,1,no,no,public,0,111.33333333333333,70,0
+male,26-35,Secondary,Married,Employed / Self Employed,,Overweight,0,1,0,0,yes,unknown,public,1,140.66666666666666,86.33333333333333,1
+female,46-55,Secondary,Married,Employed / Self Employed,,Overweight,0,0,1,0,no,no,public,0,131.66666666666666,79,0
+female,46-55,Secondary,Married,Unemployed,,Obese,0,0,1,1,yes,unknown,public,1,127,85.66666666666667,0
+male,>65,,Single,Employed / Self Employed,"51,000 - 100,000",Underweight,0,0,1,1,no,no,faith,0,120,75.66666666666667,0
+male,>65,No School,Others,Retired,"16,000 - 50,000",Overweight,0,0,1,1,no,no,faith,0,141.66666666666666,62.666666666666664,1
+male,56-65,Primary,Married,Unemployed,"16,000 - 50,000",Overweight,0,1,0,1,no,no,faith,0,120,68,0
+female,>65,Secondary,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,1,no,no,faith,0,142.33333333333334,69,1
+female,>65,Tertiary,Married,Retired,"51,000 - 100,000",Obese,0,0,1,1,yes,yes,faith,1,140,73.66666666666667,0
+female,>65,No School,Others,Unemployed,"0  - 15,000",Overweight,0,0,0,0,no,yes,faith,1,108.66666666666667,67.66666666666667,0
+male,56-65,Secondary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,1,no,yes,faith,0,131,75,0
+male,>65,No School,Others,Unemployed,"0  - 15,000",Healthy,0,0,0,0,no,yes,faith,1,138.33333333333334,78.33333333333333,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Underweight,0,0,1,1,no,no,faith,0,123.33333333333333,65,0
+male,>65,Primary,Others,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,yes,faith,1,121.33333333333333,60,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,1,no,no,faith,0,147,74,1
+female,36-45,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,1,no,no,faith,0,129.66666666666666,80.33333333333333,0
+male,56-65,Secondary,Married,Unemployed,"51,000 - 100,000",Overweight,0,0,1,1,no,no,faith,0,113.66666666666667,71.33333333333333,0
+female,46-55,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,no,yes,faith,1,177.66666666666666,100,1
+female,>65,Secondary,Married,,"100,000 - 200,000",Overweight,0,0,1,1,no,unknown,faith,1,175.33333333333334,84,1
+female,>65,Secondary,Married,Retired,"16,000 - 50,000",Healthy,0,0,0,1,no,yes,faith,1,99.33333333333333,60.333333333333336,0
+male,>65,No School,Others,Retired,"0  - 15,000",Healthy,0,0,0,1,no,yes,faith,1,138.33333333333334,68.66666666666667,0
+male,56-65,Tertiary,Married,Retired,"51,000 - 100,000",Overweight,0,0,0,1,no,no,faith,0,129.33333333333334,70.33333333333333,0
+female,56-65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,unknown,no,public,0,146.33333333333334,101,1
+male,26-35,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,1,no,no,public,0,126,72,0
+male,46-55,Primary,Married,Unemployed,,Healthy,0,0,1,0,unknown,unknown,public,0,135.66666666666666,94,1
+female,26-35,Primary,Married,Employed / Self Employed,,Healthy,0,1,0,0,unknown,unknown,public,0,158.33333333333334,92,1
+female,56-65,Primary,Married,Unemployed,,Overweight,0,0,1,1,unknown,yes,public,1,164,85.33333333333333,1
+female,18-25,Tertiary,Married,Employed / Self Employed,"0  - 15,000",Underweight,0,0,1,1,no,no,public,0,107.66666666666667,66,0
+female,18-25,Tertiary,Single,Unemployed,,Healthy,0,0,1,1,no,no,public,0,118.66666666666667,73,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,0,no,no,public,0,120.33333333333333,69.33333333333333,0
+male,18-25,Secondary,Single,Unemployed,,Underweight,0,0,1,1,no,no,public,0,105.33333333333333,56,0
+male,26-35,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,no,no,public,1,145.33333333333334,90.33333333333333,1
+female,26-35,Primary,Married,Employed / Self Employed,"0  - 15,000",Underweight,0,0,1,1,no,no,public,0,152,102.66666666666667,1
+female,26-35,Primary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,0,1,no,no,public,0,137.66666666666666,85.33333333333333,0
+female,56-65,Primary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,0,124,76,0
+male,>65,Primary,Married,Retired,,Overweight,0,0,1,1,yes,no,public,0,113,63,0
+male,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Underweight,0,1,0,0,no,no,public,0,106,66,0
+female,36-45,Primary,Married,Employed / Self Employed,,Healthy,0,0,1,1,no,no,public,1,187.66666666666666,128,1
+female,36-45,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,0,no,no,public,0,95.33333333333333,62.333333333333336,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"Above 200,000",Obese,0,0,1,1,no,yes,public,1,161,103.66666666666667,1
+female,46-55,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,1,no,no,public,1,147,97,1
+male,56-65,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,0,unknown,no,public,1,164.33333333333334,100.66666666666667,1
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,unknown,unknown,public,0,107.66666666666667,75.66666666666667,0
+female,26-35,No School,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,0,unknown,unknown,public,0,109.33333333333333,80.66666666666667,0
+male,18-25,Tertiary,Single,Employed / Self Employed,"0  - 15,000",Underweight,0,0,1,0,no,no,public,0,120.66666666666667,66.33333333333333,0
+female,18-25,Primary,Married,Employed / Self Employed,"0  - 15,000",Underweight,0,0,1,0,no,no,public,0,120,79,0
+female,36-45,Primary,Married,Employed / Self Employed,,Overweight,0,0,1,0,no,no,public,0,110.33333333333333,73,0
+male,36-45,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Underweight,0,0,1,0,no,no,public,0,130,76.33333333333333,0
+male,56-65,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,119,65.33333333333333,0
+male,18-25,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,1,1,no,no,public,0,112.66666666666667,65.33333333333333,0
+male,>65,No School,Married,Unemployed,"0  - 15,000",Healthy,1,0,1,0,unknown,unknown,public,0,128.33333333333334,89,0
+female,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,1,no,no,public,0,96.33333333333333,61,0
+male,46-55,Tertiary,Married,Unemployed,"0  - 15,000",Healthy,1,1,1,1,unknown,unknown,public,0,99.66666666666667,81.66666666666667,0
+female,36-45,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,0,no,no,public,1,114,76.66666666666667,0
+female,36-45,Primary,Married,Unemployed,"0  - 15,000",Overweight,0,1,1,1,unknown,unknown,public,0,113.66666666666667,81.33333333333333,0
+female,>65,No School,Married,Unemployed,,Overweight,0,0,0,0,no,no,public,0,142.66666666666666,82.66666666666667,1
+female,>65,Primary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,149.33333333333334,79,1
+female,36-45,No School,Married,Unemployed,"0  - 15,000",Overweight,0,0,0,0,unknown,unknown,public,0,102.66666666666667,69,0
+male,26-35,No School,Single,Unemployed,"0  - 15,000",Healthy,0,0,1,1,unknown,unknown,public,0,118,84.33333333333333,0
+female,56-65,No School,Married,Unemployed,"0  - 15,000",Overweight,0,0,1,0,yes,unknown,public,0,105.33333333333333,81,0
+female,36-45,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,1,unknown,unknown,public,0,112.33333333333333,77.66666666666667,0
+female,36-45,No School,Married,Unemployed,"0  - 15,000",Overweight,0,0,1,1,unknown,unknown,public,0,115,87,0
+female,>65,No School,Married,Unemployed,"0  - 15,000",Underweight,0,0,0,0,unknown,unknown,public,0,115.66666666666667,76,0
+male,>65,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,117.33333333333333,72.66666666666667,0
+female,26-35,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,1,unknown,unknown,public,0,92,67,0
+female,26-35,No School,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,1,unknown,unknown,public,0,147,97,1
+male,36-45,Secondary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,149.33333333333334,109.33333333333333,1
+female,>65,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,127,83.66666666666667,0
+male,>65,No School,Others,Unemployed,"0  - 15,000",Healthy,0,0,1,1,unknown,unknown,public,0,128.33333333333334,61,0
+male,36-45,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,0,unknown,unknown,public,0,105.33333333333333,62.666666666666664,0
+female,26-35,No School,Married,Unemployed,"0  - 15,000",Obese,0,0,0,0,unknown,unknown,public,0,105,83.66666666666667,0
+male,18-25,Tertiary,Single,Unemployed,"0  - 15,000",Healthy,0,0,1,1,no,no,private,0,105,73,0
+female,56-65,Tertiary,Married,,,Healthy,0,0,0,1,no,yes,private,1,121.66666666666667,96,1
+female,46-55,Tertiary,Others,Employed / Self Employed,,Overweight,0,0,0,1,yes,no,private,0,103,73,0
+female,46-55,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,0,98.33333333333333,69,0
+male,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Obese,1,0,0,0,yes,no,private,0,114,76,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,1,no,no,private,0,121.33333333333333,75.66666666666667,0
+male,56-65,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,1,no,no,private,0,128,74,0
+male,18-25,Tertiary,Single,Unemployed,,Healthy,1,1,0,0,no,no,private,0,98.33333333333333,74,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,0,yes,no,private,0,130,76,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,1,no,no,private,0,104.66666666666667,70.66666666666667,0
+male,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,1,0,1,1,unknown,unknown,public,0,129,86,0
+female,36-45,No School,Married,Unemployed,"0  - 15,000",Overweight,0,0,0,0,unknown,unknown,public,0,119,80.33333333333333,0
+female,>65,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,120,69.33333333333333,0
+female,36-45,No School,Married,Unemployed,"0  - 15,000",Obese,0,0,0,1,unknown,unknown,public,0,104.33333333333333,83.66666666666667,0
+female,>65,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,unknown,public,0,98.66666666666667,78.66666666666667,0
+male,56-65,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,1,yes,unknown,public,0,120.66666666666667,78,0
+female,26-35,No School,Married,Unemployed,"0  - 15,000",Overweight,0,0,0,0,unknown,unknown,public,0,82.66666666666667,64,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,1,1,1,unknown,unknown,public,0,140.66666666666666,101,1
+male,46-55,No School,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,0,unknown,yes,public,1,175,97,1
+male,46-55,No School,Married,Unemployed,"0  - 15,000",Healthy,1,0,0,0,unknown,yes,public,1,144.66666666666666,109,1
+female,46-55,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,unknown,public,0,110.33333333333333,78,0
+male,>65,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,unknown,yes,public,1,151.33333333333334,87,1
+female,46-55,No School,Others,Unemployed,"0  - 15,000",Overweight,0,0,0,1,unknown,yes,public,1,119,84.33333333333333,0
+female,26-35,No School,Married,Unemployed,"0  - 15,000",Obese,0,0,1,0,unknown,unknown,public,0,92.33333333333333,68.33333333333333,0
+female,36-45,No School,Others,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,0,unknown,yes,public,1,141.33333333333334,81.66666666666667,1
+male,36-45,Primary,Married,Unemployed,"16,000 - 50,000",Obese,0,0,1,1,no,no,faith,0,142.33333333333334,88,1
+female,>65,No School,Others,Retired,"0  - 15,000",Healthy,0,0,0,0,no,yes,faith,1,147,84.66666666666667,1
+female,>65,Secondary,Married,Retired,,Overweight,0,0,1,1,no,yes,faith,1,139.33333333333334,80.66666666666667,0
+male,>65,Secondary,Others,Unemployed,,Obese,0,0,1,1,no,yes,faith,1,145,86.33333333333333,1
+female,46-55,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,1,1,no,yes,faith,1,127,94,1
+male,>65,Primary,Others,Retired,"16,000 - 50,000",Healthy,0,0,0,0,no,yes,faith,1,137,90.66666666666667,1
+male,>65,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,yes,public,1,113.33333333333333,84.33333333333333,0
+male,36-45,No School,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,0,unknown,unknown,public,0,105.33333333333333,67,0
+male,56-65,No School,Married,Unemployed,"0  - 15,000",Underweight,0,0,0,0,unknown,unknown,public,0,168,114.33333333333333,1
+female,26-35,No School,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,unknown,public,0,114.33333333333333,89.66666666666667,0
+male,>65,No School,Married,Unemployed,"0  - 15,000",Healthy,1,0,1,0,unknown,yes,public,1,138.66666666666666,81.33333333333333,0
+male,26-35,No School,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,0,yes,unknown,public,0,114.66666666666667,90,0
+male,>65,No School,Married,Unemployed,"0  - 15,000",Overweight,0,0,1,0,unknown,unknown,public,0,140.66666666666666,83.66666666666667,1
+male,56-65,No School,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,1,unknown,unknown,public,0,107.33333333333333,67,0
+male,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,0,no,no,faith,0,124,69,0
+male,,Secondary,Single,Unemployed,,Healthy,0,0,1,0,no,no,faith,0,114.66666666666667,62.666666666666664,0
+male,,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,faith,0,124.66666666666667,57.333333333333336,0
+male,>65,No School,Single,Retired,"0  - 15,000",Obese,0,0,0,0,no,no,faith,1,138,76.33333333333333,0
+male,>65,Primary,Others,Retired,"16,000 - 50,000",Overweight,0,0,0,1,yes,yes,faith,1,165.66666666666666,83,1
+male,56-65,Secondary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,1,1,no,yes,faith,1,163.33333333333334,92,1
+male,>65,Secondary,Married,Retired,"0  - 15,000",Healthy,0,0,0,1,no,yes,faith,1,139,82.33333333333333,0
+female,56-65,Tertiary,Married,Retired,"51,000 - 100,000",Obese,0,0,0,1,yes,yes,faith,1,176.66666666666666,83,1
+female,18-25,Secondary,Single,Unemployed,"0  - 15,000",Underweight,0,0,0,0,no,no,faith,0,125.66666666666667,64.33333333333333,0
+male,18-25,Secondary,Single,Unemployed,"0  - 15,000",Overweight,0,0,1,1,no,no,faith,0,129.33333333333334,66.33333333333333,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,no,no,public,0,113.33333333333333,66.66666666666667,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,0,no,no,public,0,115.33333333333333,69.66666666666667,0
+female,46-55,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,no,no,public,0,117,79,0
+male,26-35,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,1,1,1,1,no,no,public,1,139,101.66666666666667,1
+female,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,no,no,public,1,131.66666666666666,82,0
+female,26-35,Primary,Single,Unemployed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,0,150.33333333333334,103.33333333333333,1
+female,26-35,Secondary,Single,Unemployed,,Overweight,0,0,1,1,no,no,public,0,114,74.33333333333333,0
+female,18-25,Secondary,Single,Unemployed,,Underweight,0,0,1,0,unknown,no,public,0,121.33333333333333,72.66666666666667,0
+female,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,no,no,public,1,122.66666666666667,85,0
+female,36-45,Primary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,1,0,no,no,public,0,116.66666666666667,74.33333333333333,0
+female,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,0,no,no,public,1,138.33333333333334,88.66666666666667,0
+female,18-25,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,1,no,no,public,1,144,91.66666666666667,1
+female,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,1,no,no,public,1,152.33333333333334,96.66666666666667,1
+female,26-35,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,0,no,no,public,0,118.33333333333333,72.33333333333333,0
+female,26-35,Secondary,Single,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,no,no,public,0,115.66666666666667,81.33333333333333,0
+male,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,1,no,unknown,public,0,152.33333333333334,90,1
+male,36-45,Primary,Married,Employed / Self Employed,"0  - 15,000",Underweight,0,1,1,0,no,no,public,1,100,61.333333333333336,0
+male,18-25,Secondary,Single,Unemployed,,Healthy,0,0,1,0,no,no,public,0,127,75.33333333333333,0
+female,36-45,Secondary,Single,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,1,no,no,public,0,117,83.66666666666667,0
+female,18-25,Secondary,Single,Unemployed,,Healthy,0,0,1,0,no,no,public,0,113,74.33333333333333,0
+female,26-35,Secondary,Single,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,1,no,no,public,0,122.33333333333333,74.33333333333333,0
+female,26-35,Primary,Married,Unemployed,"0  - 15,000",Obese,0,0,1,1,no,no,public,0,118.66666666666667,79,0
+female,26-35,Secondary,Single,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,1,no,no,public,0,123,78.66666666666667,0
+female,36-45,Primary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,1,no,no,public,0,119.33333333333333,74.66666666666667,0
+male,36-45,Secondary,Single,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,0,no,no,public,0,153,82.33333333333333,1
+male,18-25,Secondary,Single,Unemployed,,Underweight,0,0,1,0,no,no,public,0,100.66666666666667,58.333333333333336,0
+female,26-35,Primary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,0,no,no,public,0,106.33333333333333,71.66666666666667,0
+female,56-65,Primary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,1,187.33333333333334,108.66666666666667,1
+male,56-65,Primary,Married,Unemployed,"0  - 15,000",Obese,0,0,1,0,no,no,public,1,121,84,0
+male,18-25,Secondary,Single,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,0,117,77,0
+female,36-45,Primary,Single,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,0,133.66666666666666,84.33333333333333,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,0,no,no,public,1,134.66666666666666,82,0
+female,56-65,Primary,Single,Unemployed,,Overweight,0,0,1,0,no,no,public,0,102,68.33333333333333,0
+male,>65,Primary,Married,Unemployed,,Underweight,1,0,1,0,no,no,public,0,133,70.66666666666667,0
+male,>65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,1,1,0,no,no,public,0,210,98.33333333333333,1
+female,56-65,Primary,Married,Unemployed,"0  - 15,000",Overweight,0,0,1,1,no,no,public,1,156.66666666666666,110.66666666666667,1
+female,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,1,yes,no,public,1,176,104.33333333333333,1
+female,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,0,no,no,public,0,122.33333333333333,91.66666666666667,1
+female,46-55,Primary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,0,no,no,public,1,205.33333333333334,116.33333333333333,1
+female,26-35,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,0,138.33333333333334,83.33333333333333,0
+female,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,0,112.33333333333333,74,0
+female,46-55,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,yes,unknown,public,1,114.66666666666667,79,0
+male,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,1,1,0,no,no,public,1,173.33333333333334,107,1
+female,26-35,Secondary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,0,116,74.66666666666667,0
+female,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,1,yes,no,public,0,104.66666666666667,72.33333333333333,0
+male,>65,Primary,Married,Retired,"0  - 15,000",Healthy,0,0,1,0,no,no,public,0,146.66666666666666,74,1
+female,36-45,Primary,Married,Unemployed,"0  - 15,000",Overweight,0,0,1,0,no,no,public,0,105.33333333333333,58.666666666666664,0
+male,>65,Primary,Married,Unemployed,"0  - 15,000",Underweight,0,0,1,1,no,no,public,0,140,89,0
+male,36-45,Primary,Married,Employed / Self Employed,"0  - 15,000",Underweight,0,0,1,1,no,no,public,0,131.33333333333334,91,1
+female,46-55,Primary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,0,97.33333333333333,66.66666666666667,0
+male,18-25,Primary,Single,Unemployed,,Underweight,0,0,1,0,no,no,public,0,110.66666666666667,73.66666666666667,0
+male,18-25,Secondary,Single,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,0,152,86.33333333333333,1
+female,>65,Primary,Married,Unemployed,"0  - 15,000",Obese,0,0,1,0,no,no,public,1,179.33333333333334,111,1
+male,26-35,Tertiary,Single,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,1,no,no,public,0,118.33333333333333,75,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,1,no,no,public,0,147.33333333333334,97.66666666666667,1
+male,18-25,Secondary,Single,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,1,no,no,public,0,123.66666666666667,73.66666666666667,0
+male,36-45,Primary,Married,Employed / Self Employed,"0  - 15,000",Underweight,0,0,1,0,no,no,public,0,87.33333333333333,56.666666666666664,0
+male,56-65,Secondary,Married,Retired,"0  - 15,000",Healthy,0,0,1,0,no,no,public,1,95.33333333333333,67.33333333333333,0
+female,56-65,Secondary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,0,113.66666666666667,63.666666666666664,0
+female,36-45,Primary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,1,no,no,public,0,119.66666666666667,87.66666666666667,0
+male,56-65,Secondary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,1,0,no,no,public,1,153,89,1
+female,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,0,no,no,public,0,137.33333333333334,84,0
+male,18-25,Secondary,Single,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,0,124.33333333333333,79.66666666666667,0
+male,>65,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,1,160.33333333333334,98.66666666666667,1
+male,>65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,0,130.33333333333334,79,0
+male,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,1,148.66666666666666,88.33333333333333,1
+female,56-65,Secondary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,0,128,77,0
+female,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,1,no,no,public,0,100.33333333333333,48,0
+male,>65,Primary,Married,Retired,"0  - 15,000",Healthy,0,0,1,0,no,no,public,1,141.33333333333334,78.33333333333333,1
+male,36-45,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,no,no,public,0,119.33333333333333,75.66666666666667,0
+female,36-45,Primary,Single,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,1,no,no,public,0,108.66666666666667,67,0
+male,18-25,Tertiary,Single,Employed / Self Employed,"0  - 15,000",Underweight,0,0,1,1,no,no,public,0,103.66666666666667,64.33333333333333,0
+male,26-35,Primary,Single,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,no,no,public,0,121.33333333333333,71,0
+female,46-55,Primary,Married,Unemployed,"0  - 15,000",Overweight,0,0,1,1,no,no,public,0,128.66666666666666,78.33333333333333,0
+male,26-35,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,1,1,no,no,public,0,129.66666666666666,85,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,1,1,yes,no,faith,0,119.33333333333333,74.33333333333333,0
+female,>65,No School,Others,Retired,"0  - 15,000",Healthy,0,0,0,1,yes,yes,faith,1,97.66666666666667,56,0
+male,>65,Primary,Others,Unemployed,"0  - 15,000",Healthy,0,1,0,0,no,yes,faith,1,145,81,1
+female,56-65,Secondary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,1,0,no,yes,faith,1,121,81.33333333333333,0
+male,>65,Tertiary,Married,Retired,"16,000 - 50,000",Healthy,0,0,0,1,yes,yes,faith,1,151,82.33333333333333,1
+female,36-45,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,no,no,faith,0,121.66666666666667,72,0
+female,56-65,Primary,Married,Retired,,Healthy,0,0,0,1,yes,unknown,faith,1,146.66666666666666,87.33333333333333,1
+male,36-45,Tertiary,Single,Employed / Self Employed,,Overweight,0,1,0,0,unknown,unknown,faith,1,144.66666666666666,94,1
+female,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,1,no,unknown,faith,0,130.66666666666666,88,0
+female,36-45,Secondary,Married,Unemployed,,Obese,0,0,0,0,no,unknown,faith,0,121.33333333333333,74.66666666666667,0
+female,>65,Primary,Married,Retired,,Obese,0,0,0,0,no,unknown,faith,1,140,95.33333333333333,1
+male,36-45,Primary,Married,Employed / Self Employed,,Overweight,1,0,0,0,no,no,faith,0,105,82,0
+male,>65,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,1,1,0,0,unknown,unknown,faith,0,143.66666666666666,94,1
+female,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,no,no,faith,0,132,85,0
+male,>65,Primary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,0,no,unknown,faith,0,132.33333333333334,81.33333333333333,0
+female,56-65,Primary,Married,Unemployed,,Obese,0,0,0,0,no,unknown,faith,1,120.66666666666667,73,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,0,no,no,faith,1,147.66666666666666,87,1
+female,56-65,Secondary,Married,Retired,"51,000 - 100,000",Healthy,0,0,1,0,no,yes,faith,1,139.66666666666666,81.33333333333333,0
+male,>65,No School,Others,Retired,"0  - 15,000",Obese,0,0,0,0,no,yes,faith,1,126,61,0
+male,56-65,Secondary,Married,Retired,,Healthy,0,0,1,1,no,yes,faith,1,119,71.33333333333333,0
+male,18-25,Tertiary,Single,Unemployed,"0  - 15,000",Underweight,0,0,1,1,no,no,faith,0,106.33333333333333,46.666666666666664,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,1,0,no,yes,faith,1,128.33333333333334,76.33333333333333,0
+male,18-25,Secondary,Single,Unemployed,"0  - 15,000",Underweight,0,0,1,1,no,no,faith,0,113,62.666666666666664,0
+female,>65,Tertiary,Married,Retired,"51,000 - 100,000",Healthy,0,0,1,1,no,yes,faith,1,136.66666666666666,72.66666666666667,0
+female,>65,Primary,Others,Retired,"0  - 15,000",Overweight,0,0,0,0,no,yes,faith,1,145.33333333333334,92.33333333333333,1
+male,26-35,Secondary,Married,Unemployed,"16,000 - 50,000",Healthy,0,0,1,1,no,yes,faith,1,115.66666666666667,58.666666666666664,0
+male,>65,Secondary,Others,Retired,"0  - 15,000",Overweight,0,0,0,0,no,yes,faith,1,169,80,1
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,no,yes,faith,0,109.33333333333333,65.66666666666667,0
+female,>65,No School,Others,Unemployed,"0  - 15,000",Overweight,0,0,0,0,no,yes,faith,1,187,99.33333333333333,1
+female,18-25,Tertiary,Single,Unemployed,"16,000 - 50,000",Overweight,0,0,1,1,no,no,faith,0,133,77,0
+male,>65,Secondary,Married,Unemployed,"16,000 - 50,000",Healthy,0,0,0,0,no,yes,faith,1,133,69,0
+male,46-55,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,1,0,0,0,yes,no,faith,1,124.33333333333333,87.33333333333333,0
+female,46-55,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,0,0,1,no,unknown,faith,1,159.33333333333334,89.66666666666667,1
+male,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,yes,no,faith,0,117.33333333333333,80.33333333333333,0
+male,46-55,Secondary,Married,Unemployed,,Overweight,1,0,0,0,no,unknown,faith,1,217.33333333333334,127.66666666666667,1
+female,46-55,Primary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,0,no,unknown,faith,0,133.66666666666666,95.66666666666667,1
+female,46-55,Secondary,Married,Employed / Self Employed,"0  - 15,000",,0,0,0,0,no,unknown,faith,1,218.33333333333334,124.33333333333333,1
+female,46-55,Primary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,0,no,no,faith,0,128.66666666666666,82,0
+female,56-65,Primary,Married,Unemployed,,Overweight,0,0,0,1,yes,unknown,faith,0,129,94,1
+female,56-65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,0,unknown,unknown,faith,0,136.66666666666666,90,0
+female,56-65,Primary,Married,Retired,,Obese,0,0,0,0,no,no,faith,1,118.33333333333333,91,1
+female,18-25,Tertiary,Single,Unemployed,,Overweight,0,0,0,0,no,no,private,0,111.66666666666667,65.66666666666667,0
+female,56-65,Secondary,Married,Employed / Self Employed,"0  - 15,000",Overweight,0,1,1,0,no,no,public,0,124.33333333333333,80.66666666666667,0
+male,36-45,Primary,Married,Employed / Self Employed,,Overweight,0,0,1,0,no,no,public,0,119,50.333333333333336,0
+female,46-55,Tertiary,Married,Unemployed,,Overweight,0,0,1,0,yes,yes,private,1,124,91.33333333333333,1
+female,26-35,Tertiary,Single,Unemployed,,Underweight,0,0,1,0,no,no,private,0,106,68.33333333333333,0
+female,26-35,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,0,no,yes,public,1,138.33333333333334,94.66666666666667,1
+female,>65,Primary,Married,Employed / Self Employed,"0  - 15,000",Healthy,0,0,0,0,no,no,public,1,153,94.66666666666667,1
+female,56-65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,0,no,no,public,0,123.66666666666667,78.66666666666667,0
+female,46-55,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,0,no,no,public,0,134.66666666666666,72.33333333333333,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,0,no,no,private,1,185.33333333333334,113.33333333333333,1
+male,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,0,no,no,private,1,165,109.66666666666667,1
+male,56-65,Tertiary,Married,Retired,"100,000 - 200,000",Overweight,0,0,1,0,no,no,private,1,122,77.66666666666667,0
+female,56-65,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,yes,no,public,1,172,91.33333333333333,1
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,yes,no,public,0,122,80.66666666666667,0
+female,26-35,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,0,no,no,public,0,108,71.33333333333333,0
+female,56-65,Secondary,Others,Employed / Self Employed,"0  - 15,000",Healthy,0,0,1,0,yes,no,public,1,176,67.66666666666667,1
+female,,Primary,Single,Employed / Self Employed,"Above 200,000",Overweight,0,0,1,1,yes,no,public,0,114.66666666666667,64.66666666666667,0
+male,>65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,1,0,yes,no,public,1,144.33333333333334,93.33333333333333,1
+female,56-65,Tertiary,Others,Retired,"16,000 - 50,000",Obese,0,0,0,1,no,no,public,0,139.66666666666666,81.66666666666667,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,1,0,no,unknown,public,0,111,66,0
+female,>65,Primary,Others,Retired,,Obese,0,0,0,0,no,yes,public,1,171.33333333333334,92.33333333333333,1
+female,>65,Primary,Married,Retired,,Overweight,0,0,0,0,yes,no,public,1,138.66666666666666,80.33333333333333,0
+female,26-35,Tertiary,Married,Employed / Self Employed,,Obese,0,1,1,0,no,no,public,0,117.33333333333333,77.66666666666667,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,1,yes,no,public,0,123.66666666666667,78,0
+male,>65,Secondary,Married,Retired,,Healthy,1,1,1,0,yes,no,public,0,149,75.33333333333333,1
+female,26-35,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,0,yes,no,public,0,114.66666666666667,70,0
+female,56-65,Tertiary,Married,Retired,,Obese,0,0,1,1,yes,no,public,1,140,73,0
+male,>65,Tertiary,Married,Employed / Self Employed,,Overweight,0,1,0,0,yes,no,public,1,138,79.33333333333333,0
+female,56-65,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,0,no,unknown,private,1,124.33333333333333,68.33333333333333,0
+male,46-55,Secondary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,1,0,0,yes,no,public,1,159.33333333333334,94,1
+male,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,0,no,no,private,1,141.33333333333334,87.66666666666667,1
+male,56-65,Tertiary,Married,Retired,"Above 200,000",Overweight,1,1,1,0,no,no,public,0,171,134.66666666666666,1
+female,56-65,Secondary,Married,Unemployed,,Overweight,1,0,1,0,no,no,public,1,152,63.333333333333336,1
+male,26-35,Tertiary,Single,Employed / Self Employed,,Underweight,1,1,0,0,no,no,public,0,128.66666666666666,83.66666666666667,0
+male,56-65,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,0,no,no,public,0,158.33333333333334,103,1
+female,56-65,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,0,yes,unknown,private,1,156.66666666666666,105.33333333333333,1
+female,>65,Primary,Married,Employed / Self Employed,,Obese,0,0,0,0,no,yes,public,1,109,72,0
+male,46-55,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,0,0,no,no,public,0,136.66666666666666,93.66666666666667,1
+female,46-55,Secondary,Married,Employed / Self Employed,,Obese,0,0,0,0,no,no,public,0,148,83.66666666666667,1
+male,46-55,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,1,1,0,no,no,public,1,148,97,1
+female,36-45,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,no,no,private,0,144,87.33333333333333,1
+female,26-35,Secondary,Married,Employed / Self Employed,,Overweight,0,0,0,0,no,no,public,0,136.33333333333334,76.66666666666667,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,1,0,yes,unknown,private,1,132,90.66666666666667,1
+male,56-65,Primary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,no,no,public,1,139,80.33333333333333,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,0,no,no,public,0,110.33333333333333,74.66666666666667,0
+female,26-35,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Obese,0,1,0,0,no,no,public,0,120,73,0
+male,46-55,Primary,Married,Unemployed,,Underweight,1,1,0,0,no,no,public,0,90.33333333333333,60.666666666666664,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,1,0,0,no,no,public,0,110.33333333333333,73.33333333333333,0
+male,>65,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,0,no,no,public,0,107.33333333333333,68.33333333333333,0
+male,26-35,Tertiary,Married,Employed / Self Employed,,Healthy,0,1,0,0,no,no,public,0,115.66666666666667,80,0
+male,36-45,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,1,0,no,no,public,0,97.33333333333333,64,0
+male,36-45,Secondary,Married,Employed / Self Employed,,Overweight,0,0,0,0,no,no,public,0,148,94,1
+male,36-45,Secondary,Married,Employed / Self Employed,,Overweight,0,0,0,0,no,no,public,0,135,76.33333333333333,0
+female,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,0,no,no,public,0,122.33333333333333,74,0
+male,26-35,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,0,no,no,public,1,129.66666666666666,76,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,0,no,no,public,1,140.66666666666666,91.33333333333333,1
+female,56-65,Secondary,Married,Unemployed,,Obese,0,0,0,0,no,no,public,1,158.66666666666666,87,1
+female,46-55,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,no,no,private,0,110.66666666666667,73,0
+female,46-55,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,0,yes,unknown,private,1,125,79.33333333333333,0
+male,56-65,Secondary,Married,Retired,"16,000 - 50,000",Overweight,0,0,0,0,yes,yes,private,0,121.66666666666667,77,0
+female,46-55,Secondary,Married,Unemployed,,Healthy,0,0,0,0,no,no,private,0,138.33333333333334,80.33333333333333,0
+male,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,0,no,no,private,0,117,74,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,no,no,public,0,145,104,1
+female,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,0,no,no,public,0,148,82.66666666666667,1
+female,56-65,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,0,no,no,public,0,115.33333333333333,73.66666666666667,0
+female,46-55,No School,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,1,0,no,no,private,1,142.33333333333334,86.66666666666667,1
+male,>65,Primary,Married,Retired,"16,000 - 50,000",Healthy,0,0,0,1,no,yes,faith,1,168.66666666666666,84.66666666666667,1
+female,56-65,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,1,no,yes,faith,1,139.33333333333334,77,0
+female,36-45,Secondary,Married,Employed / Self Employed,"0  - 15,000",Obese,0,0,0,0,yes,no,private,1,164.33333333333334,85.66666666666667,1
+female,26-35,,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,no,no,faith,0,115.33333333333333,71,0
+female,46-55,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,1,no,yes,faith,0,125.33333333333333,68.33333333333333,0
+male,46-55,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,no,no,faith,0,117.33333333333333,70,0
+male,56-65,Tertiary,Married,Retired,"51,000 - 100,000",Healthy,0,0,1,1,no,yes,faith,0,147.33333333333334,89.66666666666667,1
+female,>65,Secondary,Married,Unemployed,"16,000 - 50,000",Healthy,0,0,1,1,no,yes,faith,1,170.66666666666666,84.33333333333333,1
+male,56-65,Secondary,Married,Retired,"16,000 - 50,000",Overweight,0,0,1,0,unknown,no,private,1,128,74,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"Above 200,000",Obese,0,0,1,1,no,no,private,0,128.33333333333334,79.33333333333333,0
+female,56-65,Secondary,Married,Unemployed,,Obese,0,0,0,0,no,no,public,1,141.66666666666666,75.66666666666667,1
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,no,no,public,0,96,64,0
+female,56-65,Secondary,Married,Unemployed,,Healthy,0,0,0,0,no,no,public,0,120,71.66666666666667,0
+female,56-65,Secondary,Others,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,0,no,no,public,0,123.66666666666667,69,0
+male,>65,Tertiary,Married,Retired,,Healthy,0,0,1,0,no,yes,private,0,135.33333333333334,71.66666666666667,0
+male,56-65,Secondary,Married,Employed / Self Employed,,Underweight,1,0,0,0,no,no,public,0,84,49.666666666666664,0
+female,46-55,Secondary,Married,Employed / Self Employed,,Obese,0,0,0,0,no,no,public,0,120.66666666666667,71,0
+male,56-65,Tertiary,Married,Retired,,Overweight,0,0,0,0,no,no,public,1,132,71.33333333333333,0
+female,56-65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,0,yes,no,public,1,99.66666666666667,57,0
+female,26-35,Secondary,Single,Employed / Self Employed,,Overweight,0,0,0,0,no,no,public,0,128.33333333333334,78.66666666666667,0
+female,26-35,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,0,no,no,public,0,103,58.666666666666664,0
+female,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,no,no,public,1,143.66666666666666,77,1
+female,36-45,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,0,0,no,no,public,0,115.66666666666667,69.66666666666667,0
+male,18-25,Tertiary,Single,Unemployed,,Healthy,0,0,0,0,no,no,public,0,113.33333333333333,65.66666666666667,0
+female,46-55,Secondary,Married,Employed / Self Employed,,Obese,0,0,0,0,no,no,public,0,120.66666666666667,58.666666666666664,0
+male,56-65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,no,yes,faith,1,138.33333333333334,69,0
+female,46-55,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,0,no,no,public,0,128.66666666666666,76,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,0,no,no,public,0,97.33333333333333,52.666666666666664,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,0,no,no,private,1,122.33333333333333,77.66666666666667,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,0,no,no,public,0,137.33333333333334,70.33333333333333,0
+female,,Primary,Married,Unemployed,"0  - 15,000",Overweight,1,0,0,1,no,no,public,0,131,71.66666666666667,0
+male,36-45,Secondary,Married,Employed / Self Employed,,Healthy,0,1,1,0,no,no,public,0,111.66666666666667,67,0
+female,46-55,Primary,Married,Unemployed,"0  - 15,000",Obese,0,0,0,0,no,yes,public,0,138.33333333333334,79.33333333333333,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,0,no,no,public,0,106,65,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,,0,0,0,0,no,no,private,1,146.33333333333334,92.66666666666667,1
+male,46-55,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,0,no,no,public,0,107.66666666666667,76.33333333333333,0
+male,>65,No School,Others,Unemployed,"0  - 15,000",Obese,0,0,0,0,no,no,public,0,154.33333333333334,75.33333333333333,1
+female,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,no,no,public,1,109,69,0
+female,18-25,Tertiary,Single,Unemployed,,Obese,1,0,1,1,no,no,public,0,115,62,0
+male,26-35,Secondary,Single,Unemployed,"0  - 15,000",Healthy,0,0,0,0,no,no,public,0,96.66666666666667,58.333333333333336,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,0,0,0,no,no,private,0,139.33333333333334,87.33333333333333,0
+female,46-55,Secondary,Married,Employed / Self Employed,,Obese,0,0,0,0,no,no,public,0,109,69.66666666666667,0
+male,56-65,Secondary,Married,Employed / Self Employed,,Underweight,1,1,0,0,no,no,public,0,162,87,1
+male,56-65,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,0,no,no,public,0,111.66666666666667,78.33333333333333,0
+female,56-65,Tertiary,Others,Employed / Self Employed,"Above 200,000",Obese,0,0,0,0,no,no,private,1,121.66666666666667,76,0
+female,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,1,no,yes,private,1,141.33333333333334,80.66666666666667,1
+male,26-35,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,0,no,no,private,0,159.33333333333334,97,1
+female,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,1,0,no,yes,faith,1,136,91.33333333333333,1
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,0,no,yes,faith,1,139.66666666666666,101,1
+female,26-35,Secondary,Married,Unemployed,"16,000 - 50,000",Overweight,0,0,0,1,unknown,no,faith,0,131,79.33333333333333,0
+male,26-35,Secondary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,1,no,no,faith,0,133.66666666666666,63.666666666666664,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,0,no,no,private,0,104.66666666666667,62.666666666666664,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,1,no,no,private,0,146.33333333333334,86.66666666666667,1
+female,>65,Tertiary,Married,Retired,,Overweight,0,0,0,1,no,no,private,0,130.66666666666666,83.33333333333333,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"Above 200,000",Overweight,0,0,0,1,no,no,private,1,138,80,0
+male,18-25,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,0,0,no,no,private,0,99.66666666666667,59.333333333333336,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"Above 200,000",Overweight,0,0,0,1,no,no,private,0,125.33333333333333,72,0
+female,36-45,Secondary,Married,Unemployed,,Healthy,0,0,0,1,no,no,private,0,106,62,0
+male,56-65,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,1,yes,no,private,0,130.66666666666666,84,0
+male,18-25,Tertiary,Single,Unemployed,,Healthy,0,0,0,1,no,no,private,0,101.33333333333333,68,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,1,no,no,private,0,107.33333333333333,69.33333333333333,0
+male,18-25,Secondary,Single,Unemployed,,Healthy,0,1,0,0,no,no,private,0,97.66666666666667,64,0
+female,46-55,Secondary,Married,Retired,,Overweight,0,0,0,0,no,no,private,0,124.66666666666667,67.33333333333333,0
+male,56-65,Tertiary,Married,Retired,"51,000 - 100,000",Obese,0,0,0,0,no,no,private,1,162,81.66666666666667,1
+male,56-65,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,0,no,no,private,1,132.66666666666666,84,0
+female,56-65,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,1,0,yes,no,private,1,155,94,1
+female,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,1,yes,unknown,private,1,109.66666666666667,68.33333333333333,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"Above 200,000",Obese,0,0,1,0,yes,no,private,0,173.33333333333334,111,1
+female,18-25,Secondary,Single,Unemployed,,Healthy,0,0,0,0,no,no,private,0,122.33333333333333,62.666666666666664,0
+female,>65,Secondary,Married,Retired,"0  - 15,000",Overweight,0,0,1,1,no,no,private,1,132.33333333333334,77.33333333333333,0
+female,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,no,no,private,0,128.66666666666666,72,0
+female,26-35,Secondary,Single,Employed / Self Employed,"Above 200,000",Healthy,0,0,1,1,no,no,private,0,100.66666666666667,57.333333333333336,0
+male,18-25,Tertiary,Single,Employed / Self Employed,"100,000 - 200,000",Healthy,0,1,0,1,no,no,private,0,121,82.33333333333333,0
+male,56-65,Secondary,Married,Retired,"51,000 - 100,000",Healthy,0,0,1,1,yes,yes,faith,1,151,89,1
+male,>65,Primary,Married,Unemployed,"16,000 - 50,000",Healthy,0,0,0,1,no,yes,faith,1,118,75,0
+male,,Secondary,Single,Unemployed,,Overweight,0,0,1,1,no,yes,faith,1,145.66666666666666,78.66666666666667,1
+male,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,1,1,no,yes,faith,1,133.33333333333334,80,0
+male,36-45,Primary,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,0,yes,yes,faith,1,115,60.333333333333336,0
+male,26-35,Secondary,Married,Unemployed,"16,000 - 50,000",Healthy,0,0,1,1,no,yes,faith,1,158.66666666666666,90,1
+female,46-55,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,1,1,no,yes,faith,1,127.66666666666667,81.66666666666667,0
+female,36-45,Secondary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,1,no,yes,faith,0,91.66666666666667,70,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,0,no,no,faith,0,119,64.66666666666667,0
+male,>65,Primary,Others,Unemployed,"0  - 15,000",Healthy,0,0,0,0,unknown,yes,faith,1,163,99,1
+female,36-45,Tertiary,Married,Unemployed,,Overweight,0,0,0,1,no,no,private,0,116,59.666666666666664,0
+male,56-65,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,yes,unknown,faith,0,139.33333333333334,69.33333333333333,0
+male,26-35,Secondary,Married,Unemployed,"0  - 15,000",Healthy,0,0,1,1,no,no,faith,0,126.66666666666667,70.33333333333333,0
+male,56-65,Primary,Married,Unemployed,,Healthy,0,0,1,1,no,no,faith,0,100.33333333333333,68,0
+female,36-45,Primary,Married,Unemployed,,Healthy,0,0,0,1,no,no,faith,0,137,76.33333333333333,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"Above 200,000",Obese,0,0,1,1,no,no,faith,0,127.33333333333333,68,0
+female,18-25,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,1,no,no,private,0,107.33333333333333,66,0
+female,18-25,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,97,72.33333333333333,0
+female,46-55,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,0,no,no,private,1,165.33333333333334,82,1
+male,46-55,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,0,no,no,private,1,132.33333333333334,81.66666666666667,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"Above 200,000",Overweight,0,0,1,0,no,no,private,1,113.33333333333333,70.66666666666667,0
+female,18-25,Secondary,Single,Unemployed,,Healthy,0,0,0,0,no,no,private,0,120.33333333333333,70.66666666666667,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,0,1,no,no,private,0,109.33333333333333,80,0
+male,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Healthy,0,1,0,1,no,no,private,0,126,74,0
+male,36-45,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,1,1,no,no,private,0,126.66666666666667,78.66666666666667,0
+female,18-25,Tertiary,Single,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,1,no,no,private,0,100.33333333333333,59,0
+,46-55,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,0,no,yes,faith,1,144.33333333333334,77.33333333333333,1
+male,26-35,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,1,1,no,no,faith,0,117,70.66666666666667,0
+female,26-35,Tertiary,Married,Employed / Self Employed,,Obese,0,0,1,0,no,no,private,1,114.66666666666667,73.66666666666667,0
+female,56-65,Secondary,Married,Unemployed,,Healthy,0,0,0,0,no,no,faith,0,113.33333333333333,69.33333333333333,0
+female,>65,Primary,Married,Unemployed,"0  - 15,000",Overweight,0,0,0,1,no,yes,faith,1,173.33333333333334,82.66666666666667,1
+male,36-45,Primary,Married,Unemployed,"0  - 15,000",Overweight,0,0,1,0,no,yes,faith,1,147.66666666666666,90,1
+male,>65,Tertiary,Married,Retired,,Obese,0,0,0,1,no,no,private,1,147.33333333333334,93.33333333333333,1
+male,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,1,no,no,private,0,101.66666666666667,75.66666666666667,0
+male,46-55,Secondary,Married,Retired,,Healthy,0,0,0,0,no,no,private,0,97.33333333333333,75.33333333333333,0
+female,56-65,Tertiary,,Retired,,Healthy,0,0,0,1,no,no,private,1,106,66.33333333333333,0
+male,36-45,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,1,no,no,private,0,120.66666666666667,71,0
+female,>65,Tertiary,Married,Retired,"51,000 - 100,000",Overweight,0,0,0,1,no,no,private,0,100.33333333333333,69.33333333333333,0
+female,56-65,Secondary,Married,Retired,,Overweight,0,0,0,1,no,no,private,0,130,88.33333333333333,0
+male,56-65,Tertiary,Married,Retired,"100,000 - 200,000",Overweight,0,0,0,0,no,no,private,0,103.33333333333333,57.333333333333336,0
+male,46-55,Tertiary,Married,Employed / Self Employed,"Above 200,000",Healthy,0,0,0,1,no,no,private,0,131,71,0
+male,>65,No School,Married,Retired,,Obese,0,0,0,0,no,yes,faith,1,132.66666666666666,68.33333333333333,0
+female,46-55,Secondary,Married,Unemployed,,Overweight,0,0,0,1,no,yes,faith,1,133,70.33333333333333,0
+male,46-55,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,0,0,no,yes,faith,1,116.33333333333333,68.66666666666667,0
+male,>65,Secondary,Others,Unemployed,,Overweight,0,0,0,0,no,no,faith,1,138,94.66666666666667,1
+male,46-55,Secondary,Married,Unemployed,"0  - 15,000",Overweight,0,0,0,0,no,yes,faith,1,124,73.66666666666667,0
+female,18-25,Tertiary,Married,Unemployed,,Healthy,1,0,0,1,no,no,public,1,141.66666666666666,96.66666666666667,1
+female,>65,Primary,Single,Unemployed,,Healthy,0,0,0,0,yes,no,public,0,141.66666666666666,69,1
+male,46-55,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,0,yes,no,public,1,140.33333333333334,81.33333333333333,1
+female,56-65,Primary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,yes,yes,private,1,153,76,1
+male,46-55,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,yes,no,public,0,147.66666666666666,102,1
+female,56-65,Tertiary,Married,Unemployed,,Obese,0,0,0,0,no,no,public,1,123.33333333333333,77.33333333333333,0
+female,46-55,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,1,1,0,no,no,public,0,154.33333333333334,93.66666666666667,1
+female,46-55,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,0,no,no,public,1,171,69.66666666666667,1
+male,56-65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Overweight,0,0,1,1,yes,no,public,1,130.33333333333334,76.66666666666667,0
+female,>65,Secondary,Single,Unemployed,,Obese,0,0,0,0,no,no,public,1,120.33333333333333,62.333333333333336,0
+male,>65,Secondary,Married,Retired,,Overweight,0,0,0,0,no,no,public,1,145.33333333333334,83.66666666666667,1
+male,>65,Tertiary,Married,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,0,0,no,no,public,0,149,93.66666666666667,1
+female,>65,Secondary,Single,Employed / Self Employed,,Overweight,0,0,0,0,no,no,public,1,122.33333333333333,62.333333333333336,0
+male,>65,Secondary,Married,Employed / Self Employed,,Healthy,0,0,0,1,no,no,public,1,166,81,1
+female,46-55,Secondary,Single,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,0,yes,no,public,1,129,81.66666666666667,0
+female,56-65,Primary,Married,Employed / Self Employed,,Overweight,0,0,0,0,yes,no,public,1,155.66666666666666,67.66666666666667,1
+female,36-45,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,no,no,public,0,108.33333333333333,65,0
+female,>65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,yes,no,public,1,164,97,1
+female,56-65,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,1,0,no,no,public,0,117,73.33333333333333,0
+female,46-55,Secondary,Married,Employed / Self Employed,,Obese,0,0,0,0,yes,no,public,0,111.33333333333333,65.66666666666667,0
+male,>65,Secondary,Married,Unemployed,"0  - 15,000",Healthy,0,0,0,0,no,no,public,1,135,66.66666666666667,0
+female,56-65,Secondary,Married,Employed / Self Employed,"16,000 - 50,000",Obese,0,0,0,0,no,no,public,0,117.66666666666667,68.66666666666667,0
+female,18-25,Tertiary,Single,Employed / Self Employed,"16,000 - 50,000",Healthy,0,0,1,1,yes,no,public,0,111.66666666666667,71.66666666666667,0
+male,26-35,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Healthy,0,0,0,0,no,no,public,0,112,73.66666666666667,0
+female,>65,Tertiary,Married,Employed / Self Employed,"51,000 - 100,000",Obese,0,0,0,0,yes,no,public,1,152.66666666666666,62.666666666666664,1
+female,36-45,Secondary,Married,Employed / Self Employed,"51,000 - 100,000",Overweight,0,0,0,0,no,no,public,0,93.33333333333333,65.33333333333333,0
+female,56-65,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Overweight,0,0,1,0,yes,no,public,0,143.66666666666666,81.33333333333333,1
+male,36-45,Tertiary,Others,Employed / Self Employed,,Obese,0,0,0,0,no,no,private,0,125.66666666666667,90.66666666666667,1
+male,26-35,Tertiary,Single,Employed / Self Employed,,Overweight,0,0,1,1,no,no,private,0,109.66666666666667,74.66666666666667,0
+female,26-35,,Married,Employed / Self Employed,,Obese,0,0,0,0,no,no,private,0,106.66666666666667,76.33333333333333,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,1,0,no,no,private,0,132,82.66666666666667,0
+male,26-35,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,0,143,94,1
+female,46-55,,Others,Employed / Self Employed,,Obese,0,0,0,1,no,no,private,0,121.33333333333333,77,0
+female,26-35,,Married,Employed / Self Employed,,Obese,0,0,0,1,no,no,private,0,130.66666666666666,84.66666666666667,0
+female,46-55,Secondary,Married,Employed / Self Employed,,Obese,0,0,0,0,no,no,private,0,119.33333333333333,77.66666666666667,0
+female,26-35,,Single,Employed / Self Employed,,Healthy,0,0,0,0,no,no,private,0,127.33333333333333,85.33333333333333,0
+male,36-45,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,0,0,no,no,private,0,124.33333333333333,83,0
+female,26-35,Tertiary,Single,Employed / Self Employed,,Overweight,0,0,0,0,no,no,private,0,130,86.66666666666667,0
+male,26-35,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,1,0,no,no,private,0,108.33333333333333,72.66666666666667,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,,0,0,1,1,no,no,private,0,102.66666666666667,59.666666666666664,0
+male,46-55,,Married,Employed / Self Employed,,Obese,0,0,1,1,no,no,private,0,144.33333333333334,95.66666666666667,1
+male,46-55,Tertiary,Single,Employed / Self Employed,,Overweight,0,0,0,0,no,no,private,0,133,88.66666666666667,0
+male,18-25,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,1,1,no,no,private,0,128,66.33333333333333,0
+male,36-45,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,121,88.66666666666667,0
+female,26-35,Tertiary,Single,Employed / Self Employed,,Obese,0,0,0,1,no,no,private,0,112,72,0
+male,26-35,Tertiary,Married,Employed / Self Employed,,Overweight,1,0,0,1,no,no,private,0,128.66666666666666,85.33333333333333,0
+female,26-35,,Single,Employed / Self Employed,,Obese,0,0,0,0,no,no,private,1,155.33333333333334,98,1
+female,18-25,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,1,0,no,no,private,0,107.33333333333333,67.33333333333333,0
+female,26-35,,Married,Employed / Self Employed,,Obese,0,0,0,1,no,no,private,0,131,93.66666666666667,1
+female,26-35,,Single,Unemployed,,Obese,0,0,0,0,no,no,private,0,129.66666666666666,94.33333333333333,1
+female,36-45,,Married,Employed / Self Employed,,Overweight,0,0,1,1,no,no,private,0,131.66666666666666,94.66666666666667,1
+female,26-35,,Others,Employed / Self Employed,,Obese,0,0,0,1,no,no,private,0,116,76.33333333333333,0
+male,36-45,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,1,1,no,no,private,0,121.33333333333333,76.66666666666667,0
+female,26-35,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,0,0,no,no,private,0,117,82.33333333333333,0
+male,36-45,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,1,1,no,no,private,0,131.33333333333334,90.66666666666667,1
+male,36-45,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,1,no,no,private,0,144.33333333333334,91.33333333333333,1
+female,36-45,Tertiary,Married,Employed / Self Employed,"100,000 - 200,000",Obese,0,0,0,1,no,no,private,1,139,103.33333333333333,1
+female,26-35,Tertiary,Single,Employed / Self Employed,,Obese,0,0,1,0,no,no,private,0,133,89,0
+male,>65,Secondary,Married,Retired,"100,000 - 200,000",Overweight,0,0,1,1,yes,yes,private,1,139,67.33333333333333,0
+male,26-35,Tertiary,Single,Employed / Self Employed,,Overweight,0,0,0,0,no,no,private,0,135.66666666666666,90.33333333333333,1
+female,26-35,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,1,0,no,no,private,0,112.33333333333333,78.33333333333333,0
+male,26-35,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,1,0,no,no,private,0,96.33333333333333,71.33333333333333,0
+female,36-45,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,141.66666666666666,99.33333333333333,1
+male,>65,Secondary,Married,Retired,,Overweight,0,0,0,1,no,no,private,0,149,94,1
+male,46-55,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,1,1,yes,no,private,1,117.33333333333333,81,0
+male,26-35,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,0,0,no,no,private,0,122.33333333333333,78.33333333333333,0
+female,18-25,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,121.33333333333333,80.66666666666667,0
+male,46-55,,Married,Employed / Self Employed,,Underweight,0,0,0,1,no,no,private,0,130.33333333333334,86.33333333333333,0
+female,26-35,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,1,no,no,private,0,118.66666666666667,87.33333333333333,0
+male,26-35,Tertiary,Single,Employed / Self Employed,,Overweight,0,0,0,0,no,no,private,0,131.66666666666666,85,0
+female,26-35,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,1,1,no,no,private,0,115.66666666666667,80.33333333333333,0
+female,26-35,,Single,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,137.33333333333334,96.66666666666667,1
+female,56-65,Tertiary,Married,Retired,,Overweight,0,0,1,1,no,no,private,0,123.66666666666667,75.33333333333333,0
+female,46-55,Tertiary,Others,Employed / Self Employed,,Overweight,0,0,1,1,no,no,private,1,98,68.66666666666667,0
+female,36-45,Secondary,Single,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,0,133.66666666666666,91.66666666666667,1
+male,36-45,Tertiary,Single,Employed / Self Employed,,Overweight,0,0,0,0,no,no,private,0,120.66666666666667,74.33333333333333,0
+female,56-65,,Married,Retired,,Obese,0,0,0,0,no,no,private,0,111,70.66666666666667,0
+female,26-35,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,0,0,no,no,private,0,104,61.666666666666664,0
+female,>65,Tertiary,Married,Retired,,Obese,0,0,1,1,yes,yes,private,1,131,66.66666666666667,0
+male,26-35,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,124,83.33333333333333,0
+male,26-35,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,1,1,no,no,private,0,134,89.66666666666667,0
+female,46-55,Tertiary,Married,Employed / Self Employed,,Obese,0,0,1,1,no,no,private,0,116,79.33333333333333,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,1,no,no,private,1,130.33333333333334,84.33333333333333,0
+male,36-45,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,0,no,no,private,0,113,65.66666666666667,0
+male,36-45,,Others,Employed / Self Employed,,,0,0,1,1,no,no,private,0,115.66666666666667,81,0
+male,36-45,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,0,no,no,private,0,118.33333333333333,84.33333333333333,0
+male,46-55,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,1,0,no,no,private,0,91.33333333333333,55,0
+male,36-45,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,1,0,yes,no,private,1,123.33333333333333,88.33333333333333,0
+female,26-35,Tertiary,Married,Employed / Self Employed,,Obese,0,0,1,1,no,no,private,0,128,91,1
+male,26-35,,Single,Employed / Self Employed,,Overweight,0,0,0,0,no,no,private,0,127,90.66666666666667,1
+female,26-35,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,0,110.33333333333333,68.33333333333333,0
+female,56-65,Primary,Married,Unemployed,,Obese,0,0,0,0,no,no,private,1,163.33333333333334,78.66666666666667,1
+male,46-55,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,1,no,no,private,0,137.66666666666666,93.33333333333333,1
+female,36-45,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,114.33333333333333,75.33333333333333,0
+female,56-65,Tertiary,Others,Retired,,Obese,0,0,1,1,no,no,private,1,134,80.33333333333333,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,0,no,no,private,0,132.66666666666666,94,1
+female,36-45,Tertiary,Others,Employed / Self Employed,,Overweight,0,0,1,0,no,no,private,0,129.66666666666666,79.66666666666667,0
+female,26-35,Tertiary,Single,Unemployed,"0  - 15,000",Overweight,0,0,1,1,no,no,private,0,132.33333333333334,98,1
+female,46-55,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,0,no,no,private,0,118,79.66666666666667,0
+female,36-45,Secondary,Married,Unemployed,,Obese,0,0,1,0,no,no,private,0,129,91,1
+female,46-55,,Others,Employed / Self Employed,,Obese,0,0,0,1,no,no,private,1,109.33333333333333,72,0
+female,>65,Secondary,Married,Retired,,Overweight,0,0,0,1,no,no,private,1,135.33333333333334,73,0
+male,26-35,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,1,1,no,no,private,0,133,90,0
+female,36-45,Tertiary,Others,Employed / Self Employed,,Obese,0,0,0,0,no,no,private,0,115,81.33333333333333,0
+female,36-45,Tertiary,Married,Employed / Self Employed,,Obese,0,0,1,0,no,no,private,0,135,85,0
+female,46-55,Secondary,Married,Unemployed,,Overweight,0,0,0,1,no,no,private,0,119.33333333333333,69,0
+female,46-55,Tertiary,Married,Employed / Self Employed,,,0,0,1,1,no,yes,private,0,119.33333333333333,80,0
+female,46-55,Tertiary,Married,Employed / Self Employed,,Obese,0,0,1,1,no,no,private,0,119,72.66666666666667,0
+female,56-65,Tertiary,Married,Employed / Self Employed,,,0,0,0,1,no,no,private,0,139,82.33333333333333,0
+male,36-45,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,118.66666666666667,79.66666666666667,0
+female,46-55,Tertiary,Single,Employed / Self Employed,,,0,0,0,1,unknown,no,private,0,124.66666666666667,87,0
+female,26-35,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,0,1,no,no,private,0,106.66666666666667,75,0
+female,36-45,,,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,0,124.33333333333333,88.66666666666667,0
+female,56-65,Tertiary,Single,Retired,,Healthy,0,0,1,1,yes,no,private,1,126.33333333333333,78.66666666666667,0
+female,26-35,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,0,no,no,private,0,115,73.66666666666667,0
+male,>65,Secondary,Married,Employed / Self Employed,,Healthy,0,0,0,0,no,no,private,0,151.33333333333334,91,1
+male,36-45,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,1,0,no,no,private,0,131.33333333333334,72,0
+female,46-55,Tertiary,Married,Employed / Self Employed,,Obese,0,0,1,1,yes,no,private,1,130.33333333333334,87.33333333333333,0
+male,26-35,Tertiary,Married,Employed / Self Employed,,Healthy,0,0,1,1,no,no,private,0,130.33333333333334,72.66666666666667,0
+female,26-35,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,1,no,no,private,0,106.66666666666667,65.66666666666667,0
+female,>65,Tertiary,Married,Retired,,Obese,0,0,1,1,yes,no,private,1,146,81,1
+female,46-55,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,1,no,no,private,0,128.33333333333334,83.66666666666667,0
+female,26-35,Tertiary,Single,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,0,132.66666666666666,83.66666666666667,0
+female,36-45,,Married,Employed / Self Employed,,,0,0,1,0,no,no,private,0,121.33333333333333,75,0
+female,46-55,Tertiary,Single,Employed / Self Employed,,Healthy,0,0,1,1,no,no,private,0,120.66666666666667,78,0
+female,46-55,Tertiary,Married,Employed / Self Employed,,Overweight,0,0,0,1,no,no,private,0,136,82,0
+female,>65,,Married,Retired,,Overweight,0,0,0,1,yes,no,private,1,138.66666666666666,68.33333333333333,0
+female,26-35,Primary,Married,Unemployed,,Healthy,0,0,0,0,no,no,private,0,119.33333333333333,77.33333333333333,0
+male,56-65,Secondary,Married,Employed / Self Employed,,Overweight,0,0,1,1,no,no,private,0,102.66666666666667,72,0
+female,46-55,Tertiary,Married,Employed / Self Employed,,Obese,0,0,0,1,no,no,private,0,160,111,1

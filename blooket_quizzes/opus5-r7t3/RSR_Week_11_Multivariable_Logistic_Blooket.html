@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RSR Week 11 Blooket candidates: multivariable logistic regression</title>
+<style>
+  :root {
+    --teal: #0f766e;
+    --teal-soft: #e3f4f2;
+    --gold: #f5c542;
+    --ink: #16242b;
+    --muted: #5d7475;
+    --line: #d3dfe0;
+    --page: #f4f7f7;
+    --good: #0b6b3a;
+    --good-bg: #e8f7ee;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+  .shell { width: min(940px, calc(100vw - 2rem)); margin: 0 auto; padding: 1.5rem 0 4rem; }
+
+  header.masthead {
+    background: var(--teal);
+    color: #fff;
+    border-radius: 8px;
+    border-left: 7px solid var(--gold);
+    padding: 1.3rem 1.5rem;
+    margin-bottom: 1.1rem;
+  }
+  .eyebrow {
+    color: var(--gold);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+  header.masthead h1 { margin: 0; font-size: 1.5rem; line-height: 1.15; }
+  header.masthead p { margin: 0.5rem 0 0; color: #d5eeeb; font-size: 0.95rem; max-width: 68ch; }
+
+  .howto {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--gold);
+    border-radius: 6px;
+    padding: 0.85rem 1.1rem;
+    margin-bottom: 1.4rem;
+    font-size: 0.9rem;
+  }
+  .howto ul { margin: 0.5rem 0 0; padding-left: 1.1rem; }
+  .howto li { margin-bottom: 0.25rem; }
+
+  h2.section {
+    color: var(--teal);
+    font-size: 1.1rem;
+    border-bottom: 2px solid var(--gold);
+    padding-bottom: 0.35rem;
+    margin: 2rem 0 0.9rem;
+  }
+  h2.section span.count { color: var(--muted); font-weight: 400; font-size: 0.85rem; }
+
+  .q {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 0.8rem;
+    page-break-inside: avoid;
+  }
+  .q-head { display: flex; gap: 0.6rem; align-items: baseline; }
+  .qnum {
+    background: var(--teal);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.78rem;
+    border-radius: 4px;
+    padding: 0.1rem 0.45rem;
+    flex: none;
+  }
+  .stem { font-weight: 600; }
+  .tag {
+    display: inline-block;
+    background: var(--teal-soft);
+    color: var(--teal);
+    border: 1px solid #b9dedb;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.05rem 0.4rem;
+    margin-left: 0.35rem;
+    vertical-align: 2px;
+  }
+  code { font-family: "SF Mono", Consolas, Menlo, monospace; font-size: 0.88em; background: #eef3f3; padding: 0.05em 0.3em; border-radius: 3px; }
+
+  .figure { margin: 0.7rem 0 0.2rem; }
+  .figure img { max-width: 100%; border: 1px solid var(--line); border-radius: 5px; display: block; }
+  .figure .cap { color: var(--muted); font-size: 0.78rem; margin-top: 0.25rem; font-family: "SF Mono", Consolas, Menlo, monospace; }
+
+  ol.opts { list-style: none; margin: 0.7rem 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem 0.8rem; }
+  ol.opts li { border: 1px solid var(--line); border-radius: 5px; padding: 0.35rem 0.6rem; font-size: 0.92rem; }
+  ol.opts li.correct { background: var(--good-bg); border-color: #9ed3b4; font-weight: 600; color: var(--good); }
+  ol.opts li.correct::after { content: " \2714"; font-weight: 700; }
+  ol.opts li .letter { color: var(--muted); font-weight: 700; margin-right: 0.3rem; }
+  ol.opts li.correct .letter { color: var(--good); }
+
+  .why { margin: 0.6rem 0 0; font-size: 0.85rem; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 0.45rem; }
+  .why b { color: var(--ink); }
+
+  @media (max-width: 620px) { ol.opts { grid-template-columns: 1fr; } }
+  @media print {
+    body { background: #fff; font-size: 10.5pt; }
+    .shell { width: auto; padding: 0; }
+    .q { border-color: #bbb; }
+    .figure img { max-width: 92mm; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<header class="masthead">
+  <div class="eyebrow">Blooket candidates &middot; draft opus5-r7t3</div>
+  <h1>RSR Week 11: multivariable logistic regression</h1>
+  <p>Twenty candidate questions. Section A reviews the pre-work on likelihood, deviance and AIC. Sections B and C set up the workshop: fitting and interpreting a multivariable logistic model, and checking it. Pick around ten to twelve for the live game.</p>
+</header>
+
+<div class="howto">
+  <b>Notes for building the Blooket</b>
+  <ul>
+    <li>Questions marked <span class="tag">image</span> need a picture uploaded. The files sit in the <code>images/</code> folder beside this page, and the filename is printed under each one.</li>
+    <li>Correct answers are shaded green. Blooket allows up to four options, and every question here fits.</li>
+    <li>The grey line under some questions is a talking point for you after the reveal, not part of the question.</li>
+  </ul>
+</div>
+
+<h2 class="section">Section A: pre-work review <span class="count">likelihood, deviance and AIC &middot; 7 questions</span></h2>
+
+<div class="q">
+  <div class="q-head"><span class="qnum">1</span><span class="stem">A logistic model's log-likelihood is a score for how well the model matches the data. Which direction means a better fit?</span></div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> Higher (less negative) is better</li>
+    <li><span class="letter">b)</span> Lower (more negative) is better</li>
+    <li><span class="letter">c)</span> Closest to zero from either side is better</li>
+    <li><span class="letter">d)</span> It does not indicate fit, only sample size</li>
+  </ol>
+</div>
+
+<div class="q">
+  <div class="q-head"><span class="qnum">2</span><span class="stem"><code>logLik()</code> returns &minus;1727.6 for a model. What is that model's deviance?</span></div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> 3455.1</li>
+    <li><span class="letter">b)</span> &minus;3455.1</li>
+    <li><span class="letter">c)</span> 1727.6</li>
+    <li><span class="letter">d)</span> &minus;863.8</li>
+  </ol>
+  <p class="why"><b>Deviance = &minus;2 &times; log-likelihood.</b> The sign flips, so lower deviance means higher likelihood means better fit.</p>
+</div>
+
+<div class="q">
+  <div class="q-head"><span class="qnum">3</span><span class="stem">In a <code>glm()</code> summary, the "Null deviance" line describes which model?</span></div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> The intercept-only model, <code>y ~ 1</code></li>
+    <li><span class="letter">b)</span> The model you actually fitted</li>
+    <li><span class="letter">c)</span> A model with all possible predictors</li>
+    <li><span class="letter">d)</span> A model fitted to a null hypothesis dataset</li>
+  </ol>
+</div>
+
+<div class="q">
+  <div class="q-head"><span class="qnum">4</span><span class="stem">Why can you not choose between two models just by picking the lower residual deviance?</span></div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> Adding predictors almost always lowers it, even useless ones</li>
+    <li><span class="letter">b)</span> Residual deviance can be negative</li>
+    <li><span class="letter">c)</span> It only works for linear models</li>
+    <li><span class="letter">d)</span> It ignores the outcome variable</li>
+  </ol>
+</div>
+
+<div class="q">
+  <div class="q-head"><span class="qnum">5</span><span class="stem">A model has residual deviance 305.2 and estimates 10 parameters. What is its AIC?</span></div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> 325.2</li>
+    <li><span class="letter">b)</span> 315.2</li>
+    <li><span class="letter">c)</span> 610.4</li>
+    <li><span class="letter">d)</span> 30.5</li>
+  </ol>
+  <p class="why"><b>AIC = residual deviance + 2k</b>, so 305.2 + 20 = 325.2. This is the actual multivariable model we fit in the workshop.</p>
+</div>
+
+<div class="q">
+  <div class="q-head"><span class="qnum">6</span><span class="stem">Your model has an AIC of 322. On its own, what does that number tell you?</span></div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> Nothing. Only differences between models are meaningful</li>
+    <li><span class="letter">b)</span> The model fits well, since it is under 500</li>
+    <li><span class="letter">c)</span> The model fits badly, since it is over 100</li>
+    <li><span class="letter">d)</span> 32.2% of variation is explained</li>
+  </ol>
+  <p class="why">And those differences only mean something when the models share the same outcome and the <b>same rows</b>. Watch for this when a predictor has missing values.</p>
+</div>
+
+<div class="q">
+  <div class="q-head"><span class="qnum">7</span><span class="stem">You are unsure how to enter a continuous predictor. What is the better strategy?</span></div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> Compare a few forms supported by theory or prior studies</li>
+    <li><span class="letter">b)</span> Try every form you can think of and report the lowest AIC</li>
+    <li><span class="letter">c)</span> Always use the most flexible form available</li>
+    <li><span class="letter">d)</span> Always split it into equal-width groups</li>
+  </ol>
+</div>
+
+<h2 class="section">Section B: fitting and reading a multivariable model <span class="count">5 questions</span></h2>
+
+<div class="q">
+  <div class="q-head"><span class="qnum">8</span><span class="stem">Which line fits a multivariable logistic model of mortality on age and TBSA?</span></div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> <code>glm(mortality ~ age + tbsa, family = binomial, data = burns)</code></li>
+    <li><span class="letter">b)</span> <code>glm(mortality ~ age, tbsa, family = binomial, data = burns)</code></li>
+    <li><span class="letter">c)</span> <code>lm(mortality ~ age + tbsa, data = burns)</code></li>
+    <li><span class="letter">d)</span> <code>glm(age + tbsa ~ mortality, family = binomial, data = burns)</code></li>
+  </ol>
+</div>
+
+<div class="q">
+  <div class="q-head"><span class="qnum">9</span><span class="stem">An <b>adjusted</b> odds ratio from a multivariable model describes the change in odds per one unit of that predictor while:</span></div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> Holding the other predictors in the model constant</li>
+    <li><span class="letter">b)</span> Averaging over every possible value of the other predictors</li>
+    <li><span class="letter">c)</span> Removing all confounding, known and unknown</li>
+    <li><span class="letter">d)</span> Setting the other predictors to their sample maximum</li>
+  </ol>
+</div>
+
+<div class="q">
+  <div class="q-head"><span class="qnum">10</span><span class="stem">Your model used 676 patients. You add carboxyhemoglobin, which is missing for 93 of them, and now <code>nobs()</code> returns 583. Why?</span></div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> <code>glm()</code> drops any row missing a value in the formula</li>
+    <li><span class="letter">b)</span> <code>glm()</code> takes a random subsample when a model gets large</li>
+    <li><span class="letter">c)</span> Carboxyhemoglobin was read in as a factor</li>
+    <li><span class="letter">d)</span> The extra predictor used up 93 degrees of freedom</li>
+  </ol>
+  <p class="why">This is why an AIC comparison needs a check that the candidate models used the same rows.</p>
+</div>
+
+<div class="q">
+  <div class="q-head">
+    <span class="qnum">11</span>
+    <span class="stem">PF ratio &lt;100 has an unadjusted OR of 2.77 but an adjusted OR of 1.43, with a CI that now crosses 1. What is the best explanation?<span class="tag">image</span></span>
+  </div>
+  <div class="figure">
+    <img src="images/kim_table2.png" alt="Table 2 from Kim et al. 2017">
+    <div class="cap">images/kim_table2.png</div>
+  </div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> Other predictors in the model explain the same patients</li>
+    <li><span class="letter">b)</span> The unadjusted odds ratio was calculated incorrectly</li>
+    <li><span class="letter">c)</span> The sample size increased when predictors were added</li>
+    <li><span class="letter">d)</span> Odds ratios always shrink towards 1 in larger models</li>
+  </ol>
+  <p class="why">Low PF ratio travels with large burns and inhalation injury. Once those are in the model, little signal is left for PF ratio alone.</p>
+</div>
+
+<div class="q">
+  <div class="q-head"><span class="qnum">12</span><span class="stem">Inhalation injury has four levels: Normal, Subjective, Upper, Lower. How many coefficients does it contribute to the model?</span></div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> 3, one comparison against the reference level</li>
+    <li><span class="letter">b)</span> 4, one per level</li>
+    <li><span class="letter">c)</span> 1, a single slope across the four levels</li>
+    <li><span class="letter">d)</span> 6, one for every pair of levels</li>
+  </ol>
+</div>
+
+<h2 class="section">Section C: checking a logistic model <span class="count">6 questions</span></h2>
+
+<div class="q">
+  <div class="q-head">
+    <span class="qnum">13</span>
+    <span class="stem">Which SUNSHINE check carries no meaning for a logistic regression?<span class="tag">image</span></span>
+  </div>
+  <div class="figure">
+    <img src="images/sunshine_checks_linear.png" alt="SUNSHINE checks for linear regression">
+    <div class="cap">images/sunshine_checks_linear.png &middot; the <b>linear</b> version on purpose, so the answer is not printed on the slide. The logistic version is also in the folder for the reveal.</div>
+  </div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> Homogeneity of variance</li>
+    <li><span class="letter">b)</span> No multicollinearity</li>
+    <li><span class="letter">c)</span> Influential points</li>
+    <li><span class="letter">d)</span> Sample size</li>
+  </ol>
+  <p class="why">For a 0/1 outcome the variance is fixed at <code>p(1 - p)</code>, so it is <i>supposed</i> to change with the fitted probability. There is nothing to check.</p>
+</div>
+
+<div class="q">
+  <div class="q-head"><span class="qnum">14</span><span class="stem">You run <code>check_normality()</code> on a logistic model. What happens?</span></div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> It refuses, and points you to <code>simulate_residuals()</code> and <code>check_residuals()</code></li>
+    <li><span class="letter">b)</span> It reports severe non-normality, so the model must be refitted</li>
+    <li><span class="letter">c)</span> It reports normality, confirming the model is fine</li>
+    <li><span class="letter">d)</span> It errors out because the outcome is a factor</li>
+  </ol>
+  <p class="why">Residuals of a two-valued outcome cannot be normal. The replacement check asks whether <b>quantile residuals are uniform</b>.</p>
+</div>
+
+<div class="q">
+  <div class="q-head">
+    <span class="qnum">15</span>
+    <span class="stem">In this <code>check_model()</code> output, the bottom panel compares the quantile residuals against which distribution?<span class="tag">image</span></span>
+  </div>
+  <div class="figure">
+    <img src="images/check_model_logistic.png" alt="check_model output for a logistic regression">
+    <div class="cap">images/check_model_logistic.png</div>
+  </div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> Uniform</li>
+    <li><span class="letter">b)</span> Normal</li>
+    <li><span class="letter">c)</span> Binomial</li>
+    <li><span class="letter">d)</span> Chi-squared</li>
+  </ol>
+  <p class="why">Read the axis label out loud: "Standard Uniform Distribution Quantiles". This is the panel people mistake for a normality check.</p>
+</div>
+
+<div class="q">
+  <div class="q-head">
+    <span class="qnum">16</span>
+    <span class="stem">The same output has a "Binned Residuals" panel. What are the bins made of?<span class="tag">image</span></span>
+  </div>
+  <div class="figure">
+    <img src="images/check_model_logistic.png" alt="check_model output for a logistic regression">
+    <div class="cap">images/check_model_logistic.png &middot; same picture as question 15</div>
+  </div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> Groups of patients with similar fitted probabilities</li>
+    <li><span class="letter">b)</span> Groups of patients with similar ages</li>
+    <li><span class="letter">c)</span> The levels of each categorical predictor</li>
+    <li><span class="letter">d)</span> Random samples of equal size</li>
+  </ol>
+  <p class="why">Individual 0/1 residuals are useless to look at, so we average them within bins. Here only about half the bins stay inside the bounds, which is the weakest part of our model.</p>
+</div>
+
+<div class="q">
+  <div class="q-head">
+    <span class="qnum">17</span>
+    <span class="stem">This plot bins age, calculates the observed log odds of mortality in each band, and adds a straight line. Which assumption is it checking?<span class="tag">image</span></span>
+  </div>
+  <div class="figure">
+    <img src="images/empirical_logit_age.png" alt="Observed log odds of mortality by age band">
+    <div class="cap">images/empirical_logit_age.png</div>
+  </div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> That the model is linear in the log odds</li>
+    <li><span class="letter">b)</span> That residuals are normally distributed</li>
+    <li><span class="letter">c)</span> That residual variance is constant</li>
+    <li><span class="letter">d)</span> That age and mortality are uncorrelated</li>
+  </ol>
+  <p class="why">Ask them where the points miss. The three youngest bands are flat and then the climb starts, which is the hint that a curve might fit better.</p>
+</div>
+
+<div class="q">
+  <div class="q-head">
+    <span class="qnum">18</span>
+    <span class="stem">Three ways of entering age into the same model. Which form produced the green staircase?<span class="tag">image</span></span>
+  </div>
+  <div class="figure">
+    <img src="images/functional_forms_age.png" alt="Fitted log odds and probability for three functional forms of age">
+    <div class="cap">images/functional_forms_age.png &middot; crop the legend before uploading if you want it harder</div>
+  </div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> Age cut into bands</li>
+    <li><span class="letter">b)</span> Age plus an age-squared term</li>
+    <li><span class="letter">c)</span> Age as a continuous linear term</li>
+    <li><span class="letter">d)</span> Age removed from the model</li>
+  </ol>
+  <p class="why">A banded model gives every patient in a band the same fitted value, so the curve can only move in steps.</p>
+</div>
+
+<h2 class="section">Spares, if you want a harder finish</h2>
+
+<div class="q">
+  <div class="q-head"><span class="qnum">19</span><span class="stem">For logistic regression, the sample-size rule of thumb counts what per parameter?</span></div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> At least 10 <b>events</b> per parameter</li>
+    <li><span class="letter">b)</span> At least 10 observations per parameter</li>
+    <li><span class="letter">c)</span> At least 30 observations in total</li>
+    <li><span class="letter">d)</span> At least 10 predictors per event</li>
+  </ol>
+  <p class="why">A model can only learn about mortality from the patients who died, so the rarer outcome is the binding constraint.</p>
+</div>
+
+<div class="q">
+  <div class="q-head"><span class="qnum">20</span><span class="stem">Comparing three forms of age in the same model: linear AIC 325.2, bands AIC 322.0, quadratic AIC 320.7. What is the fair conclusion?</span></div>
+  <ol class="opts">
+    <li class="correct"><span class="letter">a)</span> The quadratic fits best, but the gain over linear is modest</li>
+    <li><span class="letter">b)</span> The quadratic is decisively correct and must be reported</li>
+    <li><span class="letter">c)</span> The three models are indistinguishable</li>
+    <li><span class="letter">d)</span> The linear model is best because its AIC is largest</li>
+  </ol>
+  <p class="why">A gap of 4.5 is worth noticing, not worth overturning a form the literature already uses. Report the comparison either way.</p>
+</div>
+
+</div>
+</body>
+</html>

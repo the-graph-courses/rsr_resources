@@ -1,0 +1,24 @@
+variable,description,type,values,pct_complete
+id,Participant identifier,identifier,912 distinct values,100.0
+sex,Sex,categorical,"male (592), female (320)",100.0
+age_yrs,Age in years,continuous,median 52 | range 24 to 84,100.0
+bmi,Body mass index (kg/m2),continuous,median 22.84 | range 14.69 to 49.92,100.0
+systolic_bp,Systolic blood pressure (mmHg),continuous,median 119.5 | range 84.5 to 190.5,100.0
+diastolic_bp,Diastolic blood pressure (mmHg),continuous,median 75.5 | range 46.5 to 116,100.0
+smoking_status,Smoking status,categorical,"never (461), former (254), current (197)",100.0
+alcohol_g_per_week,Alcohol intake (g/week),continuous,median 4.2 | range 0 to 952,98.6
+regular_exercise,Takes regular exercise (1 = yes),binary 0/1,"1 = 177 (19.8%), 0 = 719",98.2
+ast,Aspartate aminotransferase (liver enzyme),continuous,median 19 | range 8 to 109,100.0
+alt,Alanine aminotransferase (liver enzyme),continuous,median 19 | range 6 to 148,100.0
+ggt,"Gamma-glutamyltranspeptidase (raw, strongly right-skewed)",continuous,median 19 | range 6 to 274,100.0
+log2_ggt,Gamma-GT on a log2 scale (use this one in models),continuous,median 4.25 | range 2.58 to 8.1,100.0
+fasting_glucose,Fasting blood glucose,continuous,median 96 | range 72 to 335,100.0
+uric_acid,Serum uric acid,continuous,median 5.25 | range 2 to 9.8,100.0
+total_cholesterol,Total cholesterol,continuous,median 208 | range 117 to 341,99.7
+triglycerides,Triglycerides,continuous,"median 81 | range 12 to 1,125",100.0
+hdl_cholesterol,HDL cholesterol,continuous,median 52 | range 23.7 to 108.5,100.0
+ldl_cholesterol,LDL cholesterol,continuous,median 126 | range 44 to 233,100.0
+egfr,Estimated glomerular filtration rate (kidney function),continuous,median 69.29 | range 39 to 122.28,100.0
+fatty_liver,Fatty liver on ultrasound (1 = yes),binary 0/1,"1 = 265 (29.1%), 0 = 646",99.9
+abi_max,"Ankle-brachial index, maximum of the two legs",continuous,median 1.19 | range 0.99 to 1.45,96.1
+pwv_max,Brachial-ankle pulse-wave velocity (cm/s) - higher = stiffer arteries,continuous,"median 1,371 | range 852 to 3,255",100.0
