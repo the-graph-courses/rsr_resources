@@ -21,6 +21,9 @@ h1{margin:0 0 7px;font-size:clamp(2rem,4vw,3.15rem);line-height:1.02;letter-spac
 .guidance strong{color:var(--ink)}
 .guidance p{margin:0 0 7px}.guidance p:last-child{margin-bottom:0}
 .guidance code{font-family:"SFMono-Regular",Consolas,monospace;font-size:.8rem;color:var(--ink)}
+.guidance pre{display:inline-block;margin:0 0 7px;padding:6px 9px;background:var(--white);border:1px solid var(--line);border-radius:6px;overflow-x:auto;line-height:1.4}
+.guidance pre code{font-size:.72rem;color:var(--ink)}
+.guidance pre .code-comment{color:var(--muted)}
 .guidance .notes-title{font-size:.92rem}
 .notes-list{margin:0 0 7px;padding-left:19px}.notes-list li{margin:0 0 4px}.notes-list li:last-child{margin-bottom:0}
 .heading-row{margin:18px 0 9px}
@@ -75,7 +78,13 @@ footer{padding:18px 0;border-top:1px solid var(--line);background:var(--white);c
       <li>You have both a continuous variable and the categorised version of the same thing. For example, do not use <code>systolic_bp</code> to predict <code>hypertension</code>, because they are the same measurement.</li>
     </ul>
 
-    <p><strong>Missing data.</strong> Because you are not expected to impute missing values, rows with missing values will be dropped when you run your regressions. Keep this in mind when using variables that have a lot of missing values, especially in multivariable regressions, where the losses add up across predictors.</p>
+    <p><strong>Missing data.</strong> Because you are not expected to impute missing values, any row that has a missing value for your outcome or for any of your predictors will be excluded from the model. Keep this in mind when using variables that have a lot of missing values, especially in multivariable regressions, where the losses add up across predictors.</p>
+
+    <p>In practice, we recommend that you select the variables you will be analysing, then drop the rows with missing values in those variables before fitting any models, as explained in <a href="https://www.youtube.com/watch?v=w6m7OAMZAzk" target="_blank" rel="noreferrer">this video</a>. For example:</p>
+
+    <pre><code>model_data &lt;- raw_data %&gt;%
+  select(anemia, age, sex) %&gt;%  <span class="code-comment"># your outcome and predictors</span>
+  drop_na()  <span class="code-comment"># remove rows with missing values</span></code></pre>
   </div>
 
   <div class="table-shell"><table>

@@ -21,6 +21,11 @@ h1{margin:0 0 7px;font-size:clamp(2rem,4vw,3.15rem);line-height:1.02;letter-spac
 .guidance strong{color:var(--ink)}
 .guidance p{margin:0 0 7px}.guidance p:last-child{margin-bottom:0}
 .guidance code{font-family:"SFMono-Regular",Consolas,monospace;font-size:.8rem;color:var(--ink)}
+.guidance pre{display:inline-block;margin:0 0 7px;padding:6px 9px;background:var(--white);border:1px solid var(--line);border-radius:6px;overflow-x:auto;line-height:1.4}
+.guidance pre code{font-size:.72rem;color:var(--ink)}
+.guidance pre .code-comment{color:var(--muted)}
+.guidance .notes-title{font-size:.92rem}
+.notes-list{margin:0 0 7px;padding-left:19px}.notes-list li{margin:0 0 4px}.notes-list li:last-child{margin-bottom:0}
 .heading-row{margin:18px 0 9px}
 h2{margin:0;font-size:1.25rem;letter-spacing:-.02em}
 .table-shell{overflow-x:auto;background:var(--white);border:1px solid var(--line);border-radius:13px;box-shadow:0 10px 28px rgba(55,58,60,.045)}
@@ -56,8 +61,30 @@ footer{padding:18px 0;border-top:1px solid var(--line);background:var(--white);c
   <div class="heading-row"><h2>Some datasets you can choose from.</h2></div>
 
   <div class="guidance">
-    <p><strong>About missing data.</strong> Nothing here has been dropped for being incomplete. Instead, any variable that is more than 10% missing is marked <span class="miss">(x% missing)</span> next to its name, and every variable's exact completeness is in the codebook on its dataset page.</p>
-    <p>Missing values matter because <code>lm()</code> and <code>glm()</code> silently drop any row missing <em>any</em> variable in the model. Add one 40%-missing predictor to a model and you can lose 40% of your sample without being told. So: prefer the variables with no missingness marker; if you do want a marked variable, check what your model's complete-case N actually is with <code>nrow(model.frame(your_model))</code>, report the number of rows you lost, and flag it as a limitation.</p>
+    <p class="notes-title"><strong>Some important notes about the data catalog</strong></p>
+
+    <p><strong>Expect to find problems in the data.</strong> We have looked through all of these datasets and done a lot of work to curate a set of data that are straightforward to analyse, but you may still run into issues. For example, the data shared by the authors may not exactly match what the paper reports, or there may be miscodings or typos.</p>
+
+    <p> Plan your work time on this project with that expectation in mind. You can report such issues and inconsistencies as part of your analysis.</p>
+
+    <p><strong>Your goal is not to replicate the analyses in the papers.</strong> Many of the source papers used methods quite different from what we learned in class.</p>
+
+    <p>Many of the papers also used complex sampling designs (clustered or weighted surveys). We have not covered multilevel models or advanced survey data analysis, so it is fine to analyse these with the simple regression methods from the course. You may choose to report this as a limitation in your paper.</p>
+
+    <p><strong>Not all predictors work for all the outcomes.</strong> Think about whether it makes sense conceptually. Here are a few ways it could fail to make sense:</p>
+    <ul class="notes-list">
+      <li>The predictor comes <em>after</em> the outcome. For example, in the Peru dataset, <code>birth_weight</code> was determined at birth, so a child's current <code>haemoglobin_g_dl</code> cannot be a predictor of it.</li>
+      <li>The predictor is a composite part of the outcome. For example, in the Brazilian medical student dataset, <code>dreem_learning</code> is one of the subscales that make up <code>dreem_global</code>.</li>
+      <li>You have both a continuous variable and the categorised version of the same thing. For example, do not use <code>systolic_bp</code> to predict <code>hypertension</code>, because they are the same measurement.</li>
+    </ul>
+
+    <p><strong>Missing data.</strong> Because you are not expected to impute missing values, any row that has a missing value for your outcome or for any of your predictors will be excluded from the model. Keep this in mind when using variables that have a lot of missing values, especially in multivariable regressions, where the losses add up across predictors.</p>
+
+    <p>In practice, we recommend that you select the variables you will be analysing, then drop the rows with missing values in those variables before fitting any models, as explained in <a href="https://www.youtube.com/watch?v=w6m7OAMZAzk" target="_blank" rel="noreferrer">this video</a>. For example:</p>
+
+    <pre><code>model_data &lt;- raw_data %&gt;%
+  select(anemia, age, sex) %&gt;%  <span class="code-comment"># your outcome and predictors</span>
+  drop_na()  <span class="code-comment"># remove rows with missing values</span></code></pre>
   </div>
 
   <div class="table-shell"><table>
